@@ -104,7 +104,7 @@ module.exports = async function () {
       throw new Error("Le domaine Bonjour doit être une chaîne de caractères.");
     } else {
       await require("./bonjour").init({
-        name: "do•doc",
+        name: "SoftGems",
         protocol: global.settings.protocol,
         port: global.appInfos.port,
         host: global.settings.bonjour_domain,
@@ -252,7 +252,7 @@ async function copyAndRenameUserFolder(full_default_path) {
       dialog.showErrorBox(
         `Failed to write to content path: ${full_path_to_content}`,
         `Error: ${err}\n\n` +
-          `Please check if the path is correct and if you have the necessary permissions to write to it. do•doc will start with the default Documents/dodoc folder`
+          `Please check if the path is correct and if you have the necessary permissions to write to it. SoftGems will start with the default Documents/dodoc folder`
       );
     }
 

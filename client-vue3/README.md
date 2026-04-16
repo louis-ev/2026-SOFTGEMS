@@ -1,6 +1,6 @@
 # client-vue3
 
-Ce dossier heberge le nouveau client Vue 3 de do•doc.
+Ce dossier heberge le nouveau client Vue 3 de SoftGems.
 
 ## Objectif
 
@@ -12,7 +12,7 @@ Remplacer le client Vue 2 par un client Vue 3.
 - `npm run build --prefix client-vue3`
 - `npm run preview --prefix client-vue3`
 
-## Integration dans do•doc
+## Integration dans SoftGems
 
 - En mode build: `/_client/build.js` est servi par le backend.
 - En livereload: `https://localhost:5178/src/main.js`.

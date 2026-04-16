@@ -1,5 +1,5 @@
 appId: "dodoc"
-productName: "do•doc"
+productName: "SoftGems"
 
 electronVersion: "39.8.5"
 asar: true
@@ -52,15 +52,15 @@ win:
 
 nsis:
   oneClick: true
-  uninstallDisplayName: "do•doc ${version}"
+  uninstallDisplayName: "SoftGems ${version}"
   createDesktopShortcut: always
-  shortcutName: "do•doc"
+  shortcutName: "SoftGems"
   # do not create blockmap
   differentialPackage: false
 
 appx:
   applicationId: "AtelierDesChercheurs.DoDoc"
-  displayName: "do•doc"
+  displayName: "SoftGems"
   publisherDisplayName: "L'Atelier des Chercheurs"
   # Replace these with actual values from Microsoft Partner Center:
   # Go to Partner Center > Your App > Product Identity
@@ -110,7 +110,7 @@ linux:
     - '--js-flags="--max-old-space-size=4096"'
   desktop:
     entry:
-      Name: do•doc
+      Name: SoftGems
       Comment: A documentation tool for creativity.
       Terminal: false
       Categories: Education;AudioVideo;Graphics;

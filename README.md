@@ -1,13 +1,13 @@
-![do•doc logo](/dodoc_logo.svg)
+![SoftGems logo](/dodoc_logo.svg)
 
-# do•doc
+# SoftGems
 
-do•doc (or dodoc) is a free and open-source documentation tool, initially designed for use in classrooms with children. It enables one to capture traces from an on-going experience for later reflections, reconstructions and creation of narratives. A physical device can be associated with the software to simplify usage, especially with young people. Two versions are available: the local app that can be installed for offline use, and the online webapp that can be accessed from any device connected to the Internet.<br><br>
+SoftGems (or dodoc) is a free and open-source documentation tool, initially designed for use in classrooms with children. It enables one to capture traces from an on-going experience for later reflections, reconstructions and creation of narratives. A physical device can be associated with the software to simplify usage, especially with young people. Two versions are available: the local app that can be installed for offline use, and the online webapp that can be accessed from any device connected to the Internet.<br><br>
 
-do•doc is created by a variety of people: pupils, teachers, trainers, makers, artists, etc. Anyone is welcome to contribute to its development, on Github or via the forum (contributions can be in English or French): https://forum.latelier-des-chercheurs.fr/<br>
+SoftGems is created by a variety of people: pupils, teachers, trainers, makers, artists, etc. Anyone is welcome to contribute to its development, on Github or via the forum (contributions can be in English or French): https://forum.latelier-des-chercheurs.fr/<br>
 <br>
 
-do•doc was initially created by [l'Atelier des chercheurs](http://latelier-des-chercheurs.fr/) (Sarah Garcin, Pauline Gourlet & Louis Eveillard).<br><br>
+SoftGems was initially created by [l'Atelier des chercheurs](http://latelier-des-chercheurs.fr/) (Sarah Garcin, Pauline Gourlet & Louis Eveillard).<br><br>
 
 More information:
 
@@ -20,7 +20,7 @@ https://forum.latelier-des-chercheurs.fr/
 
 # License
 
-do•doc is free and open source.
+SoftGems is free and open source.
 The code is licensed under AGPLv3, and the graphic assets (icons, pictograms, user interface) are under a CC-BY-SA license.
 
 The font [Luciole](http://www.luciole-vision.com/) is licensed under the Creative Commons Attribution 4.0 and embedded with permission from Laurent Bourcellier and Jonathan Fabreguettes.
@@ -38,7 +38,7 @@ The font [Belle Allure](https://www.jeanboyault.fr/belle-allure/) is used with p
 
 Note 2: bufferutil seems to be necessary specifically for intel macOS.
 
-# Install do•doc
+# Install SoftGems
 
 ## Method 1 — the easy way
 
@@ -50,18 +50,18 @@ See https://forum.latelier-des-chercheurs.fr/t/installer-do-doc-en-mode-developp
 
 ## Method 3 — the dev way
 
-To install do•doc in dev mode, you need to have Node.js and npm installed. Clone this repository and follow the instructions below based on your use case.
+To install SoftGems in dev mode, you need to have Node.js and npm installed. Clone this repository and follow the instructions below based on your use case.
 
 ### Node version (for servers/VPS)
 
-For running do•doc on a server with Puppeteer (for PDF/screenshot generation):
+For running SoftGems on a server with Puppeteer (for PDF/screenshot generation):
 
 ```bash
 npm install
 npm start
 ```
 
-**Optional — Poppler (`pdftoppm`):** For faster PDF thumbnail generation on the server, install [Poppler](https://poppler.freedesktop.org/) so the `pdftoppm` binary is on your `PATH` (it is not an npm package). If Poppler is not installed, do•doc falls back to the existing web preview path (Puppeteer). Examples: macOS — `brew install poppler`; Debian/Ubuntu — `apt install poppler-utils`.
+**Optional — Poppler (`pdftoppm`):** For faster PDF thumbnail generation on the server, install [Poppler](https://poppler.freedesktop.org/) so the `pdftoppm` binary is on your `PATH` (it is not an npm package). If Poppler is not installed, SoftGems falls back to the existing web preview path (Puppeteer). Examples: macOS — `brew install poppler`; Debian/Ubuntu — `apt install poppler-utils`.
 
 Available scripts for Node mode:
 
@@ -70,7 +70,7 @@ Available scripts for Node mode:
 
 ### Electron version (for desktop app)
 
-For running do•doc as a desktop application with Electron:
+For running SoftGems as a desktop application with Electron:
 
 ```bash
 npm install
@@ -129,7 +129,7 @@ Restart the server and open https://localhost:8080 — the browser will trust th
 
 ## Method 4 — the docker way
 
-This method makes the installation of do•doc a bit simpler.
+This method makes the installation of SoftGems a bit simpler.
 You need to have `docker` installed on your machine.
 
 ### The docker compose way
@@ -139,7 +139,7 @@ Your data is persistent (in ./dodoc-data directory).
 
 ### Or the docker manual way
 
-If you prefer to customise the container, the basic pattern for starting a do•doc instance is:
+If you prefer to customise the container, the basic pattern for starting a SoftGems instance is:
 
 ```
 $ docker run --name my-dodoc -p 8080:8080 -v ./dodoc-data:/home/node/Documents -d ghcr.io/l-atelier-des-chercheurs/dodoc:latest
@@ -164,7 +164,7 @@ More advanced settings are available to all by duplicating the settings.example.
 
   - if the value is just a string without any slashes (like "dodoc"), then this will be the name of the folder used in the /Documents subfolder.
   - if the value contains any forward slashes (/) or system path separators, it will be treated as a full path (like /mnt/storage/dodoc-custom)
-  - if the specified path is not writable, do•doc will automatically fall back to using a "dodoc" folder in the Documents directory
+  - if the specified path is not writable, SoftGems will automatically fall back to using a "dodoc" folder in the Documents directory
 
 - if you'd like for dodoc to be able to send email to help users recover their password, fill in the information to a mail server and account with the "mailer" property.
 
@@ -242,7 +242,7 @@ Editable default values and all custom values can only be edited by an $admins.
 
 ### SSL Certificate Warning
 
-When you first open do•doc in your browser, you may see a security warning about the SSL certificate. This is normal and expected because do•doc uses a self-signed certificate for local HTTPS connections.
+When you first open SoftGems in your browser, you may see a security warning about the SSL certificate. This is normal and expected because SoftGems uses a self-signed certificate for local HTTPS connections.
 
 **To proceed safely:**
 

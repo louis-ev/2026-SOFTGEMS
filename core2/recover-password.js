@@ -103,7 +103,7 @@ This link will expire in 1 hour.
 If you did not request this password reset, you can safely ignore this email.
 
 Best regards,
-The do•doc Team
+The SoftGems Team
 
 ---
 
@@ -119,7 +119,7 @@ Ce lien expirera dans 1 heure.
 Si vous n'avez pas demandé cette réinitialisation de mot de passe, vous pouvez ignorer cet e-mail en toute sécurité.
 
 Cordialement,
-L'équipe do•doc`,
+L'équipe SoftGems`,
       html: `<p>Hello,</p>
 <p>You have requested to reset your password for your account on ${global.settings.url}.</p>
 <p>Please click on the following link to set a new password:<br>
@@ -127,7 +127,7 @@ L'équipe do•doc`,
 <p>This link will expire in 1 hour.</p>
 <p>If you did not request this password reset, you can safely ignore this email.</p>
 <p>Best regards,<br>
-The do•doc Team</p>
+The SoftGems Team</p>
 
 <hr>
 
@@ -138,7 +138,7 @@ The do•doc Team</p>
 <p>Ce lien expirera dans 1 heure.</p>
 <p>Si vous n'avez pas demandé cette réinitialisation de mot de passe, vous pouvez ignorer cet e-mail en toute sécurité.</p>
 <p>Cordialement,<br>
-L'équipe do•doc</p>`,
+L'équipe SoftGems</p>`,
     };
   }
 

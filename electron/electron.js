@@ -292,7 +292,7 @@ module.exports = (function () {
           applicationName: global.appInfos.productName,
           applicationVersion: app.getVersion(),
           copyright:
-            "do•doc est un outil de documentation pour la créativité. Publié sous licence libre GNU AGPL. \n\n do•doc is a documentation tool for creativity. Released under the free software GNU AGPL license.",
+            "SoftGems est un outil de documentation pour la créativité. Publié sous licence libre GNU AGPL. \n\n SoftGems is a documentation tool for creativity. Released under the free software GNU AGPL license.",
         });
       }
 
