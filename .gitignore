@@ -45,3 +45,7 @@ client/dist/report.html
 tokens.json
 /dist/
 docker-compose.override.yml
+
+# SoftGems internal product spec (keep local/private)
+docs/cahier_des_charges_softgems.md
+.cursor/rules/softgems-cahier-des-charges.mdc
