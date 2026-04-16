@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div class="app_shell">
     <header class="app_header">
       <h1>SoftGems - client Vue 3</h1>
       <p>Espace de migration progressive depuis le client Vue 2.</p>
@@ -14,7 +14,7 @@
 <script setup></script>
 
 <style scoped>
-#app {
+.app_shell {
   min-height: 100vh;
   padding: 1.5rem;
 }

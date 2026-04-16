@@ -3,9 +3,13 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import mkcert from "vite-plugin-mkcert";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 
-export default defineConfig({
-  plugins: [vue(), mkcert()],
+export default defineConfig(({ command }) => ({
+  // Production assets are served by the backend under /_client.
+  // Keep dev base at / for the standalone Vite HTTPS server.
+  base: command === "build" ? "/_client/" : "/",
+  plugins: [vue(), cssInjectedByJsPlugin(), mkcert()],
   css: {
     preprocessorOptions: {
       scss: {
@@ -45,4 +49,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
