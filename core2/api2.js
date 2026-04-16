@@ -624,6 +624,7 @@ module.exports = (function () {
   async function loadIndex(req, res) {
     dev.logapi();
     let d = {};
+
     d.schema = global.settings.schema;
     d.debug_mode = dev.isDebug();
     d.is_livereload = dev.isLivereload();

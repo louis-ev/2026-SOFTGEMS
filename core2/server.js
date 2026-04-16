@@ -105,15 +105,11 @@ module.exports = function () {
   app.use(express.static(global.pathToUserContent));
   app.use(
     "/_client",
-    express.static(path.join(global.appRoot, "client", "dist"), {
+    express.static(path.join(global.appRoot, "client-vue3", "dist"), {
       setHeaders: (res, filePath) => {
         // `build.js` is the ES module entry. It must not be cached "forever"
         // (we don't add `?v=` to it, because that breaks ESM singleton identity).
         if (filePath.endsWith(path.sep + "build.js")) {
-          res.setHeader("Cache-Control", "no-cache");
-          return;
-        }
-        if (filePath.endsWith(path.sep + "bundle.js")) {
           res.setHeader("Cache-Control", "no-cache");
           return;
         }
