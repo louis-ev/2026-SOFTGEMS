@@ -10,8 +10,8 @@
     "debug": "electron --inspect=5858 . -- --debug --verbose",
     "debug-lr": "electronmon --inspect=5858 . -- --debug --verbose --livereload",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder -p always",
-    "dist:win-store": "electron-builder --win appx",
+    "dist": "node -e \"console.log('Electron release generation is temporarily disabled.')\"",
+    "dist:win-store": "node -e \"console.log('Electron release generation is temporarily disabled.')\"",
     "postinstall": "electron-builder install-app-deps"
   },
   "engines": {

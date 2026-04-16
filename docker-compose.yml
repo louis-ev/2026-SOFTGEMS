@@ -1,11 +1,11 @@
 services:
-  dodoc-node:
-    image: ghcr.io/l-atelier-des-chercheurs/dodoc:latest
+  softgems-node:
+    image: ghcr.io/l-atelier-des-chercheurs/softgems:latest
     ports:
       - "8080:8080"
     volumes:
-      - dodoc-data:/home/node/Documents/dodoc
+      - softgems-data:/home/node/Documents/softgems
     restart: always
 
 volumes:
-  dodoc-data:
+  softgems-data:

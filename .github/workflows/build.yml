@@ -46,6 +46,8 @@ jobs:
             ${{ steps.image_name.outputs.image }}:latest
 
   electron:
+    # Temporarily disabled: do not generate Electron release artifacts.
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     needs: meta
     strategy:
