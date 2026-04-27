@@ -1,8 +1,12 @@
 <template>
   <div class="_sgHome">
     <div class="u-sameRow u-spacingBottom">
-      <h1 class="_title">Gems</h1>
-      <button type="button" class="u-button u-button_bleuvert" @click="openCreateModal">
+      <h1 class="_title">INVENTORY</h1>
+      <button
+        type="button"
+        class="u-button u-button_bleuvert"
+        @click="openCreateModal"
+      >
         Create gem
       </button>
     </div>
@@ -22,7 +26,9 @@
         </tr>
         <tr v-for="gem in gems" :key="gem.$path">
           <td>{{ gem.name || gem.title || "-" }}</td>
-          <td><code>{{ gem.$path }}</code></td>
+          <td>
+            <code>{{ gem.$path }}</code>
+          </td>
         </tr>
       </tbody>
     </table>

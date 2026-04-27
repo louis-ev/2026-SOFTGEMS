@@ -2,19 +2,22 @@
   <header class="_softgemsTopbar">
     <div class="_inner">
       <div class="_left">
-        <h1 class="_title">SoftGems</h1>
-        <p class="_subtitle">Inventory workspace</p>
+        <router-link to="/">
+          <h1 class="_title">ACF</h1>
+          <p class="_subtitle">Inventory workspace</p>
+        </router-link>
       </div>
 
       <div class="_right">
         <!-- <span class="_routeLabel">{{ route_label }}</span> -->
-        <button
-          type="button"
-          class="u-button u-button_bleumarine _accountButton"
-          @click="handleAccountClick"
+        <router-link
+          :to="author_url"
+          class="u-button"
+          :class="{ 'is--active': $route.path === author_url }"
         >
-          {{ account_button_label }}
-        </button>
+          <b-icon icon="person-circle" />
+          {{ author_name }}
+        </router-link>
       </div>
     </div>
 
@@ -38,28 +41,23 @@ export default {
     route_label() {
       return this.$route?.name || this.$route?.path || "Home";
     },
-    account_button_label() {
+    author_name() {
       return this.connected_as?.name || this.$t("login");
     },
-  },
-  methods: {
-    handleAccountClick() {
-      if (this.connected_as) {
-        window.location.assign("/@/author");
-        return;
-      }
-      this.show_authors_modal = true;
+    author_url() {
+      return this.createURLFromPath(
+        this.getAuthor(this.connected_as.$path).$path
+      );
     },
   },
 };
 </script>
-
 <style lang="scss" scoped>
 ._softgemsTopbar {
   position: sticky;
   top: 0;
   z-index: 4;
-  background: white;
+  background: #333;
   border-bottom: 1px solid var(--c-gris_clair);
 }
 
@@ -75,7 +73,13 @@ export default {
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 5);
+  color: #fff;
   min-width: 0;
+
+  > a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 ._title {
@@ -86,14 +90,18 @@ export default {
 
 ._subtitle {
   margin: 0;
-  color: var(--c-gris_fonce);
-  font-size: var(--sl-font-size-x-small);
+  font-size: var(--sl-font-size-small);
 }
 
 ._right {
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
+
+  > a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 ._routeLabel {

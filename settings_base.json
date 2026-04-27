@@ -9,7 +9,7 @@
   "versioning": true,
   "tokenIsValidForXDays": 30,
 
-  "contentPath": "dodoc",
+  "contentPath": "softgems_content",
 
   "privateKeyPath": "",
   "certificatePath": "",

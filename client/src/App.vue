@@ -257,7 +257,7 @@ body {
 html {
   height: 100%;
 
-  font-family: "Fira Sans", sans-serif;
+  font-family: "Krub", sans-serif;
   font-style: normal;
   font-weight: 400;
 
