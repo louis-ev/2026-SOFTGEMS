@@ -5,7 +5,6 @@
       @close="show_disconnect_modal = false"
     />
     <TrackAuthorChanges />
-    <!-- <DynamicCursor v-if="!$root.is_touch_device" /> -->
 
     <transition name="pagetransition" mode="out-in">
       <div class="_spinner" v-if="$root.is_loading" key="loader">
@@ -17,8 +16,6 @@
           @close="show_general_password_modal = false"
         />
         <template v-else>
-          <TopBar />
-
           <div class="_mainContent">
             <transition name="pagetransition" mode="out-in">
               <div class="_routerView" :key="$route.path">
@@ -27,12 +24,6 @@
                 </router-view>
               </div>
             </transition>
-            <div
-              class="_chatsListContainer"
-              :class="{ 'is--shown': $root.show_chats_list }"
-            >
-              <ChatsList v-if="$root.show_chats_list" />
-            </div>
           </div>
           <!-- <TaskTracker /> -->
         </template>
@@ -42,23 +33,19 @@
 </template>
 <script>
 import TopBar from "@/components/TopBar.vue";
-import DynamicCursor from "@/components/DynamicCursor.vue";
 import GeneralPasswordModal from "@/adc-core/modals/GeneralPasswordModal.vue";
 import TrackAuthorChanges from "@/adc-core/author/TrackAuthorChanges.vue";
 import TaskTracker from "@/adc-core/tasks/TaskTracker.vue";
 import DisconnectModal from "@/adc-core/modals/DisconnectModal.vue";
-import ChatsList from "@/adc-core/chats/ChatsList.vue";
 
 export default {
   props: {},
   components: {
     TopBar,
-    DynamicCursor,
+
     GeneralPasswordModal,
     TrackAuthorChanges,
-    TaskTracker,
     DisconnectModal,
-    ChatsList,
   },
   data() {
     return {
@@ -157,20 +144,6 @@ export default {
   ._routerView {
     flex: 1 1 auto;
     min-width: 0; /* Prevent flex item from overflowing */
-  }
-
-  ._chatsListContainer {
-    position: relative;
-    flex: 0 0 0;
-    width: 0;
-    overflow: hidden;
-
-    --chats-list-width: 320px;
-    --chats-list-padding: 4px;
-
-    &.is--shown {
-      flex: 0 0 var(--chats-list-width);
-    }
   }
 }
 </style>
