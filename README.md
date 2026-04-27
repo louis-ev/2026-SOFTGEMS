@@ -1,30 +1,13 @@
-![SoftGems logo](/dodoc_logo.svg)
+**IN PROGRESS, DO NOT USE IN PRODUCTION JUST YET**
 
 # SoftGems
 
-SoftGems (or dodoc) is a free and open-source documentation tool, initially designed for use in classrooms with children. It enables one to capture traces from an on-going experience for later reflections, reconstructions and creation of narratives. A physical device can be associated with the software to simplify usage, especially with young people. Two versions are available: the local app that can be installed for offline use, and the online webapp that can be accessed from any device connected to the Internet.<br><br>
-
-SoftGems is created by a variety of people: pupils, teachers, trainers, makers, artists, etc. Anyone is welcome to contribute to its development, on Github or via the forum (contributions can be in English or French): https://forum.latelier-des-chercheurs.fr/<br>
-<br>
-
-SoftGems was initially created by [l'Atelier des chercheurs](http://latelier-des-chercheurs.fr/) (Sarah Garcin, Pauline Gourlet & Louis Eveillard).<br><br>
-
-More information:
-
-- in English: https://latelier-des-chercheurs.fr/en/tools/dodoc
-- en Français : https://latelier-des-chercheurs.fr/outils/dodoc
-
-And on the forum (mainly in French but you can post in English):
-
-https://forum.latelier-des-chercheurs.fr/
+SoftGems is a fork of do•doc (https://github.com/l-atelier-des-chercheurs/dodoc). See this repo for installation instructions.
 
 # License
 
 SoftGems is free and open source.
 The code is licensed under AGPLv3, and the graphic assets (icons, pictograms, user interface) are under a CC-BY-SA license.
-
-The font [Luciole](http://www.luciole-vision.com/) is licensed under the Creative Commons Attribution 4.0 and embedded with permission from Laurent Bourcellier and Jonathan Fabreguettes.
-The font [Belle Allure](https://www.jeanboyault.fr/belle-allure/) is used with permission from Jean Boyault.
 
 # Branches
 

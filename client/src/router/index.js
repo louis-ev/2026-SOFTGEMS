@@ -19,16 +19,16 @@ const routes = [
   //   },
   //   component: () => import("@/views/PublicationView.vue"),
   // },
-  // {
-  //   path: "/@",
-  //   name: "Tous les auteurs",
-  //   component: () => import("@/views/AuthorsView.vue"),
-  // },
-  // {
-  //   path: "/@:author_slug",
-  //   name: "Auteur",
-  //   component: () => import("@/views/AuthorView.vue"),
-  // },
+  {
+    path: "/@",
+    name: "Tous les auteurs",
+    component: () => import("@/views/AuthorsView.vue"),
+  },
+  {
+    path: "/@:author_slug",
+    name: "Auteur",
+    component: () => import("@/views/AuthorView.vue"),
+  },
   {
     path: "/_ui",
     name: "UI (dev only)",

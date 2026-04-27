@@ -16,6 +16,7 @@
           @close="show_general_password_modal = false"
         />
         <template v-else>
+          <SoftgemsTopbar />
           <div class="_mainContent">
             <transition name="pagetransition" mode="out-in">
               <div class="_routerView" :key="$route.path">
@@ -32,7 +33,7 @@
   </div>
 </template>
 <script>
-import TopBar from "@/components/TopBar.vue";
+import SoftgemsTopbar from "@/components/softgems/SoftgemsTopbar.vue";
 import GeneralPasswordModal from "@/adc-core/modals/GeneralPasswordModal.vue";
 import TrackAuthorChanges from "@/adc-core/author/TrackAuthorChanges.vue";
 import TaskTracker from "@/adc-core/tasks/TaskTracker.vue";
@@ -41,7 +42,7 @@ import DisconnectModal from "@/adc-core/modals/DisconnectModal.vue";
 export default {
   props: {},
   components: {
-    TopBar,
+    SoftgemsTopbar,
 
     GeneralPasswordModal,
     TrackAuthorChanges,
@@ -128,22 +129,6 @@ export default {
 }
 
 ._mainContent {
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: flex-start;
-  flex: 1;
-  // overflow: hidden;
-
-  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
-  // gap: var(--spacing);
-
-  > * {
-    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
-  }
-
-  ._routerView {
-    flex: 1 1 auto;
-    min-width: 0; /* Prevent flex item from overflowing */
-  }
+  padding: calc(var(--spacing) * 2);
 }
 </style>
