@@ -21,7 +21,16 @@
           <td colspan="2">No gems yet.</td>
         </tr>
         <tr v-for="gem in gems" :key="gem.$path">
-          <td>{{ gem.name || gem.title || "-" }}</td>
+          <td>
+            <router-link
+              v-if="getGemId(gem)"
+              :to="`/gems/${getGemId(gem)}`"
+              class="_gemLink"
+            >
+              {{ gem.name || gem.title || "-" }}
+            </router-link>
+            <span v-else>{{ gem.name || gem.title || "-" }}</span>
+          </td>
           <td>
             <code>{{ gem.$path }}</code>
           </td>
@@ -87,6 +96,12 @@ export default {
     openCreateView() {
       this.$router.push("/gems/new");
     },
+    getGemId(gem) {
+      const gem_path = gem?.$path || "";
+      if (!gem_path) return "";
+      const path_parts = gem_path.split("/");
+      return path_parts[path_parts.length - 1] || "";
+    },
   },
 };
 </script>
@@ -105,6 +120,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing);
+  margin-bottom: calc(var(--spacing) * 1);
 }
 
 ._table {
@@ -117,6 +133,11 @@ export default {
     border-bottom: 1px solid var(--c-gris_clair);
     padding: calc(var(--spacing) / 2);
   }
+}
+
+._gemLink {
+  color: inherit;
+  text-decoration: underline;
 }
 
 ._fontPreview {

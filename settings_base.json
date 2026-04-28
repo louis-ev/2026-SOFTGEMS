@@ -124,6 +124,8 @@
     },
     "$folders": {
       "gems": {
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
         "$cover": {
           "width": 2000,
           "height": 2000,

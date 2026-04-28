@@ -14,6 +14,12 @@ const routes = [
     name: "Create gem",
     component: () => import("@/views/GemNewView.vue"),
   },
+  {
+    path: "/gems/:gem_id",
+    name: "Open gem",
+    component: () => import("@/views/GemOpenView.vue"),
+    props: true,
+  },
   // {
   //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
   //   alias: ["*/export.html"],

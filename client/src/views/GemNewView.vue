@@ -178,16 +178,19 @@ export default {
 
       this.is_creating = true;
       try {
-        await this.$api.createFolder({
+        const new_gem_slug = await this.$api.createFolder({
           path: this.gems_path,
           additional_meta: {
             title: cleaned_name,
             name: cleaned_name,
-            requested_slug: "",
+            $status: "public",
+            $admins: "everyone",
+            $contributors: "everyone",
             ...normalized_gem_fields,
           },
         });
-        this.$router.push("/");
+        if (new_gem_slug) this.$router.push(`/gems/${new_gem_slug}`);
+        else this.$router.push("/");
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || "Could not create gem.");
       } finally {
