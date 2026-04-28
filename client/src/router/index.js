@@ -9,6 +9,11 @@ const routes = [
     name: "Accueil",
     component: () => import("@/views/SGHomeView.vue"),
   },
+  {
+    path: "/gems/new",
+    name: "Create gem",
+    component: () => import("@/views/GemNewView.vue"),
+  },
   // {
   //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
   //   alias: ["*/export.html"],

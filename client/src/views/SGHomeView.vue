@@ -5,7 +5,7 @@
       <button
         type="button"
         class="u-button u-button_bleuvert"
-        @click="openCreateModal"
+        @click="openCreateView"
       >
         Create gem
       </button>
@@ -32,14 +32,6 @@
         </tr>
       </tbody>
     </table>
-
-    <CreateGemModal
-      v-if="show_create_modal"
-      :gems_path="gems_path"
-      @gemCreated="onGemCreated"
-      @close="closeCreateModal"
-    />
-
     <section class="_fontPreview">
       <h1>Typography Preview H1</h1>
       <h2>Typography Preview H2</h2>
@@ -59,19 +51,14 @@
   </div>
 </template>
 <script>
-import CreateGemModal from "@/components/softgems/CreateGemModal.vue";
-
 export default {
   props: {},
-  components: {
-    CreateGemModal,
-  },
+  components: {},
   data() {
     return {
       gems_path: "gems",
       gems: [],
       is_loading: false,
-      show_create_modal: false,
       fetch_error: "",
     };
   },
@@ -101,14 +88,8 @@ export default {
         this.is_loading = false;
       }
     },
-    openCreateModal() {
-      this.show_create_modal = true;
-    },
-    closeCreateModal() {
-      this.show_create_modal = false;
-    },
-    onGemCreated() {
-      this.closeCreateModal();
+    openCreateView() {
+      this.$router.push("/gems/new");
     },
   },
 };
