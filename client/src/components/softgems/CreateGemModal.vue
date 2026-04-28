@@ -24,6 +24,8 @@
 </template>
 
 <script>
+import { default_gem_fields } from "@/utils/gemDefaults";
+
 export default {
   props: {
     gems_path: {
@@ -50,6 +52,7 @@ export default {
             title: cleaned_name,
             name: cleaned_name,
             requested_slug: cleaned_name,
+            ...default_gem_fields,
           },
         });
         this.$emit("gemCreated");

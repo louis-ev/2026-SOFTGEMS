@@ -14,6 +14,106 @@
         @onEnter="createGem"
       />
 
+      <div class="_fieldsGrid">
+        <div>
+          <DLabel str="Reference ID" />
+          <TextInput :content.sync="new_gem_fields.reference_id" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Status" />
+          <TextInput :content.sync="new_gem_fields.status" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Type" />
+          <TextInput :content.sync="new_gem_fields.gem_type" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Color" />
+          <TextInput :content.sync="new_gem_fields.color" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Origin" />
+          <TextInput :content.sync="new_gem_fields.origin" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Dimensions" />
+          <TextInput :content.sync="new_gem_fields.dimensions" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Weight (ct)" />
+          <TextInput
+            :content.sync="new_gem_fields.weight_carat"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel str="Piece count" />
+          <TextInput
+            :content.sync="new_gem_fields.piece_count"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel str="Condition" />
+          <TextInput :content.sync="new_gem_fields.condition" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Treatment" />
+          <TextInput :content.sync="new_gem_fields.treatment" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Purchase price (USD)" />
+          <TextInput
+            :content.sync="new_gem_fields.purchase_price_usd"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel str="Sale price (USD)" />
+          <TextInput
+            :content.sync="new_gem_fields.sale_price_usd"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel str="Price per carat (USD)" />
+          <TextInput
+            :content.sync="new_gem_fields.price_per_carat_usd"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel str="Supplier" />
+          <TextInput :content.sync="new_gem_fields.supplier" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Acquisition date" />
+          <TextInput
+            :content.sync="new_gem_fields.acquisition_date"
+            :required="false"
+            input_type="date"
+          />
+        </div>
+        <div>
+          <DLabel str="Country of cut (COC)" />
+          <TextInput :content.sync="new_gem_fields.country_of_cut" :required="false" />
+        </div>
+        <div>
+          <DLabel str="Pair gem ID" />
+          <TextInput :content.sync="new_gem_fields.pair_gem_id" :required="false" />
+        </div>
+      </div>
+
+      <div>
+        <DLabel str="Remarks" />
+        <textarea v-model="new_gem_fields.remarks" class="_textarea" rows="4" />
+      </div>
+
       <div class="_actions">
         <button type="button" class="u-button" @click="goBack">Cancel</button>
         <button
@@ -29,11 +129,14 @@
 </template>
 
 <script>
+import { default_gem_fields } from "@/utils/gemDefaults";
+
 export default {
   data() {
     return {
       gems_path: "gems",
       new_gem_name: "",
+      new_gem_fields: { ...default_gem_fields },
       is_creating: false,
     };
   },
@@ -45,6 +148,8 @@ export default {
       const cleaned_name = this.new_gem_name.trim();
       if (!cleaned_name || this.is_creating) return;
 
+      const normalized_gem_fields = this.normalizeGemFields(this.new_gem_fields);
+
       this.is_creating = true;
       try {
         await this.$api.createFolder({
@@ -53,6 +158,7 @@ export default {
             title: cleaned_name,
             name: cleaned_name,
             requested_slug: cleaned_name,
+            ...normalized_gem_fields,
           },
         });
         this.$router.push("/");
@@ -61,6 +167,56 @@ export default {
       } finally {
         this.is_creating = false;
       }
+    },
+    normalizeGemFields(raw_fields) {
+      const normalized_fields = {
+        ...default_gem_fields,
+        ...raw_fields,
+      };
+
+      const string_field_keys = [
+        "reference_id",
+        "status",
+        "color",
+        "origin",
+        "dimensions",
+        "gem_type",
+        "condition",
+        "treatment",
+        "supplier",
+        "acquisition_date",
+        "country_of_cut",
+        "pair_gem_id",
+        "remarks",
+      ];
+      string_field_keys.forEach((field_key) => {
+        normalized_fields[field_key] = this.cleanString(normalized_fields[field_key]);
+      });
+
+      const number_field_keys = [
+        "weight_carat",
+        "piece_count",
+        "purchase_price_usd",
+        "sale_price_usd",
+        "price_per_carat_usd",
+      ];
+      number_field_keys.forEach((field_key) => {
+        normalized_fields[field_key] = this.toNumberOrDefault(
+          normalized_fields[field_key],
+          default_gem_fields[field_key]
+        );
+      });
+
+      return normalized_fields;
+    },
+    cleanString(value) {
+      if (value === null || value === undefined) return "";
+      return String(value).trim();
+    },
+    toNumberOrDefault(value, fallback_value = 0) {
+      const as_number = Number(value);
+      if (Number.isFinite(as_number)) return as_number;
+      return fallback_value;
     },
   },
 };
@@ -76,6 +232,17 @@ export default {
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 1.5);
+}
+
+._fieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: calc(var(--spacing) / 1.75);
+}
+
+._textarea {
+  width: 100%;
+  min-height: 96px;
 }
 
 ._actions {

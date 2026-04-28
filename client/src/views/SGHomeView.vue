@@ -2,7 +2,7 @@
   <div class="_sgHome">
     <div class="_header">
       <h1 class="_title">INVENTORY</h1>
-      <router-link to="/gems/new" class="u-button u-button_bleuvert">
+      <router-link to="/gems/new" class="u-buttonLink">
         Create gem
       </router-link>
     </div>

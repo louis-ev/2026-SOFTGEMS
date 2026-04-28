@@ -136,7 +136,65 @@
             "type": "string",
             "unique": true
           },
+          "title": {
+            "type": "string"
+          },
           "description": {
+            "type": "string"
+          },
+          "reference_id": {
+            "type": "string",
+            "unique": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "dimensions": {
+            "type": "string"
+          },
+          "gem_type": {
+            "type": "string"
+          },
+          "weight_carat": {
+            "type": "number"
+          },
+          "piece_count": {
+            "type": "number"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "treatment": {
+            "type": "string"
+          },
+          "purchase_price_usd": {
+            "type": "number"
+          },
+          "sale_price_usd": {
+            "type": "number"
+          },
+          "price_per_carat_usd": {
+            "type": "number"
+          },
+          "supplier": {
+            "type": "string"
+          },
+          "acquisition_date": {
+            "type": "string"
+          },
+          "country_of_cut": {
+            "type": "string"
+          },
+          "pair_gem_id": {
+            "type": "string"
+          },
+          "remarks": {
             "type": "string"
           }
         },
