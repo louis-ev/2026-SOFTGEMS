@@ -4,6 +4,7 @@ import router from "./router";
 import { init_title_popper } from "@/utils/title-popper";
 
 import "./utils/icons";
+import "./utils/icons-softgems";
 
 // Add Bootstrap Vue CSS for icon animations
 import "bootstrap-vue/dist/bootstrap-vue-icons.min.css";

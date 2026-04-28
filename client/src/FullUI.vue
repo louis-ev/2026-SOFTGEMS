@@ -18,6 +18,7 @@
         <template v-else>
           <SoftgemsTopbar />
           <div class="_mainContent">
+            <SoftgemsSidebar />
             <!-- <transition name="pagetransition" mode="out-in"> -->
             <div class="_routerView">
               <router-view class="" v-slot="{ Component }">
@@ -34,6 +35,7 @@
 </template>
 <script>
 import SoftgemsTopbar from "@/components/softgems/SoftgemsTopbar.vue";
+import SoftgemsSidebar from "@/components/softgems/SoftgemsSidebar.vue";
 import GeneralPasswordModal from "@/adc-core/modals/GeneralPasswordModal.vue";
 import TrackAuthorChanges from "@/adc-core/author/TrackAuthorChanges.vue";
 import TaskTracker from "@/adc-core/tasks/TaskTracker.vue";
@@ -43,6 +45,7 @@ export default {
   props: {},
   components: {
     SoftgemsTopbar,
+    SoftgemsSidebar,
 
     GeneralPasswordModal,
     TrackAuthorChanges,
@@ -129,6 +132,8 @@ export default {
 }
 
 ._mainContent {
+  position: relative;
   padding: calc(var(--spacing) * 2);
+  padding-left: calc(var(--spacing) * 2 + 56px);
 }
 </style>

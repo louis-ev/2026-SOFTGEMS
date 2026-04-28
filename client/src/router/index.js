@@ -27,6 +27,16 @@ const routes = [
       },
     ],
   },
+  {
+    path: "/contact",
+    name: "Contact",
+    component: () => import("@/views/ContactView.vue"),
+  },
+  {
+    path: "/selections",
+    name: "Selections",
+    component: () => import("@/views/SelectionsView.vue"),
+  },
   // {
   //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
   //   alias: ["*/export.html"],
