@@ -10,7 +10,7 @@
       <div class="_spinner" v-if="$root.is_loading" key="loader">
         <LoaderSpinner />
       </div>
-      <div v-else>
+      <div class="_mainWin" v-else>
         <GeneralPasswordModal
           v-if="show_general_password_modal"
           @close="show_general_password_modal = false"
@@ -19,11 +19,9 @@
           <SoftgemsTopbar />
           <div class="_mainContent">
             <SoftgemsSidebar />
-            <div class="_routerView">
-              <router-view class="" v-slot="{ Component }">
-                <component :is="Component" />
-              </router-view>
-            </div>
+            <router-view class="_routerView" v-slot="{ Component }">
+              <component :is="Component" />
+            </router-view>
           </div>
           <!-- <TaskTracker /> -->
         </template>
@@ -134,9 +132,13 @@ export default {
 
 ._mainContent {
   position: relative;
-  min-height: calc(100dvh - 61px);
-  padding: calc(var(--spacing) * 2);
-  padding-left: calc(var(--spacing) * 2 + 56px);
-  overflow-y: auto;
+  height: calc(100dvh - 61px);
+  display: flex;
+  flex-direction: row nowrap;
+}
+
+._routerView {
+  overflow: auto;
+  flex: 1 1 0;
 }
 </style>

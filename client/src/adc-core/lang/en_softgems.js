@@ -1,7 +1,7 @@
 export default {
   sg_inventory: "Inventory",
   sg_all_gems: "All gems",
-  sg_create_gem: "Create gem",
+  sg_create_gem: "Add a gem",
   sg_see_all_gems: "See all gems",
   sg_back_home: "Back to home",
   sg_create_gem_title: "Create gem",

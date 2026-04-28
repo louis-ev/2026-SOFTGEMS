@@ -1,36 +1,14 @@
 <template>
   <nav class="_softgemsSidebar" aria-label="Main navigation">
     <router-link
-      to="/"
-      class="_navItem"
-      :class="{ 'is--active': $route.path === '/' }"
-      title="Home"
+      v-for="nav_item in nav_items"
+      :key="nav_item.to"
+      :to="nav_item.to"
+      class="u-button u-button_icon _navItem"
+      :class="{ 'is--active': isNavItemActive(nav_item) }"
+      :title="nav_item.title"
     >
-      <BIconHouse />
-    </router-link>
-    <router-link
-      to="/gems"
-      class="_navItem"
-      :class="{ 'is--active': $route.path.startsWith('/gems') }"
-      title="Gems"
-    >
-      <BIconGem />
-    </router-link>
-    <router-link
-      to="/selections"
-      class="_navItem"
-      :class="{ 'is--active': $route.path.startsWith('/selections') }"
-      title="Selections"
-    >
-      <BIconCardList />
-    </router-link>
-    <router-link
-      to="/contact"
-      class="_navItem"
-      :class="{ 'is--active': $route.path.startsWith('/contact') }"
-      title="Contact"
-    >
-      <BIconPeople />
+      <b-icon :icon="nav_item.icon" />
     </router-link>
   </nav>
 </template>
@@ -38,15 +16,38 @@
 <script>
 export default {
   name: "SoftgemsSidebar",
+  data() {
+    return {
+      nav_items: [
+        { to: "/", title: "Home", icon: "house", match_type: "exact" },
+        { to: "/gems", title: "Gems", icon: "gem", match_type: "starts_with" },
+        {
+          to: "/selections",
+          title: "Selections",
+          icon: "card-list",
+          match_type: "starts_with",
+        },
+        {
+          to: "/contact",
+          title: "Contact",
+          icon: "people",
+          match_type: "starts_with",
+        },
+      ],
+    };
+  },
+  methods: {
+    isNavItemActive(nav_item) {
+      if (nav_item.match_type === "exact")
+        return this.$route.path === nav_item.to;
+      return this.$route.path.startsWith(nav_item.to);
+    },
+  },
 };
 </script>
 
 <style lang="scss" scoped>
 ._softgemsSidebar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
   width: 56px;
   display: flex;
   flex-direction: column;

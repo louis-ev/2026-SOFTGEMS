@@ -213,7 +213,7 @@ export default {
 
   --active-color: var(--c-noir);
 
-  --sl-font-mono: "Fira Mono";
+  --sl-font-mono: "IBM Plex Mono";
 
   --sl-font-size-normal: 1rem;
 

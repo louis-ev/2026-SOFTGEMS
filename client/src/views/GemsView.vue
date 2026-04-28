@@ -1,65 +1,64 @@
 <template>
   <div class="_gemsView">
-    <div class="_header">
-      <h1 class="_title">{{ $t("sg_all_gems") }}</h1>
-      <div class="_headerActions">
-        <router-link to="/" class="u-buttonLink">
-          {{ $t("sg_back_home") }}
-        </router-link>
-        <router-link to="/gems/new" class="u-buttonLink">
-          {{ $t("sg_create_gem") }}
-        </router-link>
-        <button
-          type="button"
-          class="u-button"
-          :disabled="is_generating_placeholders"
-          @click="generatePlaceholderGems"
-        >
-          {{
-            is_generating_placeholders
-              ? $t("sg_generating_placeholder_gems")
-              : $t("sg_generate_placeholder_gems")
-          }}
-        </button>
+    <div class="_gemsView--content">
+      <div class="_header">
+        <h1 class="_title">{{ $t("sg_all_gems") }}</h1>
+        <div class="_headerActions">
+          <router-link to="/gems/new" class="u-buttonLink">
+            {{ $t("sg_create_gem") }}
+          </router-link>
+          <button
+            type="button"
+            class="u-button"
+            :disabled="is_generating_placeholders"
+            @click="generatePlaceholderGems"
+          >
+            {{
+              is_generating_placeholders
+                ? $t("sg_generating_placeholder_gems")
+                : $t("sg_generate_placeholder_gems")
+            }}
+          </button>
+        </div>
       </div>
+
+      <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
+      <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
+      <table v-else class="_table">
+        <thead>
+          <tr>
+            <th v-for="metadata_key in metadata_keys" :key="metadata_key">
+              {{ getMetadataLabel(metadata_key) }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="sorted_gems.length === 0">
+            <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
+          </tr>
+          <tr
+            v-for="gem in sorted_gems"
+            :key="gem.$path"
+            class="_clickableRow"
+            :class="{
+              _selected: is_gem_open && getGemId(gem) === $route.params.gem_id,
+            }"
+            @click="openGem(gem)"
+          >
+            <td
+              v-for="metadata_key in metadata_keys"
+              :key="`${gem.$path}-${metadata_key}`"
+            >
+              <span class="_gemMetadataValue">{{
+                formatValue(resolveMetadataValue(gem, metadata_key))
+              }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
-    <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
-    <table v-else class="_table">
-      <thead>
-        <tr>
-          <th v-for="metadata_key in metadata_keys" :key="metadata_key">
-            {{ getMetadataLabel(metadata_key) }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="sorted_gems.length === 0">
-          <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
-        </tr>
-        <tr
-          v-for="gem in sorted_gems"
-          :key="gem.$path"
-          class="_clickableRow"
-          :class="{
-            _selected: is_gem_open && getGemId(gem) === $route.params.gem_id,
-          }"
-          @click="openGem(gem)"
-        >
-          <td
-            v-for="metadata_key in metadata_keys"
-            :key="`${gem.$path}-${metadata_key}`"
-          >
-            <code>{{
-              formatValue(resolveMetadataValue(gem, metadata_key))
-            }}</code>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <transition name="fade">
+    <transition name="fade_fast">
       <div v-if="is_gem_open" class="_gemOverlay" @click.self="closeGemPanel">
         <section class="_gemPanel">
           <router-view />
@@ -278,10 +277,17 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._gemsView {
-  margin: 0 auto;
   position: relative;
+  height: 100%;
+  overflow: auto;
 }
 
+._gemsView--content {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2);
+}
 ._title {
   margin: 0;
 }
@@ -332,11 +338,12 @@ export default {
 }
 
 ._gemOverlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.2);
   z-index: 30;
   padding-left: 15vw;
+  overflow: hidden;
 }
 
 ._gemPanel {
@@ -348,5 +355,10 @@ export default {
   overflow-x: hidden;
   overscroll-behavior: contain;
   padding: calc(var(--spacing) * 1.25);
+}
+
+._gemMetadataValue {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-font-size-x-small);
 }
 </style>
