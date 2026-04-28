@@ -1,7 +1,7 @@
 <template>
   <section class="_gemOpenView">
-    <div class="u-sameRow u-spacingBottom">
-      <h1>{{ gem_title }}</h1>
+    <div class="_pageHeader">
+      <h1 class="_pageTitle">{{ gem_title }}</h1>
       <button type="button" class="u-button" @click="goBack">
         {{ $t("sg_back") }}
       </button>
@@ -120,6 +120,7 @@ const display_fields = [
 ];
 
 export default {
+  name: "SGGemOpenView",
   props: {
     gem_id: {
       type: String,
@@ -270,7 +271,22 @@ export default {
 
 <style lang="scss" scoped>
 ._gemOpenView {
+  height: 100%;
+  overflow-y: auto;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
   max-width: 100%;
+  margin: 0;
+}
+
+._pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing);
+  margin-bottom: calc(var(--spacing) * 1);
+}
+
+._pageTitle {
   margin: 0;
 }
 

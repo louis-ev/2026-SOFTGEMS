@@ -1,7 +1,7 @@
 <template>
   <section class="_gemNewView">
-    <div class="u-sameRow u-spacingBottom">
-      <h1>{{ $t("sg_create_gem_title") }}</h1>
+    <div class="_pageHeader">
+      <h1 class="_pageTitle">{{ $t("sg_create_gem_title") }}</h1>
       <button type="button" class="u-button" @click="goBack">
         {{ $t("sg_back") }}
       </button>
@@ -155,6 +155,7 @@
 import { default_gem_fields } from "@/utils/gemDefaults";
 
 export default {
+  name: "SGGemNewView",
   data() {
     return {
       gems_path: "gems",
@@ -255,11 +256,26 @@ export default {
 
 <style lang="scss" scoped>
 ._gemNewView {
-  max-width: 720px;
-  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+}
+
+._pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing);
+  margin-bottom: calc(var(--spacing) * 1);
+}
+
+._pageTitle {
+  margin: 0;
 }
 
 ._form {
+  max-width: 720px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 1.5);

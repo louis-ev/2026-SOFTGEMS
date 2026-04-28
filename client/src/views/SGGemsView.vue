@@ -1,8 +1,8 @@
 <template>
   <div class="_gemsView">
     <div class="_gemsView--content">
-      <div class="_header">
-        <h1 class="_title">{{ $t("sg_all_gems") }}</h1>
+      <div class="_pageHeader">
+        <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
         <div class="_headerActions">
           <router-link to="/gems/new" class="u-buttonLink">
             {{ $t("sg_create_gem") }}
@@ -71,6 +71,7 @@
 import { default_gem_fields } from "@/utils/gemDefaults";
 
 export default {
+  name: "SGGemsView",
   data() {
     return {
       gems_path: "gems",
@@ -279,20 +280,20 @@ export default {
 ._gemsView {
   position: relative;
   height: 100%;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 ._gemsView--content {
   position: relative;
-  height: 100%;
-  overflow: auto;
-  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2);
+  min-height: 100%;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
-._title {
+
+._pageTitle {
   margin: 0;
 }
 
-._header {
+._pageHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,16 +1,17 @@
 <template>
-  <div class="_sgHome">
-    <h1 class="_pageTitle">{{ $t("sg_inventory") }}</h1>
-    <p class="_placeholderText">Home placeholder for now.</p>
-  </div>
+  <section class="_selectionsView">
+    <h1 class="_pageTitle">Selections</h1>
+  </section>
 </template>
+
 <script>
 export default {
-  name: "SGHomeView",
+  name: "SGSelectionsView",
 };
 </script>
+
 <style lang="scss" scoped>
-._sgHome {
+._selectionsView {
   height: 100%;
   overflow-y: auto;
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
@@ -19,10 +20,5 @@ export default {
 ._pageTitle {
   margin: 0;
   margin-bottom: calc(var(--spacing) * 1);
-}
-
-._placeholderText {
-  margin: 0;
-  color: var(--c-gris_fonce);
 }
 </style>

@@ -12,17 +12,17 @@ const routes = [
   {
     path: "/gems/new",
     name: "Create gem",
-    component: () => import("@/views/GemNewView.vue"),
+    component: () => import("@/views/SGGemNewView.vue"),
   },
   {
     path: "/gems",
     name: "Gems",
-    component: () => import("@/views/GemsView.vue"),
+    component: () => import("@/views/SGGemsView.vue"),
     children: [
       {
         path: ":gem_id",
         name: "Open gem",
-        component: () => import("@/views/GemOpenView.vue"),
+        component: () => import("@/views/SGGemOpenView.vue"),
         props: true,
       },
     ],
@@ -30,12 +30,12 @@ const routes = [
   {
     path: "/contact",
     name: "Contact",
-    component: () => import("@/views/ContactView.vue"),
+    component: () => import("@/views/SGContactView.vue"),
   },
   {
     path: "/selections",
     name: "Selections",
-    component: () => import("@/views/SelectionsView.vue"),
+    component: () => import("@/views/SGSelectionsView.vue"),
   },
   // {
   //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
