@@ -11,6 +11,7 @@
       <div class="_right">
         <!-- <span class="_routeLabel">{{ route_label }}</span> -->
         <router-link
+          v-if="connected_as"
           :to="author_url"
           class="u-button"
           :class="{ 'is--active': $route.path === author_url }"
@@ -18,6 +19,14 @@
           <b-icon icon="person-circle" />
           {{ author_name }}
         </router-link>
+        <button
+          v-else
+          type="button"
+          class="u-button"
+          @click="show_authors_modal = true"
+        >
+          {{ $t("login") }}
+        </button>
       </div>
     </div>
 

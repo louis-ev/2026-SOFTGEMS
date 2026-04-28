@@ -1,14 +1,10 @@
 <template>
   <div class="_sgHome">
-    <div class="u-sameRow u-spacingBottom">
+    <div class="_header">
       <h1 class="_title">INVENTORY</h1>
-      <button
-        type="button"
-        class="u-button u-button_bleuvert"
-        @click="openCreateView"
-      >
+      <router-link to="/gems/new" class="u-button u-button_bleuvert">
         Create gem
-      </button>
+      </router-link>
     </div>
 
     <div v-if="is_loading">Loading gems...</div>
@@ -32,7 +28,7 @@
         </tr>
       </tbody>
     </table>
-    <section class="_fontPreview">
+    <!-- <section class="_fontPreview">
       <h1>Typography Preview H1</h1>
       <h2>Typography Preview H2</h2>
       <h3>Typography Preview H3</h3>
@@ -47,7 +43,7 @@
       <p class="sg-data-number">
         Numeric sample: 12.50 ct - $15,450.00 - 48 pieces
       </p>
-    </section>
+    </section> -->
   </div>
 </template>
 <script>
@@ -96,12 +92,19 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._sgHome {
-  max-width: 960px;
+  // max-width: 960px;
   margin: 0 auto;
 }
 
 ._title {
   margin: 0;
+}
+
+._header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing);
 }
 
 ._table {

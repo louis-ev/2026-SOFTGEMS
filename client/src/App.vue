@@ -257,7 +257,7 @@ body {
 html {
   height: 100%;
 
-  font-family: "Krub", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   font-style: normal;
   font-weight: 400;
 
