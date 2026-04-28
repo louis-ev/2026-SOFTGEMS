@@ -1,24 +1,26 @@
 <template>
   <div class="_sgHome">
     <div class="_header">
-      <h1 class="_title">INVENTORY</h1>
+      <h1 class="_title">{{ $t("sg_inventory") }}</h1>
       <router-link to="/gems/new" class="u-buttonLink">
-        Create gem
+        {{ $t("sg_create_gem") }}
       </router-link>
     </div>
 
-    <div v-if="is_loading">Loading gems...</div>
+    <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <table v-else class="_table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Path</th>
+          <th>{{ $t("sg_gem") }}</th>
+          <th v-for="metadata_key in metadata_keys" :key="metadata_key">
+            {{ getMetadataLabel(metadata_key) }}
+          </th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="gems.length === 0">
-          <td colspan="2">No gems yet.</td>
+          <td :colspan="metadata_keys.length + 1">{{ $t("sg_no_gems_yet") }}</td>
         </tr>
         <tr v-for="gem in gems" :key="gem.$path">
           <td>
@@ -31,8 +33,13 @@
             </router-link>
             <span v-else>{{ gem.name || gem.title || "-" }}</span>
           </td>
-          <td>
-            <code>{{ gem.$path }}</code>
+          <td
+            v-for="metadata_key in metadata_keys"
+            :key="`${gem.$path}-${metadata_key}`"
+          >
+            <code>{{
+              formatValue(resolveMetadataValue(gem, metadata_key))
+            }}</code>
           </td>
         </tr>
       </tbody>
@@ -77,7 +84,60 @@ export default {
     this.$api.leave({ room: this.gems_path });
   },
   watch: {},
-  computed: {},
+  computed: {
+    metadata_keys() {
+      if (!Array.isArray(this.gems) || this.gems.length === 0) return [];
+
+      const ignored_keys = new Set([
+        "reference_id",
+        "name",
+        "title",
+        "$path",
+        "$date_created",
+        "$date_modified",
+        "$status",
+        "$admins",
+        "$contributors",
+      ]);
+      const known_order = [
+        "id",
+        "status",
+        "gem_type",
+        "color",
+        "origin",
+        "dimensions",
+        "weight_carat",
+        "piece_count",
+        "condition",
+        "treatment",
+        "purchase_price_usd",
+        "sale_price_usd",
+        "price_per_carat_usd",
+        "supplier",
+        "acquisition_date",
+        "country_of_cut",
+        "pair_gem_id",
+        "remarks",
+      ];
+      const metadata_key_set = new Set();
+
+      this.gems.forEach((gem) => {
+        Object.keys(gem || {}).forEach((key) => {
+          if (!ignored_keys.has(key)) metadata_key_set.add(key);
+        });
+      });
+      metadata_key_set.add("id");
+
+      return Array.from(metadata_key_set).sort((a, b) => {
+        const a_index = known_order.indexOf(a);
+        const b_index = known_order.indexOf(b);
+        const a_rank = a_index === -1 ? Number.MAX_SAFE_INTEGER : a_index;
+        const b_rank = b_index === -1 ? Number.MAX_SAFE_INTEGER : b_index;
+        if (a_rank !== b_rank) return a_rank - b_rank;
+        return a.localeCompare(b);
+      });
+    },
+  },
   methods: {
     async fetchGems() {
       this.is_loading = true;
@@ -88,7 +148,7 @@ export default {
           path: this.gems_path,
         });
       } catch ({ code }) {
-        this.fetch_error = code || "Could not load gems.";
+        this.fetch_error = code || this.$t("sg_could_not_load_gems");
       } finally {
         this.is_loading = false;
       }
@@ -101,6 +161,45 @@ export default {
       if (!gem_path) return "";
       const path_parts = gem_path.split("/");
       return path_parts[path_parts.length - 1] || "";
+    },
+    formatValue(value) {
+      if (value === null || value === undefined || value === "") return "-";
+      if (typeof value === "number")
+        return Number.isFinite(value) ? value : "-";
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+    },
+    resolveMetadataValue(gem, metadata_key) {
+      if (metadata_key === "id") return this.getGemId(gem);
+      return gem?.[metadata_key];
+    },
+    getMetadataLabel(metadata_key) {
+      const metadata_to_translation_key = {
+        id: "sg_id",
+        status: "sg_status",
+        gem_type: "sg_type",
+        color: "sg_color",
+        origin: "sg_origin",
+        dimensions: "sg_dimensions",
+        weight_carat: "sg_weight_carat",
+        piece_count: "sg_piece_count",
+        condition: "sg_condition",
+        treatment: "sg_treatment",
+        purchase_price_usd: "sg_purchase_price_usd",
+        sale_price_usd: "sg_sale_price_usd",
+        price_per_carat_usd: "sg_price_per_carat_usd",
+        supplier: "sg_supplier",
+        acquisition_date: "sg_acquisition_date",
+        country_of_cut: "sg_country_of_cut",
+        pair_gem_id: "sg_pair_gem_id",
+        remarks: "sg_remarks",
+        $path: "sg_path",
+        $date_created: "sg_created",
+        $date_modified: "sg_last_modified",
+      };
+      const translation_key = metadata_to_translation_key[metadata_key];
+      if (!translation_key) return metadata_key;
+      return this.$t(translation_key);
     },
   },
 };
@@ -126,12 +225,20 @@ export default {
 ._table {
   width: 100%;
   border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
 
   th,
   td {
     text-align: left;
     border-bottom: 1px solid var(--c-gris_clair);
     padding: calc(var(--spacing) / 2);
+    vertical-align: top;
+  }
+
+  code {
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 }
 

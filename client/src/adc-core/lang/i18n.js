@@ -8,7 +8,7 @@ const i18n = () => {
   Vue.use(VueI18n);
 
   let lang_settings = {
-    available: ["fr", "en", "it"],
+    available: ["en"],
     default: "en",
     current: "",
     init: function () {
@@ -40,17 +40,34 @@ const i18n = () => {
 
   const loadLangageFile = async (lang) => {
     let content = null;
-    if (lang === "fr") content = await import("@/adc-core/lang/fr.js");
-    else if (lang === "it") content = await import("@/adc-core/lang/it.js");
+    let custom_content = null;
+
+    if (lang === "fr") {
+      content = await import("@/adc-core/lang/fr.js");
+    } else if (lang === "it") {
+      content = await import("@/adc-core/lang/it.js");
+    }
     // else if (lang === "fon") content = await import("@/adc-core/lang/fon.js");
-    else content = await import("@/adc-core/lang/en.js");
-    return content.default;
+    else {
+      content = await import("@/adc-core/lang/en.js");
+      try {
+        custom_content = await import("@/adc-core/lang/en_softgems.js");
+      } catch (e) {
+        // No custom file
+      }
+    }
+
+    let messages = content.default;
+    if (custom_content) {
+      messages = { ...messages, ...custom_content.default };
+    }
+    return messages;
   };
 
   const i18n = new VueI18n({
     locale: lang_settings.current, // set locale
     fallbackLocale: {
-      fon: ["fr"],
+      // fon: ["fr"],
       default: ["en"],
     },
   });

@@ -1,8 +1,10 @@
 <template>
   <section class="_gemNewView">
     <div class="u-sameRow u-spacingBottom">
-      <h1>Create gem</h1>
-      <button type="button" class="u-button" @click="goBack">Back</button>
+      <h1>{{ $t("sg_create_gem_title") }}</h1>
+      <button type="button" class="u-button" @click="goBack">
+        {{ $t("sg_back") }}
+      </button>
     </div>
 
     <form class="_form" @submit.prevent="createGem">
@@ -16,40 +18,33 @@
 
       <div class="_fieldsGrid">
         <div>
-          <DLabel str="Reference ID" />
-          <TextInput
-            :content.sync="new_gem_fields.reference_id"
-            :required="false"
-          />
-        </div>
-        <div>
-          <DLabel str="Status" />
+          <DLabel :str="$t('sg_status')" />
           <TextInput :content.sync="new_gem_fields.status" :required="false" />
         </div>
         <div>
-          <DLabel str="Type" />
+          <DLabel :str="$t('sg_type')" />
           <TextInput
             :content.sync="new_gem_fields.gem_type"
             :required="false"
           />
         </div>
         <div>
-          <DLabel str="Color" />
+          <DLabel :str="$t('sg_color')" />
           <TextInput :content.sync="new_gem_fields.color" :required="false" />
         </div>
         <div>
-          <DLabel str="Origin" />
+          <DLabel :str="$t('sg_origin')" />
           <TextInput :content.sync="new_gem_fields.origin" :required="false" />
         </div>
         <div>
-          <DLabel str="Dimensions" />
+          <DLabel :str="$t('sg_dimensions')" />
           <TextInput
             :content.sync="new_gem_fields.dimensions"
             :required="false"
           />
         </div>
         <div>
-          <DLabel str="Weight (ct)" />
+          <DLabel :str="$t('sg_weight_carat')" />
           <TextInput
             :content.sync="new_gem_fields.weight_carat"
             :required="false"
@@ -57,7 +52,7 @@
           />
         </div>
         <div>
-          <DLabel str="Piece count" />
+          <DLabel :str="$t('sg_piece_count')" />
           <TextInput
             :content.sync="new_gem_fields.piece_count"
             :required="false"
@@ -65,21 +60,21 @@
           />
         </div>
         <div>
-          <DLabel str="Condition" />
+          <DLabel :str="$t('sg_condition')" />
           <TextInput
             :content.sync="new_gem_fields.condition"
             :required="false"
           />
         </div>
         <div>
-          <DLabel str="Treatment" />
+          <DLabel :str="$t('sg_treatment')" />
           <TextInput
             :content.sync="new_gem_fields.treatment"
             :required="false"
           />
         </div>
         <div>
-          <DLabel str="Purchase price (USD)" />
+          <DLabel :str="$t('sg_purchase_price_usd')" />
           <TextInput
             :content.sync="new_gem_fields.purchase_price_usd"
             :required="false"
@@ -87,7 +82,7 @@
           />
         </div>
         <div>
-          <DLabel str="Sale price (USD)" />
+          <DLabel :str="$t('sg_sale_price_usd')" />
           <TextInput
             :content.sync="new_gem_fields.sale_price_usd"
             :required="false"
@@ -95,7 +90,7 @@
           />
         </div>
         <div>
-          <DLabel str="Price per carat (USD)" />
+          <DLabel :str="$t('sg_price_per_carat_usd')" />
           <TextInput
             :content.sync="new_gem_fields.price_per_carat_usd"
             :required="false"
@@ -103,14 +98,14 @@
           />
         </div>
         <div>
-          <DLabel str="Supplier" />
+          <DLabel :str="$t('sg_supplier')" />
           <TextInput
             :content.sync="new_gem_fields.supplier"
             :required="false"
           />
         </div>
         <div>
-          <DLabel str="Acquisition date" />
+          <DLabel :str="$t('sg_acquisition_date')" />
           <TextInput
             :content.sync="new_gem_fields.acquisition_date"
             :required="false"
@@ -118,14 +113,14 @@
           />
         </div>
         <div>
-          <DLabel str="Country of cut (COC)" />
+          <DLabel :str="$t('sg_country_of_cut')" />
           <TextInput
             :content.sync="new_gem_fields.country_of_cut"
             :required="false"
           />
         </div>
         <div>
-          <DLabel str="Pair gem ID" />
+          <DLabel :str="$t('sg_pair_gem_id')" />
           <TextInput
             :content.sync="new_gem_fields.pair_gem_id"
             :required="false"
@@ -134,18 +129,22 @@
       </div>
 
       <div>
-        <DLabel str="Remarks" />
+        <DLabel :str="$t('sg_remarks')" />
         <textarea v-model="new_gem_fields.remarks" class="_textarea" rows="4" />
       </div>
 
       <div class="_actions">
-        <button type="button" class="u-button" @click="goBack">Cancel</button>
+        <button type="button" class="u-button" @click="goBack">
+          {{ $t("sg_cancel") }}
+        </button>
         <button
           type="submit"
           class="u-button u-button_bleuvert"
           :disabled="is_creating || !new_gem_name.trim()"
         >
-          {{ is_creating ? "Creating..." : "Create gem" }}
+          {{
+            is_creating ? $t("sg_create_gem_in_progress") : $t("sg_create_gem")
+          }}
         </button>
       </div>
     </form>
@@ -192,7 +191,9 @@ export default {
         if (new_gem_slug) this.$router.push(`/gems/${new_gem_slug}`);
         else this.$router.push("/");
       } catch ({ code }) {
-        this.$alertify.delay(4000).error(code || "Could not create gem.");
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_could_not_create_gem"));
       } finally {
         this.is_creating = false;
       }
@@ -204,7 +205,6 @@ export default {
       };
 
       const string_field_keys = [
-        "reference_id",
         "status",
         "color",
         "origin",

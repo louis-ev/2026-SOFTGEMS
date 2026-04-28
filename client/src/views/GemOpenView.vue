@@ -2,10 +2,12 @@
   <section class="_gemOpenView">
     <div class="u-sameRow u-spacingBottom">
       <h1>{{ gem_title }}</h1>
-      <button type="button" class="u-button" @click="goHome">Back</button>
+      <button type="button" class="u-button" @click="goHome">
+        {{ $t("sg_back") }}
+      </button>
     </div>
 
-    <div v-if="is_loading">Loading gem...</div>
+    <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <template v-else>
       <div class="_actions u-spacingBottom">
@@ -15,7 +17,9 @@
           :disabled="is_removing"
           @click="removeGem"
         >
-          {{ is_removing ? "Removing..." : "Remove gem" }}
+          {{
+            is_removing ? $t("sg_remove_gem_in_progress") : $t("sg_remove_gem")
+          }}
         </button>
       </div>
 
@@ -31,31 +35,31 @@
 
 <script>
 const field_labels = {
-  reference_id: "Reference ID",
-  status: "Status",
-  gem_type: "Type",
-  color: "Color",
-  origin: "Origin",
-  dimensions: "Dimensions",
-  weight_carat: "Weight (ct)",
-  piece_count: "Piece count",
-  condition: "Condition",
-  treatment: "Treatment",
-  purchase_price_usd: "Purchase price (USD)",
-  sale_price_usd: "Sale price (USD)",
-  price_per_carat_usd: "Price per carat (USD)",
-  supplier: "Supplier",
-  acquisition_date: "Acquisition date",
-  country_of_cut: "Country of cut (COC)",
-  pair_gem_id: "Pair gem ID",
-  remarks: "Remarks",
-  $path: "Path",
-  $date_created: "Created",
-  $date_modified: "Last modified",
+  id: "sg_id",
+  status: "sg_status",
+  gem_type: "sg_type",
+  color: "sg_color",
+  origin: "sg_origin",
+  dimensions: "sg_dimensions",
+  weight_carat: "sg_weight_carat",
+  piece_count: "sg_piece_count",
+  condition: "sg_condition",
+  treatment: "sg_treatment",
+  purchase_price_usd: "sg_purchase_price_usd",
+  sale_price_usd: "sg_sale_price_usd",
+  price_per_carat_usd: "sg_price_per_carat_usd",
+  supplier: "sg_supplier",
+  acquisition_date: "sg_acquisition_date",
+  country_of_cut: "sg_country_of_cut",
+  pair_gem_id: "sg_pair_gem_id",
+  remarks: "sg_remarks",
+  $path: "sg_path",
+  $date_created: "sg_created",
+  $date_modified: "sg_last_modified",
 };
 
 const display_order = [
-  "reference_id",
+  "id",
   "status",
   "gem_type",
   "color",
@@ -99,15 +103,15 @@ export default {
       return `${this.gems_path}/${this.gem_id}`;
     },
     gem_title() {
-      if (!this.gem) return "Gem";
+      if (!this.gem) return this.$t("sg_open_gem_title");
       return this.gem.name || this.gem.title || this.gem_id;
     },
     metadata_items() {
       if (!this.gem) return [];
       return display_order.map((key) => ({
         key,
-        label: field_labels[key] || key,
-        value: this.formatValue(this.gem[key]),
+        label: this.getFieldLabel(key),
+        value: this.formatValue(this.getFieldValue(key)),
       }));
     },
   },
@@ -132,7 +136,7 @@ export default {
           path: this.gem_path,
         });
       } catch ({ code }) {
-        this.fetch_error = code || "Could not load gem.";
+        this.fetch_error = code || this.$t("sg_could_not_load_gem");
       } finally {
         this.is_loading = false;
       }
@@ -141,7 +145,7 @@ export default {
       if (!this.gem || this.is_removing) return;
 
       const should_remove = window.confirm(
-        `Remove "${this.gem_title}" permanently?`
+        this.$t("sg_remove_gem_confirm", { name: this.gem_title })
       );
       if (!should_remove) return;
 
@@ -152,14 +156,26 @@ export default {
         });
         this.$router.push("/");
       } catch ({ code }) {
-        this.$alertify.delay(4000).error(code || "Could not remove gem.");
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_could_not_remove_gem"));
       } finally {
         this.is_removing = false;
       }
     },
+    getFieldLabel(field_key) {
+      const translation_key = field_labels[field_key];
+      if (!translation_key) return field_key;
+      return this.$t(translation_key);
+    },
+    getFieldValue(field_key) {
+      if (field_key === "id") return this.gem_id;
+      return this.gem?.[field_key];
+    },
     formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";
-      if (typeof value === "number") return Number.isFinite(value) ? value : "-";
+      if (typeof value === "number")
+        return Number.isFinite(value) ? value : "-";
       if (typeof value === "object") return JSON.stringify(value);
       return String(value);
     },

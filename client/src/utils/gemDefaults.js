@@ -1,5 +1,4 @@
 export const default_gem_fields = {
-  reference_id: "",
   status: "available",
   color: "",
   origin: "",
