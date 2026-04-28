@@ -22,11 +22,29 @@
           }}
         </button>
       </div>
-
       <dl class="_metaGrid">
         <div class="_metaItem" v-for="item in metadata_items" :key="item.key">
           <dt>{{ item.label }}</dt>
-          <dd>{{ item.value }}</dd>
+          <dd>
+            <SelectField
+              v-if="item.editor === 'select'"
+              :field_name="item.key"
+              :content="item.raw_value"
+              :options="item.options"
+              :can_edit="can_edit"
+              @update="saveMetaField(item.key, $event)"
+            />
+            <TitleField
+              v-else-if="item.editor === 'titlefield'"
+              :show_label="false"
+              :field_name="item.key"
+              :content="item.raw_value"
+              :input_type="item.input_type"
+              :can_edit="can_edit"
+              @save="saveMetaField(item.key, $event)"
+            />
+            <span v-else>{{ item.value }}</span>
+          </dd>
         </div>
       </dl>
     </template>
@@ -34,52 +52,71 @@
 </template>
 
 <script>
-const field_labels = {
-  id: "sg_id",
-  status: "sg_status",
-  gem_type: "sg_type",
-  color: "sg_color",
-  origin: "sg_origin",
-  dimensions: "sg_dimensions",
-  weight_carat: "sg_weight_carat",
-  piece_count: "sg_piece_count",
-  condition: "sg_condition",
-  treatment: "sg_treatment",
-  purchase_price_usd: "sg_purchase_price_usd",
-  sale_price_usd: "sg_sale_price_usd",
-  price_per_carat_usd: "sg_price_per_carat_usd",
-  supplier: "sg_supplier",
-  acquisition_date: "sg_acquisition_date",
-  country_of_cut: "sg_country_of_cut",
-  pair_gem_id: "sg_pair_gem_id",
-  remarks: "sg_remarks",
-  $path: "sg_path",
-  $date_created: "sg_created",
-  $date_modified: "sg_last_modified",
-};
-
-const display_order = [
-  "id",
-  "status",
-  "gem_type",
-  "color",
-  "origin",
-  "dimensions",
-  "weight_carat",
-  "piece_count",
-  "condition",
-  "treatment",
-  "purchase_price_usd",
-  "sale_price_usd",
-  "price_per_carat_usd",
-  "supplier",
-  "acquisition_date",
-  "country_of_cut",
-  "pair_gem_id",
-  "remarks",
-  "$path",
-  "$date_created",
-  "$date_modified",
+const display_fields = [
+  { key: "id", label_key: "sg_id", editor: null },
+  {
+    key: "status",
+    label_key: "sg_status",
+    editor: "select",
+    options: [
+      { key: "available", text: "available" },
+      { key: "reserved", text: "reserved" },
+      { key: "sold", text: "sold" },
+    ],
+  },
+  { key: "gem_type", label_key: "sg_type", editor: "titlefield" },
+  { key: "color", label_key: "sg_color", editor: "titlefield" },
+  { key: "origin", label_key: "sg_origin", editor: "titlefield" },
+  { key: "dimensions", label_key: "sg_dimensions", editor: "titlefield" },
+  {
+    key: "weight_carat",
+    label_key: "sg_weight_carat",
+    editor: "titlefield",
+    input_type: "number",
+  },
+  {
+    key: "piece_count",
+    label_key: "sg_piece_count",
+    editor: "titlefield",
+    input_type: "number",
+  },
+  { key: "condition", label_key: "sg_condition", editor: "titlefield" },
+  { key: "treatment", label_key: "sg_treatment", editor: "titlefield" },
+  {
+    key: "purchase_price_usd",
+    label_key: "sg_purchase_price_usd",
+    editor: "titlefield",
+    input_type: "number",
+  },
+  {
+    key: "sale_price_usd",
+    label_key: "sg_sale_price_usd",
+    editor: "titlefield",
+    input_type: "number",
+  },
+  {
+    key: "price_per_carat_usd",
+    label_key: "sg_price_per_carat_usd",
+    editor: "titlefield",
+    input_type: "number",
+  },
+  { key: "supplier", label_key: "sg_supplier", editor: "titlefield" },
+  {
+    key: "acquisition_date",
+    label_key: "sg_acquisition_date",
+    editor: "titlefield",
+    input_type: "date",
+  },
+  {
+    key: "country_of_cut",
+    label_key: "sg_country_of_cut",
+    editor: "titlefield",
+  },
+  { key: "pair_gem_id", label_key: "sg_pair_gem_id", editor: "titlefield" },
+  { key: "remarks", label_key: "sg_remarks", editor: "titlefield" },
+  { key: "$path", label_key: "sg_path", editor: null },
+  { key: "$date_created", label_key: "sg_created", editor: null },
+  { key: "$date_modified", label_key: "sg_last_modified", editor: null },
 ];
 
 export default {
@@ -99,20 +136,29 @@ export default {
     };
   },
   computed: {
+    can_edit() {
+      return true;
+    },
     gem_path() {
       return `${this.gems_path}/${this.gem_id}`;
     },
     gem_title() {
       if (!this.gem) return this.$t("sg_open_gem_title");
-      return this.gem.name || this.gem.title || this.gem_id;
+      return this.gem.reference_id || this.gem_id;
     },
     metadata_items() {
       if (!this.gem) return [];
-      return display_order.map((key) => ({
-        key,
-        label: this.getFieldLabel(key),
-        value: this.formatValue(this.getFieldValue(key)),
-      }));
+      return display_fields.map((field) => {
+        const raw_value = this.getFieldValue(field.key);
+        return {
+          ...field,
+          label: this.$t(field.label_key),
+          raw_value,
+          value: this.formatValue(raw_value),
+          input_type: field.input_type || "text",
+          options: field.options || [],
+        };
+      });
     },
   },
   async created() {
@@ -163,14 +209,49 @@ export default {
         this.is_removing = false;
       }
     },
-    getFieldLabel(field_key) {
-      const translation_key = field_labels[field_key];
-      if (!translation_key) return field_key;
-      return this.$t(translation_key);
+    async saveMetaField(field_key, field_value) {
+      if (!this.gem) return;
+
+      const normalized_field_value = this.normalizeFieldValue({
+        field_key,
+        field_value,
+      });
+
+      try {
+        await this.$api.updateMeta({
+          path: this.gem_path,
+          new_meta: {
+            [field_key]: normalized_field_value,
+          },
+        });
+
+        this.gem = {
+          ...this.gem,
+          [field_key]: normalized_field_value,
+        };
+      } catch ({ code }) {
+        this.$alertify.delay(4000).error(code || this.$t("couldntbesaved"));
+      }
     },
     getFieldValue(field_key) {
       if (field_key === "id") return this.gem_id;
       return this.gem?.[field_key];
+    },
+    normalizeFieldValue({ field_key, field_value }) {
+      const number_fields = [
+        "weight_carat",
+        "piece_count",
+        "purchase_price_usd",
+        "sale_price_usd",
+        "price_per_carat_usd",
+      ];
+      if (number_fields.includes(field_key)) {
+        const numeric_value = Number(field_value);
+        if (Number.isFinite(numeric_value)) return numeric_value;
+        return 0;
+      }
+      if (typeof field_value === "string") return field_value.trim();
+      return field_value;
     },
     formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";

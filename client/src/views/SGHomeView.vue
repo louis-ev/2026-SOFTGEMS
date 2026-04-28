@@ -12,7 +12,6 @@
     <table v-else class="_table">
       <thead>
         <tr>
-          <th>{{ $t("sg_gem") }}</th>
           <th v-for="metadata_key in metadata_keys" :key="metadata_key">
             {{ getMetadataLabel(metadata_key) }}
           </th>
@@ -20,19 +19,14 @@
       </thead>
       <tbody>
         <tr v-if="gems.length === 0">
-          <td :colspan="metadata_keys.length + 1">{{ $t("sg_no_gems_yet") }}</td>
+          <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
         </tr>
-        <tr v-for="gem in gems" :key="gem.$path">
-          <td>
-            <router-link
-              v-if="getGemId(gem)"
-              :to="`/gems/${getGemId(gem)}`"
-              class="_gemLink"
-            >
-              {{ gem.name || gem.title || "-" }}
-            </router-link>
-            <span v-else>{{ gem.name || gem.title || "-" }}</span>
-          </td>
+        <tr
+          v-for="gem in gems"
+          :key="gem.$path"
+          class="_clickableRow"
+          @click="openGem(gem)"
+        >
           <td
             v-for="metadata_key in metadata_keys"
             :key="`${gem.$path}-${metadata_key}`"
@@ -153,14 +147,16 @@ export default {
         this.is_loading = false;
       }
     },
-    openCreateView() {
-      this.$router.push("/gems/new");
-    },
     getGemId(gem) {
       const gem_path = gem?.$path || "";
       if (!gem_path) return "";
       const path_parts = gem_path.split("/");
       return path_parts[path_parts.length - 1] || "";
+    },
+    openGem(gem) {
+      const gem_id = this.getGemId(gem);
+      if (!gem_id) return;
+      this.$router.push(`/gems/${gem_id}`);
     },
     formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";
@@ -242,9 +238,12 @@ export default {
   }
 }
 
-._gemLink {
-  color: inherit;
-  text-decoration: underline;
+._clickableRow {
+  cursor: pointer;
+}
+
+._clickableRow:hover {
+  background: var(--c-gris_clair);
 }
 
 ._fontPreview {
