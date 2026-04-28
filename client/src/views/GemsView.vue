@@ -193,7 +193,9 @@ export default {
               origin: "unknown",
               dimensions: "10 x 8 x 6 mm",
               weight_carat: Number((Math.random() * 4 + 0.8).toFixed(2)),
-              purchase_price_usd: Number((Math.random() * 1200 + 100).toFixed(2)),
+              purchase_price_usd: Number(
+                (Math.random() * 1200 + 100).toFixed(2)
+              ),
               sale_price_usd: Number((Math.random() * 2400 + 300).toFixed(2)),
               supplier: "Placeholder supplier",
               remarks: "Auto-generated placeholder gem",
@@ -202,7 +204,9 @@ export default {
         }
 
         await this.fetchGems();
-        this.$alertify.delay(3500).success(this.$t("sg_generated_placeholder_gems"));
+        this.$alertify
+          .delay(3500)
+          .success(this.$t("sg_generated_placeholder_gems"));
       } catch ({ code }) {
         this.$alertify
           .delay(4000)
@@ -325,17 +329,17 @@ export default {
   inset: 0;
   background: rgba(0, 0, 0, 0.2);
   z-index: 30;
-  padding: calc(var(--spacing) * 1.5) 5vw;
+  padding-left: 15vw;
 }
 
 ._gemPanel {
-  width: min(90vw, 1200px);
-  margin-left: 10vw;
-  max-height: calc(100vh - calc(var(--spacing) * 3));
-  overflow-y: auto;
+  width: 100%;
+
   background: var(--c-bodybg);
-  border-radius: 12px;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: calc(var(--spacing) * 1.25);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.16);
 }
 </style>
