@@ -17,7 +17,10 @@
       <div class="_fieldsGrid">
         <div>
           <DLabel str="Reference ID" />
-          <TextInput :content.sync="new_gem_fields.reference_id" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.reference_id"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Status" />
@@ -25,7 +28,10 @@
         </div>
         <div>
           <DLabel str="Type" />
-          <TextInput :content.sync="new_gem_fields.gem_type" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.gem_type"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Color" />
@@ -37,7 +43,10 @@
         </div>
         <div>
           <DLabel str="Dimensions" />
-          <TextInput :content.sync="new_gem_fields.dimensions" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.dimensions"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Weight (ct)" />
@@ -57,11 +66,17 @@
         </div>
         <div>
           <DLabel str="Condition" />
-          <TextInput :content.sync="new_gem_fields.condition" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.condition"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Treatment" />
-          <TextInput :content.sync="new_gem_fields.treatment" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.treatment"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Purchase price (USD)" />
@@ -89,7 +104,10 @@
         </div>
         <div>
           <DLabel str="Supplier" />
-          <TextInput :content.sync="new_gem_fields.supplier" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.supplier"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Acquisition date" />
@@ -101,11 +119,17 @@
         </div>
         <div>
           <DLabel str="Country of cut (COC)" />
-          <TextInput :content.sync="new_gem_fields.country_of_cut" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.country_of_cut"
+            :required="false"
+          />
         </div>
         <div>
           <DLabel str="Pair gem ID" />
-          <TextInput :content.sync="new_gem_fields.pair_gem_id" :required="false" />
+          <TextInput
+            :content.sync="new_gem_fields.pair_gem_id"
+            :required="false"
+          />
         </div>
       </div>
 
@@ -148,7 +172,9 @@ export default {
       const cleaned_name = this.new_gem_name.trim();
       if (!cleaned_name || this.is_creating) return;
 
-      const normalized_gem_fields = this.normalizeGemFields(this.new_gem_fields);
+      const normalized_gem_fields = this.normalizeGemFields(
+        this.new_gem_fields
+      );
 
       this.is_creating = true;
       try {
@@ -157,7 +183,7 @@ export default {
           additional_meta: {
             title: cleaned_name,
             name: cleaned_name,
-            requested_slug: cleaned_name,
+            requested_slug: "",
             ...normalized_gem_fields,
           },
         });
@@ -190,7 +216,9 @@ export default {
         "remarks",
       ];
       string_field_keys.forEach((field_key) => {
-        normalized_fields[field_key] = this.cleanString(normalized_fields[field_key]);
+        normalized_fields[field_key] = this.cleanString(
+          normalized_fields[field_key]
+        );
       });
 
       const number_field_keys = [
