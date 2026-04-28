@@ -42,6 +42,9 @@
           v-for="gem in sorted_gems"
           :key="gem.$path"
           class="_clickableRow"
+          :class="{
+            _selected: is_gem_open && getGemId(gem) === $route.params.gem_id,
+          }"
           @click="openGem(gem)"
         >
           <td
@@ -318,6 +321,10 @@ export default {
 
 ._clickableRow {
   cursor: pointer;
+
+  &._selected {
+    background: var(--c-gris_clair);
+  }
 }
 
 ._clickableRow:hover {
