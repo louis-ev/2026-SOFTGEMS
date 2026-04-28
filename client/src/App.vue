@@ -211,7 +211,7 @@ export default {
   --color-make: var(--c-bleumarine);
   --color-publish: var(--c-bleuvert);
 
-  --active-color: var(--c-bleuvert);
+  --active-color: var(--c-noir);
 
   --sl-font-mono: "Fira Mono";
 

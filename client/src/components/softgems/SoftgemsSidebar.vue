@@ -53,8 +53,7 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 2);
   padding: calc(var(--spacing) * 1);
-  background: #1f1f1f;
-  border-right: 1px solid var(--c-gris_clair);
+  background: var(--c-vert);
   z-index: 3;
 }
 
@@ -65,7 +64,6 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #f5f5f5;
   text-decoration: none;
   transition: background-color 150ms ease, color 150ms ease;
 }

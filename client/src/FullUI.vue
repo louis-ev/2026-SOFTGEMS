@@ -19,13 +19,11 @@
           <SoftgemsTopbar />
           <div class="_mainContent">
             <SoftgemsSidebar />
-            <!-- <transition name="pagetransition" mode="out-in"> -->
             <div class="_routerView">
               <router-view class="" v-slot="{ Component }">
                 <component :is="Component" />
               </router-view>
             </div>
-            <!-- </transition> -->
           </div>
           <!-- <TaskTracker /> -->
         </template>
@@ -129,11 +127,16 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._fullUI {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
 }
 
 ._mainContent {
   position: relative;
+  min-height: calc(100dvh - 61px);
   padding: calc(var(--spacing) * 2);
   padding-left: calc(var(--spacing) * 2 + 56px);
+  overflow-y: auto;
 }
 </style>

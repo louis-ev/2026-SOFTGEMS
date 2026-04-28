@@ -63,11 +63,8 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._softgemsTopbar {
-  position: sticky;
-  top: 0;
-  z-index: 4;
-  background: #333;
-  border-bottom: 1px solid var(--c-gris_clair);
+  background: var(--c-noir);
+  // border-bottom: 1px solid var(--c-gris_clair);
 }
 
 ._inner {
