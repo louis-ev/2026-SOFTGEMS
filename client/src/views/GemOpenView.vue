@@ -2,7 +2,7 @@
   <section class="_gemOpenView">
     <div class="u-sameRow u-spacingBottom">
       <h1>{{ gem_title }}</h1>
-      <button type="button" class="u-button" @click="goHome">
+      <button type="button" class="u-button" @click="goBack">
         {{ $t("sg_back") }}
       </button>
     </div>
@@ -171,7 +171,11 @@ export default {
     this.$api.leave({ room: this.gem_path });
   },
   methods: {
-    goHome() {
+    goBack() {
+      if (this.$route.path.startsWith("/gems/")) {
+        this.$router.push("/gems");
+        return;
+      }
       this.$router.push("/");
     },
     async fetchGem() {
@@ -266,8 +270,8 @@ export default {
 
 <style lang="scss" scoped>
 ._gemOpenView {
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
 }
 
 ._actions {

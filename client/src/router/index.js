@@ -15,10 +15,17 @@ const routes = [
     component: () => import("@/views/GemNewView.vue"),
   },
   {
-    path: "/gems/:gem_id",
-    name: "Open gem",
-    component: () => import("@/views/GemOpenView.vue"),
-    props: true,
+    path: "/gems",
+    name: "Gems",
+    component: () => import("@/views/GemsView.vue"),
+    children: [
+      {
+        path: ":gem_id",
+        name: "Open gem",
+        component: () => import("@/views/GemOpenView.vue"),
+        props: true,
+      },
+    ],
   },
   // {
   //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
@@ -73,6 +80,10 @@ const router = new VueRouter({
   base: "/",
   routes,
   scrollBehavior(to, from, savedPosition) {
+    const navigating_within_gems =
+      to.path.startsWith("/gems") && from.path.startsWith("/gems");
+    if (navigating_within_gems) return false;
+
     return new Promise((resolve, reject) => {
       // only if changing page and not just query or hash
       if (to.path !== from.path) {

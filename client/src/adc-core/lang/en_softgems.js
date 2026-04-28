@@ -1,6 +1,9 @@
 export default {
   sg_inventory: "Inventory",
+  sg_all_gems: "All gems",
   sg_create_gem: "Create gem",
+  sg_see_all_gems: "See all gems",
+  sg_back_home: "Back to home",
   sg_create_gem_title: "Create gem",
   sg_open_gem_title: "Gem",
   sg_gem: "Gem",
@@ -10,6 +13,11 @@ export default {
   sg_could_not_load_gems: "Could not load gems.",
   sg_could_not_load_gem: "Could not load gem.",
   sg_could_not_create_gem: "Could not create gem.",
+  sg_generate_placeholder_gems: "Generate 10 placeholder gems",
+  sg_generating_placeholder_gems: "Generating placeholders...",
+  sg_generated_placeholder_gems: "Generated 10 placeholder gems.",
+  sg_could_not_generate_placeholder_gems:
+    "Could not generate placeholder gems.",
   sg_could_not_remove_gem: "Could not remove gem.",
   sg_cancel: "Cancel",
   sg_create_gem_in_progress: "Creating...",

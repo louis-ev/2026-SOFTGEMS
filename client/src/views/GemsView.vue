@@ -1,14 +1,26 @@
 <template>
-  <div class="_sgHome">
+  <div class="_gemsView">
     <div class="_header">
-      <h1 class="_title">{{ $t("sg_inventory") }}</h1>
+      <h1 class="_title">{{ $t("sg_all_gems") }}</h1>
       <div class="_headerActions">
+        <router-link to="/" class="u-buttonLink">
+          {{ $t("sg_back_home") }}
+        </router-link>
         <router-link to="/gems/new" class="u-buttonLink">
           {{ $t("sg_create_gem") }}
         </router-link>
-        <router-link to="/gems" class="u-buttonLink">
-          {{ $t("sg_see_all_gems") }}
-        </router-link>
+        <button
+          type="button"
+          class="u-button"
+          :disabled="is_generating_placeholders"
+          @click="generatePlaceholderGems"
+        >
+          {{
+            is_generating_placeholders
+              ? $t("sg_generating_placeholder_gems")
+              : $t("sg_generate_placeholder_gems")
+          }}
+        </button>
       </div>
     </div>
 
@@ -23,11 +35,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-if="latest_gems.length === 0">
+        <tr v-if="sorted_gems.length === 0">
           <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
         </tr>
         <tr
-          v-for="gem in latest_gems"
+          v-for="gem in sorted_gems"
           :key="gem.$path"
           class="_clickableRow"
           @click="openGem(gem)"
@@ -43,33 +55,26 @@
         </tr>
       </tbody>
     </table>
-    <!-- <section class="_fontPreview">
-      <h1>Typography Preview H1</h1>
-      <h2>Typography Preview H2</h2>
-      <h3>Typography Preview H3</h3>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum sed
-        dui turpis. Praesent finibus, arcu id feugiat facilisis, elit sem
-        elementum justo, sed tempor neque justo eu mauris.
-      </p>
-      <p class="sg-content-emphasis">
-        This line uses content emphasis style to preview Spectral 500.
-      </p>
-      <p class="sg-data-number">
-        Numeric sample: 12.50 ct - $15,450.00 - 48 pieces
-      </p>
-    </section> -->
+
+    <transition name="fade">
+      <div v-if="is_gem_open" class="_gemOverlay" @click.self="closeGemPanel">
+        <section class="_gemPanel">
+          <router-view />
+        </section>
+      </div>
+    </transition>
   </div>
 </template>
 <script>
+import { default_gem_fields } from "@/utils/gemDefaults";
+
 export default {
-  props: {},
-  components: {},
   data() {
     return {
       gems_path: "gems",
       gems: [],
       is_loading: false,
+      is_generating_placeholders: false,
       fetch_error: "",
     };
   },
@@ -82,8 +87,10 @@ export default {
   beforeDestroy() {
     this.$api.leave({ room: this.gems_path });
   },
-  watch: {},
   computed: {
+    is_gem_open() {
+      return this.$route.name === "Open gem";
+    },
     metadata_keys() {
       if (!Array.isArray(this.gems) || this.gems.length === 0) return [];
 
@@ -136,14 +143,17 @@ export default {
         return a.localeCompare(b);
       });
     },
-    latest_gems() {
+    sorted_gems() {
       if (!Array.isArray(this.gems)) return [];
-      return [...this.gems]
-        .sort((a, b) => this.getGemTimestamp(b) - this.getGemTimestamp(a))
-        .slice(0, 10);
+      return [...this.gems].sort(
+        (a, b) => this.getGemTimestamp(b) - this.getGemTimestamp(a)
+      );
     },
   },
   methods: {
+    closeGemPanel() {
+      this.$router.push("/gems");
+    },
     async fetchGems() {
       this.is_loading = true;
       this.fetch_error = "";
@@ -158,11 +168,59 @@ export default {
         this.is_loading = false;
       }
     },
+    async generatePlaceholderGems() {
+      if (this.is_generating_placeholders) return;
+
+      this.is_generating_placeholders = true;
+      const batch_id = Date.now();
+
+      try {
+        for (let index = 1; index <= 10; index += 1) {
+          const gem_number = String(index).padStart(2, "0");
+          const placeholder_name = `Placeholder Gem ${gem_number}`;
+
+          await this.$api.createFolder({
+            path: this.gems_path,
+            additional_meta: {
+              title: `${placeholder_name} ${batch_id}`,
+              name: `${placeholder_name} ${batch_id}`,
+              $status: "public",
+              $admins: "everyone",
+              $contributors: "everyone",
+              ...default_gem_fields,
+              gem_type: "placeholder",
+              color: "mixed",
+              origin: "unknown",
+              dimensions: "10 x 8 x 6 mm",
+              weight_carat: Number((Math.random() * 4 + 0.8).toFixed(2)),
+              purchase_price_usd: Number((Math.random() * 1200 + 100).toFixed(2)),
+              sale_price_usd: Number((Math.random() * 2400 + 300).toFixed(2)),
+              supplier: "Placeholder supplier",
+              remarks: "Auto-generated placeholder gem",
+            },
+          });
+        }
+
+        await this.fetchGems();
+        this.$alertify.delay(3500).success(this.$t("sg_generated_placeholder_gems"));
+      } catch ({ code }) {
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_could_not_generate_placeholder_gems"));
+      } finally {
+        this.is_generating_placeholders = false;
+      }
+    },
     getGemId(gem) {
       const gem_path = gem?.$path || "";
       if (!gem_path) return "";
       const path_parts = gem_path.split("/");
       return path_parts[path_parts.length - 1] || "";
+    },
+    getGemTimestamp(gem) {
+      const date_value = gem?.$date_modified || gem?.$date_created;
+      const timestamp = date_value ? new Date(date_value).getTime() : 0;
+      return Number.isFinite(timestamp) ? timestamp : 0;
     },
     openGem(gem) {
       const gem_id = this.getGemId(gem);
@@ -179,11 +237,6 @@ export default {
     resolveMetadataValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
       return gem?.[metadata_key];
-    },
-    getGemTimestamp(gem) {
-      const date_value = gem?.$date_modified || gem?.$date_created;
-      const timestamp = date_value ? new Date(date_value).getTime() : 0;
-      return Number.isFinite(timestamp) ? timestamp : 0;
     },
     getMetadataLabel(metadata_key) {
       const metadata_to_translation_key = {
@@ -217,9 +270,9 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-._sgHome {
-  // max-width: 960px;
+._gemsView {
   margin: 0 auto;
+  position: relative;
 }
 
 ._title {
@@ -267,9 +320,22 @@ export default {
   background: var(--c-gris_clair);
 }
 
-._fontPreview {
-  margin-top: calc(var(--spacing) * 2);
-  padding-top: calc(var(--spacing) * 1.5);
-  border-top: 1px solid var(--c-gris_clair);
+._gemOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 30;
+  padding: calc(var(--spacing) * 1.5) 5vw;
+}
+
+._gemPanel {
+  width: min(90vw, 1200px);
+  margin-left: 10vw;
+  max-height: calc(100vh - calc(var(--spacing) * 3));
+  overflow-y: auto;
+  background: var(--c-bodybg);
+  border-radius: 12px;
+  padding: calc(var(--spacing) * 1.25);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.16);
 }
 </style>

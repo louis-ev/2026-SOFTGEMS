@@ -18,13 +18,13 @@
         <template v-else>
           <SoftgemsTopbar />
           <div class="_mainContent">
-            <transition name="pagetransition" mode="out-in">
-              <div class="_routerView" :key="$route.path">
-                <router-view class="" v-slot="{ Component }">
-                  <component :is="Component" />
-                </router-view>
-              </div>
-            </transition>
+            <!-- <transition name="pagetransition" mode="out-in"> -->
+            <div class="_routerView">
+              <router-view class="" v-slot="{ Component }">
+                <component :is="Component" />
+              </router-view>
+            </div>
+            <!-- </transition> -->
           </div>
           <!-- <TaskTracker /> -->
         </template>
