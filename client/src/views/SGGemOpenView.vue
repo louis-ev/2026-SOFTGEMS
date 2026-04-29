@@ -45,7 +45,6 @@
       </section>
 
       <section class="_contentSection">
-        <h2 class="_sectionTitle">{{ $t("sg_files") }}</h2>
         <SGGemFilesList
           :path="gem_path"
           :can_edit="can_edit"
@@ -58,11 +57,13 @@
         <h2 class="_sectionTitle">{{ $t("sg_metadata") }}</h2>
         <dl class="_metaGrid">
           <div class="_metaItem" v-for="item in metadata_items" :key="item.key">
-            <dt>{{ item.label }}</dt>
+            <dt class="u-label">{{ item.label }}</dt>
             <dd>
               <SelectField
                 v-if="item.editor === 'select'"
                 :field_name="item.key"
+                :show_label="false"
+                :label="item.label"
                 :content="item.raw_value"
                 :options="item.options"
                 :can_edit="can_edit"
@@ -71,6 +72,7 @@
               <TitleField
                 v-else-if="item.editor === 'titlefield'"
                 :show_label="false"
+                :label="item.label"
                 :field_name="item.key"
                 :content="item.editable_value"
                 :input_type="item.input_type"
@@ -374,10 +376,10 @@ export default {
 }
 
 dt {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: var(--c-gris_fonce);
-  margin-bottom: 0.25rem;
+  // font-size: 0.8rem;
+  // text-transform: uppercase;
+  // color: var(--c-gris_fonce);
+  // margin-bottom: 0.25rem;
 }
 
 dd {
