@@ -1,6 +1,6 @@
 <template>
   <div class="_sgHome">
-    <h1 class="_pageTitle">{{ $t("sg_inventory") }}</h1>
+    <h1 class="_pageTitle">Home</h1>
     <p class="_placeholderText">Home placeholder for now.</p>
   </div>
 </template>

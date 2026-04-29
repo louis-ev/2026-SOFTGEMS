@@ -49,7 +49,16 @@
               v-for="metadata_key in metadata_keys"
               :key="`${gem.$path}-${metadata_key}`"
             >
-              <span class="_gemMetadataValue">{{
+              <div v-if="metadata_key === '$cover'" class="_coverCell">
+                <CoverField
+                  :context="'tiny'"
+                  :ratio="'4 / 3'"
+                  :cover="gem.$cover"
+                  :path="gem.$path"
+                  :can_edit="false"
+                />
+              </div>
+              <span v-else class="_gemMetadataValue">{{
                 formatValue(resolveMetadataValue(gem, metadata_key))
               }}</span>
             </td>
@@ -109,6 +118,7 @@ export default {
         "$contributors",
       ]);
       const known_order = [
+        "$cover",
         "id",
         "status",
         "gem_type",
@@ -136,6 +146,7 @@ export default {
         });
       });
       metadata_key_set.add("id");
+      metadata_key_set.add("$cover");
 
       return Array.from(metadata_key_set).sort((a, b) => {
         const a_index = known_order.indexOf(a);
@@ -250,6 +261,7 @@ export default {
         id: "sg_id",
         status: "sg_status",
         gem_type: "sg_type",
+        $cover: "sg_cover",
         color: "sg_color",
         origin: "sg_origin",
         dimensions: "sg_dimensions",
@@ -281,12 +293,12 @@ export default {
   position: relative;
   height: 100%;
   overflow-y: auto;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
 ._gemsView--content {
   position: relative;
   min-height: 100%;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
 ._pageTitle {
@@ -307,10 +319,10 @@ export default {
 }
 
 ._table {
-  width: 100%;
   border-collapse: collapse;
   display: block;
   overflow-x: auto;
+  border: 1px solid var(--c-gris_clair);
 
   th,
   td {
@@ -361,5 +373,12 @@ export default {
 ._gemMetadataValue {
   font-family: var(--sl-font-mono);
   font-size: var(--sl-font-size-x-small);
+}
+
+._coverCell {
+  position: relative;
+  width: 84px;
+  min-width: 84px;
+  aspect-ratio: 4 / 3;
 }
 </style>

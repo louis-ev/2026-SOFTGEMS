@@ -30,6 +30,9 @@ export default {
   sg_id: "ID",
   sg_status: "Status",
   sg_type: "Type",
+  sg_files: "Files",
+  sg_no_files_for_gem: "No files added to this gem yet.",
+  sg_cover: "Cover",
   sg_color: "Color",
   sg_origin: "Origin",
   sg_dimensions: "Dimensions",
@@ -48,4 +51,5 @@ export default {
   sg_path: "Path",
   sg_created: "Created",
   sg_last_modified: "Last modified",
+  sg_metadata: "Informations",
 };
