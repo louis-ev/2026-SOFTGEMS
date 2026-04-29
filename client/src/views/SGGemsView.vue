@@ -8,6 +8,7 @@
             {{ $t("sg_create_gem") }}
           </router-link>
           <button
+            v-if="false"
             type="button"
             class="u-button"
             :disabled="is_generating_placeholders"
@@ -101,7 +102,7 @@ export default {
   },
   computed: {
     is_gem_open() {
-      return this.$route.name === "Open gem";
+      return ["Open gem", "Create gem"].includes(this.$route.name);
     },
     metadata_keys() {
       if (!Array.isArray(this.gems) || this.gems.length === 0) return [];

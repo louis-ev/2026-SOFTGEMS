@@ -10,15 +10,15 @@ const routes = [
     component: () => import("@/views/SGHomeView.vue"),
   },
   {
-    path: "/gems/new",
-    name: "Create gem",
-    component: () => import("@/views/SGGemNewView.vue"),
-  },
-  {
     path: "/gems",
     name: "Gems",
     component: () => import("@/views/SGGemsView.vue"),
     children: [
+      {
+        path: "new",
+        name: "Create gem",
+        component: () => import("@/views/SGGemNewView.vue"),
+      },
       {
         path: ":gem_id",
         name: "Open gem",

@@ -166,7 +166,7 @@ export default {
   },
   methods: {
     goBack() {
-      this.$router.push("/");
+      this.$router.push("/gems");
     },
     async createGem() {
       const cleaned_name = this.new_gem_name.trim();
@@ -190,7 +190,7 @@ export default {
           },
         });
         if (new_gem_slug) this.$router.push(`/gems/${new_gem_slug}`);
-        else this.$router.push("/");
+        else this.$router.push("/gems");
       } catch ({ code }) {
         this.$alertify
           .delay(4000)
