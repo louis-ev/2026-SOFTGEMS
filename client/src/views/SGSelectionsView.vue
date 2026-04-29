@@ -1,6 +1,7 @@
 <template>
   <section class="_selectionsView">
     <h1 class="_pageTitle">Selections</h1>
+    <p>Selections placeholder for now.</p>
   </section>
 </template>
 
