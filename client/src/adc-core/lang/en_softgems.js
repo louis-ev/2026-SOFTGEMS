@@ -20,6 +20,12 @@ export default {
   sg_generate_placeholder_gems: "Generate 10 placeholder gems",
   sg_generating_placeholder_gems: "Generating placeholders...",
   sg_generated_placeholder_gems: "Generated 10 placeholder gems.",
+  sg_remove_all_gems: "Remove all gems",
+  sg_removing_all_gems: "Removing all gems...",
+  sg_remove_all_gems_confirm:
+    "Remove all gems permanently? ({count} items)",
+  sg_removed_all_gems_success: "Removed all gems.",
+  sg_could_not_remove_all_gems: "Could not remove all gems.",
   sg_could_not_generate_placeholder_gems:
     "Could not generate placeholder gems.",
   sg_could_not_remove_gem: "Could not remove gem.",

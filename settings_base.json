@@ -151,53 +151,68 @@
           "status": {
             "type": "string"
           },
+          "reference_supplier": {
+            "type": "string"
+          },
+          "reference_customer": {
+            "type": "string"
+          },
+          "paired_gem": {
+            "type": "string"
+          },
+          "number_of_pieces": {
+            "type": "number"
+          },
+          "stone_type": {
+            "type": "string"
+          },
           "color": {
             "type": "string"
           },
-          "origin": {
+          "shape": {
             "type": "string"
           },
-          "dimensions": {
+          "origin_country": {
             "type": "string"
           },
-          "gem_type": {
+          "treatment_type": {
             "type": "string"
           },
-          "weight_carat": {
+          "length_mm": {
             "type": "number"
           },
-          "piece_count": {
+          "width_mm": {
             "type": "number"
           },
-          "condition": {
-            "type": "string"
-          },
-          "treatment": {
-            "type": "string"
-          },
-          "purchase_price_usd": {
+          "height_mm": {
             "type": "number"
           },
-          "sale_price_usd": {
+          "weight_ct": {
             "type": "number"
           },
-          "price_per_carat_usd": {
+          "base_price_pcb": {
             "type": "number"
           },
-          "supplier": {
-            "type": "string"
+          "purchased_price_pa": {
+            "type": "number"
           },
-          "acquisition_date": {
-            "type": "string"
+          "price_per_carat_pa_pcb": {
+            "type": "number"
           },
-          "country_of_cut": {
-            "type": "string"
+          "pv_selling_price": {
+            "type": "number"
           },
-          "pair_gem_id": {
-            "type": "string"
+          "pvd_asking_price": {
+            "type": "number"
           },
-          "remarks": {
-            "type": "string"
+          "pc_to": {
+            "type": "number"
+          },
+          "pf_invoiced_price": {
+            "type": "number"
+          },
+          "price_per_carat_all": {
+            "type": "number"
           }
         },
         "$files": {

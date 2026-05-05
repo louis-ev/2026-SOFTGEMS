@@ -8,16 +8,27 @@
             {{ $t("sg_create_gem") }}
           </router-link>
           <button
-            v-if="false"
             type="button"
             class="u-button"
-            :disabled="is_generating_placeholders"
+            :disabled="is_generating_placeholders || is_removing_all_gems"
             @click="generatePlaceholderGems"
           >
             {{
               is_generating_placeholders
                 ? $t("sg_generating_placeholder_gems")
                 : $t("sg_generate_placeholder_gems")
+            }}
+          </button>
+          <button
+            type="button"
+            class="u-button u-button_red"
+            :disabled="is_generating_placeholders || is_removing_all_gems"
+            @click="removeAllGems"
+          >
+            {{
+              is_removing_all_gems
+                ? $t("sg_removing_all_gems")
+                : $t("sg_remove_all_gems")
             }}
           </button>
         </div>
@@ -78,7 +89,30 @@
   </div>
 </template>
 <script>
-import { default_gem_fields } from "@/utils/gemDefaults";
+const placeholder_gem_fields_defaults = {
+  status: "reference",
+  reference_supplier: "",
+  reference_customer: "",
+  paired_gem: "",
+  number_of_pieces: 1,
+  stone_type: "",
+  color: "",
+  shape: "",
+  origin_country: "",
+  treatment_type: "",
+  length_mm: 0,
+  width_mm: 0,
+  height_mm: 0,
+  weight_ct: 0,
+  base_price_pcb: 0,
+  purchased_price_pa: 0,
+  price_per_carat_pa_pcb: 0,
+  pv_selling_price: 0,
+  pvd_asking_price: 0,
+  pc_to: 0,
+  pf_invoiced_price: 0,
+  price_per_carat_all: 0,
+};
 
 export default {
   name: "SGGemsView",
@@ -88,6 +122,7 @@ export default {
       gems: [],
       is_loading: false,
       is_generating_placeholders: false,
+      is_removing_all_gems: false,
       fetch_error: "",
     };
   },
@@ -122,22 +157,27 @@ export default {
         "$cover",
         "id",
         "status",
-        "gem_type",
+        "reference_supplier",
+        "reference_customer",
+        "paired_gem",
+        "number_of_pieces",
+        "stone_type",
+        "weight_ct",
         "color",
-        "origin",
-        "dimensions",
-        "weight_carat",
-        "piece_count",
-        "condition",
-        "treatment",
-        "purchase_price_usd",
-        "sale_price_usd",
-        "price_per_carat_usd",
-        "supplier",
-        "acquisition_date",
-        "country_of_cut",
-        "pair_gem_id",
-        "remarks",
+        "shape",
+        "origin_country",
+        "treatment_type",
+        "length_mm",
+        "width_mm",
+        "height_mm",
+        "base_price_pcb",
+        "purchased_price_pa",
+        "price_per_carat_pa_pcb",
+        "pv_selling_price",
+        "pvd_asking_price",
+        "pc_to",
+        "pf_invoiced_price",
+        "price_per_carat_all",
       ];
       const metadata_key_set = new Set();
 
@@ -193,6 +233,11 @@ export default {
         for (let index = 1; index <= 10; index += 1) {
           const gem_number = String(index).padStart(2, "0");
           const placeholder_name = `Placeholder Gem ${gem_number}`;
+          const purchased_price_pa = Number(
+            (Math.random() * 1200 + 100).toFixed(2)
+          );
+          const pv_selling_price = Number((Math.random() * 2400 + 300).toFixed(2));
+          const pvd_asking_price = Number((pv_selling_price * 1.15).toFixed(2));
 
           await this.$api.createFolder({
             path: this.gems_path,
@@ -202,18 +247,20 @@ export default {
               $status: "public",
               $admins: "everyone",
               $contributors: "everyone",
-              ...default_gem_fields,
-              gem_type: "placeholder",
-              color: "mixed",
-              origin: "unknown",
-              dimensions: "10 x 8 x 6 mm",
-              weight_carat: Number((Math.random() * 4 + 0.8).toFixed(2)),
-              purchase_price_usd: Number(
-                (Math.random() * 1200 + 100).toFixed(2)
-              ),
-              sale_price_usd: Number((Math.random() * 2400 + 300).toFixed(2)),
-              supplier: "Placeholder supplier",
-              remarks: "Auto-generated placeholder gem",
+              ...placeholder_gem_fields_defaults,
+              reference_supplier: "Placeholder supplier",
+              stone_type: "Quartz",
+              color: "Green",
+              shape: "Oval",
+              origin_country: "Unknown",
+              treatment_type: "Natural",
+              length_mm: Number((Math.random() * 6 + 6).toFixed(2)),
+              width_mm: Number((Math.random() * 4 + 4).toFixed(2)),
+              height_mm: Number((Math.random() * 3 + 3).toFixed(2)),
+              weight_ct: Number((Math.random() * 4 + 0.8).toFixed(2)),
+              purchased_price_pa,
+              pv_selling_price,
+              pvd_asking_price,
             },
           });
         }
@@ -228,6 +275,42 @@ export default {
           .error(code || this.$t("sg_could_not_generate_placeholder_gems"));
       } finally {
         this.is_generating_placeholders = false;
+      }
+    },
+    async removeAllGems() {
+      if (this.is_removing_all_gems) return;
+      if (!Array.isArray(this.gems) || this.gems.length === 0) return;
+
+      const should_remove_all = window.confirm(
+        this.$t("sg_remove_all_gems_confirm", { count: this.gems.length })
+      );
+      if (!should_remove_all) return;
+
+      this.is_removing_all_gems = true;
+      try {
+        const folder_slugs = this.gems
+          .map((gem) => this.getGemId(gem))
+          .filter((folder_slug) => Boolean(folder_slug));
+        const { success } = await this.$api.deleteFolders({
+          path: this.gems_path,
+          folder_slugs,
+        });
+        await this.fetchGems();
+        if (success.length > 0) {
+          this.$alertify
+            .delay(4000)
+            .success(this.$t("sg_removed_all_gems_success"));
+        } else {
+          this.$alertify
+            .delay(4000)
+            .error(this.$t("sg_could_not_remove_all_gems"));
+        }
+      } catch ({ code }) {
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_could_not_remove_all_gems"));
+      } finally {
+        this.is_removing_all_gems = false;
       }
     },
     getGemId(gem) {
@@ -261,23 +344,28 @@ export default {
       const metadata_to_translation_key = {
         id: "sg_id",
         status: "sg_status",
-        gem_type: "sg_type",
         $cover: "sg_cover",
+        reference_supplier: "sg_reference_supplier",
+        reference_customer: "sg_reference_customer",
+        paired_gem: "sg_paired_gem",
+        number_of_pieces: "sg_number_of_pieces",
+        stone_type: "sg_stone_type",
+        weight_ct: "sg_weight_ct",
         color: "sg_color",
-        origin: "sg_origin",
-        dimensions: "sg_dimensions",
-        weight_carat: "sg_weight_carat",
-        piece_count: "sg_piece_count",
-        condition: "sg_condition",
-        treatment: "sg_treatment",
-        purchase_price_usd: "sg_purchase_price_usd",
-        sale_price_usd: "sg_sale_price_usd",
-        price_per_carat_usd: "sg_price_per_carat_usd",
-        supplier: "sg_supplier",
-        acquisition_date: "sg_acquisition_date",
-        country_of_cut: "sg_country_of_cut",
-        pair_gem_id: "sg_pair_gem_id",
-        remarks: "sg_remarks",
+        shape: "sg_shape",
+        origin_country: "sg_origin_country",
+        treatment_type: "sg_treatment_type",
+        length_mm: "sg_length_mm",
+        width_mm: "sg_width_mm",
+        height_mm: "sg_height_mm",
+        base_price_pcb: "sg_base_price_pcb",
+        purchased_price_pa: "sg_purchased_price_pa",
+        price_per_carat_pa_pcb: "sg_price_per_carat_pa_pcb",
+        pv_selling_price: "sg_pv_selling_price",
+        pvd_asking_price: "sg_pvd_asking_price",
+        pc_to: "sg_pc_to",
+        pf_invoiced_price: "sg_pf_invoiced_price",
+        price_per_carat_all: "sg_price_per_carat_all",
         $path: "sg_path",
         $date_created: "sg_created",
         $date_modified: "sg_last_modified",

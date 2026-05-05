@@ -12,21 +12,21 @@
         <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
         <div class="_fieldsGrid">
           <div>
-            <DLabel :str="$t('sg_reference_supplier')" />
+            <DLabel :str="$t('sg_reference_supplier')" icon="archive" />
             <TextInput
               :content.sync="new_gem_fields.reference_supplier"
               :required="false"
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_reference_customer')" />
+            <DLabel :str="$t('sg_reference_customer')" icon="person-circle" />
             <TextInput
               :content.sync="new_gem_fields.reference_customer"
               :required="false"
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_paired_gem')" />
+            <DLabel :str="$t('sg_paired_gem')" icon="link" />
             <SGSelectField
               v-model="new_gem_fields.paired_gem"
               :options="paired_gem_options"
@@ -42,7 +42,7 @@
         </h2>
         <div class="_fieldsGrid">
           <div>
-            <DLabel :str="$t('sg_number_of_pieces')" />
+            <DLabel :str="$t('sg_number_of_pieces')" icon="list-ol" />
             <TextInput
               :content.sync="new_gem_fields.number_of_pieces"
               :required="false"
@@ -50,7 +50,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_stone_type')" />
+            <DLabel :str="$t('sg_stone_type')" icon="gem" />
             <SGSelectField
               v-model="new_gem_fields.stone_type"
               :options="stone_type_suggestions"
@@ -58,7 +58,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_weight_ct')" />
+            <DLabel :str="$t('sg_weight_ct')" icon="rulers" />
             <TextInput
               :content.sync="new_gem_fields.weight_ct"
               :required="false"
@@ -66,7 +66,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_color')" />
+            <DLabel :str="$t('sg_color')" icon="palette-fill" />
             <SGSelectField
               v-model="new_gem_fields.color"
               :options="color_suggestions"
@@ -74,7 +74,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_shape')" />
+            <DLabel :str="$t('sg_shape')" icon="pentagon" />
             <SGSelectField
               v-model="new_gem_fields.shape"
               :options="shape_suggestions"
@@ -82,7 +82,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_origin_country')" />
+            <DLabel :str="$t('sg_origin_country')" icon="pin-map" />
             <SGSelectField
               v-model="new_gem_fields.origin_country"
               :options="origin_country_suggestions"
@@ -90,7 +90,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_treatment_type')" />
+            <DLabel :str="$t('sg_treatment_type')" icon="tools" />
             <SGSelectField
               v-model="new_gem_fields.treatment_type"
               :options="treatment_type_suggestions"
@@ -98,7 +98,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_length_mm')" />
+            <DLabel :str="$t('sg_length_mm')" icon="aspect-ratio" />
             <TextInput
               :content.sync="new_gem_fields.length_mm"
               :required="false"
@@ -106,7 +106,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_width_mm')" />
+            <DLabel :str="$t('sg_width_mm')" icon="aspect-ratio" />
             <TextInput
               :content.sync="new_gem_fields.width_mm"
               :required="false"
@@ -114,7 +114,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_height_mm')" />
+            <DLabel :str="$t('sg_height_mm')" icon="aspect-ratio" />
             <TextInput
               :content.sync="new_gem_fields.height_mm"
               :required="false"
@@ -128,7 +128,7 @@
         <h2 class="_sectionTitle">{{ $t("sg_section_pricing") }}</h2>
         <div class="_fieldsGrid">
           <div>
-            <DLabel :str="$t('sg_base_price_pcb')" />
+            <DLabel :str="$t('sg_base_price_pcb')" icon="tag" />
             <TextInput
               :content.sync="new_gem_fields.base_price_pcb"
               :required="false"
@@ -136,7 +136,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_purchased_price_pa')" />
+            <DLabel :str="$t('sg_purchased_price_pa')" icon="tag" />
             <TextInput
               :content.sync="new_gem_fields.purchased_price_pa"
               :required="false"
@@ -144,7 +144,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_price_per_carat_pa_pcb')" />
+            <DLabel :str="$t('sg_price_per_carat_pa_pcb')" icon="diagram2" />
             <TextInput
               :content.sync="new_gem_fields.price_per_carat_pa_pcb"
               :required="false"
@@ -152,7 +152,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_pv_selling_price')" />
+            <DLabel :str="$t('sg_pv_selling_price')" icon="tag" />
             <TextInput
               :content.sync="new_gem_fields.pv_selling_price"
               :required="false"
@@ -160,7 +160,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_pvd_asking_price')" />
+            <DLabel :str="$t('sg_pvd_asking_price')" icon="diagram2" />
             <input
               :value="pvd_asking_price_preview"
               type="number"
@@ -169,7 +169,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_pc_to')" />
+            <DLabel :str="$t('sg_pc_to')" icon="file-earmark-text" />
             <TextInput
               :content.sync="new_gem_fields.pc_to"
               :required="false"
@@ -177,7 +177,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_pf_invoiced_price')" />
+            <DLabel :str="$t('sg_pf_invoiced_price')" icon="file-earmark-text" />
             <TextInput
               :content.sync="new_gem_fields.pf_invoiced_price"
               :required="false"
@@ -185,7 +185,7 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_price_per_carat_all')" />
+            <DLabel :str="$t('sg_price_per_carat_all')" icon="arrow-up" />
             <TextInput
               :content.sync="new_gem_fields.price_per_carat_all"
               :required="false"
@@ -198,7 +198,7 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_creation") }}</h2>
         <div>
-          <DLabel :str="$t('sg_internal_name_optional')" />
+          <DLabel :str="$t('sg_internal_name_optional')" icon="pencil" />
           <TextInput :content.sync="new_gem_name" :required="false" />
         </div>
       </section>
