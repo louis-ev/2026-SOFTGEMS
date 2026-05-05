@@ -33,7 +33,7 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 | `box_reference`         | automatic          | Shows box reference when stone is associated to a box.        |
 | `reference_supplier`    | manual             | Supplier unique identifier for gemstone or parcel.            |
 | `reference_customer`    | manual             | Customer unique identifier for gemstone or parcel.            |
-| `pair_single_indicator` | manual / automatic | Added stone can become a pair.                                |
+| `paired_gem`            | select from gem list | User selects another gem to pair with current gem. On create, reciprocal pairing is auto-set on the selected gem. |
 | `parent_id`             | automatic          | Shows parent ID in case of split. (hidden + purple in source) |
 
 ## Stone Characteristics

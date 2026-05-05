@@ -8,188 +8,206 @@
     </div>
 
     <form class="_form" @submit.prevent="createGem">
-      <div class="_fieldsGrid">
-        <div>
-          <DLabel :str="$t('sg_status')" />
-          <SGSelectField
-            v-model="new_gem_fields.status"
-            :options="status_suggestions"
-            :allow_empty="false"
-          />
+      <section class="_formSection">
+        <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
+        <div class="_fieldsGrid">
+          <div>
+            <DLabel :str="$t('sg_status')" />
+            <SGSelectField
+              v-model="new_gem_fields.status"
+              :options="status_suggestions"
+              :allow_empty="false"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_reference_supplier')" />
+            <TextInput
+              :content.sync="new_gem_fields.reference_supplier"
+              :required="false"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_reference_customer')" />
+            <TextInput
+              :content.sync="new_gem_fields.reference_customer"
+              :required="false"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_paired_gem')" />
+            <SGSelectField
+              v-model="new_gem_fields.paired_gem"
+              :options="paired_gem_options"
+              :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_number_of_pieces')" />
+            <TextInput
+              :content.sync="new_gem_fields.number_of_pieces"
+              :required="false"
+              input_type="number"
+            />
+          </div>
         </div>
-        <div>
-          <DLabel :str="$t('sg_reference_supplier')" />
-          <TextInput
-            :content.sync="new_gem_fields.reference_supplier"
-            :required="false"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_reference_customer')" />
-          <TextInput
-            :content.sync="new_gem_fields.reference_customer"
-            :required="false"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_pair_single_indicator')" />
-          <SGSelectField
-            v-model="new_gem_fields.pair_single_indicator"
-            :options="pair_single_indicator_suggestions"
-            :allow_empty="false"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_number_of_pieces')" />
-          <TextInput
-            :content.sync="new_gem_fields.number_of_pieces"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_stone_type')" />
-          <SGSelectField
-            v-model="new_gem_fields.stone_type"
-            :options="stone_type_suggestions"
-            :allow_empty="true"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_color')" />
-          <SGSelectField
-            v-model="new_gem_fields.color"
-            :options="color_suggestions"
-            :allow_empty="true"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_shape')" />
-          <SGSelectField
-            v-model="new_gem_fields.shape"
-            :options="shape_suggestions"
-            :allow_empty="true"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_origin_country')" />
-          <SGSelectField
-            v-model="new_gem_fields.origin_country"
-            :options="origin_country_suggestions"
-            :allow_empty="true"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_treatment_type')" />
-          <SGSelectField
-            v-model="new_gem_fields.treatment_type"
-            :options="treatment_type_suggestions"
-            :allow_empty="true"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_length_mm')" />
-          <TextInput
-            :content.sync="new_gem_fields.length_mm"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_width_mm')" />
-          <TextInput
-            :content.sync="new_gem_fields.width_mm"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_height_mm')" />
-          <TextInput
-            :content.sync="new_gem_fields.height_mm"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_weight_ct')" />
-          <TextInput
-            :content.sync="new_gem_fields.weight_ct"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_base_price_pcb')" />
-          <TextInput
-            :content.sync="new_gem_fields.base_price_pcb"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_purchased_price_pa')" />
-          <TextInput
-            :content.sync="new_gem_fields.purchased_price_pa"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_price_per_carat_pa_pcb')" />
-          <TextInput
-            :content.sync="new_gem_fields.price_per_carat_pa_pcb"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_pv_selling_price')" />
-          <TextInput
-            :content.sync="new_gem_fields.pv_selling_price"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_pvd_asking_price')" />
-          <input
-            :value="pvd_asking_price_preview"
-            type="number"
-            class="u-input"
-            readonly
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_pc_to')" />
-          <TextInput
-            :content.sync="new_gem_fields.pc_to"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_pf_invoiced_price')" />
-          <TextInput
-            :content.sync="new_gem_fields.pf_invoiced_price"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_price_per_carat_all')" />
-          <TextInput
-            :content.sync="new_gem_fields.price_per_carat_all"
-            :required="false"
-            input_type="number"
-          />
-        </div>
-      </div>
+      </section>
 
-      <div>
-        <DLabel :str="$t('sg_internal_name_optional')" />
-        <TextInput :content.sync="new_gem_name" :required="false" />
-      </div>
+      <section class="_formSection">
+        <h2 class="_sectionTitle">{{ $t("sg_section_stone_characteristics") }}</h2>
+        <div class="_fieldsGrid">
+          <div>
+            <DLabel :str="$t('sg_stone_type')" />
+            <SGSelectField
+              v-model="new_gem_fields.stone_type"
+              :options="stone_type_suggestions"
+              :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_color')" />
+            <SGSelectField
+              v-model="new_gem_fields.color"
+              :options="color_suggestions"
+              :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_shape')" />
+            <SGSelectField
+              v-model="new_gem_fields.shape"
+              :options="shape_suggestions"
+              :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_origin_country')" />
+            <SGSelectField
+              v-model="new_gem_fields.origin_country"
+              :options="origin_country_suggestions"
+              :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_treatment_type')" />
+            <SGSelectField
+              v-model="new_gem_fields.treatment_type"
+              :options="treatment_type_suggestions"
+              :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_length_mm')" />
+            <TextInput
+              :content.sync="new_gem_fields.length_mm"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_width_mm')" />
+            <TextInput
+              :content.sync="new_gem_fields.width_mm"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_height_mm')" />
+            <TextInput
+              :content.sync="new_gem_fields.height_mm"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_weight_ct')" />
+            <TextInput
+              :content.sync="new_gem_fields.weight_ct"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="_formSection">
+        <h2 class="_sectionTitle">{{ $t("sg_section_pricing") }}</h2>
+        <div class="_fieldsGrid">
+          <div>
+            <DLabel :str="$t('sg_base_price_pcb')" />
+            <TextInput
+              :content.sync="new_gem_fields.base_price_pcb"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_purchased_price_pa')" />
+            <TextInput
+              :content.sync="new_gem_fields.purchased_price_pa"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_price_per_carat_pa_pcb')" />
+            <TextInput
+              :content.sync="new_gem_fields.price_per_carat_pa_pcb"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_pv_selling_price')" />
+            <TextInput
+              :content.sync="new_gem_fields.pv_selling_price"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_pvd_asking_price')" />
+            <input
+              :value="pvd_asking_price_preview"
+              type="number"
+              class="u-input"
+              readonly
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_pc_to')" />
+            <TextInput
+              :content.sync="new_gem_fields.pc_to"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_pf_invoiced_price')" />
+            <TextInput
+              :content.sync="new_gem_fields.pf_invoiced_price"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_price_per_carat_all')" />
+            <TextInput
+              :content.sync="new_gem_fields.price_per_carat_all"
+              :required="false"
+              input_type="number"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="_formSection">
+        <h2 class="_sectionTitle">{{ $t("sg_section_creation") }}</h2>
+        <div>
+          <DLabel :str="$t('sg_internal_name_optional')" />
+          <TextInput :content.sync="new_gem_name" :required="false" />
+        </div>
+      </section>
 
       <div class="_actions">
         <button type="button" class="u-button" @click="goBack">
@@ -213,7 +231,6 @@
 import {
   color_suggestions,
   origin_country_suggestions,
-  pair_single_indicator_suggestions,
   shape_suggestions,
   stone_type_suggestions,
   status_suggestions,
@@ -225,7 +242,7 @@ const v1_new_gem_fields_defaults = {
   status: "reference",
   reference_supplier: "",
   reference_customer: "",
-  pair_single_indicator: "single",
+  paired_gem: "",
   number_of_pieces: 1,
   stone_type: "",
   color: "",
@@ -251,6 +268,14 @@ export default {
   components: {
     SGSelectField,
   },
+  async created() {
+    await this.fetchPairableGems();
+  },
+  beforeDestroy() {
+    if (!this.is_joined_gems_room) return;
+    this.$api.leave({ room: this.gems_path });
+    this.is_joined_gems_room = false;
+  },
   data() {
     return {
       gems_path: "gems",
@@ -258,12 +283,13 @@ export default {
       new_gem_fields: { ...v1_new_gem_fields_defaults },
       color_suggestions,
       origin_country_suggestions,
-      pair_single_indicator_suggestions,
+      paired_gem_options: [],
       shape_suggestions,
       stone_type_suggestions,
       status_suggestions,
       treatment_type_suggestions,
       is_creating: false,
+      is_joined_gems_room: false,
     };
   },
   computed: {
@@ -277,6 +303,39 @@ export default {
     goBack() {
       this.$router.push("/gems");
     },
+    async fetchPairableGems() {
+      try {
+        if (!this.is_joined_gems_room) {
+          this.$api.join({ room: this.gems_path });
+          this.is_joined_gems_room = true;
+        }
+        const gems = await this.$api.getFolders({
+          path: this.gems_path,
+        });
+        this.paired_gem_options = (Array.isArray(gems) ? gems : []).map(
+          (gem) => {
+            const gem_id = this.getGemIdFromPath(gem?.$path);
+            const gem_label =
+              this.cleanString(gem?.reference_id) ||
+              this.cleanString(gem?.title) ||
+              this.cleanString(gem?.name) ||
+              gem_id;
+            return {
+              value: gem_id,
+              label: gem_label,
+            };
+          }
+        );
+      } catch {
+        this.paired_gem_options = [];
+      }
+    },
+    getGemIdFromPath(gem_path) {
+      const cleaned_path = this.cleanString(gem_path);
+      if (!cleaned_path) return "";
+      const path_parts = cleaned_path.split("/");
+      return path_parts[path_parts.length - 1] || "";
+    },
     async createGem() {
       const cleaned_name = this.getGemTitle();
       if (!cleaned_name || this.is_creating) return;
@@ -284,6 +343,7 @@ export default {
       const normalized_gem_fields = this.normalizeGemFields(
         this.new_gem_fields
       );
+      const paired_gem_id = normalized_gem_fields.paired_gem;
 
       this.is_creating = true;
       try {
@@ -298,14 +358,36 @@ export default {
             ...normalized_gem_fields,
           },
         });
-        if (new_gem_slug) this.$router.push(`/gems/${new_gem_slug}`);
-        else this.$router.push("/gems");
+        if (new_gem_slug) {
+          await this.syncReciprocalPairing({
+            new_gem_slug,
+            paired_gem_id,
+          });
+          this.$router.push(`/gems/${new_gem_slug}`);
+        } else this.$router.push("/gems");
       } catch ({ code }) {
         this.$alertify
           .delay(4000)
           .error(code || this.$t("sg_could_not_create_gem"));
       } finally {
         this.is_creating = false;
+      }
+    },
+    async syncReciprocalPairing({ new_gem_slug, paired_gem_id }) {
+      const cleaned_new_gem_slug = this.cleanString(new_gem_slug);
+      const cleaned_paired_gem_id = this.cleanString(paired_gem_id);
+      if (!cleaned_new_gem_slug || !cleaned_paired_gem_id) return;
+      if (cleaned_new_gem_slug === cleaned_paired_gem_id) return;
+
+      try {
+        await this.$api.updateMeta({
+          path: `${this.gems_path}/${cleaned_paired_gem_id}`,
+          new_meta: {
+            paired_gem: cleaned_new_gem_slug,
+          },
+        });
+      } catch {
+        // Do not block creation if reciprocal link update fails.
       }
     },
     getGemTitle() {
@@ -330,7 +412,7 @@ export default {
         "status",
         "reference_supplier",
         "reference_customer",
-        "pair_single_indicator",
+        "paired_gem",
         "stone_type",
         "color",
         "shape",
@@ -408,6 +490,18 @@ export default {
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 1.5);
+}
+
+._formSection {
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 10px;
+  padding: calc(var(--spacing) * 0.9);
+  background: var(--c-blanc);
+}
+
+._sectionTitle {
+  margin: 0 0 calc(var(--spacing) * 0.6) 0;
+  font-size: 1rem;
 }
 
 ._fieldsGrid {
