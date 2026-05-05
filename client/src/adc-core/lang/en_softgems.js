@@ -69,5 +69,9 @@ export default {
   sg_purchased_price_pa: "Purchased price (PA)",
   sg_price_per_carat_pa_pcb: "Price per carat (PA & PCb)",
   sg_pv_selling_price: "PV (selling price)",
+  sg_pvd_asking_price: "PVD (asking price)",
+  sg_pc_to: "PC to",
+  sg_pf_invoiced_price: "PF (invoiced price)",
+  sg_price_per_carat_all: "Price per carat (all pricing)",
   sg_internal_name_optional: "Internal name (optional)",
 };

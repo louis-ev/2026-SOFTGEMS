@@ -10,6 +10,7 @@ This folder contains reusable suggestion lists for SoftGems fields.
 - `shape_suggestions.js`: options for gem shape.
 - `origin_country_suggestions.js`: options for gem origin/country.
 - `treatment_type_suggestions.js`: options for treatment type.
+- `pair_single_indicator_suggestions.js`: options for pair/single indicator.
 
 ## Usage
 

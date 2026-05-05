@@ -33,9 +33,10 @@
         </div>
         <div>
           <DLabel :str="$t('sg_pair_single_indicator')" />
-          <TextInput
-            :content.sync="new_gem_fields.pair_single_indicator"
-            :required="false"
+          <SGSelectField
+            v-model="new_gem_fields.pair_single_indicator"
+            :options="pair_single_indicator_suggestions"
+            :allow_empty="false"
           />
         </div>
         <div>
@@ -150,6 +151,39 @@
             input_type="number"
           />
         </div>
+        <div>
+          <DLabel :str="$t('sg_pvd_asking_price')" />
+          <input
+            :value="pvd_asking_price_preview"
+            type="number"
+            class="u-input"
+            readonly
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_pc_to')" />
+          <TextInput
+            :content.sync="new_gem_fields.pc_to"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_pf_invoiced_price')" />
+          <TextInput
+            :content.sync="new_gem_fields.pf_invoiced_price"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_price_per_carat_all')" />
+          <TextInput
+            :content.sync="new_gem_fields.price_per_carat_all"
+            :required="false"
+            input_type="number"
+          />
+        </div>
       </div>
 
       <div>
@@ -179,6 +213,7 @@
 import {
   color_suggestions,
   origin_country_suggestions,
+  pair_single_indicator_suggestions,
   shape_suggestions,
   stone_type_suggestions,
   status_suggestions,
@@ -190,7 +225,7 @@ const v1_new_gem_fields_defaults = {
   status: "reference",
   reference_supplier: "",
   reference_customer: "",
-  pair_single_indicator: "",
+  pair_single_indicator: "single",
   number_of_pieces: 1,
   stone_type: "",
   color: "",
@@ -205,6 +240,10 @@ const v1_new_gem_fields_defaults = {
   purchased_price_pa: 0,
   price_per_carat_pa_pcb: 0,
   pv_selling_price: 0,
+  pvd_asking_price: 0,
+  pc_to: 0,
+  pf_invoiced_price: 0,
+  price_per_carat_all: 0,
 };
 
 export default {
@@ -219,12 +258,20 @@ export default {
       new_gem_fields: { ...v1_new_gem_fields_defaults },
       color_suggestions,
       origin_country_suggestions,
+      pair_single_indicator_suggestions,
       shape_suggestions,
       stone_type_suggestions,
       status_suggestions,
       treatment_type_suggestions,
       is_creating: false,
     };
+  },
+  computed: {
+    pvd_asking_price_preview() {
+      const pv_selling_price = Number(this.new_gem_fields.pv_selling_price);
+      if (!Number.isFinite(pv_selling_price)) return 0;
+      return Number((pv_selling_price * 1.15).toFixed(2));
+    },
   },
   methods: {
     goBack() {
@@ -306,6 +353,9 @@ export default {
         "purchased_price_pa",
         "price_per_carat_pa_pcb",
         "pv_selling_price",
+        "pc_to",
+        "pf_invoiced_price",
+        "price_per_carat_all",
       ];
       number_field_keys.forEach((field_key) => {
         normalized_fields[field_key] = this.toNumberOrDefault(
@@ -313,6 +363,10 @@ export default {
           v1_new_gem_fields_defaults[field_key]
         );
       });
+
+      normalized_fields.pvd_asking_price = Number(
+        (normalized_fields.pv_selling_price * 1.15).toFixed(2)
+      );
 
       return normalized_fields;
     },
