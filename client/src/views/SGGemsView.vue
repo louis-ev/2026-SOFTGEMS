@@ -293,13 +293,13 @@ export default {
 ._gemsView {
   position: relative;
   height: 100%;
-  overflow-y: auto;
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
 ._gemsView--content {
   position: relative;
-  min-height: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 
 ._pageTitle {
@@ -357,7 +357,6 @@ export default {
   background: rgba(0, 0, 0, 0.2);
   z-index: 30;
   padding-left: 15vw;
-  overflow: hidden;
 }
 
 ._gemPanel {

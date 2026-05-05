@@ -53,7 +53,7 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: calc(var(--spacing) / 2);
-  padding: calc(var(--spacing) * 1);
+  padding: calc(var(--spacing) / 2);
   background: var(--c-vert);
   z-index: 3;
 }

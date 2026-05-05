@@ -8,24 +8,46 @@
     </div>
 
     <form class="_form" @submit.prevent="createGem">
-      <DLabel str="Name" />
-      <TextInput
-        :content.sync="new_gem_name"
-        :required="true"
-        :autofocus="true"
-        @onEnter="createGem"
-      />
-
       <div class="_fieldsGrid">
         <div>
           <DLabel :str="$t('sg_status')" />
           <TextInput :content.sync="new_gem_fields.status" :required="false" />
         </div>
         <div>
-          <DLabel :str="$t('sg_type')" />
+          <DLabel :str="$t('sg_reference_supplier')" />
           <TextInput
-            :content.sync="new_gem_fields.gem_type"
+            :content.sync="new_gem_fields.reference_supplier"
             :required="false"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_reference_customer')" />
+          <TextInput
+            :content.sync="new_gem_fields.reference_customer"
+            :required="false"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_pair_single_indicator')" />
+          <TextInput
+            :content.sync="new_gem_fields.pair_single_indicator"
+            :required="false"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_number_of_pieces')" />
+          <TextInput
+            :content.sync="new_gem_fields.number_of_pieces"
+            :required="false"
+            input_type="number"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_stone_type')" />
+          <SGSelectField
+            v-model="new_gem_fields.stone_type"
+            :options="stone_type_suggestions"
+            :allow_empty="true"
           />
         </div>
         <div>
@@ -33,104 +55,92 @@
           <TextInput :content.sync="new_gem_fields.color" :required="false" />
         </div>
         <div>
-          <DLabel :str="$t('sg_origin')" />
-          <TextInput :content.sync="new_gem_fields.origin" :required="false" />
+          <DLabel :str="$t('sg_shape')" />
+          <TextInput :content.sync="new_gem_fields.shape" :required="false" />
         </div>
         <div>
-          <DLabel :str="$t('sg_dimensions')" />
+          <DLabel :str="$t('sg_origin_country')" />
           <TextInput
-            :content.sync="new_gem_fields.dimensions"
+            :content.sync="new_gem_fields.origin_country"
             :required="false"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_weight_carat')" />
+          <DLabel :str="$t('sg_treatment_type')" />
           <TextInput
-            :content.sync="new_gem_fields.weight_carat"
+            :content.sync="new_gem_fields.treatment_type"
+            :required="false"
+          />
+        </div>
+        <div>
+          <DLabel :str="$t('sg_length_mm')" />
+          <TextInput
+            :content.sync="new_gem_fields.length_mm"
             :required="false"
             input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_piece_count')" />
+          <DLabel :str="$t('sg_width_mm')" />
           <TextInput
-            :content.sync="new_gem_fields.piece_count"
+            :content.sync="new_gem_fields.width_mm"
             :required="false"
             input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_condition')" />
+          <DLabel :str="$t('sg_height_mm')" />
           <TextInput
-            :content.sync="new_gem_fields.condition"
-            :required="false"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_treatment')" />
-          <TextInput
-            :content.sync="new_gem_fields.treatment"
-            :required="false"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_purchase_price_usd')" />
-          <TextInput
-            :content.sync="new_gem_fields.purchase_price_usd"
+            :content.sync="new_gem_fields.height_mm"
             :required="false"
             input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_sale_price_usd')" />
+          <DLabel :str="$t('sg_weight_ct')" />
           <TextInput
-            :content.sync="new_gem_fields.sale_price_usd"
+            :content.sync="new_gem_fields.weight_ct"
             :required="false"
             input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_price_per_carat_usd')" />
+          <DLabel :str="$t('sg_base_price_pcb')" />
           <TextInput
-            :content.sync="new_gem_fields.price_per_carat_usd"
+            :content.sync="new_gem_fields.base_price_pcb"
             :required="false"
             input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_supplier')" />
+          <DLabel :str="$t('sg_purchased_price_pa')" />
           <TextInput
-            :content.sync="new_gem_fields.supplier"
+            :content.sync="new_gem_fields.purchased_price_pa"
             :required="false"
+            input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_acquisition_date')" />
+          <DLabel :str="$t('sg_price_per_carat_pa_pcb')" />
           <TextInput
-            :content.sync="new_gem_fields.acquisition_date"
+            :content.sync="new_gem_fields.price_per_carat_pa_pcb"
             :required="false"
-            input_type="date"
+            input_type="number"
           />
         </div>
         <div>
-          <DLabel :str="$t('sg_country_of_cut')" />
+          <DLabel :str="$t('sg_pv_selling_price')" />
           <TextInput
-            :content.sync="new_gem_fields.country_of_cut"
+            :content.sync="new_gem_fields.pv_selling_price"
             :required="false"
-          />
-        </div>
-        <div>
-          <DLabel :str="$t('sg_pair_gem_id')" />
-          <TextInput
-            :content.sync="new_gem_fields.pair_gem_id"
-            :required="false"
+            input_type="number"
           />
         </div>
       </div>
 
       <div>
-        <DLabel :str="$t('sg_remarks')" />
-        <textarea v-model="new_gem_fields.remarks" class="_textarea" rows="4" />
+        <DLabel :str="$t('sg_internal_name_optional')" />
+        <TextInput :content.sync="new_gem_name" :required="false" />
       </div>
 
       <div class="_actions">
@@ -140,7 +150,7 @@
         <button
           type="submit"
           class="u-button u-button_bleuvert"
-          :disabled="is_creating || !new_gem_name.trim()"
+          :disabled="is_creating"
         >
           {{
             is_creating ? $t("sg_create_gem_in_progress") : $t("sg_create_gem")
@@ -152,15 +162,41 @@
 </template>
 
 <script>
-import { default_gem_fields } from "@/utils/gemDefaults";
+import { stone_type_suggestions } from "@/suggestions/softgems";
+import SGSelectField from "@/components/softgems/SGSelectField.vue";
+
+const v1_new_gem_fields_defaults = {
+  status: "reference",
+  reference_supplier: "",
+  reference_customer: "",
+  pair_single_indicator: "",
+  number_of_pieces: 1,
+  stone_type: "",
+  color: "",
+  shape: "",
+  origin_country: "",
+  treatment_type: "",
+  length_mm: 0,
+  width_mm: 0,
+  height_mm: 0,
+  weight_ct: 0,
+  base_price_pcb: 0,
+  purchased_price_pa: 0,
+  price_per_carat_pa_pcb: 0,
+  pv_selling_price: 0,
+};
 
 export default {
   name: "SGGemNewView",
+  components: {
+    SGSelectField,
+  },
   data() {
     return {
       gems_path: "gems",
       new_gem_name: "",
-      new_gem_fields: { ...default_gem_fields },
+      new_gem_fields: { ...v1_new_gem_fields_defaults },
+      stone_type_suggestions,
       is_creating: false,
     };
   },
@@ -169,7 +205,7 @@ export default {
       this.$router.push("/gems");
     },
     async createGem() {
-      const cleaned_name = this.new_gem_name.trim();
+      const cleaned_name = this.getGemTitle();
       if (!cleaned_name || this.is_creating) return;
 
       const normalized_gem_fields = this.normalizeGemFields(
@@ -199,25 +235,34 @@ export default {
         this.is_creating = false;
       }
     },
+    getGemTitle() {
+      const explicit_name = this.cleanString(this.new_gem_name);
+      if (explicit_name) return explicit_name;
+
+      const derived_name =
+        this.cleanString(this.new_gem_fields.reference_supplier) ||
+        this.cleanString(this.new_gem_fields.reference_customer) ||
+        this.cleanString(this.new_gem_fields.stone_type);
+
+      if (derived_name) return derived_name;
+      return `Gem ${new Date().toISOString().slice(0, 19).replace("T", " ")}`;
+    },
     normalizeGemFields(raw_fields) {
       const normalized_fields = {
-        ...default_gem_fields,
+        ...v1_new_gem_fields_defaults,
         ...raw_fields,
       };
 
       const string_field_keys = [
         "status",
+        "reference_supplier",
+        "reference_customer",
+        "pair_single_indicator",
+        "stone_type",
         "color",
-        "origin",
-        "dimensions",
-        "gem_type",
-        "condition",
-        "treatment",
-        "supplier",
-        "acquisition_date",
-        "country_of_cut",
-        "pair_gem_id",
-        "remarks",
+        "shape",
+        "origin_country",
+        "treatment_type",
       ];
       string_field_keys.forEach((field_key) => {
         normalized_fields[field_key] = this.cleanString(
@@ -226,16 +271,20 @@ export default {
       });
 
       const number_field_keys = [
-        "weight_carat",
-        "piece_count",
-        "purchase_price_usd",
-        "sale_price_usd",
-        "price_per_carat_usd",
+        "number_of_pieces",
+        "length_mm",
+        "width_mm",
+        "height_mm",
+        "weight_ct",
+        "base_price_pcb",
+        "purchased_price_pa",
+        "price_per_carat_pa_pcb",
+        "pv_selling_price",
       ];
       number_field_keys.forEach((field_key) => {
         normalized_fields[field_key] = this.toNumberOrDefault(
           normalized_fields[field_key],
-          default_gem_fields[field_key]
+          v1_new_gem_fields_defaults[field_key]
         );
       });
 
