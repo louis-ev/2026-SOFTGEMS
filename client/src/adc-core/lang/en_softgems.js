@@ -85,4 +85,11 @@ export default {
   sg_pf_invoiced_price: "PF (invoiced price)",
   sg_price_per_carat_all: "Price per carat (all pricing)",
   sg_internal_name_optional: "Internal name (optional)",
+  sg_field_history: "History",
+  sg_no_history: "No history yet.",
+  sg_history_changed_on: "Changed on",
+  sg_history_by: "by",
+  sg_edit_field: "Edit",
+  sg_readonly_field: "Computed field (read-only)",
+  sg_section_status: "Status",
 };

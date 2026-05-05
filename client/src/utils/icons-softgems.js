@@ -4,9 +4,11 @@ import {
   BIconArrowUp,
   BIconAspectRatio,
   BIconCardList,
+  BIconClockHistory,
   BIconDiagram2,
   BIconFileEarmarkText,
   BIconGem,
+  BIconImages,
   BIconLink,
   BIconListOl,
   BIconPaletteFill,
@@ -24,8 +26,10 @@ Vue.component("BIconArrowUp", BIconArrowUp);
 Vue.component("BIconAspectRatio", BIconAspectRatio);
 Vue.component("BIconGem", BIconGem);
 Vue.component("BIconCardList", BIconCardList);
+Vue.component("BIconClockHistory", BIconClockHistory);
 Vue.component("BIconDiagram2", BIconDiagram2);
 Vue.component("BIconFileEarmarkText", BIconFileEarmarkText);
+Vue.component("BIconImages", BIconImages);
 Vue.component("BIconLink", BIconLink);
 Vue.component("BIconListOl", BIconListOl);
 Vue.component("BIconPaletteFill", BIconPaletteFill);

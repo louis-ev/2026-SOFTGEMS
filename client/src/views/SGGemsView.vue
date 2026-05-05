@@ -40,7 +40,14 @@
         <thead>
           <tr>
             <th v-for="metadata_key in metadata_keys" :key="metadata_key">
-              {{ getMetadataLabel(metadata_key) }}
+              <span class="_thContent">
+                <b-icon
+                  v-if="getMetadataIcon(metadata_key)"
+                  :icon="getMetadataIcon(metadata_key)"
+                  class="_thIcon"
+                />
+                <span>{{ getMetadataLabel(metadata_key) }}</span>
+              </span>
             </th>
           </tr>
         </thead>
@@ -61,14 +68,23 @@
               v-for="metadata_key in metadata_keys"
               :key="`${gem.$path}-${metadata_key}`"
             >
-              <div v-if="metadata_key === '$cover'" class="_coverCell">
-                <CoverField
-                  :context="'tiny'"
-                  :ratio="'4 / 3'"
-                  :cover="gem.$cover"
-                  :path="gem.$path"
-                  :can_edit="false"
-                />
+              <div v-if="metadata_key === '$cover'" class="_coverFilesCell">
+                <div class="_coverThumb">
+                  <CoverField
+                    :context="'tiny'"
+                    :ratio="'4 / 3'"
+                    :cover="gem.$cover"
+                    :path="gem.$path"
+                    :can_edit="false"
+                  />
+                </div>
+                <div
+                  v-if="gem.$files && gem.$files.length > 0"
+                  class="_filesCount"
+                >
+                  <b-icon icon="file-earmark-text" />
+                  <span>{{ gem.$files.length }}</span>
+                </div>
               </div>
               <span v-else class="_gemMetadataValue">{{
                 formatValue(resolveMetadataValue(gem, metadata_key))
@@ -152,10 +168,11 @@ export default {
         "$status",
         "$admins",
         "$contributors",
+        "$files",
       ]);
       const known_order = [
-        "$cover",
         "id",
+        "$cover",
         "status",
         "reference_supplier",
         "reference_customer",
@@ -236,7 +253,9 @@ export default {
           const purchased_price_pa = Number(
             (Math.random() * 1200 + 100).toFixed(2)
           );
-          const pv_selling_price = Number((Math.random() * 2400 + 300).toFixed(2));
+          const pv_selling_price = Number(
+            (Math.random() * 2400 + 300).toFixed(2)
+          );
           const pvd_asking_price = Number((pv_selling_price * 1.15).toFixed(2));
 
           await this.$api.createFolder({
@@ -339,6 +358,34 @@ export default {
     resolveMetadataValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
       return gem?.[metadata_key];
+    },
+    getMetadataIcon(metadata_key) {
+      const metadata_to_icon = {
+        id: "card-list",
+        $cover: "images",
+        reference_supplier: "archive",
+        reference_customer: "person-circle",
+        paired_gem: "link",
+        number_of_pieces: "list-ol",
+        stone_type: "gem",
+        weight_ct: "rulers",
+        color: "palette-fill",
+        shape: "pentagon",
+        origin_country: "pin-map",
+        treatment_type: "tools",
+        length_mm: "aspect-ratio",
+        width_mm: "aspect-ratio",
+        height_mm: "aspect-ratio",
+        base_price_pcb: "tag",
+        purchased_price_pa: "tag",
+        price_per_carat_pa_pcb: "diagram2",
+        pv_selling_price: "tag",
+        pvd_asking_price: "diagram2",
+        pc_to: "file-earmark-text",
+        pf_invoiced_price: "file-earmark-text",
+        price_per_carat_all: "arrow-up",
+      };
+      return metadata_to_icon[metadata_key] || null;
     },
     getMetadataLabel(metadata_key) {
       const metadata_to_translation_key = {
@@ -463,10 +510,40 @@ export default {
   font-size: var(--sl-font-size-x-small);
 }
 
-._coverCell {
+._thContent {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 4);
+  white-space: nowrap;
+}
+
+._thIcon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+._coverFilesCell {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) / 2);
+}
+
+._coverThumb {
   position: relative;
   width: 84px;
   min-width: 84px;
   aspect-ratio: 4 / 3;
+  flex-shrink: 0;
+}
+
+._filesCount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--sl-font-size-x-small);
+  font-family: var(--sl-font-mono);
+  color: var(--c-gris_fonce);
+  padding-top: 2px;
 }
 </style>
