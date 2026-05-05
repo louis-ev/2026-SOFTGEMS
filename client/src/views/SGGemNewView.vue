@@ -11,7 +11,11 @@
       <div class="_fieldsGrid">
         <div>
           <DLabel :str="$t('sg_status')" />
-          <TextInput :content.sync="new_gem_fields.status" :required="false" />
+          <SGSelectField
+            v-model="new_gem_fields.status"
+            :options="status_suggestions"
+            :allow_empty="false"
+          />
         </div>
         <div>
           <DLabel :str="$t('sg_reference_supplier')" />
@@ -52,24 +56,34 @@
         </div>
         <div>
           <DLabel :str="$t('sg_color')" />
-          <TextInput :content.sync="new_gem_fields.color" :required="false" />
+          <SGSelectField
+            v-model="new_gem_fields.color"
+            :options="color_suggestions"
+            :allow_empty="true"
+          />
         </div>
         <div>
           <DLabel :str="$t('sg_shape')" />
-          <TextInput :content.sync="new_gem_fields.shape" :required="false" />
+          <SGSelectField
+            v-model="new_gem_fields.shape"
+            :options="shape_suggestions"
+            :allow_empty="true"
+          />
         </div>
         <div>
           <DLabel :str="$t('sg_origin_country')" />
-          <TextInput
-            :content.sync="new_gem_fields.origin_country"
-            :required="false"
+          <SGSelectField
+            v-model="new_gem_fields.origin_country"
+            :options="origin_country_suggestions"
+            :allow_empty="true"
           />
         </div>
         <div>
           <DLabel :str="$t('sg_treatment_type')" />
-          <TextInput
-            :content.sync="new_gem_fields.treatment_type"
-            :required="false"
+          <SGSelectField
+            v-model="new_gem_fields.treatment_type"
+            :options="treatment_type_suggestions"
+            :allow_empty="true"
           />
         </div>
         <div>
@@ -162,7 +176,14 @@
 </template>
 
 <script>
-import { stone_type_suggestions } from "@/suggestions/softgems";
+import {
+  color_suggestions,
+  origin_country_suggestions,
+  shape_suggestions,
+  stone_type_suggestions,
+  status_suggestions,
+  treatment_type_suggestions,
+} from "@/suggestions/softgems";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 
 const v1_new_gem_fields_defaults = {
@@ -196,7 +217,12 @@ export default {
       gems_path: "gems",
       new_gem_name: "",
       new_gem_fields: { ...v1_new_gem_fields_defaults },
+      color_suggestions,
+      origin_country_suggestions,
+      shape_suggestions,
       stone_type_suggestions,
+      status_suggestions,
+      treatment_type_suggestions,
       is_creating: false,
     };
   },

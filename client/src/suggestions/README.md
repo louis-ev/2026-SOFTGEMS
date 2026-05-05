@@ -5,6 +5,11 @@ This folder contains reusable suggestion lists for SoftGems fields.
 ## Current files
 
 - `stone_type_suggestions.js`: suggestion list for stone type field.
+- `status_suggestions.js`: options for gem status.
+- `color_suggestions.js`: options for gem color.
+- `shape_suggestions.js`: options for gem shape.
+- `origin_country_suggestions.js`: options for gem origin/country.
+- `treatment_type_suggestions.js`: options for treatment type.
 
 ## Usage
 
