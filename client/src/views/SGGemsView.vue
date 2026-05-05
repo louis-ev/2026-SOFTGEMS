@@ -363,7 +363,7 @@ export default {
   width: 100%;
 
   background: var(--c-bodybg);
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;

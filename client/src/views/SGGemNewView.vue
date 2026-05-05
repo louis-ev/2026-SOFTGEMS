@@ -37,7 +37,9 @@
       </section>
 
       <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_stone_characteristics") }}</h2>
+        <h2 class="_sectionTitle">
+          {{ $t("sg_section_stone_characteristics") }}
+        </h2>
         <div class="_fieldsGrid">
           <div>
             <DLabel :str="$t('sg_number_of_pieces')" />
@@ -459,9 +461,7 @@ export default {
 
 <style lang="scss" scoped>
 ._gemNewView {
-  height: 100%;
-  overflow-y: auto;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 2);
 }
 
 ._pageHeader {
