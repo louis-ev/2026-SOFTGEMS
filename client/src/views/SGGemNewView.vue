@@ -12,14 +12,6 @@
         <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
         <div class="_fieldsGrid">
           <div>
-            <DLabel :str="$t('sg_status')" />
-            <SGSelectField
-              v-model="new_gem_fields.status"
-              :options="status_suggestions"
-              :allow_empty="false"
-            />
-          </div>
-          <div>
             <DLabel :str="$t('sg_reference_supplier')" />
             <TextInput
               :content.sync="new_gem_fields.reference_supplier"
@@ -41,6 +33,12 @@
               :allow_empty="true"
             />
           </div>
+        </div>
+      </section>
+
+      <section class="_formSection">
+        <h2 class="_sectionTitle">{{ $t("sg_section_stone_characteristics") }}</h2>
+        <div class="_fieldsGrid">
           <div>
             <DLabel :str="$t('sg_number_of_pieces')" />
             <TextInput
@@ -49,18 +47,20 @@
               input_type="number"
             />
           </div>
-        </div>
-      </section>
-
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_stone_characteristics") }}</h2>
-        <div class="_fieldsGrid">
           <div>
             <DLabel :str="$t('sg_stone_type')" />
             <SGSelectField
               v-model="new_gem_fields.stone_type"
               :options="stone_type_suggestions"
               :allow_empty="true"
+            />
+          </div>
+          <div>
+            <DLabel :str="$t('sg_weight_ct')" />
+            <TextInput
+              :content.sync="new_gem_fields.weight_ct"
+              :required="false"
+              input_type="number"
             />
           </div>
           <div>
@@ -115,14 +115,6 @@
             <DLabel :str="$t('sg_height_mm')" />
             <TextInput
               :content.sync="new_gem_fields.height_mm"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_weight_ct')" />
-            <TextInput
-              :content.sync="new_gem_fields.weight_ct"
               :required="false"
               input_type="number"
             />
@@ -233,7 +225,6 @@ import {
   origin_country_suggestions,
   shape_suggestions,
   stone_type_suggestions,
-  status_suggestions,
   treatment_type_suggestions,
 } from "@/suggestions/softgems";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
@@ -286,7 +277,6 @@ export default {
       paired_gem_options: [],
       shape_suggestions,
       stone_type_suggestions,
-      status_suggestions,
       treatment_type_suggestions,
       is_creating: false,
       is_joined_gems_room: false,
@@ -409,7 +399,6 @@ export default {
       };
 
       const string_field_keys = [
-        "status",
         "reference_supplier",
         "reference_customer",
         "paired_gem",
@@ -424,6 +413,9 @@ export default {
           normalized_fields[field_key]
         );
       });
+
+      // Status is automatic and not editable in this form.
+      normalized_fields.status = "reference";
 
       const number_field_keys = [
         "number_of_pieces",
