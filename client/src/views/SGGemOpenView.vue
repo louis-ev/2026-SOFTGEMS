@@ -304,7 +304,7 @@ export default {
 ._gemOpenView {
   position: relative;
   min-height: 100%;
-  padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3.5);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
   max-width: 100%;
   margin: 0;
 }

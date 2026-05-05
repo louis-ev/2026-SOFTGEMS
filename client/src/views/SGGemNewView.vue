@@ -461,7 +461,7 @@ export default {
 
 <style lang="scss" scoped>
 ._gemNewView {
-  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 2);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
 ._pageHeader {
