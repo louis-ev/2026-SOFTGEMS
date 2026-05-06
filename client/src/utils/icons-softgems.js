@@ -3,6 +3,8 @@ import {
   BIconArchive,
   BIconArrowUp,
   BIconAspectRatio,
+  BIconCaretDownFill,
+  BIconCaretUpFill,
   BIconCardList,
   BIconClockHistory,
   BIconDiagram2,
@@ -24,6 +26,8 @@ import {
 Vue.component("BIconArchive", BIconArchive);
 Vue.component("BIconArrowUp", BIconArrowUp);
 Vue.component("BIconAspectRatio", BIconAspectRatio);
+Vue.component("BIconCaretDownFill", BIconCaretDownFill);
+Vue.component("BIconCaretUpFill", BIconCaretUpFill);
 Vue.component("BIconGem", BIconGem);
 Vue.component("BIconCardList", BIconCardList);
 Vue.component("BIconClockHistory", BIconClockHistory);

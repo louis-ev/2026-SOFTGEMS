@@ -26,11 +26,28 @@
                 />
                 <span>{{ metadata_labels[metadata_key] || metadata_key }}</span>
               </span>
-              <b-icon
+              <span
                 v-if="isSortableColumn(metadata_key)"
-                :icon="getSortIcon(metadata_key)"
-                class="_sortIcon"
-              />
+                class="_sortArrows"
+                :class="{ _activeSort: sort_key === metadata_key }"
+              >
+                <b-icon
+                  icon="caret-up-fill"
+                  class="_sortArrow"
+                  :class="{
+                    _active:
+                      sort_key === metadata_key && sort_direction === 'asc',
+                  }"
+                />
+                <b-icon
+                  icon="caret-down-fill"
+                  class="_sortArrow"
+                  :class="{
+                    _active:
+                      sort_key === metadata_key && sort_direction === 'desc',
+                  }"
+                />
+              </span>
             </button>
           </th>
         </tr>
@@ -195,10 +212,6 @@ export default {
       this.sort_key = metadata_key;
       this.sort_direction = metadata_key === "id" ? "desc" : "asc";
     },
-    getSortIcon(metadata_key) {
-      if (this.sort_key !== metadata_key) return "arrow-down-up";
-      return this.sort_direction === "asc" ? "sort-up" : "sort-down";
-    },
     getAriaSort(metadata_key) {
       if (!this.isSortableColumn(metadata_key)) return "none";
       if (this.sort_key !== metadata_key) return "none";
@@ -232,7 +245,7 @@ export default {
 }
 
 ._table {
-  --sticky-id-col-width: 50px;
+  --sticky-id-col-width: 80px;
   --sticky-cover-col-width: 80px;
 
   border-collapse: separate;
@@ -320,9 +333,31 @@ export default {
   cursor: default;
 }
 
-._sortIcon {
-  opacity: 0.7;
+._sortArrows {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0;
+  opacity: 0.75;
   flex-shrink: 0;
+  margin-top: -12px;
+  margin-bottom: -12px;
+  // display: none;
+}
+
+._sortArrow {
+  font-size: 0.52rem;
+  opacity: 0.28;
+  color: var(--c-gris_fonce);
+  transition: opacity 120ms ease, color 120ms ease;
+}
+
+._sortArrow._active {
+  opacity: 1;
+  color: var(--c-bleuvert);
+}
+
+._sortArrows._activeSort {
+  opacity: 1;
 }
 
 ._clickableRow {
