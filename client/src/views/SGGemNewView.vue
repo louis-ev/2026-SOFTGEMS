@@ -48,6 +48,7 @@
               :required="false"
               :input_type="gem_field_configs[field_key].input_type || 'text'"
               :input_step="gem_field_configs[field_key].input_step"
+              :instructions="gem_field_configs[field_key].instructions"
               @update:content="setFieldValue(field_key, $event)"
             />
           </div>
@@ -331,7 +332,9 @@ export default {
           if (field_config.readonly) return false;
           if (target_type === "number") return field_config.type === "number";
           if (target_type === "string")
-            return field_config.type === "text" || field_config.type === "select";
+            return (
+              field_config.type === "text" || field_config.type === "select"
+            );
           return false;
         })
         .map((field_config) => field_config.key);

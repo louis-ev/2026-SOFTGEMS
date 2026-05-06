@@ -97,4 +97,7 @@ export default {
   sg_edit_field: "Edit",
   sg_readonly_field: "Computed field (read-only)",
   sg_section_status: "Status",
+  sg_format_integer: "Format: integer",
+  sg_format_decimal_2: "Format: 0.00",
+  sg_format_decimal_3: "Format: 0.000",
 };

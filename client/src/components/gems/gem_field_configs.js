@@ -53,6 +53,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 1,
+      instructions: t("sg_format_integer"),
     },
     stone_type: {
       key: "stone_type",
@@ -68,6 +69,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.001,
+      instructions: t("sg_format_decimal_3"),
     },
     color: {
       key: "color",
@@ -104,6 +106,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     width_mm: {
       key: "width_mm",
@@ -112,6 +115,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     height_mm: {
       key: "height_mm",
@@ -120,6 +124,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     base_price_pcb: {
       key: "base_price_pcb",
@@ -128,6 +133,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     purchased_price_pa: {
       key: "purchased_price_pa",
@@ -136,6 +142,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     price_per_carat_pa_pcb: {
       key: "price_per_carat_pa_pcb",
@@ -144,6 +151,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     pv_selling_price: {
       key: "pv_selling_price",
@@ -152,6 +160,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     pvd_asking_price: {
       key: "pvd_asking_price",
@@ -167,6 +176,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 1,
+      instructions: t("sg_format_integer"),
     },
     pf_invoiced_price: {
       key: "pf_invoiced_price",
@@ -175,6 +185,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     price_per_carat_all: {
       key: "price_per_carat_all",
@@ -183,6 +194,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       type: "number",
       input_type: "number",
       input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
   };
 }

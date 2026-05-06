@@ -23,6 +23,7 @@
           :content.sync="edit_value"
           :input_type="field.input_type || 'text'"
           :input_step="field.input_step"
+          :instructions="field.instructions"
           :autofocus="true"
         />
       </div>
