@@ -1,0 +1,12 @@
+# SoftGems Product Specification
+
+Quand une demande utilisateur concerne le produit SoftGems (fonctionnalités métier, priorisation produit, UX métier, données pierres/sélections/contacts, sécurité fonctionnelle), lire d’abord ce document avant de proposer une solution :
+
+- `docs/cahier_des_charges_softgems.md`
+
+Règles d’utilisation :
+
+- Considérer ce cahier des charges comme source de vérité métier par défaut.
+- Si une demande contredit le cahier des charges, demander une clarification explicite à l’utilisateur avant d’implémenter.
+- En cas d’arbitrage technique, préserver les objectifs fonctionnels du cahier des charges.
+- Pour les tâches purement techniques (tooling, CI, refactor sans impact métier), la lecture n’est pas obligatoire.
