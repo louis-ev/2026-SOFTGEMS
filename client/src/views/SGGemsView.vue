@@ -249,8 +249,11 @@ export default {
     },
     sorted_gems() {
       if (!Array.isArray(this.gems)) return [];
-      return [...this.gems].sort(
-        (a, b) => this.getGemTimestamp(b) - this.getGemTimestamp(a)
+      return [...this.gems].sort((a, b) =>
+        this.getGemId(b).localeCompare(this.getGemId(a), undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
       );
     },
   },
