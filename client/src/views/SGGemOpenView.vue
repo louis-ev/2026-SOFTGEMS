@@ -15,12 +15,14 @@ z
         <p v-if="gem_internal_name" class="_pageSubtitle">
           {{ gem_internal_name }}
         </p>
-        <p
+        <button
           v-if="gem_last_edited_date"
-          class="_pageSubtitle _pageSubtitle_muted"
+          type="button"
+          class="_historyTrigger"
+          @click="openHistoryModal"
         >
           {{ $t("sg_last_modified") }}: {{ gem_last_edited_date }}
-        </p>
+        </button>
       </div>
       <div class="_coverColumn" v-if="gem">
         <div class="_coverFrame">
@@ -230,6 +232,38 @@ z
       @saved="onFieldSaved"
       @close="editing_field = null"
     />
+
+    <BaseModal2
+      v-if="show_history_modal"
+      :title="$t('sg_modifications_history')"
+      :size="'large'"
+      @close="show_history_modal = false"
+    >
+      <div class="_historyModalBody">
+        <div v-if="is_loading_history" class="_historyLoading">
+          <LoaderSpinner />
+        </div>
+        <p v-else-if="gem_history_entries.length === 0" class="_historyEmpty">
+          {{ $t("sg_no_history") }}
+        </p>
+        <ul v-else class="_historyList">
+          <li
+            v-for="(entry, index) in gem_history_entries"
+            :key="`${entry.ts}-${entry.event}-${entry.field || 'created'}-${index}`"
+            class="_historyEntry"
+          >
+            <p class="_historyEntryTitle">{{ formatHistoryEntryTitle(entry) }}</p>
+            <p class="_historyEntryMeta">
+              <time :datetime="entry.ts">{{ formatRecentDateTime(entry.ts) }}</time>
+              <template v-if="entry.author">
+                • {{ $t("sg_history_by") }}
+                <strong>{{ formatAuthor(entry.author) }}</strong>
+              </template>
+            </p>
+          </li>
+        </ul>
+      </div>
+    </BaseModal2>
   </section>
 </template>
 
@@ -260,6 +294,9 @@ export default {
       paired_gem_options: [],
       editing_field: null,
       editing_current_value: "",
+      show_history_modal: false,
+      is_loading_history: false,
+      gem_history_entries: [],
     };
   },
   computed: {
@@ -338,6 +375,48 @@ export default {
         this.paired_gem_options = [];
       }
     },
+    async openHistoryModal() {
+      this.show_history_modal = true;
+      if (this.gem_history_entries.length > 0) return;
+
+      this.is_loading_history = true;
+      try {
+        const entries = await this.$api.getFieldHistory({
+          path: this.gem_path,
+        });
+        this.gem_history_entries = (Array.isArray(entries) ? entries : [])
+          .slice()
+          .reverse();
+      } catch {
+        this.gem_history_entries = [];
+      } finally {
+        this.is_loading_history = false;
+      }
+    },
+    formatHistoryEntryTitle(entry) {
+      if (entry?.event === "created") {
+        const fields_count = Object.keys(entry?.fields || {}).length;
+        return `${this.$t("sg_created")} (${fields_count} fields)`;
+      }
+
+      if (entry?.event === "updated") {
+        const field_name = this.field_configs?.[entry.field]?.label || entry.field;
+        const value_text =
+          entry.value === null || entry.value === undefined || entry.value === ""
+            ? "—"
+            : String(entry.value);
+        return `${field_name}: ${value_text}`;
+      }
+
+      return this.$t("sg_field_history");
+    },
+    formatAuthor(author_path) {
+      if (!author_path) return "";
+      const author = this.getAuthor(author_path);
+      if (author) return author.name;
+      const parts = String(author_path).split("/");
+      return parts[parts.length - 1] || author_path;
+    },
     openEditModal(field_config) {
       const raw_value = this.gem?.[field_config.key];
       this.editing_current_value =
@@ -387,6 +466,20 @@ export default {
 
 ._pageSubtitle_muted {
   font-size: 0.85rem;
+}
+
+._historyTrigger {
+  all: unset;
+  cursor: pointer;
+  margin: calc(var(--spacing) / 6) 0 0;
+  color: var(--c-gris_fonce);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+
+  &:hover {
+    color: var(--c-noir);
+  }
 }
 
 ._backButton {
@@ -452,6 +545,53 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: calc(var(--spacing) / 1.75);
+}
+
+._historyModalBody {
+  min-height: 120px;
+}
+
+._historyLoading {
+  display: flex;
+  justify-content: center;
+  padding: calc(var(--spacing) / 2);
+}
+
+._historyEmpty {
+  margin: 0;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-gris_fonce);
+}
+
+._historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 3);
+}
+
+._historyEntry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: calc(var(--spacing) / 3) calc(var(--spacing) / 2);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 6px;
+  background: var(--c-bodybg);
+}
+
+._historyEntryTitle {
+  margin: 0;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-noir);
+}
+
+._historyEntryMeta {
+  margin: 0;
+  font-size: var(--sl-font-size-x-small);
+  color: var(--c-gris_fonce);
 }
 
 @media (max-width: 920px) {

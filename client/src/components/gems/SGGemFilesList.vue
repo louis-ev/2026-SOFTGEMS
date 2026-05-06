@@ -12,7 +12,6 @@
           multiple="multiple"
           :id="upload_input_id"
           name="file"
-          accept=".pdf,.jpg,.jpeg,.png,.heic,.mp4"
           class="inputfile-2"
           @change="updateInputFiles($event)"
         />
@@ -38,12 +37,31 @@
 
     <div v-else class="_grid">
       <article v-for="file in sorted_files" :key="file.$path" class="_item">
-        <div class="_preview">
-          <MediaContent :file="file" :resolution="640" />
-        </div>
-        <div class="_meta">
-          <p class="_name">{{ file.$media_filename || file.$path }}</p>
-          <p class="_type">{{ file.$type || "other" }}</p>
+        <a
+          v-if="getFileDownloadUrl(file)"
+          class="_itemLink"
+          :href="getFileDownloadUrl(file)"
+          :download="shouldDownloadFile(file) ? file.$media_filename || '' : null"
+          :title="shouldDownloadFile(file) ? $t('download') : $t('open')"
+          :target="shouldDownloadFile(file) ? null : '_blank'"
+          rel="noopener noreferrer"
+        >
+          <div class="_preview">
+            <MediaContent :file="file" :resolution="640" />
+          </div>
+          <div class="_meta">
+            <p class="_name">{{ file.$media_filename || file.$path }}</p>
+            <p class="_type">{{ file.$type || "other" }}</p>
+          </div>
+        </a>
+        <div v-else class="_itemLink _itemLink_disabled">
+          <div class="_preview">
+            <MediaContent :file="file" :resolution="640" />
+          </div>
+          <div class="_meta">
+            <p class="_name">{{ file.$media_filename || file.$path }}</p>
+            <p class="_type">{{ file.$type || "other" }}</p>
+          </div>
         </div>
       </article>
     </div>
@@ -85,6 +103,17 @@ export default {
     },
   },
   methods: {
+    shouldDownloadFile(file) {
+      const previewable_types = new Set(["image", "video", "audio", "pdf"]);
+      return !previewable_types.has(file?.$type);
+    },
+    getFileDownloadUrl(file) {
+      if (!file?.$path || !file?.$media_filename) return "";
+      return this.makeMediaFileURL({
+        $path: file.$path,
+        $media_filename: file.$media_filename,
+      });
+    },
     updateInputFiles(event) {
       const file_list = event?.target?.files;
       this.selected_files = file_list ? Array.from(file_list) : [];
@@ -136,6 +165,22 @@ export default {
   border-radius: 8px;
   overflow: hidden;
   background: var(--c-blanc);
+}
+
+._itemLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+
+  &:hover {
+    background: var(--c-bodybg);
+  }
+}
+
+._itemLink_disabled {
+  cursor: default;
 }
 
 ._preview {

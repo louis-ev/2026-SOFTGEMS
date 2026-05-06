@@ -91,6 +91,7 @@ export default {
   sg_creation_notice_editable:
     "All fields remain editable after creation.",
   sg_field_history: "History",
+  sg_modifications_history: "Modifications history",
   sg_no_history: "No history yet.",
   sg_history_changed_on: "Changed on",
   sg_history_by: "by",
