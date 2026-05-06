@@ -23,7 +23,10 @@
           <div
             v-for="field_key in form_section.field_keys"
             :key="`${form_section.key}-${field_key}`"
-            :class="{ _fieldInvalid: !isFieldValid(field_key) }"
+            :class="{
+              _fieldInvalid: !isFieldValid(field_key),
+              _fieldDisabled: isFieldDisabled(field_key),
+            }"
           >
             <DLabel
               :str="gem_field_configs[field_key].label"
@@ -41,12 +44,14 @@
               :value="new_gem_fields[field_key]"
               :options="gem_field_configs[field_key].options || []"
               :allow_empty="true"
+              :disabled="isFieldDisabled(field_key)"
               @input="setFieldValue(field_key, $event)"
             />
             <TextInput
               v-else
               :content="new_gem_fields[field_key]"
               :required="false"
+              :disabled="isFieldDisabled(field_key)"
               :input_type="gem_field_configs[field_key].input_type || 'text'"
               :input_step="gem_field_configs[field_key].input_step"
               :instructions="gem_field_configs[field_key].instructions"
@@ -93,6 +98,12 @@
 <script>
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+
+const creation_locked_field_keys = [
+  "reference_supplier",
+  "reference_customer",
+  "paired_gem",
+];
 
 const v1_new_gem_fields_defaults = {
   status: "reference",
@@ -173,20 +184,6 @@ export default {
             "height_mm",
           ],
         },
-        {
-          key: "pricing",
-          title: this.$t("sg_section_pricing"),
-          field_keys: [
-            "base_price_pcb",
-            "purchased_price_pa",
-            "price_per_carat_pa_pcb",
-            "pv_selling_price",
-            "pvd_asking_price",
-            "pc_to",
-            "pf_invoiced_price",
-            "price_per_carat_all",
-          ],
-        },
       ];
     },
     pvd_asking_price_preview() {
@@ -227,7 +224,11 @@ export default {
     },
   },
   methods: {
+    isFieldDisabled(field_key) {
+      return creation_locked_field_keys.includes(field_key);
+    },
     setFieldValue(field_key, value) {
+      if (this.isFieldDisabled(field_key)) return;
       this.$set(this.new_gem_fields, field_key, value);
     },
     goBack() {
@@ -395,6 +396,8 @@ export default {
     validateFieldValue(field_key, raw_value) {
       const field_config = this.gem_field_configs[field_key];
       if (!field_config) return { is_valid: true, error_message: "" };
+      if (this.isFieldDisabled(field_key))
+        return { is_valid: true, error_message: "" };
       if (field_key === "pvd_asking_price" || field_config.readonly)
         return { is_valid: true, error_message: "" };
       if (field_config.type !== "number")
@@ -534,6 +537,13 @@ export default {
 ._fieldInvalid {
   :deep(.u-input) {
     border-color: var(--c-rouge);
+  }
+}
+
+._fieldDisabled {
+  :deep(.u-input),
+  :deep(select) {
+    cursor: not-allowed;
   }
 }
 

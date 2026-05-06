@@ -12,6 +12,7 @@
           :autocomplete="autocomplete"
           :size="size"
           :required="required"
+          :disabled="disabled"
           :placeholder="placeholder"
           :value="content"
           @input="onInput"
@@ -118,6 +119,10 @@ export default {
     required: {
       type: Boolean,
       default: true,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
     autofocus: {
       type: Boolean,
