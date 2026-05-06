@@ -179,19 +179,29 @@ export default {
     },
     async save() {
       if (this.field.readonly || this.is_saving) return;
+      const normalized_value = this.normalizeFieldValue(this.edit_value);
       this.is_saving = true;
       try {
         await this.$api.updateMeta({
           path: this.gem_path,
-          new_meta: { [this.field.key]: this.edit_value },
+          new_meta: { [this.field.key]: normalized_value },
         });
-        this.$emit("saved", { key: this.field.key, value: this.edit_value });
+        this.$emit("saved", { key: this.field.key, value: normalized_value });
         this.$emit("close");
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || this.$t("couldntbesaved"));
       } finally {
         this.is_saving = false;
       }
+    },
+    normalizeFieldValue(raw_value) {
+      if (this.field.type !== "number") return raw_value;
+      if (raw_value === "" || raw_value === null || raw_value === undefined)
+        return 0;
+
+      const number_value = Number(raw_value);
+      if (Number.isFinite(number_value)) return number_value;
+      return raw_value;
     },
     formatHistoryValue(value) {
       if (value === null || value === undefined || value === "") return "—";

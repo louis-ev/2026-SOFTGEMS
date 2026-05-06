@@ -269,11 +269,10 @@ export default {
   },
   async created() {
     await this.fetchGem();
+    this.$api.join({ room: this.gem_path });
     this.fetchPairableGems();
   },
-  mounted() {
-    this.$api.join({ room: this.gem_path });
-  },
+  mounted() {},
   beforeDestroy() {
     this.$api.leave({ room: this.gem_path });
   },
