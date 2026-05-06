@@ -10,26 +10,28 @@
 
     <div class="_pageHeader">
       <h1 class="_pageTitle">{{ gem_title }}</h1>
+
+      <div class="_coverColumn" v-if="gem">
+        <div class="_coverFrame">
+          <CoverField
+            :context="'full'"
+            :ratio="'1 / 1'"
+            :cover="gem.$cover"
+            :path="gem_path"
+            :can_edit="can_edit"
+            :available_options="['import']"
+          />
+        </div>
+      </div>
     </div>
 
     <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="gem" class="_content">
       <!-- Overview: cover + files -->
+
       <section class="_formSection">
         <div class="_topOverview">
-          <div class="_coverColumn">
-            <div class="_coverFrame">
-              <CoverField
-                :context="'full'"
-                :ratio="'1 / 1'"
-                :cover="gem.$cover"
-                :path="gem_path"
-                :can_edit="can_edit"
-                :available_options="['import']"
-              />
-            </div>
-          </div>
           <div class="_filesColumn">
             <SGGemFilesList
               :path="gem_path"

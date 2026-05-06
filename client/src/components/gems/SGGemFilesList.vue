@@ -5,25 +5,31 @@
         {{ $t("sg_files") }}
       </h2>
       <span class="_count">{{ sorted_files.length }}</span>
-    </div>
 
-    <div v-if="can_edit" class="_uploadRow">
-      <input
-        type="file"
-        multiple="multiple"
-        :id="upload_input_id"
-        name="file"
-        accept=".pdf,.jpg,.jpeg,.png,.heic,.mp4"
-        class="inputfile-2"
-        @change="updateInputFiles($event)"
-      />
-      <label :for="upload_input_id">{{ $t("import") }}</label>
-      <UploadFiles
-        v-if="selected_files.length > 0"
-        :files_to_import="selected_files"
-        :path="path"
-        @close="onUploadClosed"
-      />
+      <div v-if="can_edit" class="_uploadRow">
+        <input
+          type="file"
+          multiple="multiple"
+          :id="upload_input_id"
+          name="file"
+          accept=".pdf,.jpg,.jpeg,.png,.heic,.mp4"
+          class="inputfile-2"
+          @change="updateInputFiles($event)"
+        />
+        <label
+          :for="upload_input_id"
+          class="u-button u-button_small u-button_red u-button_icon"
+        >
+          <b-icon icon="upload" :label="$t('import')" />
+          <!-- {{ $t("import") }} -->
+        </label>
+        <UploadFiles
+          v-if="selected_files.length > 0"
+          :files_to_import="selected_files"
+          :path="path"
+          @close="onUploadClosed"
+        />
+      </div>
     </div>
 
     <p v-if="sorted_files.length === 0" class="_empty">
