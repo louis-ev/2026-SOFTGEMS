@@ -1,3 +1,4 @@
+z
 <template>
   <section class="_gemOpenView">
     <button
@@ -9,8 +10,18 @@
     </button>
 
     <div class="_pageHeader">
-      <h1 class="_pageTitle">{{ gem_title }}</h1>
-
+      <div>
+        <h1 class="_pageTitle">{{ gem_title }}</h1>
+        <p v-if="gem_internal_name" class="_pageSubtitle">
+          {{ gem_internal_name }}
+        </p>
+        <p
+          v-if="gem_last_edited_date"
+          class="_pageSubtitle _pageSubtitle_muted"
+        >
+          {{ $t("sg_last_modified") }}: {{ gem_last_edited_date }}
+        </p>
+      </div>
       <div class="_coverColumn" v-if="gem">
         <div class="_coverFrame">
           <CoverField
@@ -31,16 +42,12 @@
       <!-- Overview: cover + files -->
 
       <section class="_formSection">
-        <div class="_topOverview">
-          <div class="_filesColumn">
-            <SGGemFilesList
-              :path="gem_path"
-              :can_edit="can_edit"
-              :gem_files="gem.$files || []"
-              @filesUpdated="fetchGem"
-            />
-          </div>
-        </div>
+        <SGGemFilesList
+          :path="gem_path"
+          :can_edit="can_edit"
+          :gem_files="gem.$files || []"
+          @filesUpdated="fetchGem"
+        />
         <div class="_dangerZone">
           <button
             type="button"
@@ -266,6 +273,16 @@ export default {
       if (!this.gem) return this.$t("sg_open_gem_title");
       return this.$t("sg_gem_title", { id: this.gem_id });
     },
+    gem_internal_name() {
+      return (
+        this.cleanString(this.gem?.name) || this.cleanString(this.gem?.title)
+      );
+    },
+    gem_last_edited_date() {
+      const raw_date = this.gem?.$date_modified || this.gem?.$date_created;
+      if (!raw_date) return "";
+      return this.formatRecentDateTime(raw_date);
+    },
     pvd_asking_price_computed() {
       const pv = Number(this.gem?.pv_selling_price);
       if (!Number.isFinite(pv)) return 0;
@@ -362,6 +379,16 @@ export default {
   margin: 0;
 }
 
+._pageSubtitle {
+  margin: calc(var(--spacing) / 6) 0 0;
+  color: var(--c-gris_fonce);
+  font-size: 0.95rem;
+}
+
+._pageSubtitle_muted {
+  font-size: 0.85rem;
+}
+
 ._backButton {
   position: absolute;
   top: 0;
@@ -398,6 +425,7 @@ export default {
 
 ._coverColumn {
   min-width: 0;
+  flex: 0 1 200px;
 }
 
 ._filesColumn {
