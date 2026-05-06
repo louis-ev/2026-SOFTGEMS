@@ -17,22 +17,28 @@
     <div v-else-if="gem" class="_content">
       <!-- Overview: cover + files -->
       <section class="_formSection">
-        <div class="_coverFrame">
-          <CoverField
-            :context="'full'"
-            :ratio="'1 / 1'"
-            :cover="gem.$cover"
-            :path="gem_path"
-            :can_edit="can_edit"
-            :available_options="['import']"
-          />
+        <div class="_topOverview">
+          <div class="_coverColumn">
+            <div class="_coverFrame">
+              <CoverField
+                :context="'full'"
+                :ratio="'1 / 1'"
+                :cover="gem.$cover"
+                :path="gem_path"
+                :can_edit="can_edit"
+                :available_options="['import']"
+              />
+            </div>
+          </div>
+          <div class="_filesColumn">
+            <SGGemFilesList
+              :path="gem_path"
+              :can_edit="can_edit"
+              :gem_files="gem.$files || []"
+              @filesUpdated="fetchGem"
+            />
+          </div>
         </div>
-        <SGGemFilesList
-          :path="gem_path"
-          :can_edit="can_edit"
-          :gem_files="gem.$files || []"
-          @filesUpdated="fetchGem"
-        />
         <div class="_dangerZone">
           <button
             type="button"
@@ -381,13 +387,27 @@ export default {
   font-size: 1rem;
 }
 
+._topOverview {
+  display: grid;
+  grid-template-columns: minmax(220px, 220px) minmax(0, 1fr);
+  gap: calc(var(--spacing) * 0.9);
+  align-items: start;
+}
+
+._coverColumn {
+  min-width: 0;
+}
+
+._filesColumn {
+  min-width: 0;
+}
+
 ._coverFrame {
-  width: min(300px, 100%);
+  width: 100%;
   border: 1px solid var(--c-gris_clair);
   border-radius: 8px;
   overflow: hidden;
   background: var(--c-bodybg);
-  margin-bottom: calc(var(--spacing) * 0.75);
 }
 
 ._dangerZone {
@@ -402,5 +422,11 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: calc(var(--spacing) / 1.75);
+}
+
+@media (max-width: 920px) {
+  ._topOverview {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
