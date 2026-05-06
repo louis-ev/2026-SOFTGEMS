@@ -59,7 +59,7 @@
         v-if="edit_mode"
         :path="path"
         :label="label_title"
-        :ratio="ratio"
+        :ratio="normalized_ratio"
         :preview_format="preview_format"
         :existing_preview="existing_preview"
         :available_options="available_options"
