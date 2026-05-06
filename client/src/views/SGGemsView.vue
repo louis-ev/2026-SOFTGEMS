@@ -37,85 +37,87 @@
 
       <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
       <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
-      <div v-else>
-        <table class="_table">
-          <thead>
-            <tr>
-              <th
-                v-for="metadata_key in metadata_keys"
-                :key="metadata_key"
-                :class="getStickyColumnClass(metadata_key)"
-              >
-                <span class="_thContent">
-                  <b-icon
-                    v-if="getMetadataIcon(metadata_key)"
-                    :icon="getMetadataIcon(metadata_key)"
-                    class="_thIcon"
-                  />
-                  <span>{{ getMetadataLabel(metadata_key) }}</span>
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="sorted_gems.length === 0">
-              <td :colspan="metadata_keys.length">
-                {{ $t("sg_no_gems_yet") }}
-              </td>
-            </tr>
-            <tr
-              v-for="gem in sorted_gems"
-              :key="gem.$path"
-              class="_clickableRow"
-              :class="{
-                _selected:
-                  is_gem_open && getGemId(gem) === $route.params.gem_id,
-              }"
-              @click="openGem(gem)"
-            >
-              <td
-                v-for="metadata_key in metadata_keys"
-                :key="`${gem.$path}-${metadata_key}`"
-                :class="[
-                  getStickyColumnClass(metadata_key),
-                  { _editableCell: isFieldEditable(metadata_key) },
-                ]"
-                @click="
-                  isFieldEditable(metadata_key)
-                    ? openCellEditModal(gem, metadata_key, $event)
-                    : null
-                "
-              >
-                <div
-                  v-if="metadata_key === '$cover'"
-                  class="_coverFilesCell"
-                  @click.stop
+      <div v-else class="_tableSection">
+        <div class="_tableWrap">
+          <table class="_table">
+            <thead>
+              <tr>
+                <th
+                  v-for="metadata_key in metadata_keys"
+                  :key="metadata_key"
+                  :class="getStickyColumnClass(metadata_key)"
                 >
-                  <div class="_coverThumb">
-                    <CoverField
-                      :context="'tiny'"
-                      :ratio="'1 / 1'"
-                      :cover="gem.$cover"
-                      :path="gem.$path"
-                      :can_edit="true"
-                      :available_options="['import']"
+                  <span class="_thContent">
+                    <b-icon
+                      v-if="getMetadataIcon(metadata_key)"
+                      :icon="getMetadataIcon(metadata_key)"
+                      class="_thIcon"
                     />
-                  </div>
+                    <span>{{ getMetadataLabel(metadata_key) }}</span>
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="sorted_gems.length === 0">
+                <td :colspan="metadata_keys.length">
+                  {{ $t("sg_no_gems_yet") }}
+                </td>
+              </tr>
+              <tr
+                v-for="gem in sorted_gems"
+                :key="gem.$path"
+                class="_clickableRow"
+                :class="{
+                  _selected:
+                    is_gem_open && getGemId(gem) === $route.params.gem_id,
+                }"
+                @click="openGem(gem)"
+              >
+                <td
+                  v-for="metadata_key in metadata_keys"
+                  :key="`${gem.$path}-${metadata_key}`"
+                  :class="[
+                    getStickyColumnClass(metadata_key),
+                    { _editableCell: isFieldEditable(metadata_key) },
+                  ]"
+                  @click="
+                    isFieldEditable(metadata_key)
+                      ? openCellEditModal(gem, metadata_key, $event)
+                      : null
+                  "
+                >
                   <div
-                    v-if="gem.$files && gem.$files.length > 0"
-                    class="_filesCount"
+                    v-if="metadata_key === '$cover'"
+                    class="_coverFilesCell"
+                    @click.stop
                   >
-                    <b-icon icon="file-earmark-text" />
-                    <span>{{ gem.$files.length }}</span>
+                    <div class="_coverThumb">
+                      <CoverField
+                        :context="'tiny'"
+                        :ratio="'1 / 1'"
+                        :cover="gem.$cover"
+                        :path="gem.$path"
+                        :can_edit="true"
+                        :available_options="['import']"
+                      />
+                    </div>
+                    <div
+                      v-if="gem.$files && gem.$files.length > 0"
+                      class="_filesCount"
+                    >
+                      <b-icon icon="file-earmark-text" />
+                      <span>{{ gem.$files.length }}</span>
+                    </div>
                   </div>
-                </div>
-                <span v-else class="_gemMetadataValue">{{
-                  formatValue(resolveMetadataValue(gem, metadata_key))
-                }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  <span v-else class="_gemMetadataValue">{{
+                    formatValue(resolveMetadataValue(gem, metadata_key))
+                  }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <GemCsvExportButton
           :gems="sorted_gems"
@@ -546,7 +548,10 @@ export default {
 ._gemsView--content {
   position: relative;
   height: 100%;
-  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 ._pageTitle {
@@ -572,9 +577,9 @@ export default {
 
   border-collapse: separate;
   border-spacing: 0;
-  display: block;
-  overflow-x: auto;
   border: 1px solid var(--c-gris_clair);
+  width: max-content;
+  min-width: 100%;
 
   th,
   td {
@@ -582,6 +587,13 @@ export default {
     border-bottom: 1px solid var(--c-gris_clair);
     padding: calc(var(--spacing) / 2);
     vertical-align: top;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--c-bodybg);
+    z-index: 5;
   }
 
   code {
@@ -612,12 +624,25 @@ export default {
 
   th._stickyIdCol,
   th._stickyCoverCol {
-    z-index: 6;
+    z-index: 7;
   }
 
   th._stickyCoverCol {
-    z-index: 7;
+    z-index: 8;
   }
+}
+
+._tableWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+._tableSection {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 ._clickableRow {

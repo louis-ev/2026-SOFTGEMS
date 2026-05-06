@@ -2,7 +2,7 @@
   <div class="_csvExport">
     <button
       type="button"
-      class="u-button"
+      class="u-buttonLink"
       :disabled="!has_gems"
       @click="exportCsv"
     >
@@ -85,7 +85,7 @@ export default {
 
 <style lang="scss" scoped>
 ._csvExport {
-  margin-top: var(--spacing);
+  margin-top: calc(var(--spacing) * 0.5);
   display: flex;
   justify-content: flex-end;
 }
