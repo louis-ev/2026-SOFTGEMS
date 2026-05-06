@@ -4,10 +4,11 @@
       <div class="_pageHeader">
         <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
         <div class="_headerActions">
-          <router-link to="/gems/new" class="u-buttonLink">
+          <router-link to="/gems/new" class="u-button u-button_bleuvert">
+            <b-icon icon="plus-lg" />
             {{ $t("sg_create_gem") }}
           </router-link>
-          <button
+          <!-- <button
             type="button"
             class="u-button"
             :disabled="is_generating_placeholders || is_removing_all_gems"
@@ -18,8 +19,8 @@
                 ? $t("sg_generating_placeholder_gems")
                 : $t("sg_generate_placeholder_gems")
             }}
-          </button>
-          <button
+          </button> -->
+          <!-- <button
             type="button"
             class="u-button u-button_red"
             :disabled="is_generating_placeholders || is_removing_all_gems"
@@ -30,83 +31,91 @@
                 ? $t("sg_removing_all_gems")
                 : $t("sg_remove_all_gems")
             }}
-          </button>
+          </button> -->
         </div>
       </div>
 
       <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
       <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
-      <table v-else class="_table">
-        <thead>
-          <tr>
-            <th v-for="metadata_key in metadata_keys" :key="metadata_key">
-              <span class="_thContent">
-                <b-icon
-                  v-if="getMetadataIcon(metadata_key)"
-                  :icon="getMetadataIcon(metadata_key)"
-                  class="_thIcon"
-                />
-                <span>{{ getMetadataLabel(metadata_key) }}</span>
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="sorted_gems.length === 0">
-            <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
-          </tr>
-          <tr
-            v-for="gem in sorted_gems"
-            :key="gem.$path"
-            class="_clickableRow"
-            :class="{
-              _selected: is_gem_open && getGemId(gem) === $route.params.gem_id,
-            }"
-            @click="openGem(gem)"
-          >
-            <td
-              v-for="metadata_key in metadata_keys"
-              :key="`${gem.$path}-${metadata_key}`"
-              :class="{ _editableCell: isFieldEditable(metadata_key) }"
-              @click="
-                isFieldEditable(metadata_key)
-                  ? openCellEditModal(gem, metadata_key, $event)
-                  : null
-              "
-            >
-              <div
-                v-if="metadata_key === '$cover'"
-                class="_coverFilesCell"
-                @click.stop
-              >
-                <div class="_coverThumb">
-                  <CoverField
-                    :context="'tiny'"
-                    :ratio="'1 / 1'"
-                    :cover="gem.$cover"
-                    :path="gem.$path"
-                    :can_edit="true"
-                    :available_options="['import']"
+      <div v-else>
+        <table class="_table">
+          <thead>
+            <tr>
+              <th v-for="metadata_key in metadata_keys" :key="metadata_key">
+                <span class="_thContent">
+                  <b-icon
+                    v-if="getMetadataIcon(metadata_key)"
+                    :icon="getMetadataIcon(metadata_key)"
+                    class="_thIcon"
                   />
-                </div>
+                  <span>{{ getMetadataLabel(metadata_key) }}</span>
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="sorted_gems.length === 0">
+              <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
+            </tr>
+            <tr
+              v-for="gem in sorted_gems"
+              :key="gem.$path"
+              class="_clickableRow"
+              :class="{
+                _selected: is_gem_open && getGemId(gem) === $route.params.gem_id,
+              }"
+              @click="openGem(gem)"
+            >
+              <td
+                v-for="metadata_key in metadata_keys"
+                :key="`${gem.$path}-${metadata_key}`"
+                :class="{ _editableCell: isFieldEditable(metadata_key) }"
+                @click="
+                  isFieldEditable(metadata_key)
+                    ? openCellEditModal(gem, metadata_key, $event)
+                    : null
+                "
+              >
                 <div
-                  v-if="gem.$files && gem.$files.length > 0"
-                  class="_filesCount"
+                  v-if="metadata_key === '$cover'"
+                  class="_coverFilesCell"
+                  @click.stop
                 >
-                  <b-icon icon="file-earmark-text" />
-                  <span>{{ gem.$files.length }}</span>
+                  <div class="_coverThumb">
+                    <CoverField
+                      :context="'tiny'"
+                      :ratio="'1 / 1'"
+                      :cover="gem.$cover"
+                      :path="gem.$path"
+                      :can_edit="true"
+                      :available_options="['import']"
+                    />
+                  </div>
+                  <div
+                    v-if="gem.$files && gem.$files.length > 0"
+                    class="_filesCount"
+                  >
+                    <b-icon icon="file-earmark-text" />
+                    <span>{{ gem.$files.length }}</span>
+                  </div>
                 </div>
-              </div>
-              <span v-else class="_gemMetadataValue">{{
-                formatValue(resolveMetadataValue(gem, metadata_key))
-              }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <span v-else class="_gemMetadataValue">{{
+                  formatValue(resolveMetadataValue(gem, metadata_key))
+                }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <GemCsvExportButton
+          :gems="sorted_gems"
+          :metadata_keys="metadata_keys"
+          :metadata_labels="metadata_labels"
+        />
+      </div>
     </div>
 
-    <transition name="fade_fast">
+    <transition name="fade">
       <div v-if="is_gem_open" class="_gemOverlay" @click.self="closeGemPanel">
         <section class="_gemPanel">
           <router-view />
@@ -160,6 +169,8 @@ export default {
   components: {
     SGGemEditFieldModal: () =>
       import("@/components/gems/SGGemEditFieldModal.vue"),
+    GemCsvExportButton: () =>
+      import("@/components/gems/GemCsvExportButton.vue"),
   },
   data() {
     return {
@@ -255,6 +266,12 @@ export default {
           sensitivity: "base",
         })
       );
+    },
+    metadata_labels() {
+      return this.metadata_keys.reduce((accumulator, metadata_key) => {
+        accumulator[metadata_key] = this.getMetadataLabel(metadata_key);
+        return accumulator;
+      }, {});
     },
   },
   methods: {

@@ -2,6 +2,7 @@ export default {
   sg_inventory: "Inventory",
   sg_all_gems: "All gems",
   sg_create_gem: "Add a gem",
+  sg_export_gems_csv: "Export full database (CSV)",
   sg_section_identification: "Identification",
   sg_section_stone_characteristics: "Stone characteristics",
   sg_section_pricing: "Pricing",
@@ -85,6 +86,10 @@ export default {
   sg_pf_invoiced_price: "PF (invoiced price)",
   sg_price_per_carat_all: "Price per carat (all pricing)",
   sg_internal_name_optional: "Internal name (optional)",
+  sg_creation_notice_documents:
+    "You can add a cover image and documents (images, videos, PDF certificates, etc.) after creating the gem.",
+  sg_creation_notice_editable:
+    "All fields remain editable after creation.",
   sg_field_history: "History",
   sg_no_history: "No history yet.",
   sg_history_changed_on: "Changed on",

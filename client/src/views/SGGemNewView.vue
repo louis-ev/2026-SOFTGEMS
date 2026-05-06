@@ -1,10 +1,15 @@
 <template>
   <section class="_gemNewView">
+    <button
+      type="button"
+      class="u-button u-button_icon _closeButton"
+      @click="goBack"
+    >
+      <b-icon icon="x-lg" />
+    </button>
+
     <div class="_pageHeader">
       <h1 class="_pageTitle">{{ $t("sg_create_gem_title") }}</h1>
-      <button type="button" class="u-button" @click="goBack">
-        {{ $t("sg_back") }}
-      </button>
     </div>
 
     <form class="_form" @submit.prevent="createGem">
@@ -177,7 +182,10 @@
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_pf_invoiced_price')" icon="file-earmark-text" />
+            <DLabel
+              :str="$t('sg_pf_invoiced_price')"
+              icon="file-earmark-text"
+            />
             <TextInput
               :content.sync="new_gem_fields.pf_invoiced_price"
               :required="false"
@@ -201,6 +209,8 @@
           <DLabel :str="$t('sg_internal_name_optional')" icon="pencil" />
           <TextInput :content.sync="new_gem_name" :required="false" />
         </div>
+        <p class="_creationNotice">{{ $t("sg_creation_notice_documents") }}</p>
+        <p class="_creationNotice">{{ $t("sg_creation_notice_editable") }}</p>
       </section>
 
       <div class="_actions">
@@ -461,6 +471,7 @@ export default {
 
 <style lang="scss" scoped>
 ._gemNewView {
+  position: relative;
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
@@ -476,8 +487,15 @@ export default {
   margin: 0;
 }
 
+._closeButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+}
+
 ._form {
-  max-width: 720px;
+  // max-width: 720px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -505,6 +523,12 @@ export default {
 ._textarea {
   width: 100%;
   min-height: 96px;
+}
+
+._creationNotice {
+  margin: calc(var(--spacing) * 0.6) 0 0;
+  color: var(--c-gris_fonce);
+  font-size: 0.925rem;
 }
 
 ._actions {
