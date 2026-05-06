@@ -100,4 +100,9 @@ export default {
   sg_format_integer: "Format: integer",
   sg_format_decimal_2: "Format: 0.00",
   sg_format_decimal_3: "Format: 0.000",
+  sg_invalid_number: "Invalid number format.",
+  sg_invalid_integer: "Use an integer value.",
+  sg_invalid_decimals: "Use up to {decimals} decimals.",
+  sg_invalid_fields_summary: "Please fix invalid fields: {fields}",
+  sg_invalid_field_before_save: "Fix the invalid value before saving.",
 };

@@ -23,6 +23,7 @@
           <div
             v-for="field_key in form_section.field_keys"
             :key="`${form_section.key}-${field_key}`"
+            :class="{ _fieldInvalid: !isFieldValid(field_key) }"
           >
             <DLabel
               :str="gem_field_configs[field_key].label"
@@ -51,6 +52,9 @@
               :instructions="gem_field_configs[field_key].instructions"
               @update:content="setFieldValue(field_key, $event)"
             />
+            <p v-if="getFieldError(field_key)" class="_fieldError">
+              {{ getFieldError(field_key) }}
+            </p>
           </div>
         </div>
       </section>
@@ -66,13 +70,16 @@
       </section>
 
       <div class="_actions">
+        <p v-if="invalid_field_keys.length > 0" class="_formError">
+          {{ invalid_fields_summary }}
+        </p>
         <button type="button" class="u-button" @click="goBack">
           {{ $t("sg_cancel") }}
         </button>
         <button
           type="submit"
           class="u-button u-button_bleuvert"
-          :disabled="is_creating"
+          :disabled="is_create_disabled"
         >
           {{
             is_creating ? $t("sg_create_gem_in_progress") : $t("sg_create_gem")
@@ -187,6 +194,35 @@ export default {
       if (!Number.isFinite(pv_selling_price)) return 0;
       return Number((pv_selling_price * 1.15).toFixed(2));
     },
+    flat_form_field_keys() {
+      return this.form_sections.flatMap((form_section) => form_section.field_keys);
+    },
+    field_validation_map() {
+      return this.flat_form_field_keys.reduce((accumulator, field_key) => {
+        accumulator[field_key] = this.validateFieldValue(
+          field_key,
+          this.new_gem_fields[field_key]
+        );
+        return accumulator;
+      }, {});
+    },
+    invalid_field_keys() {
+      return this.flat_form_field_keys.filter((field_key) => {
+        const field_validation = this.field_validation_map[field_key];
+        return field_validation && !field_validation.is_valid;
+      });
+    },
+    invalid_fields_summary() {
+      const invalid_field_labels = this.invalid_field_keys.map(
+        (field_key) => this.gem_field_configs[field_key]?.label || field_key
+      );
+      return this.$t("sg_invalid_fields_summary", {
+        fields: invalid_field_labels.join(", "),
+      });
+    },
+    is_create_disabled() {
+      return this.is_creating || this.invalid_field_keys.length > 0;
+    },
   },
   methods: {
     setFieldValue(field_key, value) {
@@ -230,7 +266,8 @@ export default {
     },
     async createGem() {
       const cleaned_name = this.getGemTitle();
-      if (!cleaned_name || this.is_creating) return;
+      if (!cleaned_name || this.is_creating || this.invalid_field_keys.length > 0)
+        return;
 
       const normalized_gem_fields = this.normalizeGemFields(
         this.new_gem_fields
@@ -339,6 +376,68 @@ export default {
         })
         .map((field_config) => field_config.key);
     },
+    getFieldError(field_key) {
+      const field_validation = this.field_validation_map[field_key];
+      if (!field_validation || field_validation.is_valid) return "";
+      return field_validation.error_message;
+    },
+    isFieldValid(field_key) {
+      const field_validation = this.field_validation_map[field_key];
+      if (!field_validation) return true;
+      return field_validation.is_valid;
+    },
+    validateFieldValue(field_key, raw_value) {
+      const field_config = this.gem_field_configs[field_key];
+      if (!field_config) return { is_valid: true, error_message: "" };
+      if (field_key === "pvd_asking_price" || field_config.readonly)
+        return { is_valid: true, error_message: "" };
+      if (field_config.type !== "number")
+        return { is_valid: true, error_message: "" };
+      if (raw_value === null || raw_value === undefined || raw_value === "")
+        return { is_valid: true, error_message: "" };
+
+      const normalized_value = String(raw_value).trim().replace(",", ".");
+      if (!/^-?\d+(?:\.\d+)?$/.test(normalized_value)) {
+        return {
+          is_valid: false,
+          error_message: this.$t("sg_invalid_number"),
+        };
+      }
+
+      const number_value = Number(normalized_value);
+      if (!Number.isFinite(number_value)) {
+        return {
+          is_valid: false,
+          error_message: this.$t("sg_invalid_number"),
+        };
+      }
+
+      const allowed_decimals = this.getAllowedDecimals(field_config.input_step);
+      if (allowed_decimals === null) return { is_valid: true, error_message: "" };
+
+      const decimal_count = this.getDecimalCount(normalized_value);
+      if (decimal_count <= allowed_decimals)
+        return { is_valid: true, error_message: "" };
+
+      return {
+        is_valid: false,
+        error_message:
+          allowed_decimals === 0
+            ? this.$t("sg_invalid_integer")
+            : this.$t("sg_invalid_decimals", { decimals: allowed_decimals }),
+      };
+    },
+    getAllowedDecimals(input_step) {
+      if (input_step === null || input_step === undefined || input_step === "")
+        return null;
+      const step_value = String(input_step);
+      if (step_value.includes(".")) return step_value.split(".")[1].length;
+      return 0;
+    },
+    getDecimalCount(normalized_value) {
+      if (!normalized_value.includes(".")) return 0;
+      return normalized_value.split(".")[1].length;
+    },
     cleanString(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
@@ -419,7 +518,26 @@ export default {
 
 ._actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: calc(var(--spacing) / 2);
+}
+
+._fieldInvalid {
+  :deep(.u-input) {
+    border-color: var(--c-rouge);
+  }
+}
+
+._fieldError,
+._formError {
+  margin: calc(var(--spacing) / 6) 0 0;
+  color: var(--c-rouge);
+  font-size: var(--sl-font-size-x-small);
+}
+
+._formError {
+  margin-right: auto;
 }
 </style>

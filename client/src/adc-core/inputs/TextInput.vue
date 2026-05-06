@@ -14,8 +14,9 @@
           :required="required"
           :placeholder="placeholder"
           :value="content"
-          @input="$emit('update:content', $event.target.value)"
+          @input="onInput"
           @input_txt="innerText = $event.target.value"
+          @keydown="onKeydown"
           @keydown.enter.exact.prevent="$emit('onEnter')"
           @keydown.enter.shift.exact.prevent="$emit('onShiftEnter')"
         />
@@ -195,6 +196,63 @@ export default {
     },
   },
   methods: {
+    onInput(event) {
+      const raw_value = event?.target?.value ?? "";
+      if (this.field_input_type_prop !== "number") {
+        this.$emit("update:content", raw_value);
+        return;
+      }
+
+      const sanitized_value = this.sanitizeNumberInput(raw_value);
+      if (event?.target && event.target.value !== sanitized_value) {
+        event.target.value = sanitized_value;
+      }
+      this.$emit("update:content", sanitized_value);
+    },
+    onKeydown(event) {
+      if (this.field_input_type_prop !== "number") return;
+      if (!event) return;
+
+      const key = event.key;
+      const allowed_control_keys = [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Enter",
+        "Escape",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+      ];
+      if (allowed_control_keys.includes(key)) return;
+
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        ["a", "c", "v", "x", "z", "y"].includes(String(key).toLowerCase())
+      )
+        return;
+
+      if (/^[0-9.,-]$/.test(key)) return;
+      event.preventDefault();
+    },
+    sanitizeNumberInput(raw_value) {
+      let sanitized_value = String(raw_value ?? "");
+      sanitized_value = sanitized_value.replace(/\s+/g, "");
+      sanitized_value = sanitized_value.replace(/[^\d,.\-]/g, "");
+      sanitized_value = sanitized_value.replace(/(?!^)-/g, "");
+
+      const first_decimal_index = sanitized_value.search(/[.,]/);
+      if (first_decimal_index === -1) return sanitized_value;
+
+      const before_decimal = sanitized_value.slice(0, first_decimal_index + 1);
+      const after_decimal = sanitized_value
+        .slice(first_decimal_index + 1)
+        .replace(/[.,]/g, "");
+      return `${before_decimal}${after_decimal}`;
+    },
     initInput() {
       if (!this.autofocus) return;
       if (this.tag === "span") {

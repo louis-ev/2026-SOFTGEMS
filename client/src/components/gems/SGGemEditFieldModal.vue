@@ -26,6 +26,9 @@
           :instructions="field.instructions"
           :autofocus="true"
         />
+        <p v-if="field_validation_error" class="_fieldError">
+          {{ field_validation_error }}
+        </p>
       </div>
 
       <div class="u-spacingBottom"></div>
@@ -80,7 +83,7 @@
       <button
         type="button"
         class="u-button u-button_bleuvert"
-        :disabled="field.readonly || is_saving"
+        :disabled="is_save_disabled"
         @click="save"
       >
         {{ is_saving ? "…" : $t("save") }}
@@ -119,6 +122,18 @@ export default {
       return `${this.$t("sg_gem_title", { id: this.gem_id })} — ${
         this.field.label
       }`;
+    },
+    field_validation() {
+      return this.validateFieldValue(this.edit_value);
+    },
+    field_validation_error() {
+      if (this.field_validation.is_valid) return "";
+      return this.field_validation.error_message;
+    },
+    is_save_disabled() {
+      return (
+        this.field.readonly || this.is_saving || !this.field_validation.is_valid
+      );
     },
   },
   data() {
@@ -179,7 +194,12 @@ export default {
       return result.reverse();
     },
     async save() {
-      if (this.field.readonly || this.is_saving) return;
+      if (
+        this.field.readonly ||
+        this.is_saving ||
+        !this.field_validation.is_valid
+      )
+        return;
       const normalized_value = this.normalizeFieldValue(this.edit_value);
       this.is_saving = true;
       try {
@@ -204,6 +224,55 @@ export default {
       const number_value = Number(normalized_value);
       if (Number.isFinite(number_value)) return number_value;
       return raw_value;
+    },
+    validateFieldValue(raw_value) {
+      if (this.field.type !== "number")
+        return { is_valid: true, error_message: "" };
+      if (raw_value === null || raw_value === undefined || raw_value === "")
+        return { is_valid: true, error_message: "" };
+
+      const normalized_value = String(raw_value).trim().replace(",", ".");
+      if (!/^-?\d+(?:\.\d+)?$/.test(normalized_value)) {
+        return {
+          is_valid: false,
+          error_message: this.$t("sg_invalid_number"),
+        };
+      }
+
+      const number_value = Number(normalized_value);
+      if (!Number.isFinite(number_value)) {
+        return {
+          is_valid: false,
+          error_message: this.$t("sg_invalid_number"),
+        };
+      }
+
+      const allowed_decimals = this.getAllowedDecimals(this.field.input_step);
+      if (allowed_decimals === null)
+        return { is_valid: true, error_message: "" };
+
+      const decimal_count = this.getDecimalCount(normalized_value);
+      if (decimal_count <= allowed_decimals)
+        return { is_valid: true, error_message: "" };
+
+      return {
+        is_valid: false,
+        error_message:
+          allowed_decimals === 0
+            ? this.$t("sg_invalid_integer")
+            : this.$t("sg_invalid_decimals", { decimals: allowed_decimals }),
+      };
+    },
+    getAllowedDecimals(input_step) {
+      if (input_step === null || input_step === undefined || input_step === "")
+        return null;
+      const step_value = String(input_step);
+      if (step_value.includes(".")) return step_value.split(".")[1].length;
+      return 0;
+    },
+    getDecimalCount(normalized_value) {
+      if (!normalized_value.includes(".")) return 0;
+      return normalized_value.split(".")[1].length;
     },
     formatHistoryValue(value) {
       if (value === null || value === undefined || value === "") return "—";
@@ -242,6 +311,12 @@ export default {
   margin: 0;
   font-size: var(--sl-font-size-x-small);
   color: var(--c-gris_fonce);
+}
+
+._fieldError {
+  margin: calc(var(--spacing) / 6) 0 0;
+  color: var(--c-rouge);
+  font-size: var(--sl-font-size-x-small);
 }
 
 ._historyToggle {
