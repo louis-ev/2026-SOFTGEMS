@@ -68,16 +68,25 @@
               v-for="metadata_key in metadata_keys"
               :key="`${gem.$path}-${metadata_key}`"
               :class="{ _editableCell: isFieldEditable(metadata_key) }"
-              @click="isFieldEditable(metadata_key) ? openCellEditModal(gem, metadata_key, $event) : null"
+              @click="
+                isFieldEditable(metadata_key)
+                  ? openCellEditModal(gem, metadata_key, $event)
+                  : null
+              "
             >
-              <div v-if="metadata_key === '$cover'" class="_coverFilesCell">
+              <div
+                v-if="metadata_key === '$cover'"
+                class="_coverFilesCell"
+                @click.stop
+              >
                 <div class="_coverThumb">
                   <CoverField
                     :context="'tiny'"
-                    :ratio="'4 / 3'"
+                    :ratio="'1 / 1'"
                     :cover="gem.$cover"
                     :path="gem.$path"
-                    :can_edit="false"
+                    :can_edit="true"
+                    :available_options="['import']"
                   />
                 </div>
                 <div
@@ -111,7 +120,10 @@
       :current_value="editing_current_value"
       :gem_path="editing_gem.$path"
       @saved="onFieldSaved"
-      @close="editing_field = null; editing_gem = null"
+      @close="
+        editing_field = null;
+        editing_gem = null;
+      "
     />
   </div>
 </template>
@@ -555,7 +567,10 @@ export default {
   cursor: pointer;
 
   &:hover {
-    background: var(--c-bleuvert_clair, color-mix(in srgb, var(--c-bleuvert) 12%, transparent));
+    background: var(
+      --c-bleuvert_clair,
+      color-mix(in srgb, var(--c-bleuvert) 12%, transparent)
+    );
     ._gemMetadataValue {
       color: var(--c-noir);
     }
@@ -605,10 +620,8 @@ export default {
 }
 
 ._coverThumb {
-  position: relative;
   width: 84px;
   min-width: 84px;
-  aspect-ratio: 4 / 3;
   flex-shrink: 0;
 }
 

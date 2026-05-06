@@ -5,7 +5,7 @@
     @close="$emit('close')"
   >
     <div class="_body">
-      <DLabel :str="field.label" :icon="field.icon" tag="span" />
+      <DLabel :str="field.label" :icon="field.icon" />
 
       <div class="_inputWrap">
         <template v-if="field.readonly">
@@ -26,11 +26,9 @@
         />
       </div>
 
-      <button
-        type="button"
-        class="_historyToggle"
-        @click="toggleHistory"
-      >
+      <div class="u-spacingBottom"></div>
+
+      <button type="button" class="_historyToggle" @click="toggleHistory">
         <b-icon icon="clock-history" />
         <span>{{ $t("sg_field_history") }}</span>
         <b-icon
@@ -116,7 +114,9 @@ export default {
       return parts[parts.length - 1] || this.gem_path;
     },
     modal_title() {
-      return `${this.$t("sg_gem_title", { id: this.gem_id })} — ${this.field.label}`;
+      return `${this.$t("sg_gem_title", { id: this.gem_id })} — ${
+        this.field.label
+      }`;
     },
   },
   data() {
@@ -215,8 +215,8 @@ export default {
 ._body {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) * 0.6);
-  padding-bottom: calc(var(--spacing) * 0.5);
+  // gap: calc(var(--spacing) * 0.6);
+  // padding-bottom: calc(var(--spacing) * 0.5);
 }
 
 ._inputWrap {
@@ -240,7 +240,7 @@ export default {
   font-size: var(--sl-font-size-x-small);
   color: var(--c-gris_fonce);
   padding: calc(var(--spacing) / 4) 0;
-  border-top: 1px solid var(--c-gris_clair);
+  // border-top: 1px solid var(--c-gris_clair);
   width: 100%;
 
   &:hover {

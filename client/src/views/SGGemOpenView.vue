@@ -20,10 +20,11 @@
         <div class="_coverFrame">
           <CoverField
             :context="'full'"
-            :ratio="'4 / 3'"
+            :ratio="'1 / 1'"
             :cover="gem.$cover"
             :path="gem_path"
             :can_edit="can_edit"
+            :available_options="['import']"
           />
         </div>
         <SGGemFilesList
@@ -263,10 +264,7 @@ export default {
       return Number((pv * 1.15).toFixed(2));
     },
     field_configs() {
-      return buildGemFieldConfigs(
-        this.$t.bind(this),
-        this.paired_gem_options
-      );
+      return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
     },
   },
   async created() {
@@ -385,9 +383,7 @@ export default {
 }
 
 ._coverFrame {
-  position: relative;
   width: min(300px, 100%);
-  aspect-ratio: 4 / 3;
   border: 1px solid var(--c-gris_clair);
   border-radius: 8px;
   overflow: hidden;
