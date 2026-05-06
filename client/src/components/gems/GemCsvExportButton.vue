@@ -85,7 +85,7 @@ export default {
 
 <style lang="scss" scoped>
 ._csvExport {
-  margin-top: calc(var(--spacing) * 0.5);
+  margin-top: 0;
   display: flex;
   justify-content: flex-end;
 }

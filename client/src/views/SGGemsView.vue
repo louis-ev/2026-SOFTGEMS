@@ -472,7 +472,8 @@ export default {
 ._gemsView {
   position: relative;
   height: 100%;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
+    calc(var(--spacing) * 1);
 }
 
 ._gemsView--content {

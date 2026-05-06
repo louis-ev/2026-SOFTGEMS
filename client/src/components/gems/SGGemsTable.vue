@@ -75,6 +75,7 @@
                 _flashCell: isCellFlashing(gem, metadata_key),
               },
             ]"
+            :data-cell-key="getCellFlashKey(gem, metadata_key)"
             :data-metadata-key="metadata_key"
             @click="onCellClick(gem, metadata_key, $event)"
           >
@@ -277,6 +278,7 @@ export default {
     },
     detectUpdatedCells(new_gems) {
       const next_snapshot = this.buildCellSnapshot(new_gems);
+      let first_changed_cell_key = "";
 
       if (!this.has_initialized_snapshot) {
         this.previous_cell_values = next_snapshot;
@@ -288,10 +290,15 @@ export default {
         if (!(cell_key in this.previous_cell_values)) return;
         if (this.previous_cell_values[cell_key] === next_snapshot[cell_key])
           return;
+        if (!first_changed_cell_key) first_changed_cell_key = cell_key;
         this.flashCell(cell_key);
       });
 
       this.previous_cell_values = next_snapshot;
+
+      if (first_changed_cell_key) {
+        this.scrollCellIntoViewIfNeeded(first_changed_cell_key);
+      }
     },
     flashCell(cell_key) {
       if (this.flash_timeouts[cell_key]) {
@@ -307,6 +314,39 @@ export default {
     isCellFlashing(gem, metadata_key) {
       const cell_key = this.getCellFlashKey(gem, metadata_key);
       return Boolean(this.flashing_cells[cell_key]);
+    },
+    scrollCellIntoViewIfNeeded(cell_key) {
+      this.$nextTick(() => {
+        const scroll_container = this.$el?.querySelector("._gemsTable");
+        if (!scroll_container) return;
+
+        const cell_elements = this.$el.querySelectorAll("td[data-cell-key]");
+        const cell_element = Array.from(cell_elements).find(
+          (element) => element?.dataset?.cellKey === cell_key
+        );
+        if (!cell_element) return;
+
+        const cell_rect = cell_element.getBoundingClientRect();
+        const container_rect = scroll_container.getBoundingClientRect();
+        const is_outside_vertical =
+          cell_rect.top < container_rect.top ||
+          cell_rect.bottom > container_rect.bottom;
+        const is_outside_horizontal =
+          cell_rect.left < container_rect.left ||
+          cell_rect.right > container_rect.right;
+        if (!is_outside_vertical && !is_outside_horizontal) return;
+
+        if (typeof cell_element.scrollIntoViewIfNeeded === "function") {
+          cell_element.scrollIntoViewIfNeeded(false);
+          return;
+        }
+
+        cell_element.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "nearest",
+        });
+      });
     },
   },
 };
@@ -355,6 +395,10 @@ export default {
     top: 0;
     border-top: 1px solid var(--c-gris);
     z-index: 5;
+
+    &:hover {
+      background: var(--c-gris_clair);
+    }
   }
 
   th._stickyIdCol,
