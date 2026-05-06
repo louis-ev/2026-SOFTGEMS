@@ -41,7 +41,11 @@
         <table class="_table">
           <thead>
             <tr>
-              <th v-for="metadata_key in metadata_keys" :key="metadata_key">
+              <th
+                v-for="metadata_key in metadata_keys"
+                :key="metadata_key"
+                :class="getStickyColumnClass(metadata_key)"
+              >
                 <span class="_thContent">
                   <b-icon
                     v-if="getMetadataIcon(metadata_key)"
@@ -55,21 +59,27 @@
           </thead>
           <tbody>
             <tr v-if="sorted_gems.length === 0">
-              <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
+              <td :colspan="metadata_keys.length">
+                {{ $t("sg_no_gems_yet") }}
+              </td>
             </tr>
             <tr
               v-for="gem in sorted_gems"
               :key="gem.$path"
               class="_clickableRow"
               :class="{
-                _selected: is_gem_open && getGemId(gem) === $route.params.gem_id,
+                _selected:
+                  is_gem_open && getGemId(gem) === $route.params.gem_id,
               }"
               @click="openGem(gem)"
             >
               <td
                 v-for="metadata_key in metadata_keys"
                 :key="`${gem.$path}-${metadata_key}`"
-                :class="{ _editableCell: isFieldEditable(metadata_key) }"
+                :class="[
+                  getStickyColumnClass(metadata_key),
+                  { _editableCell: isFieldEditable(metadata_key) },
+                ]"
                 @click="
                   isFieldEditable(metadata_key)
                     ? openCellEditModal(gem, metadata_key, $event)
@@ -518,6 +528,11 @@ export default {
       if (!translation_key) return metadata_key;
       return this.$t(translation_key);
     },
+    getStickyColumnClass(metadata_key) {
+      if (metadata_key === "id") return "_stickyIdCol";
+      if (metadata_key === "$cover") return "_stickyCoverCol";
+      return "";
+    },
   },
 };
 </script>
@@ -552,7 +567,11 @@ export default {
 }
 
 ._table {
-  border-collapse: collapse;
+  --sticky-id-col-width: 110px;
+  --sticky-cover-col-width: 130px;
+
+  border-collapse: separate;
+  border-spacing: 0;
   display: block;
   overflow-x: auto;
   border: 1px solid var(--c-gris_clair);
@@ -569,6 +588,36 @@ export default {
     white-space: pre-wrap;
     word-break: break-word;
   }
+
+  th._stickyIdCol,
+  td._stickyIdCol {
+    position: sticky;
+    left: 0;
+    min-width: var(--sticky-id-col-width);
+    max-width: var(--sticky-id-col-width);
+    background: var(--c-bodybg);
+    z-index: 4;
+  }
+
+  th._stickyCoverCol,
+  td._stickyCoverCol {
+    left: var(--sticky-id-col-width);
+    min-width: var(--sticky-cover-col-width);
+    background: var(--c-bodybg);
+    z-index: 3;
+    position: sticky;
+    position: -webkit-sticky;
+    border-right: 1px solid var(--c-gris_clair);
+  }
+
+  th._stickyIdCol,
+  th._stickyCoverCol {
+    z-index: 6;
+  }
+
+  th._stickyCoverCol {
+    z-index: 7;
+  }
 }
 
 ._clickableRow {
@@ -580,6 +629,13 @@ export default {
 }
 
 ._clickableRow:hover {
+  background: var(--c-gris_clair);
+}
+
+._clickableRow:hover td._stickyIdCol,
+._clickableRow:hover td._stickyCoverCol,
+._clickableRow._selected td._stickyIdCol,
+._clickableRow._selected td._stickyCoverCol {
   background: var(--c-gris_clair);
 }
 
@@ -613,7 +669,7 @@ export default {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  padding: calc(var(--spacing) * 1.25);
+  // padding: calc(var(--spacing) * 1.25);
 }
 
 ._gemMetadataValue {

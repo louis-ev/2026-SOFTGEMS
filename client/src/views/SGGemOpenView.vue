@@ -363,7 +363,7 @@ export default {
 }
 
 ._content {
-  max-width: 720px;
+  // max-width: 720px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
