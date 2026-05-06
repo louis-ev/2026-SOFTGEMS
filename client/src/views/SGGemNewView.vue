@@ -148,15 +148,15 @@ export default {
     },
     form_sections() {
       return [
-        {
-          key: "identification",
-          title: this.$t("sg_section_identification"),
-          field_keys: [
-            "reference_supplier",
-            "reference_customer",
-            "paired_gem",
-          ],
-        },
+        // {
+        //   key: "identification",
+        //   title: this.$t("sg_section_identification"),
+        //   field_keys: [
+        //     "reference_supplier",
+        //     "reference_customer",
+        //     "paired_gem",
+        //   ],
+        // },
         {
           key: "stone_characteristics",
           title: this.$t("sg_section_stone_characteristics"),
@@ -195,7 +195,9 @@ export default {
       return Number((pv_selling_price * 1.15).toFixed(2));
     },
     flat_form_field_keys() {
-      return this.form_sections.flatMap((form_section) => form_section.field_keys);
+      return this.form_sections.flatMap(
+        (form_section) => form_section.field_keys
+      );
     },
     field_validation_map() {
       return this.flat_form_field_keys.reduce((accumulator, field_key) => {
@@ -266,7 +268,11 @@ export default {
     },
     async createGem() {
       const cleaned_name = this.getGemTitle();
-      if (!cleaned_name || this.is_creating || this.invalid_field_keys.length > 0)
+      if (
+        !cleaned_name ||
+        this.is_creating ||
+        this.invalid_field_keys.length > 0
+      )
         return;
 
       const normalized_gem_fields = this.normalizeGemFields(
@@ -413,7 +419,8 @@ export default {
       }
 
       const allowed_decimals = this.getAllowedDecimals(field_config.input_step);
-      if (allowed_decimals === null) return { is_valid: true, error_message: "" };
+      if (allowed_decimals === null)
+        return { is_valid: true, error_message: "" };
 
       const decimal_count = this.getDecimalCount(normalized_value);
       if (decimal_count <= allowed_decimals)
