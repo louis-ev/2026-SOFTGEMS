@@ -235,35 +235,49 @@ export default {
   --sticky-id-col-width: 50px;
   --sticky-cover-col-width: 80px;
 
-  border-collapse: collapse;
+  border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--c-gris);
+  border-left: 0px;
+  border-top: 0px;
   width: max-content;
   min-width: 100%;
 
   th,
   td {
     text-align: left;
-    border: 1px solid red;
-    // border: 1px solid var(--c-gris);
+    border: 0;
+    border-right: 1px solid var(--c-gris);
+    border-bottom: 1px solid var(--c-gris);
     padding: calc(var(--spacing) / 2);
     vertical-align: top;
     background: var(--c-bodybg);
   }
 
+  tr > :last-child {
+    border-right: 0;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
   th {
     position: sticky;
     top: 0;
+    border-top: 1px solid var(--c-gris);
     z-index: 5;
   }
 
   th._stickyIdCol,
   td._stickyIdCol {
     position: sticky;
-    left: 0;
+    left: 0px;
     min-width: var(--sticky-id-col-width);
     max-width: var(--sticky-id-col-width);
     z-index: 4;
+    border-left: 1px solid var(--c-gris);
+    // box-shadow: inset -1px 0 0 var(--c-gris);
   }
 
   th._stickyCoverCol,
@@ -274,7 +288,7 @@ export default {
     max-width: var(--sticky-cover-col-width);
     z-index: 3;
     overflow: hidden;
-    border-right: 1px solid var(--c-gris_clair);
+    // border-left: 1px solid var(--c-gris);
   }
 
   th._stickyIdCol,
