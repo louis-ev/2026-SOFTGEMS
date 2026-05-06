@@ -261,8 +261,7 @@ export default function () {
         if (index === -1) {
           this.getAndTrackUsers();
         } else {
-          if (!this.users[index].meta)
-            this.$set(this.users[index], "meta", {});
+          if (!this.users[index].meta) this.$set(this.users[index], "meta", {});
           Object.entries(changed_data).map(([key, value]) => {
             this.$set(this.users[index].meta, key, value);
           });

@@ -1,7 +1,8 @@
 const path = require("path"),
   fs = require("fs-extra");
 
-const utils = require("./utils");
+const utils = require("./utils"),
+  dev = require("./dev-log");
 
 module.exports = (function () {
   const META_ARCHIVE_FILENAME = "meta_archive.jsonl";

@@ -818,12 +818,15 @@ module.exports = (function () {
 
       res.status(200).json({ new_folder_slug });
 
-      // Record the initial field state so history is complete from creation.
-      history.appendCreated({
-        path_to_folder: utils.convertToSlashPath(path_to_folder),
-        meta: new_folder_meta,
-        author_path: token_path,
-      }).catch((err) => dev.error("Failed to write creation history: " + err.message));
+      history
+        .appendCreated({
+          path_to_folder: utils.convertToSlashPath(path_to_folder),
+          meta: new_folder_meta,
+          author_path: token_path,
+        })
+        .catch((err) =>
+          dev.error("Failed to write creation history: " + err.message)
+        );
 
       journal.log({
         from: "api2",
@@ -1065,11 +1068,15 @@ module.exports = (function () {
 
       // 4. Append per-field history (fire-and-forget)
       if (data && Object.keys(data).length > 0) {
-        history.appendUpdated({
-          path_to_folder: utils.convertToSlashPath(path_to_folder),
-          data,
-          author_path: token_path,
-        }).catch((err) => dev.error("Failed to append update history: " + err.message));
+        history
+          .appendUpdated({
+            path_to_folder: utils.convertToSlashPath(path_to_folder),
+            data,
+            author_path: token_path,
+          })
+          .catch((err) =>
+            dev.error("Failed to append update history: " + err.message)
+          );
       }
 
       // 5. Send response
