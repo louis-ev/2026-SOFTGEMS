@@ -52,8 +52,8 @@
           </th>
         </tr>
       </thead>
-      <tbody>
-        <tr v-if="sorted_gems.length === 0">
+      <transition-group name="row-sort" tag="tbody">
+        <tr v-if="sorted_gems.length === 0" key="_empty">
           <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
         </tr>
         <tr
@@ -70,7 +70,10 @@
             :key="`${gem.$path}-${metadata_key}`"
             :class="[
               getStickyColumnClass(metadata_key),
-              { _editableCell: isFieldEditable(metadata_key) },
+              {
+                _editableCell: isFieldEditable(metadata_key),
+                _flashCell: isCellFlashing(gem, metadata_key),
+              },
             ]"
             :data-metadata-key="metadata_key"
             @click="onCellClick(gem, metadata_key, $event)"
@@ -94,7 +97,7 @@
             }}</span>
           </td>
         </tr>
-      </tbody>
+      </transition-group>
     </table>
   </div>
 </template>
@@ -118,6 +121,10 @@ export default {
     return {
       sort_key: "id",
       sort_direction: "desc",
+      has_initialized_snapshot: false,
+      previous_cell_values: {},
+      flashing_cells: {},
+      flash_timeouts: {},
     };
   },
   computed: {
@@ -144,6 +151,13 @@ export default {
     },
   },
   watch: {
+    gems: {
+      immediate: true,
+      deep: true,
+      handler(new_gems) {
+        this.detectUpdatedCells(new_gems);
+      },
+    },
     metadata_keys: {
       immediate: true,
       handler(new_keys) {
@@ -158,6 +172,11 @@ export default {
         }
       },
     },
+  },
+  beforeDestroy() {
+    Object.values(this.flash_timeouts).forEach((timeout_id) => {
+      clearTimeout(timeout_id);
+    });
   },
   methods: {
     getGemId(gem) {
@@ -232,6 +251,62 @@ export default {
       if (metadata_key === "id") return "_stickyIdCol";
       if (metadata_key === "$cover") return "_stickyCoverCol";
       return "";
+    },
+    getCellFlashKey(gem, metadata_key) {
+      return `${gem?.$path || ""}::${metadata_key}`;
+    },
+    serializeCellValue(value) {
+      if (value === null || value === undefined) return "";
+      if (typeof value === "number" || typeof value === "boolean")
+        return String(value);
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+    },
+    buildCellSnapshot(gems) {
+      const snapshot = {};
+      if (!Array.isArray(gems)) return snapshot;
+
+      gems.forEach((gem) => {
+        this.metadata_keys.forEach((metadata_key) => {
+          const cell_key = this.getCellFlashKey(gem, metadata_key);
+          const cell_value = this.resolveMetadataValue(gem, metadata_key);
+          snapshot[cell_key] = this.serializeCellValue(cell_value);
+        });
+      });
+      return snapshot;
+    },
+    detectUpdatedCells(new_gems) {
+      const next_snapshot = this.buildCellSnapshot(new_gems);
+
+      if (!this.has_initialized_snapshot) {
+        this.previous_cell_values = next_snapshot;
+        this.has_initialized_snapshot = true;
+        return;
+      }
+
+      Object.keys(next_snapshot).forEach((cell_key) => {
+        if (!(cell_key in this.previous_cell_values)) return;
+        if (this.previous_cell_values[cell_key] === next_snapshot[cell_key])
+          return;
+        this.flashCell(cell_key);
+      });
+
+      this.previous_cell_values = next_snapshot;
+    },
+    flashCell(cell_key) {
+      if (this.flash_timeouts[cell_key]) {
+        clearTimeout(this.flash_timeouts[cell_key]);
+      }
+
+      this.$set(this.flashing_cells, cell_key, true);
+      this.flash_timeouts[cell_key] = setTimeout(() => {
+        this.$delete(this.flashing_cells, cell_key);
+        this.$delete(this.flash_timeouts, cell_key);
+      }, 2000);
+    },
+    isCellFlashing(gem, metadata_key) {
+      const cell_key = this.getCellFlashKey(gem, metadata_key);
+      return Boolean(this.flashing_cells[cell_key]);
     },
   },
 };
@@ -397,6 +472,19 @@ td[data-metadata-key="$cover"] {
   }
 }
 
+._flashCell {
+  animation: _flashCellFade 2s ease-out 1;
+}
+
+@keyframes _flashCellFade {
+  0% {
+    background: color-mix(in srgb, var(--c-bleuvert) 28%, var(--c-bodybg));
+  }
+  100% {
+    background: var(--c-bodybg);
+  }
+}
+
 ._gemMetadataValue {
   font-family: var(--sl-font-mono);
   font-size: var(--sl-font-size-x-small);
@@ -441,5 +529,19 @@ td[data-metadata-key="$cover"] {
   font-family: var(--sl-font-mono);
   color: var(--c-gris_fonce);
   padding-top: 2px;
+}
+
+.row-sort-move {
+  transition: transform 380ms ease;
+}
+
+.row-sort-enter-active,
+.row-sort-leave-active {
+  transition: opacity 520ms ease;
+}
+
+.row-sort-enter,
+.row-sort-leave-to {
+  opacity: 0;
 }
 </style>
