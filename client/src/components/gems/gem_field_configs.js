@@ -66,6 +66,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "rulers",
       type: "number",
       input_type: "number",
+      input_step: 0.001,
     },
     color: {
       key: "color",

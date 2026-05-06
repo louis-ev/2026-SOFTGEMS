@@ -7,6 +7,7 @@
           ref="field"
           :id="label_str"
           :type="field_input_type_prop"
+          :step="input_step_prop"
           :name="label_str"
           :autocomplete="autocomplete"
           :size="size"
@@ -91,6 +92,10 @@ export default {
     input_type: {
       type: String,
       default: "text",
+    },
+    input_step: {
+      type: [String, Number],
+      default: undefined,
     },
     autocomplete: {
       type: String,
@@ -177,6 +182,10 @@ export default {
         if (this.show_password_in_clear) return "text";
         else return "password";
       return this.input_type;
+    },
+    input_step_prop() {
+      if (this.field_input_type_prop !== "number") return undefined;
+      return this.input_step;
     },
     content_txt() {
       // Create a temporary div to parse HTML and get plain text

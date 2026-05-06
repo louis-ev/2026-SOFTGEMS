@@ -22,6 +22,7 @@
           v-else
           :content.sync="edit_value"
           :input_type="field.input_type || 'text'"
+          :input_step="field.input_step"
           :autofocus="true"
         />
       </div>

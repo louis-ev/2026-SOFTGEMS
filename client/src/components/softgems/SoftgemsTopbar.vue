@@ -10,20 +10,20 @@
 
       <div class="_right">
         <!-- <span class="_routeLabel">{{ route_label }}</span> -->
-        <router-link
+        <button
           v-if="connected_as"
-          :to="author_url"
+          type="button"
           class="u-button"
-          :class="{ 'is--active': $route.path === author_url }"
+          @click="openAuthorModal"
         >
           <b-icon icon="person-circle" />
           {{ author_name }}
-        </router-link>
+        </button>
         <button
           v-else
           type="button"
           class="u-button"
-          @click="show_authors_modal = true"
+          @click="openAuthorModal"
         >
           {{ $t("login") }}
         </button>
@@ -53,10 +53,10 @@ export default {
     author_name() {
       return this.connected_as?.name || this.$t("login");
     },
-    author_url() {
-      return this.createURLFromPath(
-        this.getAuthor(this.connected_as.$path).$path
-      );
+  },
+  methods: {
+    openAuthorModal() {
+      this.show_authors_modal = true;
     },
   },
 };

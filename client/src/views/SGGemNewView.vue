@@ -68,6 +68,7 @@
               :content.sync="new_gem_fields.weight_ct"
               :required="false"
               input_type="number"
+              :input_step="0.001"
             />
           </div>
           <div>
