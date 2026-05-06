@@ -38,86 +38,17 @@
       <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
       <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
       <div v-else class="_tableSection">
-        <div class="_tableWrap">
-          <table class="_table">
-            <thead>
-              <tr>
-                <th
-                  v-for="metadata_key in metadata_keys"
-                  :key="metadata_key"
-                  :class="getStickyColumnClass(metadata_key)"
-                >
-                  <span class="_thContent">
-                    <b-icon
-                      v-if="getMetadataIcon(metadata_key)"
-                      :icon="getMetadataIcon(metadata_key)"
-                      class="_thIcon"
-                    />
-                    <span>{{ getMetadataLabel(metadata_key) }}</span>
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="sorted_gems.length === 0">
-                <td :colspan="metadata_keys.length">
-                  {{ $t("sg_no_gems_yet") }}
-                </td>
-              </tr>
-              <tr
-                v-for="gem in sorted_gems"
-                :key="gem.$path"
-                class="_clickableRow"
-                :class="{
-                  _selected:
-                    is_gem_open && getGemId(gem) === $route.params.gem_id,
-                }"
-                @click="openGem(gem)"
-              >
-                <td
-                  v-for="metadata_key in metadata_keys"
-                  :key="`${gem.$path}-${metadata_key}`"
-                  :class="[
-                    getStickyColumnClass(metadata_key),
-                    { _editableCell: isFieldEditable(metadata_key) },
-                  ]"
-                  @click="
-                    isFieldEditable(metadata_key)
-                      ? openCellEditModal(gem, metadata_key, $event)
-                      : null
-                  "
-                >
-                  <div
-                    v-if="metadata_key === '$cover'"
-                    class="_coverFilesCell"
-                    @click.stop
-                  >
-                    <div class="_coverThumb">
-                      <CoverField
-                        :context="'tiny'"
-                        :ratio="'1 / 1'"
-                        :cover="gem.$cover"
-                        :path="gem.$path"
-                        :can_edit="true"
-                        :available_options="['import']"
-                      />
-                    </div>
-                    <div
-                      v-if="gem.$files && gem.$files.length > 0"
-                      class="_filesCount"
-                    >
-                      <b-icon icon="file-earmark-text" />
-                      <span>{{ gem.$files.length }}</span>
-                    </div>
-                  </div>
-                  <span v-else class="_gemMetadataValue">{{
-                    formatValue(resolveMetadataValue(gem, metadata_key))
-                  }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <SGGemsTable
+          :gems="gems"
+          :metadata_keys="metadata_keys"
+          :metadata_labels="metadata_labels"
+          :metadata_icons="metadata_icons"
+          :field_editable_map="field_editable_map"
+          :selected_gem_id="$route.params.gem_id"
+          :is_gem_open="is_gem_open"
+          @rowClick="openGem"
+          @editCell="onTableEditCell"
+        />
 
         <GemCsvExportButton
           :gems="sorted_gems"
@@ -181,6 +112,7 @@ export default {
   components: {
     SGGemEditFieldModal: () =>
       import("@/components/gems/SGGemEditFieldModal.vue"),
+    SGGemsTable: () => import("@/components/gems/SGGemsTable.vue"),
     GemCsvExportButton: () =>
       import("@/components/gems/GemCsvExportButton.vue"),
   },
@@ -282,6 +214,18 @@ export default {
     metadata_labels() {
       return this.metadata_keys.reduce((accumulator, metadata_key) => {
         accumulator[metadata_key] = this.getMetadataLabel(metadata_key);
+        return accumulator;
+      }, {});
+    },
+    metadata_icons() {
+      return this.metadata_keys.reduce((accumulator, metadata_key) => {
+        accumulator[metadata_key] = this.getMetadataIcon(metadata_key);
+        return accumulator;
+      }, {});
+    },
+    field_editable_map() {
+      return this.metadata_keys.reduce((accumulator, metadata_key) => {
+        accumulator[metadata_key] = this.isFieldEditable(metadata_key);
         return accumulator;
       }, {});
     },
@@ -412,17 +356,6 @@ export default {
       if (!gem_id) return;
       this.$router.push(`/gems/${gem_id}`);
     },
-    formatValue(value) {
-      if (value === null || value === undefined || value === "") return "-";
-      if (typeof value === "number")
-        return Number.isFinite(value) ? value : "-";
-      if (typeof value === "object") return JSON.stringify(value);
-      return String(value);
-    },
-    resolveMetadataValue(gem, metadata_key) {
-      if (metadata_key === "id") return this.getGemId(gem);
-      return gem?.[metadata_key];
-    },
     getPairedGemOptions(excluded_gem_id) {
       return (Array.isArray(this.gems) ? this.gems : [])
         .filter((g) => g?.$path && !g.$path.endsWith(`/${excluded_gem_id}`))
@@ -448,8 +381,10 @@ export default {
       const config = this.getFieldConfig(metadata_key, {});
       return config !== null && !config.readonly;
     },
-    openCellEditModal(gem, metadata_key, event) {
-      event.stopPropagation();
+    onTableEditCell({ gem, metadata_key }) {
+      this.openCellEditModal(gem, metadata_key);
+    },
+    openCellEditModal(gem, metadata_key) {
       const field_config = this.getFieldConfig(metadata_key, gem);
       if (!field_config || field_config.readonly) return;
       const raw_value = gem?.[metadata_key];
@@ -530,11 +465,6 @@ export default {
       if (!translation_key) return metadata_key;
       return this.$t(translation_key);
     },
-    getStickyColumnClass(metadata_key) {
-      if (metadata_key === "id") return "_stickyIdCol";
-      if (metadata_key === "$cover") return "_stickyCoverCol";
-      return "";
-    },
   },
 };
 </script>
@@ -571,111 +501,12 @@ export default {
   gap: calc(var(--spacing) / 2);
 }
 
-._table {
-  --sticky-id-col-width: 110px;
-  --sticky-cover-col-width: 130px;
-
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid var(--c-gris_clair);
-  width: max-content;
-  min-width: 100%;
-
-  th,
-  td {
-    text-align: left;
-    border-bottom: 1px solid var(--c-gris_clair);
-    padding: calc(var(--spacing) / 2);
-    vertical-align: top;
-  }
-
-  th {
-    position: sticky;
-    top: 0;
-    background: var(--c-bodybg);
-    z-index: 5;
-  }
-
-  code {
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  th._stickyIdCol,
-  td._stickyIdCol {
-    position: sticky;
-    left: 0;
-    min-width: var(--sticky-id-col-width);
-    max-width: var(--sticky-id-col-width);
-    background: var(--c-bodybg);
-    z-index: 4;
-  }
-
-  th._stickyCoverCol,
-  td._stickyCoverCol {
-    left: var(--sticky-id-col-width);
-    min-width: var(--sticky-cover-col-width);
-    background: var(--c-bodybg);
-    z-index: 3;
-    position: sticky;
-    position: -webkit-sticky;
-    border-right: 1px solid var(--c-gris_clair);
-  }
-
-  th._stickyIdCol,
-  th._stickyCoverCol {
-    z-index: 7;
-  }
-
-  th._stickyCoverCol {
-    z-index: 8;
-  }
-}
-
-._tableWrap {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-
 ._tableSection {
   min-height: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-._clickableRow {
-  cursor: pointer;
-
-  &._selected {
-    background: var(--c-gris_clair);
-  }
-}
-
-._clickableRow:hover {
-  background: var(--c-gris_clair);
-}
-
-._clickableRow:hover td._stickyIdCol,
-._clickableRow:hover td._stickyCoverCol,
-._clickableRow._selected td._stickyIdCol,
-._clickableRow._selected td._stickyCoverCol {
-  background: var(--c-gris_clair);
-}
-
-._editableCell {
-  cursor: pointer;
-
-  &:hover {
-    background: var(
-      --c-bleuvert_clair,
-      color-mix(in srgb, var(--c-bleuvert) 12%, transparent)
-    );
-    ._gemMetadataValue {
-      color: var(--c-noir);
-    }
-  }
+  gap: var(--spacing);
 }
 
 ._gemOverlay {
@@ -694,46 +525,5 @@ export default {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  // padding: calc(var(--spacing) * 1.25);
-}
-
-._gemMetadataValue {
-  font-family: var(--sl-font-mono);
-  font-size: var(--sl-font-size-x-small);
-}
-
-._thContent {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--spacing) / 4);
-  white-space: nowrap;
-}
-
-._thIcon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-._coverFilesCell {
-  display: flex;
-  align-items: flex-start;
-  gap: calc(var(--spacing) / 2);
-}
-
-._coverThumb {
-  width: 84px;
-  min-width: 84px;
-  flex-shrink: 0;
-}
-
-._filesCount {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: var(--sl-font-size-x-small);
-  font-family: var(--sl-font-mono);
-  color: var(--c-gris_fonce);
-  padding-top: 2px;
 }
 </style>
