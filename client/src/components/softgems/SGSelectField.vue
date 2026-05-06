@@ -50,7 +50,7 @@ export default {
   },
   computed: {
     normalized_options() {
-      return this.options
+      const normalized_options = this.options
         .map((option_item) => {
           if (
             option_item !== null &&
@@ -72,6 +72,20 @@ export default {
           };
         })
         .filter((option_item) => option_item.value !== "");
+
+      const current_value = String(this.value ?? "").trim();
+      if (!current_value) return normalized_options;
+
+      const has_current_value = normalized_options.some(
+        (option_item) => option_item.value === current_value
+      );
+      if (has_current_value) return normalized_options;
+
+      // Keep unknown/imported values selectable instead of forcing empty.
+      return [
+        { value: current_value, label: current_value },
+        ...normalized_options,
+      ];
     },
     allowed_values() {
       return this.normalized_options.map((option_item) => option_item.value);

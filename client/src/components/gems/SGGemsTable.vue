@@ -193,7 +193,11 @@ export default {
     formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";
       if (typeof value === "number")
-        return Number.isFinite(value) ? value : "-";
+        return Number.isFinite(value)
+          ? value.toLocaleString("fr-FR", {
+              maximumFractionDigits: 3,
+            })
+          : "-";
       if (typeof value === "object") return JSON.stringify(value);
       return String(value);
     },

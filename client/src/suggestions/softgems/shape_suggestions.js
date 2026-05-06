@@ -12,6 +12,7 @@ export const shape_suggestions = [
   "Triangle (Trilliant)",
   "Hexagonal",
   "Octagonal",
+  "Octogonal",
   "Lozenge",
   "Fancy Shape",
   "Mixed Cut",

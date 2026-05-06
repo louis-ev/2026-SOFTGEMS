@@ -199,7 +199,8 @@ export default {
       if (raw_value === "" || raw_value === null || raw_value === undefined)
         return 0;
 
-      const number_value = Number(raw_value);
+      const normalized_value = String(raw_value).trim().replace(",", ".");
+      const number_value = Number(normalized_value);
       if (Number.isFinite(number_value)) return number_value;
       return raw_value;
     },

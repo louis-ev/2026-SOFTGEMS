@@ -13,192 +13,42 @@
     </div>
 
     <form class="_form" @submit.prevent="createGem">
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
+      <section
+        v-for="form_section in form_sections"
+        :key="form_section.key"
+        class="_formSection"
+      >
+        <h2 class="_sectionTitle">{{ form_section.title }}</h2>
         <div class="_fieldsGrid">
-          <div>
-            <DLabel :str="$t('sg_reference_supplier')" icon="archive" />
-            <TextInput
-              :content.sync="new_gem_fields.reference_supplier"
-              :required="false"
+          <div
+            v-for="field_key in form_section.field_keys"
+            :key="`${form_section.key}-${field_key}`"
+          >
+            <DLabel
+              :str="gem_field_configs[field_key].label"
+              :icon="gem_field_configs[field_key].icon"
             />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_reference_customer')" icon="person-circle" />
-            <TextInput
-              :content.sync="new_gem_fields.reference_customer"
-              :required="false"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_paired_gem')" icon="link" />
-            <SGSelectField
-              v-model="new_gem_fields.paired_gem"
-              :options="paired_gem_options"
-              :allow_empty="true"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section class="_formSection">
-        <h2 class="_sectionTitle">
-          {{ $t("sg_section_stone_characteristics") }}
-        </h2>
-        <div class="_fieldsGrid">
-          <div>
-            <DLabel :str="$t('sg_number_of_pieces')" icon="list-ol" />
-            <TextInput
-              :content.sync="new_gem_fields.number_of_pieces"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_stone_type')" icon="gem" />
-            <SGSelectField
-              v-model="new_gem_fields.stone_type"
-              :options="stone_type_suggestions"
-              :allow_empty="true"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_weight_ct')" icon="rulers" />
-            <TextInput
-              :content.sync="new_gem_fields.weight_ct"
-              :required="false"
-              input_type="number"
-              :input_step="0.001"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_color')" icon="palette-fill" />
-            <SGSelectField
-              v-model="new_gem_fields.color"
-              :options="color_suggestions"
-              :allow_empty="true"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_shape')" icon="pentagon" />
-            <SGSelectField
-              v-model="new_gem_fields.shape"
-              :options="shape_suggestions"
-              :allow_empty="true"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_origin_country')" icon="pin-map" />
-            <SGSelectField
-              v-model="new_gem_fields.origin_country"
-              :options="origin_country_suggestions"
-              :allow_empty="true"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_treatment_type')" icon="tools" />
-            <SGSelectField
-              v-model="new_gem_fields.treatment_type"
-              :options="treatment_type_suggestions"
-              :allow_empty="true"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_length_mm')" icon="aspect-ratio" />
-            <TextInput
-              :content.sync="new_gem_fields.length_mm"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_width_mm')" icon="aspect-ratio" />
-            <TextInput
-              :content.sync="new_gem_fields.width_mm"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_height_mm')" icon="aspect-ratio" />
-            <TextInput
-              :content.sync="new_gem_fields.height_mm"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_pricing") }}</h2>
-        <div class="_fieldsGrid">
-          <div>
-            <DLabel :str="$t('sg_base_price_pcb')" icon="tag" />
-            <TextInput
-              :content.sync="new_gem_fields.base_price_pcb"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_purchased_price_pa')" icon="tag" />
-            <TextInput
-              :content.sync="new_gem_fields.purchased_price_pa"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_price_per_carat_pa_pcb')" icon="diagram2" />
-            <TextInput
-              :content.sync="new_gem_fields.price_per_carat_pa_pcb"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_pv_selling_price')" icon="tag" />
-            <TextInput
-              :content.sync="new_gem_fields.pv_selling_price"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_pvd_asking_price')" icon="diagram2" />
             <input
+              v-if="field_key === 'pvd_asking_price'"
               :value="pvd_asking_price_preview"
               type="number"
               class="u-input"
               readonly
             />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_pc_to')" icon="file-earmark-text" />
-            <TextInput
-              :content.sync="new_gem_fields.pc_to"
-              :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel
-              :str="$t('sg_pf_invoiced_price')"
-              icon="file-earmark-text"
+            <SGSelectField
+              v-else-if="gem_field_configs[field_key].type === 'select'"
+              :value="new_gem_fields[field_key]"
+              :options="gem_field_configs[field_key].options || []"
+              :allow_empty="true"
+              @input="setFieldValue(field_key, $event)"
             />
             <TextInput
-              :content.sync="new_gem_fields.pf_invoiced_price"
+              v-else
+              :content="new_gem_fields[field_key]"
               :required="false"
-              input_type="number"
-            />
-          </div>
-          <div>
-            <DLabel :str="$t('sg_price_per_carat_all')" icon="arrow-up" />
-            <TextInput
-              :content.sync="new_gem_fields.price_per_carat_all"
-              :required="false"
-              input_type="number"
+              :input_type="gem_field_configs[field_key].input_type || 'text'"
+              :input_step="gem_field_configs[field_key].input_step"
+              @update:content="setFieldValue(field_key, $event)"
             />
           </div>
         </div>
@@ -233,13 +83,7 @@
 </template>
 
 <script>
-import {
-  color_suggestions,
-  origin_country_suggestions,
-  shape_suggestions,
-  stone_type_suggestions,
-  treatment_type_suggestions,
-} from "@/suggestions/softgems";
+import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 
 const v1_new_gem_fields_defaults = {
@@ -285,17 +129,58 @@ export default {
       gems_path: "gems",
       new_gem_name: "",
       new_gem_fields: { ...v1_new_gem_fields_defaults },
-      color_suggestions,
-      origin_country_suggestions,
       paired_gem_options: [],
-      shape_suggestions,
-      stone_type_suggestions,
-      treatment_type_suggestions,
       is_creating: false,
       is_joined_gems_room: false,
     };
   },
   computed: {
+    gem_field_configs() {
+      return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
+    },
+    form_sections() {
+      return [
+        {
+          key: "identification",
+          title: this.$t("sg_section_identification"),
+          field_keys: [
+            "reference_supplier",
+            "reference_customer",
+            "paired_gem",
+          ],
+        },
+        {
+          key: "stone_characteristics",
+          title: this.$t("sg_section_stone_characteristics"),
+          field_keys: [
+            "number_of_pieces",
+            "stone_type",
+            "weight_ct",
+            "color",
+            "shape",
+            "origin_country",
+            "treatment_type",
+            "length_mm",
+            "width_mm",
+            "height_mm",
+          ],
+        },
+        {
+          key: "pricing",
+          title: this.$t("sg_section_pricing"),
+          field_keys: [
+            "base_price_pcb",
+            "purchased_price_pa",
+            "price_per_carat_pa_pcb",
+            "pv_selling_price",
+            "pvd_asking_price",
+            "pc_to",
+            "pf_invoiced_price",
+            "price_per_carat_all",
+          ],
+        },
+      ];
+    },
     pvd_asking_price_preview() {
       const pv_selling_price = Number(this.new_gem_fields.pv_selling_price);
       if (!Number.isFinite(pv_selling_price)) return 0;
@@ -303,6 +188,9 @@ export default {
     },
   },
   methods: {
+    setFieldValue(field_key, value) {
+      this.$set(this.new_gem_fields, field_key, value);
+    },
     goBack() {
       this.$router.push("/gems");
     },
@@ -411,16 +299,7 @@ export default {
         ...raw_fields,
       };
 
-      const string_field_keys = [
-        "reference_supplier",
-        "reference_customer",
-        "paired_gem",
-        "stone_type",
-        "color",
-        "shape",
-        "origin_country",
-        "treatment_type",
-      ];
+      const string_field_keys = this.getFieldKeysByType("string");
       string_field_keys.forEach((field_key) => {
         normalized_fields[field_key] = this.cleanString(
           normalized_fields[field_key]
@@ -430,20 +309,7 @@ export default {
       // Status is automatic and not editable in this form.
       normalized_fields.status = "reference";
 
-      const number_field_keys = [
-        "number_of_pieces",
-        "length_mm",
-        "width_mm",
-        "height_mm",
-        "weight_ct",
-        "base_price_pcb",
-        "purchased_price_pa",
-        "price_per_carat_pa_pcb",
-        "pv_selling_price",
-        "pc_to",
-        "pf_invoiced_price",
-        "price_per_carat_all",
-      ];
+      const number_field_keys = this.getFieldKeysByType("number");
       number_field_keys.forEach((field_key) => {
         normalized_fields[field_key] = this.toNumberOrDefault(
           normalized_fields[field_key],
@@ -457,12 +323,28 @@ export default {
 
       return normalized_fields;
     },
+    getFieldKeysByType(target_type) {
+      return Object.values(this.gem_field_configs)
+        .filter((field_config) => {
+          if (!field_config || typeof field_config !== "object") return false;
+          if (field_config.key === "status") return false;
+          if (field_config.readonly) return false;
+          if (target_type === "number") return field_config.type === "number";
+          if (target_type === "string")
+            return field_config.type === "text" || field_config.type === "select";
+          return false;
+        })
+        .map((field_config) => field_config.key);
+    },
     cleanString(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
     toNumberOrDefault(value, fallback_value = 0) {
-      const as_number = Number(value);
+      const normalized_value = String(value ?? "")
+        .trim()
+        .replace(",", ".");
+      const as_number = Number(normalized_value);
       if (Number.isFinite(as_number)) return as_number;
       return fallback_value;
     },

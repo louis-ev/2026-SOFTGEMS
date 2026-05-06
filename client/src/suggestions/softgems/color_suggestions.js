@@ -69,6 +69,8 @@ export const color_suggestions = [
   "Deep Violet",
   "Deep Purple",
   "Grey",
+  "Light Grey",
+  "Bluegreen",
   "Black",
   "Pigeon Blood",
   "Royal Blue",

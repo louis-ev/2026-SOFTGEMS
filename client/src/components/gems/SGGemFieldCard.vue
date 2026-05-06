@@ -43,7 +43,11 @@ export default {
     display_value() {
       if (this.is_empty) return "—";
       if (typeof this.value === "number")
-        return Number.isFinite(this.value) ? String(this.value) : "—";
+        return Number.isFinite(this.value)
+          ? this.value.toLocaleString("fr-FR", {
+              maximumFractionDigits: 3,
+            })
+          : "—";
       return String(this.value);
     },
   },

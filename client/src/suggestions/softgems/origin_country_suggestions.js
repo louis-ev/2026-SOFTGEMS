@@ -22,6 +22,7 @@ export const origin_country_suggestions = [
   "Thailand",
   "Vietnam",
   "Zambia",
+  "Ceylon (Sri Lanka)",
   "East Africa",
   "West Africa",
   "Africa",

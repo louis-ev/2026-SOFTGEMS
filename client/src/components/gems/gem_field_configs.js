@@ -52,6 +52,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "list-ol",
       type: "number",
       input_type: "number",
+      input_step: 1,
     },
     stone_type: {
       key: "stone_type",
@@ -102,6 +103,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "aspect-ratio",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     width_mm: {
       key: "width_mm",
@@ -109,6 +111,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "aspect-ratio",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     height_mm: {
       key: "height_mm",
@@ -116,6 +119,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "aspect-ratio",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     base_price_pcb: {
       key: "base_price_pcb",
@@ -123,6 +127,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "tag",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     purchased_price_pa: {
       key: "purchased_price_pa",
@@ -130,6 +135,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "tag",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     price_per_carat_pa_pcb: {
       key: "price_per_carat_pa_pcb",
@@ -137,6 +143,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "diagram2",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     pv_selling_price: {
       key: "pv_selling_price",
@@ -144,6 +151,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "tag",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     pvd_asking_price: {
       key: "pvd_asking_price",
@@ -158,6 +166,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "file-earmark-text",
       type: "number",
       input_type: "number",
+      input_step: 1,
     },
     pf_invoiced_price: {
       key: "pf_invoiced_price",
@@ -165,6 +174,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "file-earmark-text",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
     price_per_carat_all: {
       key: "price_per_carat_all",
@@ -172,6 +182,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "arrow-up",
       type: "number",
       input_type: "number",
+      input_step: 0.01,
     },
   };
 }
