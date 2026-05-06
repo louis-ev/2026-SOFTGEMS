@@ -15,7 +15,6 @@
     <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="gem" class="_content">
-
       <!-- Overview: cover + files -->
       <section class="_formSection">
         <div class="_coverFrame">
@@ -56,125 +55,98 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
         <div class="_fieldsGrid">
-          <button
-            type="button"
-            class="_fieldCard"
+          <SGGemFieldCard
+            :label="$t('sg_status')"
+            :value="gem.status"
             @click="openEditModal(status_field)"
-          >
-            <DLabel :str="$t('sg_status')" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.status) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_reference_supplier')"
+            icon="archive"
+            :value="gem.reference_supplier"
             @click="openEditModal(reference_supplier_field)"
-          >
-            <DLabel :str="$t('sg_reference_supplier')" icon="archive" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.reference_supplier) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_reference_customer')"
+            icon="person-circle"
+            :value="gem.reference_customer"
             @click="openEditModal(reference_customer_field)"
-          >
-            <DLabel :str="$t('sg_reference_customer')" icon="person-circle" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.reference_customer) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_paired_gem')"
+            icon="link"
+            :value="gem.paired_gem"
             @click="openEditModal(paired_gem_field)"
-          >
-            <DLabel :str="$t('sg_paired_gem')" icon="link" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.paired_gem) }}</span>
-          </button>
+          />
         </div>
       </section>
 
       <!-- Section: Stone characteristics -->
       <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_stone_characteristics") }}</h2>
+        <h2 class="_sectionTitle">
+          {{ $t("sg_section_stone_characteristics") }}
+        </h2>
         <div class="_fieldsGrid">
-          <button
-            type="button"
-            class="_fieldCard"
+          <SGGemFieldCard
+            :label="$t('sg_number_of_pieces')"
+            icon="list-ol"
+            :value="gem.number_of_pieces"
             @click="openEditModal(number_of_pieces_field)"
-          >
-            <DLabel :str="$t('sg_number_of_pieces')" icon="list-ol" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.number_of_pieces) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_stone_type')"
+            icon="gem"
+            :value="gem.stone_type"
             @click="openEditModal(stone_type_field)"
-          >
-            <DLabel :str="$t('sg_stone_type')" icon="gem" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.stone_type) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_weight_ct')"
+            icon="rulers"
+            :value="gem.weight_ct"
             @click="openEditModal(weight_ct_field)"
-          >
-            <DLabel :str="$t('sg_weight_ct')" icon="rulers" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.weight_ct) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_color')"
+            icon="palette-fill"
+            :value="gem.color"
             @click="openEditModal(color_field)"
-          >
-            <DLabel :str="$t('sg_color')" icon="palette-fill" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.color) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_shape')"
+            icon="pentagon"
+            :value="gem.shape"
             @click="openEditModal(shape_field)"
-          >
-            <DLabel :str="$t('sg_shape')" icon="pentagon" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.shape) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_origin_country')"
+            icon="pin-map"
+            :value="gem.origin_country"
             @click="openEditModal(origin_country_field)"
-          >
-            <DLabel :str="$t('sg_origin_country')" icon="pin-map" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.origin_country) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_treatment_type')"
+            icon="tools"
+            :value="gem.treatment_type"
             @click="openEditModal(treatment_type_field)"
-          >
-            <DLabel :str="$t('sg_treatment_type')" icon="tools" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.treatment_type) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_length_mm')"
+            icon="aspect-ratio"
+            :value="gem.length_mm"
             @click="openEditModal(length_mm_field)"
-          >
-            <DLabel :str="$t('sg_length_mm')" icon="aspect-ratio" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.length_mm) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_width_mm')"
+            icon="aspect-ratio"
+            :value="gem.width_mm"
             @click="openEditModal(width_mm_field)"
-          >
-            <DLabel :str="$t('sg_width_mm')" icon="aspect-ratio" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.width_mm) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_height_mm')"
+            icon="aspect-ratio"
+            :value="gem.height_mm"
             @click="openEditModal(height_mm_field)"
-          >
-            <DLabel :str="$t('sg_height_mm')" icon="aspect-ratio" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.height_mm) }}</span>
-          </button>
+          />
         </div>
       </section>
 
@@ -182,73 +154,56 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_pricing") }}</h2>
         <div class="_fieldsGrid">
-          <button
-            type="button"
-            class="_fieldCard"
+          <SGGemFieldCard
+            :label="$t('sg_base_price_pcb')"
+            icon="tag"
+            :value="gem.base_price_pcb"
             @click="openEditModal(base_price_pcb_field)"
-          >
-            <DLabel :str="$t('sg_base_price_pcb')" icon="tag" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.base_price_pcb) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_purchased_price_pa')"
+            icon="tag"
+            :value="gem.purchased_price_pa"
             @click="openEditModal(purchased_price_pa_field)"
-          >
-            <DLabel :str="$t('sg_purchased_price_pa')" icon="tag" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.purchased_price_pa) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_price_per_carat_pa_pcb')"
+            icon="diagram2"
+            :value="gem.price_per_carat_pa_pcb"
             @click="openEditModal(price_per_carat_pa_pcb_field)"
-          >
-            <DLabel :str="$t('sg_price_per_carat_pa_pcb')" icon="diagram2" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.price_per_carat_pa_pcb) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_pv_selling_price')"
+            icon="tag"
+            :value="gem.pv_selling_price"
             @click="openEditModal(pv_selling_price_field)"
-          >
-            <DLabel :str="$t('sg_pv_selling_price')" icon="tag" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.pv_selling_price) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard _fieldCard_readonly"
-            @click="openEditModal(pvd_asking_price_field)"
-          >
-            <DLabel :str="$t('sg_pvd_asking_price')" icon="diagram2" tag="span" />
-            <span class="_fieldValue">{{ displayValue(pvd_asking_price_computed) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_pvd_asking_price')"
+            icon="diagram2"
+            :value="pvd_asking_price_computed"
+            :readonly="true"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_pc_to')"
+            icon="file-earmark-text"
+            :value="gem.pc_to"
             @click="openEditModal(pc_to_field)"
-          >
-            <DLabel :str="$t('sg_pc_to')" icon="file-earmark-text" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.pc_to) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_pf_invoiced_price')"
+            icon="file-earmark-text"
+            :value="gem.pf_invoiced_price"
             @click="openEditModal(pf_invoiced_price_field)"
-          >
-            <DLabel :str="$t('sg_pf_invoiced_price')" icon="file-earmark-text" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.pf_invoiced_price) }}</span>
-          </button>
-          <button
-            type="button"
-            class="_fieldCard"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_price_per_carat_all')"
+            icon="arrow-up"
+            :value="gem.price_per_carat_all"
             @click="openEditModal(price_per_carat_all_field)"
-          >
-            <DLabel :str="$t('sg_price_per_carat_all')" icon="arrow-up" tag="span" />
-            <span class="_fieldValue">{{ displayValue(gem.price_per_carat_all) }}</span>
-          </button>
+          />
         </div>
       </section>
-
     </div>
 
     <SGGemEditFieldModal
@@ -277,6 +232,7 @@ export default {
     SGGemFilesList: () => import("@/components/gems/SGGemFilesList.vue"),
     SGGemEditFieldModal: () =>
       import("@/components/gems/SGGemEditFieldModal.vue"),
+    SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
   },
   props: {
     gem_id: {
@@ -305,11 +261,7 @@ export default {
     },
     gem_title() {
       if (!this.gem) return this.$t("sg_open_gem_title");
-      return (
-        this.gem.reference_supplier ||
-        this.gem.reference_customer ||
-        this.gem_id
-      );
+      return this.$t("sg_gem_title", { id: this.gem_id });
     },
     pvd_asking_price_computed() {
       const pv = Number(this.gem?.pv_selling_price);
@@ -332,10 +284,20 @@ export default {
       };
     },
     reference_supplier_field() {
-      return { key: "reference_supplier", label: this.$t("sg_reference_supplier"), icon: "archive", type: "text" };
+      return {
+        key: "reference_supplier",
+        label: this.$t("sg_reference_supplier"),
+        icon: "archive",
+        type: "text",
+      };
     },
     reference_customer_field() {
-      return { key: "reference_customer", label: this.$t("sg_reference_customer"), icon: "person-circle", type: "text" };
+      return {
+        key: "reference_customer",
+        label: this.$t("sg_reference_customer"),
+        icon: "person-circle",
+        type: "text",
+      };
     },
     paired_gem_field() {
       return {
@@ -347,58 +309,166 @@ export default {
       };
     },
     number_of_pieces_field() {
-      return { key: "number_of_pieces", label: this.$t("sg_number_of_pieces"), icon: "list-ol", type: "number", input_type: "number" };
+      return {
+        key: "number_of_pieces",
+        label: this.$t("sg_number_of_pieces"),
+        icon: "list-ol",
+        type: "number",
+        input_type: "number",
+      };
     },
     stone_type_field() {
-      return { key: "stone_type", label: this.$t("sg_stone_type"), icon: "gem", type: "select", options: stone_type_suggestions };
+      return {
+        key: "stone_type",
+        label: this.$t("sg_stone_type"),
+        icon: "gem",
+        type: "select",
+        options: stone_type_suggestions,
+      };
     },
     weight_ct_field() {
-      return { key: "weight_ct", label: this.$t("sg_weight_ct"), icon: "rulers", type: "number", input_type: "number" };
+      return {
+        key: "weight_ct",
+        label: this.$t("sg_weight_ct"),
+        icon: "rulers",
+        type: "number",
+        input_type: "number",
+      };
     },
     color_field() {
-      return { key: "color", label: this.$t("sg_color"), icon: "palette-fill", type: "select", options: color_suggestions };
+      return {
+        key: "color",
+        label: this.$t("sg_color"),
+        icon: "palette-fill",
+        type: "select",
+        options: color_suggestions,
+      };
     },
     shape_field() {
-      return { key: "shape", label: this.$t("sg_shape"), icon: "pentagon", type: "select", options: shape_suggestions };
+      return {
+        key: "shape",
+        label: this.$t("sg_shape"),
+        icon: "pentagon",
+        type: "select",
+        options: shape_suggestions,
+      };
     },
     origin_country_field() {
-      return { key: "origin_country", label: this.$t("sg_origin_country"), icon: "pin-map", type: "select", options: origin_country_suggestions };
+      return {
+        key: "origin_country",
+        label: this.$t("sg_origin_country"),
+        icon: "pin-map",
+        type: "select",
+        options: origin_country_suggestions,
+      };
     },
     treatment_type_field() {
-      return { key: "treatment_type", label: this.$t("sg_treatment_type"), icon: "tools", type: "select", options: treatment_type_suggestions };
+      return {
+        key: "treatment_type",
+        label: this.$t("sg_treatment_type"),
+        icon: "tools",
+        type: "select",
+        options: treatment_type_suggestions,
+      };
     },
     length_mm_field() {
-      return { key: "length_mm", label: this.$t("sg_length_mm"), icon: "aspect-ratio", type: "number", input_type: "number" };
+      return {
+        key: "length_mm",
+        label: this.$t("sg_length_mm"),
+        icon: "aspect-ratio",
+        type: "number",
+        input_type: "number",
+      };
     },
     width_mm_field() {
-      return { key: "width_mm", label: this.$t("sg_width_mm"), icon: "aspect-ratio", type: "number", input_type: "number" };
+      return {
+        key: "width_mm",
+        label: this.$t("sg_width_mm"),
+        icon: "aspect-ratio",
+        type: "number",
+        input_type: "number",
+      };
     },
     height_mm_field() {
-      return { key: "height_mm", label: this.$t("sg_height_mm"), icon: "aspect-ratio", type: "number", input_type: "number" };
+      return {
+        key: "height_mm",
+        label: this.$t("sg_height_mm"),
+        icon: "aspect-ratio",
+        type: "number",
+        input_type: "number",
+      };
     },
     base_price_pcb_field() {
-      return { key: "base_price_pcb", label: this.$t("sg_base_price_pcb"), icon: "tag", type: "number", input_type: "number" };
+      return {
+        key: "base_price_pcb",
+        label: this.$t("sg_base_price_pcb"),
+        icon: "tag",
+        type: "number",
+        input_type: "number",
+      };
     },
     purchased_price_pa_field() {
-      return { key: "purchased_price_pa", label: this.$t("sg_purchased_price_pa"), icon: "tag", type: "number", input_type: "number" };
+      return {
+        key: "purchased_price_pa",
+        label: this.$t("sg_purchased_price_pa"),
+        icon: "tag",
+        type: "number",
+        input_type: "number",
+      };
     },
     price_per_carat_pa_pcb_field() {
-      return { key: "price_per_carat_pa_pcb", label: this.$t("sg_price_per_carat_pa_pcb"), icon: "diagram2", type: "number", input_type: "number" };
+      return {
+        key: "price_per_carat_pa_pcb",
+        label: this.$t("sg_price_per_carat_pa_pcb"),
+        icon: "diagram2",
+        type: "number",
+        input_type: "number",
+      };
     },
     pv_selling_price_field() {
-      return { key: "pv_selling_price", label: this.$t("sg_pv_selling_price"), icon: "tag", type: "number", input_type: "number" };
+      return {
+        key: "pv_selling_price",
+        label: this.$t("sg_pv_selling_price"),
+        icon: "tag",
+        type: "number",
+        input_type: "number",
+      };
     },
     pvd_asking_price_field() {
-      return { key: "pvd_asking_price", label: this.$t("sg_pvd_asking_price"), icon: "diagram2", type: "number", readonly: true };
+      return {
+        key: "pvd_asking_price",
+        label: this.$t("sg_pvd_asking_price"),
+        icon: "diagram2",
+        type: "number",
+        readonly: true,
+      };
     },
     pc_to_field() {
-      return { key: "pc_to", label: this.$t("sg_pc_to"), icon: "file-earmark-text", type: "number", input_type: "number" };
+      return {
+        key: "pc_to",
+        label: this.$t("sg_pc_to"),
+        icon: "file-earmark-text",
+        type: "number",
+        input_type: "number",
+      };
     },
     pf_invoiced_price_field() {
-      return { key: "pf_invoiced_price", label: this.$t("sg_pf_invoiced_price"), icon: "file-earmark-text", type: "number", input_type: "number" };
+      return {
+        key: "pf_invoiced_price",
+        label: this.$t("sg_pf_invoiced_price"),
+        icon: "file-earmark-text",
+        type: "number",
+        input_type: "number",
+      };
     },
     price_per_carat_all_field() {
-      return { key: "price_per_carat_all", label: this.$t("sg_price_per_carat_all"), icon: "arrow-up", type: "number", input_type: "number" };
+      return {
+        key: "price_per_carat_all",
+        label: this.$t("sg_price_per_carat_all"),
+        icon: "arrow-up",
+        type: "number",
+        input_type: "number",
+      };
     },
   },
   async created() {
@@ -461,12 +531,6 @@ export default {
     onGemRemoved() {
       this.show_remove_modal = false;
       this.$router.push("/gems");
-    },
-    displayValue(value) {
-      if (value === null || value === undefined || value === "") return "—";
-      if (typeof value === "number")
-        return Number.isFinite(value) ? String(value) : "—";
-      return String(value);
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";
@@ -545,54 +609,5 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: calc(var(--spacing) / 1.75);
-}
-
-._fieldCard {
-  all: unset;
-  box-sizing: border-box;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  text-align: left;
-
-  ._fieldValue {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0.3em 0.5em;
-    border: 1px solid var(--c-gris_clair);
-    border-radius: 4px;
-    background: var(--c-bodybg);
-    font-family: var(--sl-font-mono);
-    font-size: var(--sl-font-size-small);
-    color: var(--c-gris_fonce);
-    min-height: 2.1em;
-    transition: border-color 0.15s, background 0.15s;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &:hover ._fieldValue {
-    border-color: var(--c-gris);
-    background: var(--c-blanc);
-    color: var(--c-noir);
-  }
-
-  &._fieldCard_readonly {
-    cursor: default;
-
-    ._fieldValue {
-      color: var(--c-gris_fonce);
-      opacity: 0.8;
-    }
-
-    &:hover ._fieldValue {
-      border-color: var(--c-gris_clair);
-      background: var(--c-bodybg);
-    }
-  }
 }
 </style>

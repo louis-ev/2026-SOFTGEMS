@@ -10,6 +10,7 @@ export default {
   sg_back_home: "Back to home",
   sg_create_gem_title: "Create gem",
   sg_open_gem_title: "Gem",
+  sg_gem_title: "Gem #{id}",
   sg_gem: "Gem",
   sg_loading_gems: "Loading gems...",
   sg_loading_gem: "Loading gem...",
@@ -22,8 +23,7 @@ export default {
   sg_generated_placeholder_gems: "Generated 10 placeholder gems.",
   sg_remove_all_gems: "Remove all gems",
   sg_removing_all_gems: "Removing all gems...",
-  sg_remove_all_gems_confirm:
-    "Remove all gems permanently? ({count} items)",
+  sg_remove_all_gems_confirm: "Remove all gems permanently? ({count} items)",
   sg_removed_all_gems_success: "Removed all gems.",
   sg_could_not_remove_all_gems: "Could not remove all gems.",
   sg_could_not_generate_placeholder_gems:
