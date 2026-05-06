@@ -1,6 +1,6 @@
 <template>
   <BaseModal2
-    :title="field.label"
+    :title="modal_title"
     :is_loading="is_saving"
     @close="$emit('close')"
   >
@@ -108,6 +108,15 @@ export default {
     gem_path: {
       type: String,
       required: true,
+    },
+  },
+  computed: {
+    gem_id() {
+      const parts = this.gem_path.split("/");
+      return parts[parts.length - 1] || this.gem_path;
+    },
+    modal_title() {
+      return `${this.$t("sg_gem_title", { id: this.gem_id })} — ${this.field.label}`;
     },
   },
   data() {

@@ -58,25 +58,25 @@
           <SGGemFieldCard
             :label="$t('sg_status')"
             :value="gem.status"
-            @click="openEditModal(status_field)"
+            @click="openEditModal(field_configs.status)"
           />
           <SGGemFieldCard
             :label="$t('sg_reference_supplier')"
             icon="archive"
             :value="gem.reference_supplier"
-            @click="openEditModal(reference_supplier_field)"
+            @click="openEditModal(field_configs.reference_supplier)"
           />
           <SGGemFieldCard
             :label="$t('sg_reference_customer')"
             icon="person-circle"
             :value="gem.reference_customer"
-            @click="openEditModal(reference_customer_field)"
+            @click="openEditModal(field_configs.reference_customer)"
           />
           <SGGemFieldCard
             :label="$t('sg_paired_gem')"
             icon="link"
             :value="gem.paired_gem"
-            @click="openEditModal(paired_gem_field)"
+            @click="openEditModal(field_configs.paired_gem)"
           />
         </div>
       </section>
@@ -91,61 +91,61 @@
             :label="$t('sg_number_of_pieces')"
             icon="list-ol"
             :value="gem.number_of_pieces"
-            @click="openEditModal(number_of_pieces_field)"
+            @click="openEditModal(field_configs.number_of_pieces)"
           />
           <SGGemFieldCard
             :label="$t('sg_stone_type')"
             icon="gem"
             :value="gem.stone_type"
-            @click="openEditModal(stone_type_field)"
+            @click="openEditModal(field_configs.stone_type)"
           />
           <SGGemFieldCard
             :label="$t('sg_weight_ct')"
             icon="rulers"
             :value="gem.weight_ct"
-            @click="openEditModal(weight_ct_field)"
+            @click="openEditModal(field_configs.weight_ct)"
           />
           <SGGemFieldCard
             :label="$t('sg_color')"
             icon="palette-fill"
             :value="gem.color"
-            @click="openEditModal(color_field)"
+            @click="openEditModal(field_configs.color)"
           />
           <SGGemFieldCard
             :label="$t('sg_shape')"
             icon="pentagon"
             :value="gem.shape"
-            @click="openEditModal(shape_field)"
+            @click="openEditModal(field_configs.shape)"
           />
           <SGGemFieldCard
             :label="$t('sg_origin_country')"
             icon="pin-map"
             :value="gem.origin_country"
-            @click="openEditModal(origin_country_field)"
+            @click="openEditModal(field_configs.origin_country)"
           />
           <SGGemFieldCard
             :label="$t('sg_treatment_type')"
             icon="tools"
             :value="gem.treatment_type"
-            @click="openEditModal(treatment_type_field)"
+            @click="openEditModal(field_configs.treatment_type)"
           />
           <SGGemFieldCard
             :label="$t('sg_length_mm')"
             icon="aspect-ratio"
             :value="gem.length_mm"
-            @click="openEditModal(length_mm_field)"
+            @click="openEditModal(field_configs.length_mm)"
           />
           <SGGemFieldCard
             :label="$t('sg_width_mm')"
             icon="aspect-ratio"
             :value="gem.width_mm"
-            @click="openEditModal(width_mm_field)"
+            @click="openEditModal(field_configs.width_mm)"
           />
           <SGGemFieldCard
             :label="$t('sg_height_mm')"
             icon="aspect-ratio"
             :value="gem.height_mm"
-            @click="openEditModal(height_mm_field)"
+            @click="openEditModal(field_configs.height_mm)"
           />
         </div>
       </section>
@@ -158,25 +158,25 @@
             :label="$t('sg_base_price_pcb')"
             icon="tag"
             :value="gem.base_price_pcb"
-            @click="openEditModal(base_price_pcb_field)"
+            @click="openEditModal(field_configs.base_price_pcb)"
           />
           <SGGemFieldCard
             :label="$t('sg_purchased_price_pa')"
             icon="tag"
             :value="gem.purchased_price_pa"
-            @click="openEditModal(purchased_price_pa_field)"
+            @click="openEditModal(field_configs.purchased_price_pa)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_pa_pcb')"
             icon="diagram2"
             :value="gem.price_per_carat_pa_pcb"
-            @click="openEditModal(price_per_carat_pa_pcb_field)"
+            @click="openEditModal(field_configs.price_per_carat_pa_pcb)"
           />
           <SGGemFieldCard
             :label="$t('sg_pv_selling_price')"
             icon="tag"
             :value="gem.pv_selling_price"
-            @click="openEditModal(pv_selling_price_field)"
+            @click="openEditModal(field_configs.pv_selling_price)"
           />
           <SGGemFieldCard
             :label="$t('sg_pvd_asking_price')"
@@ -188,19 +188,19 @@
             :label="$t('sg_pc_to')"
             icon="file-earmark-text"
             :value="gem.pc_to"
-            @click="openEditModal(pc_to_field)"
+            @click="openEditModal(field_configs.pc_to)"
           />
           <SGGemFieldCard
             :label="$t('sg_pf_invoiced_price')"
             icon="file-earmark-text"
             :value="gem.pf_invoiced_price"
-            @click="openEditModal(pf_invoiced_price_field)"
+            @click="openEditModal(field_configs.pf_invoiced_price)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_all')"
             icon="arrow-up"
             :value="gem.price_per_carat_all"
-            @click="openEditModal(price_per_carat_all_field)"
+            @click="openEditModal(field_configs.price_per_carat_all)"
           />
         </div>
       </section>
@@ -218,13 +218,7 @@
 </template>
 
 <script>
-import {
-  color_suggestions,
-  origin_country_suggestions,
-  shape_suggestions,
-  stone_type_suggestions,
-  treatment_type_suggestions,
-} from "@/suggestions/softgems";
+import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 
 export default {
   name: "SGGemOpenView",
@@ -268,207 +262,11 @@ export default {
       if (!Number.isFinite(pv)) return 0;
       return Number((pv * 1.15).toFixed(2));
     },
-    // ── Field configs ────────────────────────────────────────────────────────
-    status_field() {
-      return {
-        key: "status",
-        label: this.$t("sg_status"),
-        icon: null,
-        type: "select",
-        options: [
-          { value: "reference", label: "reference" },
-          { value: "available", label: "available" },
-          { value: "reserved", label: "reserved" },
-          { value: "sold", label: "sold" },
-        ],
-      };
-    },
-    reference_supplier_field() {
-      return {
-        key: "reference_supplier",
-        label: this.$t("sg_reference_supplier"),
-        icon: "archive",
-        type: "text",
-      };
-    },
-    reference_customer_field() {
-      return {
-        key: "reference_customer",
-        label: this.$t("sg_reference_customer"),
-        icon: "person-circle",
-        type: "text",
-      };
-    },
-    paired_gem_field() {
-      return {
-        key: "paired_gem",
-        label: this.$t("sg_paired_gem"),
-        icon: "link",
-        type: "select",
-        options: this.paired_gem_options,
-      };
-    },
-    number_of_pieces_field() {
-      return {
-        key: "number_of_pieces",
-        label: this.$t("sg_number_of_pieces"),
-        icon: "list-ol",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    stone_type_field() {
-      return {
-        key: "stone_type",
-        label: this.$t("sg_stone_type"),
-        icon: "gem",
-        type: "select",
-        options: stone_type_suggestions,
-      };
-    },
-    weight_ct_field() {
-      return {
-        key: "weight_ct",
-        label: this.$t("sg_weight_ct"),
-        icon: "rulers",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    color_field() {
-      return {
-        key: "color",
-        label: this.$t("sg_color"),
-        icon: "palette-fill",
-        type: "select",
-        options: color_suggestions,
-      };
-    },
-    shape_field() {
-      return {
-        key: "shape",
-        label: this.$t("sg_shape"),
-        icon: "pentagon",
-        type: "select",
-        options: shape_suggestions,
-      };
-    },
-    origin_country_field() {
-      return {
-        key: "origin_country",
-        label: this.$t("sg_origin_country"),
-        icon: "pin-map",
-        type: "select",
-        options: origin_country_suggestions,
-      };
-    },
-    treatment_type_field() {
-      return {
-        key: "treatment_type",
-        label: this.$t("sg_treatment_type"),
-        icon: "tools",
-        type: "select",
-        options: treatment_type_suggestions,
-      };
-    },
-    length_mm_field() {
-      return {
-        key: "length_mm",
-        label: this.$t("sg_length_mm"),
-        icon: "aspect-ratio",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    width_mm_field() {
-      return {
-        key: "width_mm",
-        label: this.$t("sg_width_mm"),
-        icon: "aspect-ratio",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    height_mm_field() {
-      return {
-        key: "height_mm",
-        label: this.$t("sg_height_mm"),
-        icon: "aspect-ratio",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    base_price_pcb_field() {
-      return {
-        key: "base_price_pcb",
-        label: this.$t("sg_base_price_pcb"),
-        icon: "tag",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    purchased_price_pa_field() {
-      return {
-        key: "purchased_price_pa",
-        label: this.$t("sg_purchased_price_pa"),
-        icon: "tag",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    price_per_carat_pa_pcb_field() {
-      return {
-        key: "price_per_carat_pa_pcb",
-        label: this.$t("sg_price_per_carat_pa_pcb"),
-        icon: "diagram2",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    pv_selling_price_field() {
-      return {
-        key: "pv_selling_price",
-        label: this.$t("sg_pv_selling_price"),
-        icon: "tag",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    pvd_asking_price_field() {
-      return {
-        key: "pvd_asking_price",
-        label: this.$t("sg_pvd_asking_price"),
-        icon: "diagram2",
-        type: "number",
-        readonly: true,
-      };
-    },
-    pc_to_field() {
-      return {
-        key: "pc_to",
-        label: this.$t("sg_pc_to"),
-        icon: "file-earmark-text",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    pf_invoiced_price_field() {
-      return {
-        key: "pf_invoiced_price",
-        label: this.$t("sg_pf_invoiced_price"),
-        icon: "file-earmark-text",
-        type: "number",
-        input_type: "number",
-      };
-    },
-    price_per_carat_all_field() {
-      return {
-        key: "price_per_carat_all",
-        label: this.$t("sg_price_per_carat_all"),
-        icon: "arrow-up",
-        type: "number",
-        input_type: "number",
-      };
+    field_configs() {
+      return buildGemFieldConfigs(
+        this.$t.bind(this),
+        this.paired_gem_options
+      );
     },
   },
   async created() {

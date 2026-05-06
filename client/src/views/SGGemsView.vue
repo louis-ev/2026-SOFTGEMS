@@ -67,6 +67,8 @@
             <td
               v-for="metadata_key in metadata_keys"
               :key="`${gem.$path}-${metadata_key}`"
+              :class="{ _editableCell: isFieldEditable(metadata_key) }"
+              @click="isFieldEditable(metadata_key) ? openCellEditModal(gem, metadata_key, $event) : null"
             >
               <div v-if="metadata_key === '$cover'" class="_coverFilesCell">
                 <div class="_coverThumb">
@@ -102,9 +104,20 @@
         </section>
       </div>
     </transition>
+
+    <SGGemEditFieldModal
+      v-if="editing_field && editing_gem"
+      :field="editing_field"
+      :current_value="editing_current_value"
+      :gem_path="editing_gem.$path"
+      @saved="onFieldSaved"
+      @close="editing_field = null; editing_gem = null"
+    />
   </div>
 </template>
 <script>
+import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
+
 const placeholder_gem_fields_defaults = {
   status: "reference",
   reference_supplier: "",
@@ -132,6 +145,10 @@ const placeholder_gem_fields_defaults = {
 
 export default {
   name: "SGGemsView",
+  components: {
+    SGGemEditFieldModal: () =>
+      import("@/components/gems/SGGemEditFieldModal.vue"),
+  },
   data() {
     return {
       gems_path: "gems",
@@ -140,6 +157,9 @@ export default {
       is_generating_placeholders: false,
       is_removing_all_gems: false,
       fetch_error: "",
+      editing_gem: null,
+      editing_field: null,
+      editing_current_value: "",
     };
   },
   created() {
@@ -359,6 +379,51 @@ export default {
       if (metadata_key === "id") return this.getGemId(gem);
       return gem?.[metadata_key];
     },
+    getPairedGemOptions(excluded_gem_id) {
+      return (Array.isArray(this.gems) ? this.gems : [])
+        .filter((g) => g?.$path && !g.$path.endsWith(`/${excluded_gem_id}`))
+        .map((g) => {
+          const gem_id = this.getGemId(g);
+          const gem_label =
+            (g.reference_supplier && String(g.reference_supplier).trim()) ||
+            (g.reference_customer && String(g.reference_customer).trim()) ||
+            gem_id;
+          return { value: gem_id, label: gem_label };
+        });
+    },
+    getFieldConfig(metadata_key, gem) {
+      const gem_id = this.getGemId(gem);
+      const configs = buildGemFieldConfigs(
+        this.$t.bind(this),
+        this.getPairedGemOptions(gem_id)
+      );
+      return configs[metadata_key] || null;
+    },
+    isFieldEditable(metadata_key) {
+      if (metadata_key === "id" || metadata_key === "$cover") return false;
+      const config = this.getFieldConfig(metadata_key, {});
+      return config !== null && !config.readonly;
+    },
+    openCellEditModal(gem, metadata_key, event) {
+      event.stopPropagation();
+      const field_config = this.getFieldConfig(metadata_key, gem);
+      if (!field_config || field_config.readonly) return;
+      const raw_value = gem?.[metadata_key];
+      this.editing_current_value =
+        raw_value !== undefined && raw_value !== null ? raw_value : "";
+      this.editing_gem = gem;
+      this.editing_field = field_config;
+    },
+    onFieldSaved({ key, value }) {
+      if (!this.editing_gem) return;
+      const gem_path = this.editing_gem.$path;
+      const index = this.gems.findIndex((g) => g.$path === gem_path);
+      if (index !== -1) {
+        this.$set(this.gems, index, { ...this.gems[index], [key]: value });
+      }
+      this.editing_gem = null;
+      this.editing_field = null;
+    },
     getMetadataIcon(metadata_key) {
       const metadata_to_icon = {
         id: "card-list",
@@ -484,6 +549,17 @@ export default {
 
 ._clickableRow:hover {
   background: var(--c-gris_clair);
+}
+
+._editableCell {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--c-bleuvert_clair, color-mix(in srgb, var(--c-bleuvert) 12%, transparent));
+    ._gemMetadataValue {
+      color: var(--c-noir);
+    }
+  }
 }
 
 ._gemOverlay {

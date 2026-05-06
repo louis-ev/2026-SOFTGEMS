@@ -1,0 +1,176 @@
+import {
+  color_suggestions,
+  origin_country_suggestions,
+  shape_suggestions,
+  stone_type_suggestions,
+  treatment_type_suggestions,
+} from "@/suggestions/softgems";
+
+const STATUS_OPTIONS = [
+  { value: "reference", label: "reference" },
+  { value: "available", label: "available" },
+  { value: "reserved", label: "reserved" },
+  { value: "sold", label: "sold" },
+];
+
+/**
+ * Returns the full field config map for all gem fields.
+ * @param {Function} t - Vue $t translation function
+ * @param {Array} paired_gem_options - select options for the paired_gem field
+ */
+export function buildGemFieldConfigs(t, paired_gem_options = []) {
+  return {
+    status: {
+      key: "status",
+      label: t("sg_status"),
+      icon: null,
+      type: "select",
+      options: STATUS_OPTIONS,
+    },
+    reference_supplier: {
+      key: "reference_supplier",
+      label: t("sg_reference_supplier"),
+      icon: "archive",
+      type: "text",
+    },
+    reference_customer: {
+      key: "reference_customer",
+      label: t("sg_reference_customer"),
+      icon: "person-circle",
+      type: "text",
+    },
+    paired_gem: {
+      key: "paired_gem",
+      label: t("sg_paired_gem"),
+      icon: "link",
+      type: "select",
+      options: paired_gem_options,
+    },
+    number_of_pieces: {
+      key: "number_of_pieces",
+      label: t("sg_number_of_pieces"),
+      icon: "list-ol",
+      type: "number",
+      input_type: "number",
+    },
+    stone_type: {
+      key: "stone_type",
+      label: t("sg_stone_type"),
+      icon: "gem",
+      type: "select",
+      options: stone_type_suggestions,
+    },
+    weight_ct: {
+      key: "weight_ct",
+      label: t("sg_weight_ct"),
+      icon: "rulers",
+      type: "number",
+      input_type: "number",
+    },
+    color: {
+      key: "color",
+      label: t("sg_color"),
+      icon: "palette-fill",
+      type: "select",
+      options: color_suggestions,
+    },
+    shape: {
+      key: "shape",
+      label: t("sg_shape"),
+      icon: "pentagon",
+      type: "select",
+      options: shape_suggestions,
+    },
+    origin_country: {
+      key: "origin_country",
+      label: t("sg_origin_country"),
+      icon: "pin-map",
+      type: "select",
+      options: origin_country_suggestions,
+    },
+    treatment_type: {
+      key: "treatment_type",
+      label: t("sg_treatment_type"),
+      icon: "tools",
+      type: "select",
+      options: treatment_type_suggestions,
+    },
+    length_mm: {
+      key: "length_mm",
+      label: t("sg_length_mm"),
+      icon: "aspect-ratio",
+      type: "number",
+      input_type: "number",
+    },
+    width_mm: {
+      key: "width_mm",
+      label: t("sg_width_mm"),
+      icon: "aspect-ratio",
+      type: "number",
+      input_type: "number",
+    },
+    height_mm: {
+      key: "height_mm",
+      label: t("sg_height_mm"),
+      icon: "aspect-ratio",
+      type: "number",
+      input_type: "number",
+    },
+    base_price_pcb: {
+      key: "base_price_pcb",
+      label: t("sg_base_price_pcb"),
+      icon: "tag",
+      type: "number",
+      input_type: "number",
+    },
+    purchased_price_pa: {
+      key: "purchased_price_pa",
+      label: t("sg_purchased_price_pa"),
+      icon: "tag",
+      type: "number",
+      input_type: "number",
+    },
+    price_per_carat_pa_pcb: {
+      key: "price_per_carat_pa_pcb",
+      label: t("sg_price_per_carat_pa_pcb"),
+      icon: "diagram2",
+      type: "number",
+      input_type: "number",
+    },
+    pv_selling_price: {
+      key: "pv_selling_price",
+      label: t("sg_pv_selling_price"),
+      icon: "tag",
+      type: "number",
+      input_type: "number",
+    },
+    pvd_asking_price: {
+      key: "pvd_asking_price",
+      label: t("sg_pvd_asking_price"),
+      icon: "diagram2",
+      type: "number",
+      readonly: true,
+    },
+    pc_to: {
+      key: "pc_to",
+      label: t("sg_pc_to"),
+      icon: "file-earmark-text",
+      type: "number",
+      input_type: "number",
+    },
+    pf_invoiced_price: {
+      key: "pf_invoiced_price",
+      label: t("sg_pf_invoiced_price"),
+      icon: "file-earmark-text",
+      type: "number",
+      input_type: "number",
+    },
+    price_per_carat_all: {
+      key: "price_per_carat_all",
+      label: t("sg_price_per_carat_all"),
+      icon: "arrow-up",
+      type: "number",
+      input_type: "number",
+    },
+  };
+}
