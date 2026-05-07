@@ -6,6 +6,19 @@ import {
   treatment_type_suggestions,
 } from "@/suggestions/softgems";
 
+const sortSuggestions = (suggestions) =>
+  [...suggestions].sort((a, b) => a.localeCompare(b));
+
+const sorted_color_suggestions = sortSuggestions(color_suggestions);
+const sorted_origin_country_suggestions = sortSuggestions(
+  origin_country_suggestions
+);
+const sorted_shape_suggestions = sortSuggestions(shape_suggestions);
+const sorted_stone_type_suggestions = sortSuggestions(stone_type_suggestions);
+const sorted_treatment_type_suggestions = sortSuggestions(
+  treatment_type_suggestions
+);
+
 const STATUS_OPTIONS = [
   { value: "reference", label: "reference" },
   { value: "available", label: "available" },
@@ -60,7 +73,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       label: t("sg_stone_type"),
       icon: "gem",
       type: "select",
-      options: stone_type_suggestions,
+      options: sorted_stone_type_suggestions,
     },
     weight_ct: {
       key: "weight_ct",
@@ -76,28 +89,28 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       label: t("sg_color"),
       icon: "palette-fill",
       type: "select",
-      options: color_suggestions,
+      options: sorted_color_suggestions,
     },
     shape: {
       key: "shape",
       label: t("sg_shape"),
       icon: "pentagon",
       type: "select",
-      options: shape_suggestions,
+      options: sorted_shape_suggestions,
     },
     origin_country: {
       key: "origin_country",
       label: t("sg_origin_country"),
       icon: "pin-map",
       type: "select",
-      options: origin_country_suggestions,
+      options: sorted_origin_country_suggestions,
     },
     treatment_type: {
       key: "treatment_type",
       label: t("sg_treatment_type"),
       icon: "tools",
       type: "select",
-      options: treatment_type_suggestions,
+      options: sorted_treatment_type_suggestions,
     },
     length_mm: {
       key: "length_mm",
