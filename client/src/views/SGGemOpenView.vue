@@ -191,10 +191,16 @@ z
             @click="openEditModal(field_configs.purchased_price_pa)"
           />
           <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pa_pcb')"
+            :label="$t('sg_price_per_carat_pcb')"
             icon="diagram2"
-            :value="gem.price_per_carat_pa_pcb"
-            @click="openEditModal(field_configs.price_per_carat_pa_pcb)"
+            :value="gem.price_per_carat_pcb"
+            @click="openEditModal(field_configs.price_per_carat_pcb)"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_price_per_carat_pa')"
+            icon="diagram2"
+            :value="gem.price_per_carat_pa"
+            @click="openEditModal(field_configs.price_per_carat_pa)"
           />
           <SGGemFieldCard
             :label="$t('sg_pv_selling_price')"
@@ -235,6 +241,7 @@ z
       :field="editing_field"
       :current_value="editing_current_value"
       :gem_path="gem_path"
+      :gem="gem"
       @saved="onFieldSaved"
       @close="editing_field = null"
     />
@@ -360,7 +367,8 @@ export default {
       this.is_loading = true;
       this.fetch_error = "";
       try {
-        this.gem = await this.$api.getFolder({ path: this.gem_path });
+        const gem = await this.$api.getFolder({ path: this.gem_path });
+        this.gem = this.normalizeGemPricingFields(gem);
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_gem");
       } finally {
@@ -436,9 +444,64 @@ export default {
         raw_value !== undefined && raw_value !== null ? raw_value : "";
       this.editing_field = field_config;
     },
-    onFieldSaved({ key, value }) {
+    onFieldSaved({ key, value, changes }) {
       if (!this.gem) return;
-      this.gem = { ...this.gem, [key]: value };
+      if (changes && typeof changes === "object") {
+        this.gem = this.normalizeGemPricingFields({ ...this.gem, ...changes });
+        return;
+      }
+      this.gem = this.normalizeGemPricingFields({ ...this.gem, [key]: value });
+    },
+    normalizeGemPricingFields(gem) {
+      if (!gem || typeof gem !== "object") return gem;
+      const normalized_gem = { ...gem };
+      const weight_ct = this.toNumberOrDefault(normalized_gem.weight_ct);
+      const legacy_per_carat = this.toNumberOrNull(
+        normalized_gem.price_per_carat_pa_pcb
+      );
+
+      const base_price_pcb = this.toNumberOrDefault(normalized_gem.base_price_pcb);
+      const purchased_price_pa = this.toNumberOrDefault(
+        normalized_gem.purchased_price_pa
+      );
+
+      normalized_gem.price_per_carat_pcb = this.resolvePerCaratValue({
+        explicit_value: normalized_gem.price_per_carat_pcb,
+        legacy_value: legacy_per_carat,
+        total_value: base_price_pcb,
+        weight_ct,
+      });
+      normalized_gem.price_per_carat_pa = this.resolvePerCaratValue({
+        explicit_value: normalized_gem.price_per_carat_pa,
+        legacy_value: legacy_per_carat,
+        total_value: purchased_price_pa,
+        weight_ct,
+      });
+      delete normalized_gem.price_per_carat_pa_pcb;
+      return normalized_gem;
+    },
+    resolvePerCaratValue({ explicit_value, legacy_value, total_value, weight_ct }) {
+      const explicit_number = this.toNumberOrNull(explicit_value);
+      if (explicit_number !== null) return explicit_number;
+      if (legacy_value !== null) return legacy_value;
+      return this.computePerCarat({ total_value, weight_ct });
+    },
+    computePerCarat({ total_value, weight_ct }) {
+      if (!Number.isFinite(total_value)) return 0;
+      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
+      return Number((total_value / weight_ct).toFixed(2));
+    },
+    toNumberOrNull(value) {
+      if (value === null || value === undefined || value === "") return null;
+      const normalized_value = String(value).trim().replace(",", ".");
+      const number_value = Number(normalized_value);
+      if (!Number.isFinite(number_value)) return null;
+      return number_value;
+    },
+    toNumberOrDefault(value, fallback_value = 0) {
+      const number_value = this.toNumberOrNull(value);
+      if (number_value === null) return fallback_value;
+      return number_value;
     },
     onGemRemoved() {
       this.show_remove_modal = false;

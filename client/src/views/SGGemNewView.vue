@@ -122,7 +122,8 @@ const v1_new_gem_fields_defaults = {
   weight_ct: 0,
   base_price_pcb: 0,
   purchased_price_pa: 0,
-  price_per_carat_pa_pcb: 0,
+  price_per_carat_pcb: 0,
+  price_per_carat_pa: 0,
   pv_selling_price: 0,
   pvd_asking_price: 0,
   pc_to: 0,
@@ -332,6 +333,16 @@ export default {
         );
       });
 
+      const weight_ct = this.toNumberOrDefault(normalized_fields.weight_ct, 0);
+      normalized_fields.price_per_carat_pcb = this.computePerCarat({
+        total_value: normalized_fields.base_price_pcb,
+        weight_ct,
+      });
+      normalized_fields.price_per_carat_pa = this.computePerCarat({
+        total_value: normalized_fields.purchased_price_pa,
+        weight_ct,
+      });
+
       normalized_fields.pvd_asking_price = Number(
         (normalized_fields.pv_selling_price * 1.15).toFixed(2)
       );
@@ -429,6 +440,11 @@ export default {
       const as_number = Number(normalized_value);
       if (Number.isFinite(as_number)) return as_number;
       return fallback_value;
+    },
+    computePerCarat({ total_value, weight_ct }) {
+      if (!Number.isFinite(total_value)) return 0;
+      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
+      return Number((total_value / weight_ct).toFixed(2));
     },
   },
 };

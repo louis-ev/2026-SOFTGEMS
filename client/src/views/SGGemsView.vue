@@ -91,6 +91,7 @@
       :field="editing_field"
       :current_value="editing_current_value"
       :gem_path="editing_gem.$path"
+      :gem="editing_gem"
       @saved="onFieldSaved"
       @close="
         editing_field = null;
@@ -119,7 +120,8 @@ const placeholder_gem_fields_defaults = {
   weight_ct: 0,
   base_price_pcb: 0,
   purchased_price_pa: 0,
-  price_per_carat_pa_pcb: 0,
+  price_per_carat_pcb: 0,
+  price_per_carat_pa: 0,
   pv_selling_price: 0,
   pvd_asking_price: 0,
   pc_to: 0,
@@ -154,9 +156,9 @@ export default {
   },
   created() {
     this.loadViewDensityFromStorage();
-    this.fetchGems();
   },
   mounted() {
+    this.fetchGems();
     this.$api.join({ room: this.gems_path });
   },
   beforeDestroy() {
@@ -179,6 +181,7 @@ export default {
         "$admins",
         "$contributors",
         "$files",
+        "price_per_carat_pa_pcb",
       ]);
       const known_order = [
         "id",
@@ -200,7 +203,8 @@ export default {
         "height_mm",
         "base_price_pcb",
         "purchased_price_pa",
-        "price_per_carat_pa_pcb",
+        "price_per_carat_pcb",
+        "price_per_carat_pa",
         "pv_selling_price",
         "pvd_asking_price",
         "pc_to",
@@ -306,8 +310,12 @@ export default {
       this.fetch_error = "";
 
       try {
-        this.gems = await this.$api.getFolders({
+        const fetched_gems = await this.$api.getFolders({
           path: this.gems_path,
+        });
+        this.gems = Array.isArray(fetched_gems) ? fetched_gems : [];
+        this.gems.forEach((gem) => {
+          this.ensureGemPricingFields(gem);
         });
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_gems");
@@ -460,15 +468,72 @@ export default {
       this.editing_gem = gem;
       this.editing_field = field_config;
     },
-    onFieldSaved({ key, value }) {
+    onFieldSaved({ key, value, changes }) {
       if (!this.editing_gem) return;
       const gem_path = this.editing_gem.$path;
       const index = this.gems.findIndex((g) => g.$path === gem_path);
       if (index !== -1) {
-        this.$set(this.gems, index, { ...this.gems[index], [key]: value });
+        const target_gem = this.gems[index];
+        const next_changes =
+          changes && typeof changes === "object" ? changes : { [key]: value };
+        Object.keys(next_changes).forEach((change_key) => {
+          this.$set(target_gem, change_key, next_changes[change_key]);
+        });
+        this.ensureGemPricingFields(target_gem);
       }
       this.editing_gem = null;
       this.editing_field = null;
+    },
+    ensureGemPricingFields(gem) {
+      if (!gem || typeof gem !== "object") return;
+      const weight_ct = this.toNumberOrDefault(gem.weight_ct);
+      const legacy_per_carat = this.toNumberOrNull(gem.price_per_carat_pa_pcb);
+      const base_price_pcb = this.toNumberOrDefault(gem.base_price_pcb);
+      const purchased_price_pa = this.toNumberOrDefault(gem.purchased_price_pa);
+
+      const price_per_carat_pcb = this.resolvePerCaratValue({
+        explicit_value: gem.price_per_carat_pcb,
+        legacy_value: legacy_per_carat,
+        total_value: base_price_pcb,
+        weight_ct,
+      });
+      const price_per_carat_pa = this.resolvePerCaratValue({
+        explicit_value: gem.price_per_carat_pa,
+        legacy_value: legacy_per_carat,
+        total_value: purchased_price_pa,
+        weight_ct,
+      });
+
+      this.$set(gem, "price_per_carat_pcb", price_per_carat_pcb);
+      this.$set(gem, "price_per_carat_pa", price_per_carat_pa);
+    },
+    resolvePerCaratValue({
+      explicit_value,
+      legacy_value,
+      total_value,
+      weight_ct,
+    }) {
+      const explicit_number = this.toNumberOrNull(explicit_value);
+      if (explicit_number !== null) return explicit_number;
+      if (legacy_value !== null) return legacy_value;
+      return this.computePerCarat({ total_value, weight_ct });
+    },
+    computePerCarat({ total_value, weight_ct }) {
+      if (!Number.isFinite(total_value)) return 0;
+      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
+      return Number((total_value / weight_ct).toFixed(2));
+    },
+    toNumberOrNull(value) {
+      if (value === null || value === undefined || value === "") return null;
+      const normalized_value = String(value).trim().replace(",", ".");
+      const number_value = Number(normalized_value);
+      if (!Number.isFinite(number_value)) return null;
+      return number_value;
+    },
+    toNumberOrDefault(value, fallback_value = 0) {
+      const number_value = this.toNumberOrNull(value);
+      if (number_value === null) return fallback_value;
+      return number_value;
     },
     getMetadataIcon(metadata_key) {
       const metadata_to_icon = {
@@ -490,7 +555,8 @@ export default {
         height_mm: "aspect-ratio",
         base_price_pcb: "tag",
         purchased_price_pa: "tag",
-        price_per_carat_pa_pcb: "diagram2",
+        price_per_carat_pcb: "diagram2",
+        price_per_carat_pa: "diagram2",
         pv_selling_price: "tag",
         pvd_asking_price: "diagram2",
         pc_to: "file-earmark-text",
@@ -520,7 +586,8 @@ export default {
         height_mm: "sg_height_mm",
         base_price_pcb: "sg_base_price_pcb",
         purchased_price_pa: "sg_purchased_price_pa",
-        price_per_carat_pa_pcb: "sg_price_per_carat_pa_pcb",
+        price_per_carat_pcb: "sg_price_per_carat_pcb",
+        price_per_carat_pa: "sg_price_per_carat_pa",
         pv_selling_price: "sg_pv_selling_price",
         pvd_asking_price: "sg_pvd_asking_price",
         pc_to: "sg_pc_to",

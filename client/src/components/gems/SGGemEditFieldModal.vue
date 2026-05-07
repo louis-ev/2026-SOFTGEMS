@@ -95,6 +95,17 @@
 <script>
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 
+const price_field_pairs = [
+  {
+    total_key: "base_price_pcb",
+    per_carat_key: "price_per_carat_pcb",
+  },
+  {
+    total_key: "purchased_price_pa",
+    per_carat_key: "price_per_carat_pa",
+  },
+];
+
 export default {
   name: "SGGemEditFieldModal",
   components: {
@@ -111,6 +122,10 @@ export default {
     gem_path: {
       type: String,
       required: true,
+    },
+    gem: {
+      type: Object,
+      default: null,
     },
   },
   computed: {
@@ -201,19 +216,24 @@ export default {
       )
         return;
       const normalized_value = this.normalizeFieldValue(this.edit_value);
+      const meta_patch = this.buildMetaPatch({
+        field_key: this.field.key,
+        normalized_value,
+      });
       this.is_saving = true;
       try {
         const update_response = await this.$api.updateMeta({
           path: this.gem_path,
-          new_meta: { [this.field.key]: normalized_value },
+          new_meta: meta_patch,
         });
-        const saved_value = this.getSavedValueFromUpdateResponse({
+        const saved_changes = this.getSavedValuesFromUpdateResponse({
           update_response,
-          fallback_value: normalized_value,
+          fallback_changes: meta_patch,
         });
         this.$emit("saved", {
+          changes: saved_changes,
           key: this.field.key,
-          value: saved_value,
+          value: saved_changes[this.field.key],
           update_response,
         });
         this.$emit("close");
@@ -223,24 +243,72 @@ export default {
         this.is_saving = false;
       }
     },
-    getSavedValueFromUpdateResponse({ update_response, fallback_value }) {
-      if (
-        update_response &&
-        update_response.changed_data &&
-        Object.prototype.hasOwnProperty.call(
-          update_response.changed_data,
-          this.field.key
-        )
-      ) {
-        return update_response.changed_data[this.field.key];
+    getSavedValuesFromUpdateResponse({ update_response, fallback_changes }) {
+      const normalized_fallback_changes = {
+        ...(fallback_changes || {}),
+      };
+      const changed_data =
+        update_response && update_response.changed_data
+          ? update_response.changed_data
+          : {};
+      return {
+        ...normalized_fallback_changes,
+        ...changed_data,
+      };
+    },
+    buildMetaPatch({ field_key, normalized_value }) {
+      const next_meta = { [field_key]: normalized_value };
+      if (!this.isPricingField(field_key) && field_key !== "weight_ct")
+        return next_meta;
+
+      const current_gem = this.gem && typeof this.gem === "object" ? this.gem : {};
+      const weight_ct = this.toNumberOrDefault(
+        field_key === "weight_ct" ? normalized_value : current_gem.weight_ct
+      );
+
+      if (field_key === "weight_ct") {
+        price_field_pairs.forEach(({ total_key, per_carat_key }) => {
+          const total_value = this.toNumberOrDefault(current_gem[total_key]);
+          next_meta[per_carat_key] = this.computePerCarat({
+            total_value,
+            weight_ct,
+          });
+        });
+        return next_meta;
       }
-      if (
-        update_response &&
-        Object.prototype.hasOwnProperty.call(update_response, this.field.key)
-      ) {
-        return update_response[this.field.key];
-      }
-      return fallback_value;
+
+      price_field_pairs.forEach(({ total_key, per_carat_key }) => {
+        if (field_key === total_key) {
+          next_meta[per_carat_key] = this.computePerCarat({
+            total_value: this.toNumberOrDefault(normalized_value),
+            weight_ct,
+          });
+        }
+        if (field_key === per_carat_key) {
+          next_meta[total_key] = this.computeTotal({
+            per_carat_value: this.toNumberOrDefault(normalized_value),
+            weight_ct,
+          });
+        }
+      });
+
+      return next_meta;
+    },
+    isPricingField(field_key) {
+      return price_field_pairs.some(
+        ({ total_key, per_carat_key }) =>
+          field_key === total_key || field_key === per_carat_key
+      );
+    },
+    computePerCarat({ total_value, weight_ct }) {
+      if (!Number.isFinite(total_value)) return 0;
+      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
+      return Number((total_value / weight_ct).toFixed(2));
+    },
+    computeTotal({ per_carat_value, weight_ct }) {
+      if (!Number.isFinite(per_carat_value)) return 0;
+      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
+      return Number((per_carat_value * weight_ct).toFixed(2));
     },
     normalizeFieldValue(raw_value) {
       if (this.field.type !== "number") return raw_value;
@@ -251,6 +319,14 @@ export default {
       const number_value = Number(normalized_value);
       if (Number.isFinite(number_value)) return number_value;
       return raw_value;
+    },
+    toNumberOrDefault(value, fallback_value = 0) {
+      const normalized_value = String(value ?? "")
+        .trim()
+        .replace(",", ".");
+      const number_value = Number(normalized_value);
+      if (Number.isFinite(number_value)) return number_value;
+      return fallback_value;
     },
     validateFieldValue(raw_value) {
       if (this.field.type !== "number")

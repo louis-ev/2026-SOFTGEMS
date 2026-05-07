@@ -163,9 +163,18 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
     },
-    price_per_carat_pa_pcb: {
-      key: "price_per_carat_pa_pcb",
-      label: t("sg_price_per_carat_pa_pcb"),
+    price_per_carat_pcb: {
+      key: "price_per_carat_pcb",
+      label: t("sg_price_per_carat_pcb"),
+      icon: "diagram2",
+      type: "number",
+      input_type: "number",
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
+    },
+    price_per_carat_pa: {
+      key: "price_per_carat_pa",
+      label: t("sg_price_per_carat_pa"),
       icon: "diagram2",
       type: "number",
       input_type: "number",

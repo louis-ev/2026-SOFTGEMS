@@ -548,7 +548,7 @@ td[data-metadata-key="$cover"] {
 
   &:hover {
     background: var(
-      --c-bleuvert_clair,
+      --c-vert,
       color-mix(in srgb, var(--c-bleuvert) 12%, transparent)
     );
     ._gemMetadataValue {
