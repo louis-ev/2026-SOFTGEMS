@@ -74,6 +74,12 @@ z
         <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
         <div class="_fieldsGrid">
           <SGGemFieldCard
+            :label="$t('sg_internal_name')"
+            icon="pencil"
+            :value="gem.internal_name"
+            @click="openEditModal(field_configs.internal_name)"
+          />
+          <SGGemFieldCard
             :label="$t('sg_status')"
             :value="gem.status"
             @click="openEditModal(field_configs.status)"
@@ -311,9 +317,7 @@ export default {
       return this.$t("sg_gem_title", { id: this.gem_id });
     },
     gem_internal_name() {
-      return (
-        this.cleanString(this.gem?.name) || this.cleanString(this.gem?.title)
-      );
+      return this.cleanString(this.gem?.internal_name);
     },
     gem_last_edited_date() {
       const raw_date = this.gem?.$date_modified || this.gem?.$date_created;

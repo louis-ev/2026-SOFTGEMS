@@ -68,7 +68,7 @@
         <h2 class="_sectionTitle">{{ $t("sg_section_creation") }}</h2>
         <div>
           <DLabel :str="$t('sg_internal_name_optional')" icon="pencil" />
-          <TextInput :content.sync="new_gem_name" :required="false" />
+          <TextInput :content.sync="new_gem_internal_name" :required="false" />
         </div>
         <p class="_creationNotice">{{ $t("sg_creation_notice_documents") }}</p>
         <p class="_creationNotice">{{ $t("sg_creation_notice_editable") }}</p>
@@ -146,7 +146,7 @@ export default {
   data() {
     return {
       gems_path: "gems",
-      new_gem_name: "",
+      new_gem_internal_name: "",
       new_gem_fields: { ...v1_new_gem_fields_defaults },
       paired_gem_options: [],
       is_creating: false,
@@ -248,8 +248,7 @@ export default {
             const gem_id = this.getGemIdFromPath(gem?.$path);
             const gem_label =
               this.cleanString(gem?.reference_id) ||
-              this.cleanString(gem?.title) ||
-              this.cleanString(gem?.name) ||
+              this.cleanString(gem?.internal_name) ||
               gem_id;
             return {
               value: gem_id,
@@ -268,30 +267,24 @@ export default {
       return path_parts[path_parts.length - 1] || "";
     },
     async createGem() {
-      const cleaned_name = this.getGemTitle();
-      if (
-        !cleaned_name ||
-        this.is_creating ||
-        this.invalid_field_keys.length > 0
-      )
-        return;
+      if (this.is_creating || this.invalid_field_keys.length > 0) return;
 
       const normalized_gem_fields = this.normalizeGemFields(
         this.new_gem_fields
       );
       const paired_gem_id = normalized_gem_fields.paired_gem;
+      const creation_meta = this.getCreationMeta();
 
       this.is_creating = true;
       try {
         const new_gem_slug = await this.$api.createFolder({
           path: this.gems_path,
           additional_meta: {
-            title: cleaned_name,
-            name: cleaned_name,
             $status: "public",
             $admins: "everyone",
             $contributors: "everyone",
             ...normalized_gem_fields,
+            ...creation_meta,
           },
         });
         if (new_gem_slug) {
@@ -326,17 +319,12 @@ export default {
         // Do not block creation if reciprocal link update fails.
       }
     },
-    getGemTitle() {
-      const explicit_name = this.cleanString(this.new_gem_name);
-      if (explicit_name) return explicit_name;
-
-      const derived_name =
-        this.cleanString(this.new_gem_fields.reference_supplier) ||
-        this.cleanString(this.new_gem_fields.reference_customer) ||
-        this.cleanString(this.new_gem_fields.stone_type);
-
-      if (derived_name) return derived_name;
-      return `Gem ${new Date().toISOString().slice(0, 19).replace("T", " ")}`;
+    getCreationMeta() {
+      const cleaned_internal_name = this.cleanString(this.new_gem_internal_name);
+      if (!cleaned_internal_name) return {};
+      return {
+        internal_name: cleaned_internal_name,
+      };
     },
     normalizeGemFields(raw_fields) {
       const normalized_fields = {

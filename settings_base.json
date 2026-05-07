@@ -134,11 +134,7 @@
           }
         },
         "fields": {
-          "name": {
-            "type": "string",
-            "unique": true
-          },
-          "title": {
+          "internal_name": {
             "type": "string"
           },
           "description": {

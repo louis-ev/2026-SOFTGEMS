@@ -143,14 +143,14 @@ module.exports = (function () {
 
       let { $cover, ...meta } = data;
 
-      const folder_slug = await _resolveFolderSlug({
-        path_to_type,
-        data,
-      });
-
       let valid_meta = await _cleanFields({
         meta,
         path_to_type,
+      });
+
+      const folder_slug = await _resolveFolderSlug({
+        path_to_type,
+        data,
       });
 
       valid_meta.$date_created = valid_meta.$date_modified =
@@ -681,7 +681,9 @@ module.exports = (function () {
       relative_path: path_to_type,
     });
     if (item_in_schema?.slug_naming === "sequence") {
-      const slug_sequence_start = Number.isInteger(item_in_schema.slug_sequence_start)
+      const slug_sequence_start = Number.isInteger(
+        item_in_schema.slug_sequence_start
+      )
         ? item_in_schema.slug_sequence_start
         : 1;
       return _getNextSequentialFolderSlug({

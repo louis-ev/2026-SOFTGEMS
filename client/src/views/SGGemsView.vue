@@ -160,6 +160,7 @@ export default {
       const known_order = [
         "id",
         "$cover",
+        "internal_name",
         "status",
         "reference_supplier",
         "reference_customer",
@@ -269,8 +270,7 @@ export default {
           await this.$api.createFolder({
             path: this.gems_path,
             additional_meta: {
-              title: `${placeholder_name} ${batch_id}`,
-              name: `${placeholder_name} ${batch_id}`,
+              internal_name: `${placeholder_name} ${batch_id}`,
               $status: "public",
               $admins: "everyone",
               $contributors: "everyone",
@@ -362,6 +362,7 @@ export default {
         .map((g) => {
           const gem_id = this.getGemId(g);
           const gem_label =
+            (g.internal_name && String(g.internal_name).trim()) ||
             (g.reference_supplier && String(g.reference_supplier).trim()) ||
             (g.reference_customer && String(g.reference_customer).trim()) ||
             gem_id;
@@ -407,6 +408,7 @@ export default {
       const metadata_to_icon = {
         id: "card-list",
         $cover: "images",
+        internal_name: "pencil",
         reference_supplier: "archive",
         reference_customer: "person-circle",
         paired_gem: "link",
@@ -436,6 +438,7 @@ export default {
         id: "sg_id",
         status: "sg_status",
         $cover: "sg_cover",
+        internal_name: "sg_internal_name",
         reference_supplier: "sg_reference_supplier",
         reference_customer: "sg_reference_customer",
         paired_gem: "sg_paired_gem",
