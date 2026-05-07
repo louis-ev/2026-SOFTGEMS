@@ -1,6 +1,6 @@
 <template>
   <div class="_gemFieldCard">
-    <DLabel :str="label" :icon="icon" tag="span" />
+    <DLabel :str="label" :icon="icon" />
     <button
       v-if="!readonly"
       type="button"
