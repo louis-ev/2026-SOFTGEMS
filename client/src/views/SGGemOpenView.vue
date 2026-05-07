@@ -367,8 +367,8 @@ export default {
       this.is_loading = true;
       this.fetch_error = "";
       try {
-        const gem = await this.$api.getFolder({ path: this.gem_path });
-        this.gem = this.normalizeGemPricingFields(gem);
+        this.gem = await this.$api.getFolder({ path: this.gem_path });
+        this.ensureGemPricingFields(this.gem);
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_gem");
       } finally {
@@ -446,41 +446,42 @@ export default {
     },
     onFieldSaved({ key, value, changes }) {
       if (!this.gem) return;
-      if (changes && typeof changes === "object") {
-        this.gem = this.normalizeGemPricingFields({ ...this.gem, ...changes });
-        return;
-      }
-      this.gem = this.normalizeGemPricingFields({ ...this.gem, [key]: value });
+      const next_changes =
+        changes && typeof changes === "object" ? changes : { [key]: value };
+      Object.keys(next_changes).forEach((change_key) => {
+        this.$set(this.gem, change_key, next_changes[change_key]);
+      });
+      this.ensureGemPricingFields(this.gem);
     },
-    normalizeGemPricingFields(gem) {
-      if (!gem || typeof gem !== "object") return gem;
-      const normalized_gem = { ...gem };
-      const weight_ct = this.toNumberOrDefault(normalized_gem.weight_ct);
-      const legacy_per_carat = this.toNumberOrNull(
-        normalized_gem.price_per_carat_pa_pcb
-      );
+    ensureGemPricingFields(gem) {
+      if (!gem || typeof gem !== "object") return;
+      const weight_ct = this.toNumberOrDefault(gem.weight_ct);
+      const legacy_per_carat = this.toNumberOrNull(gem.price_per_carat_pa_pcb);
+      const base_price_pcb = this.toNumberOrDefault(gem.base_price_pcb);
+      const purchased_price_pa = this.toNumberOrDefault(gem.purchased_price_pa);
 
-      const base_price_pcb = this.toNumberOrDefault(normalized_gem.base_price_pcb);
-      const purchased_price_pa = this.toNumberOrDefault(
-        normalized_gem.purchased_price_pa
-      );
-
-      normalized_gem.price_per_carat_pcb = this.resolvePerCaratValue({
-        explicit_value: normalized_gem.price_per_carat_pcb,
+      const price_per_carat_pcb = this.resolvePerCaratValue({
+        explicit_value: gem.price_per_carat_pcb,
         legacy_value: legacy_per_carat,
         total_value: base_price_pcb,
         weight_ct,
       });
-      normalized_gem.price_per_carat_pa = this.resolvePerCaratValue({
-        explicit_value: normalized_gem.price_per_carat_pa,
+      const price_per_carat_pa = this.resolvePerCaratValue({
+        explicit_value: gem.price_per_carat_pa,
         legacy_value: legacy_per_carat,
         total_value: purchased_price_pa,
         weight_ct,
       });
-      delete normalized_gem.price_per_carat_pa_pcb;
-      return normalized_gem;
+
+      this.$set(gem, "price_per_carat_pcb", price_per_carat_pcb);
+      this.$set(gem, "price_per_carat_pa", price_per_carat_pa);
     },
-    resolvePerCaratValue({ explicit_value, legacy_value, total_value, weight_ct }) {
+    resolvePerCaratValue({
+      explicit_value,
+      legacy_value,
+      total_value,
+      weight_ct,
+    }) {
       const explicit_number = this.toNumberOrNull(explicit_value);
       if (explicit_number !== null) return explicit_number;
       if (legacy_value !== null) return legacy_value;
