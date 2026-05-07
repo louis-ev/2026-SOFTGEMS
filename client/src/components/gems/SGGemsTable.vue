@@ -1,5 +1,5 @@
 <template>
-  <div class="_gemsTable">
+  <div class="_gemsTable" :class="density_class">
     <table class="_table">
       <thead>
         <tr>
@@ -117,6 +117,7 @@ export default {
     field_editable_map: { type: Object, default: () => ({}) },
     selected_gem_id: { type: String, default: "" },
     is_gem_open: { type: Boolean, default: false },
+    view_density: { type: String, default: "medium" },
   },
   data() {
     return {
@@ -129,6 +130,11 @@ export default {
     };
   },
   computed: {
+    density_class() {
+      if (this.view_density === "compact") return "_densityCompact";
+      if (this.view_density === "large") return "_densityLarge";
+      return "_densityMedium";
+    },
     sorted_gems() {
       if (!Array.isArray(this.gems)) return [];
       const sorted_gems = [...this.gems];
@@ -358,15 +364,46 @@ export default {
 
 <style lang="scss" scoped>
 ._gemsTable {
+  --sticky-id-col-width: 80px;
+  --sticky-cover-col-width: 80px;
+  --sticky-cover-col-height: 80px;
+  --sg-cell-padding: calc(var(--spacing) / 2);
+  --sg-metadata-font-size: var(--sl-font-size-x-small);
+  --sg-id-font-size: var(--sl-font-size-medium);
+
   flex: 1;
   min-height: 0;
   overflow: auto;
 }
 
-._table {
+._gemsTable._densityCompact {
+  --sticky-id-col-width: 72px;
+  --sticky-cover-col-width: 62px;
+  --sticky-cover-col-height: 62px;
+  --sg-cell-padding: calc(var(--spacing) / 3);
+  --sg-metadata-font-size: 0.68rem;
+  --sg-id-font-size: 0.82rem;
+}
+
+._gemsTable._densityMedium {
   --sticky-id-col-width: 80px;
   --sticky-cover-col-width: 80px;
+  --sticky-cover-col-height: 80px;
+  --sg-cell-padding: calc(var(--spacing) / 2);
+  --sg-metadata-font-size: var(--sl-font-size-x-small);
+  --sg-id-font-size: var(--sl-font-size-medium);
+}
 
+._gemsTable._densityLarge {
+  --sticky-id-col-width: 96px;
+  --sticky-cover-col-width: 104px;
+  --sticky-cover-col-height: 104px;
+  --sg-cell-padding: calc(var(--spacing) * 0.66);
+  --sg-metadata-font-size: var(--sl-font-size-small);
+  --sg-id-font-size: var(--sl-font-size-large);
+}
+
+._table {
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--c-gris);
@@ -381,7 +418,7 @@ export default {
     border: 0;
     border-right: 1px solid var(--c-gris);
     border-bottom: 1px solid var(--c-gris);
-    padding: calc(var(--spacing) / 2);
+    padding: var(--sg-cell-padding);
     vertical-align: top;
     background: var(--c-bodybg);
   }
@@ -535,11 +572,11 @@ td[data-metadata-key="$cover"] {
 
 ._gemMetadataValue {
   font-family: var(--sl-font-mono);
-  font-size: var(--sl-font-size-x-small);
+  font-size: var(--sg-metadata-font-size);
 }
 td[data-metadata-key="id"] {
   ._gemMetadataValue {
-    font-size: var(--sl-font-size-medium);
+    font-size: var(--sg-id-font-size);
   }
 }
 td[data-metadata-key="$cover"] {

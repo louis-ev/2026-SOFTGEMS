@@ -4,6 +4,25 @@
       <div class="_pageHeader">
         <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
         <div class="_headerActions">
+          <div
+            class="_densityControls"
+            role="group"
+            aria-label="Gems list density"
+          >
+            <button
+              v-for="density_option in density_options"
+              :key="density_option.value"
+              type="button"
+              class="u-button u-button_icon _densityButton"
+              :class="{ _active: view_density === density_option.value }"
+              :title="density_option.label"
+              :aria-label="density_option.label"
+              :aria-pressed="view_density === density_option.value"
+              @click="setViewDensity(density_option.value)"
+            >
+              <b-icon :icon="density_option.icon" />
+            </button>
+          </div>
           <router-link to="/gems/new" class="u-button u-button_bleuvert">
             <b-icon icon="plus-lg" />
             {{ $t("sg_create_gem") }}
@@ -46,6 +65,7 @@
           :field_editable_map="field_editable_map"
           :selected_gem_id="$route.params.gem_id"
           :is_gem_open="is_gem_open"
+          :view_density="view_density"
           @rowClick="openGem"
           @editCell="onTableEditCell"
         />
@@ -106,6 +126,8 @@ const placeholder_gem_fields_defaults = {
   pf_invoiced_price: 0,
   price_per_carat_all: 0,
 };
+const view_density_localstorage_key = "sg_gems_view_density";
+const available_view_densities = ["compact", "medium", "large"];
 
 export default {
   name: "SGGemsView",
@@ -127,9 +149,11 @@ export default {
       editing_gem: null,
       editing_field: null,
       editing_current_value: "",
+      view_density: "medium",
     };
   },
   created() {
+    this.loadViewDensityFromStorage();
     this.fetchGems();
   },
   mounted() {
@@ -229,8 +253,51 @@ export default {
         return accumulator;
       }, {});
     },
+    density_options() {
+      return [
+        {
+          value: "compact",
+          icon: "zoom-out",
+          label: "Compact view",
+        },
+        {
+          value: "medium",
+          icon: "search",
+          label: "Medium view",
+        },
+        {
+          value: "large",
+          icon: "zoom-in",
+          label: "Large view",
+        },
+      ];
+    },
   },
   methods: {
+    loadViewDensityFromStorage() {
+      try {
+        const stored_density = localStorage.getItem(
+          view_density_localstorage_key
+        );
+        if (!stored_density) return;
+        if (!available_view_densities.includes(stored_density)) return;
+        this.view_density = stored_density;
+      } catch {
+        // Keep default when storage is unavailable.
+      }
+    },
+    persistViewDensityToStorage() {
+      try {
+        localStorage.setItem(view_density_localstorage_key, this.view_density);
+      } catch {
+        // Ignore storage write errors.
+      }
+    },
+    setViewDensity(next_density) {
+      if (!available_view_densities.includes(next_density)) return;
+      this.view_density = next_density;
+      this.persistViewDensityToStorage();
+    },
     closeGemPanel() {
       this.$router.push("/gems");
     },
@@ -501,7 +568,25 @@ export default {
 
 ._headerActions {
   display: flex;
+  align-items: center;
   gap: calc(var(--spacing) / 2);
+}
+
+._densityControls {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 4);
+}
+
+._densityButton {
+  // min-width: 34px;
+  padding: calc(var(--spacing) / 4);
+
+  &._active {
+    background: var(--c-bleuvert);
+    color: var(--c-blanc);
+    border-color: var(--c-bleuvert);
+  }
 }
 
 ._tableSection {
