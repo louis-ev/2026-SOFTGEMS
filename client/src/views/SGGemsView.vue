@@ -146,7 +146,6 @@ export default {
       if (!Array.isArray(this.gems) || this.gems.length === 0) return [];
 
       const ignored_keys = new Set([
-        "reference_id",
         "name",
         "title",
         "$path",

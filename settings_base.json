@@ -140,10 +140,6 @@
           "description": {
             "type": "string"
           },
-          "reference_id": {
-            "type": "string",
-            "unique": true
-          },
           "status": {
             "type": "string"
           },

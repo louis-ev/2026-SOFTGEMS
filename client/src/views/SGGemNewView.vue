@@ -247,7 +247,6 @@ export default {
           (gem) => {
             const gem_id = this.getGemIdFromPath(gem?.$path);
             const gem_label =
-              this.cleanString(gem?.reference_id) ||
               this.cleanString(gem?.internal_name) ||
               gem_id;
             return {
