@@ -6,7 +6,6 @@
           <h1 class="_title">ACF</h1>
           <p class="_subtitle">Inventory workspace</p>
         </router-link>
-        {{ $api.rooms_joined }}
       </div>
 
       <div class="_right">
