@@ -203,17 +203,44 @@ export default {
       const normalized_value = this.normalizeFieldValue(this.edit_value);
       this.is_saving = true;
       try {
-        await this.$api.updateMeta({
+        const update_response = await this.$api.updateMeta({
           path: this.gem_path,
           new_meta: { [this.field.key]: normalized_value },
         });
-        this.$emit("saved", { key: this.field.key, value: normalized_value });
+        const saved_value = this.getSavedValueFromUpdateResponse({
+          update_response,
+          fallback_value: normalized_value,
+        });
+        this.$emit("saved", {
+          key: this.field.key,
+          value: saved_value,
+          update_response,
+        });
         this.$emit("close");
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || this.$t("couldntbesaved"));
       } finally {
         this.is_saving = false;
       }
+    },
+    getSavedValueFromUpdateResponse({ update_response, fallback_value }) {
+      if (
+        update_response &&
+        update_response.changed_data &&
+        Object.prototype.hasOwnProperty.call(
+          update_response.changed_data,
+          this.field.key
+        )
+      ) {
+        return update_response.changed_data[this.field.key];
+      }
+      if (
+        update_response &&
+        Object.prototype.hasOwnProperty.call(update_response, this.field.key)
+      ) {
+        return update_response[this.field.key];
+      }
+      return fallback_value;
     },
     normalizeFieldValue(raw_value) {
       if (this.field.type !== "number") return raw_value;
