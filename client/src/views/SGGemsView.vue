@@ -61,7 +61,7 @@
     <transition name="fade">
       <div v-if="is_gem_open" class="_gemOverlay" @click.self="closeGemPanel">
         <section class="_gemPanel">
-          <router-view />
+          <router-view :all_gems="gems" />
         </section>
       </div>
     </transition>

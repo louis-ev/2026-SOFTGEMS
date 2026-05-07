@@ -135,25 +135,31 @@ export default {
   components: {
     SGSelectField,
   },
-  async created() {
-    await this.fetchPairableGems();
-  },
-  beforeDestroy() {
-    if (!this.is_joined_gems_room) return;
-    this.$api.leave({ room: this.gems_path });
-    this.is_joined_gems_room = false;
+  props: {
+    all_gems: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
       gems_path: "gems",
       new_gem_internal_name: "",
       new_gem_fields: { ...v1_new_gem_fields_defaults },
-      paired_gem_options: [],
       is_creating: false,
-      is_joined_gems_room: false,
     };
   },
   computed: {
+    paired_gem_options() {
+      return (Array.isArray(this.all_gems) ? this.all_gems : []).map((gem) => {
+        const gem_id = this.getGemIdFromPath(gem?.$path);
+        const gem_label = this.cleanString(gem?.internal_name) || gem_id;
+        return {
+          value: gem_id,
+          label: gem_label,
+        };
+      });
+    },
     gem_field_configs() {
       return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
     },
@@ -233,29 +239,6 @@ export default {
     },
     goBack() {
       this.$router.push("/gems");
-    },
-    async fetchPairableGems() {
-      try {
-        if (!this.is_joined_gems_room) {
-          this.$api.join({ room: this.gems_path });
-          this.is_joined_gems_room = true;
-        }
-        const gems = await this.$api.getFolders({
-          path: this.gems_path,
-        });
-        this.paired_gem_options = (Array.isArray(gems) ? gems : []).map(
-          (gem) => {
-            const gem_id = this.getGemIdFromPath(gem?.$path);
-            const gem_label = this.cleanString(gem?.internal_name) || gem_id;
-            return {
-              value: gem_id,
-              label: gem_label,
-            };
-          }
-        );
-      } catch {
-        this.paired_gem_options = [];
-      }
     },
     getGemIdFromPath(gem_path) {
       const cleaned_path = this.cleanString(gem_path);
