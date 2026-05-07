@@ -6,6 +6,7 @@
           <h1 class="_title">ACF</h1>
           <p class="_subtitle">Inventory workspace</p>
         </router-link>
+        {{ $api.rooms_joined }}
       </div>
 
       <div class="_right">
@@ -19,12 +20,7 @@
           <b-icon icon="person-circle" />
           {{ author_name }}
         </button>
-        <button
-          v-else
-          type="button"
-          class="u-button"
-          @click="openAuthorModal"
-        >
+        <button v-else type="button" class="u-button" @click="openAuthorModal">
           {{ $t("login") }}
         </button>
       </div>

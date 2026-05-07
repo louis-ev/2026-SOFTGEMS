@@ -148,15 +148,10 @@ export default function () {
         const normalized_room = this.normalizeRoomPath(room);
         if (!normalized_room) return;
 
-        // join room only if not tracking
-        if (!this.rooms_joined.includes(normalized_room)) {
-          // console.log("JOIN – room isnt tracked, joining", room);
-          this.apiJoinRoom({ room: normalized_room });
-        } else {
-          // console.log("JOIN – room already tracked", room);
-        }
-        // we push this room anyway, so that when we remove it we keep tracking until all has been removed
+        const is_first_subscription = !this.rooms_joined.includes(normalized_room);
+        // We always track locally first so reconnect logic can rejoin later.
         this.rooms_joined.push(normalized_room);
+        if (is_first_subscription) this.apiJoinRoom({ room: normalized_room });
       },
       leave({ room }) {
         const normalized_room = this.normalizeRoomPath(room);
@@ -169,7 +164,7 @@ export default function () {
         // if room isnt tracked anymore
         if (!this.rooms_joined.includes(normalized_room)) {
           // console.log("LEAVE – room isnt tracked anymore, delete store", room);
-          this.socket.emit("leaveRoom", { room: normalized_room });
+          if (this.socket) this.socket.emit("leaveRoom", { room: normalized_room });
           this.$delete(this.store, normalized_room);
         } else {
           // console.log("LEAVE – room still tracked", room);
@@ -190,6 +185,7 @@ export default function () {
       apiJoinRoom({ room }) {
         const normalized_room = this.normalizeRoomPath(room);
         if (!normalized_room) return;
+        if (!this.socket) return;
 
         let infos = { room: normalized_room };
         if (this.tokenpath.token && this.tokenpath.token_path) {

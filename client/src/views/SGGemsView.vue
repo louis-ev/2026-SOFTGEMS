@@ -1,6 +1,5 @@
 <template>
   <div class="_gemsView">
-    {{ gems_path }}
     <div class="_gemsView--content">
       <div class="_pageHeader">
         <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>

@@ -255,12 +255,18 @@ z
         <ul v-else class="_historyList">
           <li
             v-for="(entry, index) in gem_history_entries"
-            :key="`${entry.ts}-${entry.event}-${entry.field || 'created'}-${index}`"
+            :key="`${entry.ts}-${entry.event}-${
+              entry.field || 'created'
+            }-${index}`"
             class="_historyEntry"
           >
-            <p class="_historyEntryTitle">{{ formatHistoryEntryTitle(entry) }}</p>
+            <p class="_historyEntryTitle">
+              {{ formatHistoryEntryTitle(entry) }}
+            </p>
             <p class="_historyEntryMeta">
-              <time :datetime="entry.ts">{{ formatRecentDateTime(entry.ts) }}</time>
+              <time :datetime="entry.ts">{{
+                formatRecentDateTime(entry.ts)
+              }}</time>
               <template v-if="entry.author">
                 • {{ $t("sg_history_by") }}
                 <strong>{{ formatAuthor(entry.author) }}</strong>
@@ -404,9 +410,12 @@ export default {
       }
 
       if (entry?.event === "updated") {
-        const field_name = this.field_configs?.[entry.field]?.label || entry.field;
+        const field_name =
+          this.field_configs?.[entry.field]?.label || entry.field;
         const value_text =
-          entry.value === null || entry.value === undefined || entry.value === ""
+          entry.value === null ||
+          entry.value === undefined ||
+          entry.value === ""
             ? "—"
             : String(entry.value);
         return `${field_name}: ${value_text}`;

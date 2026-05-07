@@ -246,9 +246,7 @@ export default {
         this.paired_gem_options = (Array.isArray(gems) ? gems : []).map(
           (gem) => {
             const gem_id = this.getGemIdFromPath(gem?.$path);
-            const gem_label =
-              this.cleanString(gem?.internal_name) ||
-              gem_id;
+            const gem_label = this.cleanString(gem?.internal_name) || gem_id;
             return {
               value: gem_id,
               label: gem_label,
@@ -319,7 +317,9 @@ export default {
       }
     },
     getCreationMeta() {
-      const cleaned_internal_name = this.cleanString(this.new_gem_internal_name);
+      const cleaned_internal_name = this.cleanString(
+        this.new_gem_internal_name
+      );
       if (!cleaned_internal_name) return {};
       return {
         internal_name: cleaned_internal_name,
