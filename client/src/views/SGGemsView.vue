@@ -4,25 +4,14 @@
       <div class="_pageHeader">
         <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
         <div class="_headerActions">
-          <div
-            class="_densityControls"
-            role="group"
-            aria-label="Gems list density"
+          <button
+            type="button"
+            class="u-button"
+            @click="show_columns_modal = true"
           >
-            <button
-              v-for="density_option in density_options"
-              :key="density_option.value"
-              type="button"
-              class="u-button u-button_icon _densityButton"
-              :class="{ _active: view_density === density_option.value }"
-              :title="density_option.label"
-              :aria-label="density_option.label"
-              :aria-pressed="view_density === density_option.value"
-              @click="setViewDensity(density_option.value)"
-            >
-              <b-icon :icon="density_option.icon" />
-            </button>
-          </div>
+            <b-icon icon="layout-three-columns" />
+            {{ $t("sg_customize_columns") }}
+          </button>
           <router-link to="/gems/new" class="u-button u-button_bleuvert">
             <b-icon icon="plus-lg" />
             {{ $t("sg_create_gem") }}
@@ -74,6 +63,7 @@
           :gems="sorted_gems"
           :metadata_keys="metadata_keys"
           :metadata_labels="metadata_labels"
+          :gems_path="gems_path"
         />
       </div>
     </div>
@@ -97,6 +87,16 @@
         editing_field = null;
         editing_gem = null;
       "
+    />
+
+    <SGGemColumnsModal
+      v-if="show_columns_modal"
+      :all_metadata_keys="all_metadata_keys"
+      :selected_metadata_keys="selected_metadata_keys"
+      :metadata_labels="metadata_labels"
+      :metadata_icons="metadata_icons"
+      @save="onSaveColumnsSelection"
+      @close="show_columns_modal = false"
     />
   </div>
 </template>
@@ -128,8 +128,8 @@ const placeholder_gem_fields_defaults = {
   pf_invoiced_price: 0,
   price_per_carat_all: 0,
 };
-const view_density_localstorage_key = "sg_gems_view_density";
-const available_view_densities = ["compact", "medium", "large"];
+const metadata_keys_localstorage_key = "sg_gems_metadata_keys";
+const pinned_metadata_keys = ["id", "$cover"];
 
 export default {
   name: "SGGemsView",
@@ -139,6 +139,7 @@ export default {
     SGGemsTable: () => import("@/components/gems/SGGemsTable.vue"),
     GemCsvExportButton: () =>
       import("@/components/gems/GemCsvExportButton.vue"),
+    SGGemColumnsModal: () => import("@/components/gems/SGGemColumnsModal.vue"),
   },
   data() {
     return {
@@ -151,11 +152,13 @@ export default {
       editing_gem: null,
       editing_field: null,
       editing_current_value: "",
-      view_density: "medium",
+      view_density: "compact",
+      show_columns_modal: false,
+      selected_metadata_keys: [],
     };
   },
   created() {
-    this.loadViewDensityFromStorage();
+    this.loadMetadataKeysFromStorage();
   },
   mounted() {
     this.fetchGems();
@@ -168,7 +171,7 @@ export default {
     is_gem_open() {
       return ["Open gem", "Create gem"].includes(this.$route.name);
     },
-    metadata_keys() {
+    all_metadata_keys() {
       if (!Array.isArray(this.gems) || this.gems.length === 0) return [];
 
       const ignored_keys = new Set([
@@ -230,6 +233,18 @@ export default {
         return a.localeCompare(b);
       });
     },
+    metadata_keys() {
+      const all_keys = this.all_metadata_keys;
+      if (all_keys.length === 0) return [];
+      if (!Array.isArray(this.selected_metadata_keys)) return all_keys;
+
+      const selected_in_order = this.selected_metadata_keys.filter(
+        (metadata_key) => all_keys.includes(metadata_key)
+      );
+      const selected_or_default =
+        selected_in_order.length > 0 ? selected_in_order : all_keys;
+      return this.enforcePinnedColumns(selected_or_default, all_keys);
+    },
     sorted_gems() {
       if (!Array.isArray(this.gems)) return [];
       return [...this.gems].sort((a, b) =>
@@ -240,67 +255,132 @@ export default {
       );
     },
     metadata_labels() {
-      return this.metadata_keys.reduce((accumulator, metadata_key) => {
+      return this.all_metadata_keys.reduce((accumulator, metadata_key) => {
         accumulator[metadata_key] = this.getMetadataLabel(metadata_key);
         return accumulator;
       }, {});
     },
     metadata_icons() {
-      return this.metadata_keys.reduce((accumulator, metadata_key) => {
+      return this.all_metadata_keys.reduce((accumulator, metadata_key) => {
         accumulator[metadata_key] = this.getMetadataIcon(metadata_key);
         return accumulator;
       }, {});
     },
     field_editable_map() {
-      return this.metadata_keys.reduce((accumulator, metadata_key) => {
+      return this.all_metadata_keys.reduce((accumulator, metadata_key) => {
         accumulator[metadata_key] = this.isFieldEditable(metadata_key);
         return accumulator;
       }, {});
     },
-    density_options() {
-      return [
-        {
-          value: "compact",
-          icon: "zoom-out",
-          label: "Compact view",
-        },
-        {
-          value: "medium",
-          icon: "search",
-          label: "Medium view",
-        },
-        {
-          value: "large",
-          icon: "zoom-in",
-          label: "Large view",
-        },
-      ];
+  },
+  watch: {
+    all_metadata_keys: {
+      immediate: true,
+      handler() {
+        this.syncSelectedMetadataKeys();
+      },
     },
   },
   methods: {
-    loadViewDensityFromStorage() {
+    loadMetadataKeysFromStorage() {
       try {
-        const stored_density = localStorage.getItem(
-          view_density_localstorage_key
+        const stored_keys_json = localStorage.getItem(
+          metadata_keys_localstorage_key
         );
-        if (!stored_density) return;
-        if (!available_view_densities.includes(stored_density)) return;
-        this.view_density = stored_density;
+        if (!stored_keys_json) return;
+        const stored_keys = JSON.parse(stored_keys_json);
+        if (!Array.isArray(stored_keys)) return;
+        this.selected_metadata_keys = stored_keys.filter(
+          (metadata_key) => typeof metadata_key === "string"
+        );
       } catch {
-        // Keep default when storage is unavailable.
+        // Keep defaults when storage is unavailable or invalid.
       }
     },
-    persistViewDensityToStorage() {
+    persistMetadataKeysToStorage() {
       try {
-        localStorage.setItem(view_density_localstorage_key, this.view_density);
+        localStorage.setItem(
+          metadata_keys_localstorage_key,
+          JSON.stringify(this.selected_metadata_keys)
+        );
       } catch {
         // Ignore storage write errors.
       }
     },
-    setViewDensity(next_density) {
-      if (!available_view_densities.includes(next_density)) return;
-      this.view_density = next_density;
-      this.persistViewDensityToStorage();
+    syncSelectedMetadataKeys() {
+      const all_keys = Array.isArray(this.all_metadata_keys)
+        ? this.all_metadata_keys
+        : [];
+      if (all_keys.length === 0) {
+        this.selected_metadata_keys = [];
+        return;
+      }
+
+      const selected_keys = Array.isArray(this.selected_metadata_keys)
+        ? this.selected_metadata_keys
+        : [];
+      const selected_in_order = selected_keys.filter((metadata_key) =>
+        all_keys.includes(metadata_key)
+      );
+      const missing_keys = all_keys.filter(
+        (metadata_key) => !selected_in_order.includes(metadata_key)
+      );
+      const next_selected_keys =
+        selected_in_order.length > 0
+          ? [...selected_in_order, ...missing_keys]
+          : [...all_keys];
+      const normalized_selected_keys = this.enforcePinnedColumns(
+        next_selected_keys,
+        all_keys
+      );
+
+      if (
+        !this.areArraysEqual(
+          normalized_selected_keys,
+          this.selected_metadata_keys
+        )
+      ) {
+        this.selected_metadata_keys = normalized_selected_keys;
+        this.persistMetadataKeysToStorage();
+      }
+    },
+    onSaveColumnsSelection(next_selected_metadata_keys) {
+      if (
+        !Array.isArray(next_selected_metadata_keys) ||
+        next_selected_metadata_keys.length === 0
+      ) {
+        return;
+      }
+      this.selected_metadata_keys = this.enforcePinnedColumns(
+        next_selected_metadata_keys,
+        this.all_metadata_keys
+      );
+      this.persistMetadataKeysToStorage();
+      this.show_columns_modal = false;
+    },
+    enforcePinnedColumns(metadata_keys, all_keys = this.all_metadata_keys) {
+      const available_keys = Array.isArray(all_keys) ? all_keys : [];
+      const requested_keys = Array.isArray(metadata_keys) ? metadata_keys : [];
+
+      const pinned_existing_keys = pinned_metadata_keys.filter((metadata_key) =>
+        available_keys.includes(metadata_key)
+      );
+      const ordered_non_pinned_keys = requested_keys.filter(
+        (metadata_key) =>
+          !pinned_metadata_keys.includes(metadata_key) &&
+          available_keys.includes(metadata_key)
+      );
+
+      return [...pinned_existing_keys, ...ordered_non_pinned_keys];
+    },
+    areArraysEqual(first_array, second_array) {
+      if (!Array.isArray(first_array) || !Array.isArray(second_array)) {
+        return false;
+      }
+      if (first_array.length !== second_array.length) return false;
+      return first_array.every(
+        (first_item, index) => first_item === second_array[index]
+      );
     },
     closeGemPanel() {
       this.$router.push("/gems");
@@ -637,23 +717,6 @@ export default {
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
-}
-
-._densityControls {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(var(--spacing) / 4);
-}
-
-._densityButton {
-  // min-width: 34px;
-  padding: calc(var(--spacing) / 4);
-
-  &._active {
-    background: var(--c-bleuvert);
-    color: var(--c-blanc);
-    border-color: var(--c-bleuvert);
-  }
 }
 
 ._tableSection {

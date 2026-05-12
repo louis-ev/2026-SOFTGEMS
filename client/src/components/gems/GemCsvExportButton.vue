@@ -4,11 +4,57 @@
       type="button"
       class="u-buttonLink"
       :disabled="!has_gems"
+      @click="openDownloadModal"
+    >
+      <b-icon icon="file-earmark-zip" />
+      {{ $t("sg_download_all_gems_zip") }}
+    </button>
+    <button
+      type="button"
+      class="u-buttonLink"
+      :disabled="!has_gems"
       @click="exportCsv"
     >
       <b-icon icon="download" />
       {{ $t("sg_export_gems_csv") }}
     </button>
+
+    <BaseModal2
+      v-if="show_download_modal"
+      :title="$t('sg_download_all_gems_zip')"
+      @close="show_download_modal = false"
+    >
+      <div class="_downloadModalBody">
+        <p class="_downloadInstructions">
+          {{ $t("sg_download_all_gems_zip_instructions") }}
+        </p>
+        <div v-if="is_loading_size" class="_sizeLoader">
+          <LoaderSpinner />
+        </div>
+        <div v-else-if="size_load_error" class="u-errorMsg">
+          {{ size_load_error }}
+        </div>
+        <SizeDisplay v-else-if="folder_size !== null" :size="folder_size" />
+      </div>
+
+      <template slot="footer">
+        <button type="button" class="u-button" @click="show_download_modal = false">
+          {{ $t("cancel") }}
+        </button>
+        <button
+          type="button"
+          class="u-button u-button_bleuvert"
+          :disabled="is_downloading_zip || is_loading_size"
+          @click="downloadAllGemsZip"
+        >
+          {{
+            is_downloading_zip
+              ? $t("sg_download_all_gems_zip_in_progress")
+              : $t("download")
+          }}
+        </button>
+      </template>
+    </BaseModal2>
   </div>
 </template>
 
@@ -19,6 +65,16 @@ export default {
     gems: { type: Array, default: () => [] },
     metadata_keys: { type: Array, default: () => [] },
     metadata_labels: { type: Object, default: () => ({}) },
+    gems_path: { type: String, default: "gems" },
+  },
+  data() {
+    return {
+      show_download_modal: false,
+      is_loading_size: false,
+      is_downloading_zip: false,
+      folder_size: null,
+      size_load_error: "",
+    };
   },
   computed: {
     has_gems() {
@@ -26,6 +82,40 @@ export default {
     },
   },
   methods: {
+    async openDownloadModal() {
+      if (!this.has_gems) return;
+      this.show_download_modal = true;
+      this.is_loading_size = true;
+      this.size_load_error = "";
+      this.folder_size = null;
+      try {
+        const response = await this.$axios.get(`${this.gems_path}?detailed=true`);
+        const folders = Array.isArray(response?.data) ? response.data : [];
+        this.folder_size = folders.reduce((total_size, gem) => {
+          const gem_size = Number(gem?.$infos?.size);
+          if (!Number.isFinite(gem_size)) return total_size;
+          return total_size + gem_size;
+        }, 0);
+      } catch ({ code }) {
+        this.size_load_error = code || this.$t("sg_could_not_estimate_gems_size");
+      } finally {
+        this.is_loading_size = false;
+      }
+    },
+    async downloadAllGemsZip() {
+      if (!this.has_gems || this.is_downloading_zip) return;
+      this.is_downloading_zip = true;
+      try {
+        await this.$api.downloadFolder({ path: this.gems_path });
+        this.show_download_modal = false;
+      } catch ({ code }) {
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_could_not_download_gems_zip"));
+      } finally {
+        this.is_downloading_zip = false;
+      }
+    },
     getGemId(gem) {
       const gem_path = gem?.$path || "";
       if (!gem_path) return "";
@@ -88,5 +178,19 @@ export default {
   margin-top: 0;
   display: flex;
   justify-content: flex-end;
+  gap: calc(var(--spacing) / 2);
+}
+
+._downloadModalBody {
+  min-height: 44px;
+}
+
+._downloadInstructions {
+  margin: 0 0 calc(var(--spacing) / 2) 0;
+}
+
+._sizeLoader {
+  display: flex;
+  justify-content: center;
 }
 </style>

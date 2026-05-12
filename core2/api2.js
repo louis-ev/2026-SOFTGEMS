@@ -277,6 +277,12 @@ module.exports = (function () {
       _copyFolder
     );
     app.get(
+      ["/_api2/:folder_type.zip"],
+      _generalPasswordCheck,
+      _onlyAdmins,
+      _downloadFolderType
+    );
+    app.get(
       [
         "/_api2/:folder_type/:folder_slug.zip",
         "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug.zip",
@@ -1544,6 +1550,16 @@ module.exports = (function () {
 
     await downloads.downloadFolder({
       path_to_folder,
+      path_to_type,
+      res,
+      token_path,
+    });
+  }
+  async function _downloadFolderType(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization || "{}");
+
+    await downloads.downloadFolderType({
       path_to_type,
       res,
       token_path,

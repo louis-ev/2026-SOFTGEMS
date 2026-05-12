@@ -11,6 +11,7 @@ import {
   BIconFileEarmarkText,
   BIconGem,
   BIconImages,
+  BIconLayoutThreeColumns,
   BIconLink,
   BIconListOl,
   BIconPaletteFill,
@@ -34,6 +35,7 @@ Vue.component("BIconClockHistory", BIconClockHistory);
 Vue.component("BIconDiagram2", BIconDiagram2);
 Vue.component("BIconFileEarmarkText", BIconFileEarmarkText);
 Vue.component("BIconImages", BIconImages);
+Vue.component("BIconLayoutThreeColumns", BIconLayoutThreeColumns);
 Vue.component("BIconLink", BIconLink);
 Vue.component("BIconListOl", BIconListOl);
 Vue.component("BIconPaletteFill", BIconPaletteFill);

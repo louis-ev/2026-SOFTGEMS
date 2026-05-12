@@ -55,6 +55,57 @@ module.exports = (function () {
         _handleDownloadFolderError(err, res, { path_to_folder, token_path });
       }
     },
+    downloadFolderType: async ({ path_to_type, res, token_path = "" }) => {
+      dev.logapi({ path_to_type });
+
+      try {
+        const type_slug = utils.getFilename(path_to_type) || "download";
+        const filename = `${type_slug}.zip`;
+        res.header("Content-Type", "application/zip");
+        res.header("Content-Disposition", `attachment; filename="${filename}"`);
+
+        const archive = archiver("zip", { zlib: { level: 0 } });
+        archive.on("warning", (err) => {
+          throw err;
+        });
+        archive.on("error", (err) => {
+          throw err;
+        });
+        archive.pipe(res);
+
+        const full_type_path = utils.getPathToUserContent(path_to_type);
+        archive.directory(full_type_path, type_slug);
+
+        archive.finalize();
+
+        dev.logpackets(
+          `Successfully started type download for ${path_to_type}`
+        );
+        journal.log({
+          from: "api2",
+          event: "download_folder_type",
+          details: {
+            outcome: "success",
+            path_to_type,
+            author_path: token_path,
+          },
+        });
+      } catch (err) {
+        const { message, code, err_infos } = err;
+        dev.error(`Failed to download folder type ${path_to_type}: ${message}`);
+        journal.log({
+          from: "api2",
+          event: "download_folder_type",
+          details: {
+            outcome: "error",
+            path_to_type,
+            error_message: message,
+            author_path: token_path,
+          },
+        });
+        res.status(500).send({ code, err_infos });
+      }
+    },
 
     downloadSources: async ({
       path_to_folder,
