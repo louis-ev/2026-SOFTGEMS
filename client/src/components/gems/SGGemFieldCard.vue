@@ -66,7 +66,7 @@ export default {
 }
 
 ._gemFieldCard._flashing ._value {
-  animation: _flashFieldCardFade 2s ease-out 1;
+  animation: _flashFieldCardFade 4s ease-out 1;
 }
 
 ._value {

@@ -319,7 +319,7 @@ export default {
       this.flash_timeouts[cell_key] = setTimeout(() => {
         this.$delete(this.flashing_cells, cell_key);
         this.$delete(this.flash_timeouts, cell_key);
-      }, 2000);
+      }, 4000);
     },
     isCellFlashing(gem, metadata_key) {
       const cell_key = this.getCellFlashKey(gem, metadata_key);
@@ -558,7 +558,7 @@ td[data-metadata-key="$cover"] {
 }
 
 ._flashCell {
-  animation: _flashCellFade 2s ease-out 1;
+  animation: _flashCellFade 4s ease-out 1;
 }
 
 @keyframes _flashCellFade {

@@ -492,7 +492,7 @@ export default {
         this.flash_timeouts[field_key] = setTimeout(() => {
           this.$delete(this.flashing_fields, field_key);
           this.$delete(this.flash_timeouts, field_key);
-        }, 2000);
+        }, 4000);
       });
     },
     isFieldFlashing(field_key) {
