@@ -13,6 +13,7 @@ export default {
   sg_columns_modal_title: "Customize columns",
   sg_columns_modal_instructions:
     "Enable or disable columns, then drag rows to reorder them.",
+  sg_fixed: "Fixed",
   sg_check_all_columns: "Check all",
   sg_uncheck_all_columns: "Uncheck all",
   sg_column_active: "Active",

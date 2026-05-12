@@ -45,12 +45,17 @@
               _isInactive: !column_item.is_enabled,
               'is--dragSource': dragged_column_index === index,
               _isLocked: column_item.is_locked,
+              _dropTargetBefore: isRowDropTargetBefore(index),
+              _dropTargetAfter: isRowDropTargetAfter(index),
             }"
             :draggable="!column_item.is_locked"
             @dragstart="handleDragStartColumn(index, $event)"
             @dragend="handleDragEndColumn"
+            @dragover.prevent="handleDragOverRow(index, $event)"
+            @dragenter.prevent="handleDragEnterRow(index, $event)"
+            @drop.prevent="handleDropOnRow(index, $event)"
           >
-            <label class="_toggleWrap">
+            <label v-if="!column_item.is_locked" class="_toggleWrap">
               <input
                 :checked="column_item.is_enabled"
                 type="checkbox"
@@ -58,6 +63,9 @@
                 @change="toggleColumn(column_item.metadata_key, $event)"
               />
             </label>
+            <span v-else class="_fixedBadge">
+              {{ $t("sg_fixed") }}
+            </span>
 
             <span class="_columnLabel">
               <b-icon
@@ -239,6 +247,32 @@ export default {
         this.drag_over_drop_index = null;
       }
     },
+    getDropIndexForRow(index, event) {
+      const row_element = event?.currentTarget;
+      if (
+        !row_element ||
+        typeof row_element.getBoundingClientRect !== "function"
+      ) {
+        return index;
+      }
+      const rect = row_element.getBoundingClientRect();
+      const middle_y = rect.top + rect.height / 2;
+      return event.clientY < middle_y ? index : index + 1;
+    },
+    handleDragOverRow(index, event) {
+      const drop_index = this.getDropIndexForRow(index, event);
+      if (!this.isDropZoneAvailable(drop_index)) return;
+      this.drag_over_drop_index = drop_index;
+    },
+    handleDragEnterRow(index, event) {
+      const drop_index = this.getDropIndexForRow(index, event);
+      if (!this.isDropZoneAvailable(drop_index)) return;
+      this.drag_over_drop_index = drop_index;
+    },
+    handleDropOnRow(index, event) {
+      const drop_index = this.getDropIndexForRow(index, event);
+      this.handleDropOnDropZone(drop_index);
+    },
     handleDropOnDropZone(drop_index) {
       if (!this.isDropZoneAvailable(drop_index)) {
         this.handleDragEndColumn();
@@ -271,6 +305,18 @@ export default {
       return (
         index !== this.dragged_column_index &&
         index !== this.dragged_column_index + 1
+      );
+    },
+    isRowDropTargetBefore(index) {
+      return (
+        this.drag_over_drop_index === index && this.isDropZoneAvailable(index)
+      );
+    },
+    isRowDropTargetAfter(index) {
+      const after_index = index + 1;
+      return (
+        this.drag_over_drop_index === after_index &&
+        this.isDropZoneAvailable(after_index)
       );
     },
   },
@@ -317,6 +363,7 @@ export default {
   padding: calc(var(--spacing) / 2);
   background: var(--c-bodybg);
   cursor: grab;
+  position: relative;
 }
 
 ._columnRow._isInactive {
@@ -329,6 +376,24 @@ export default {
 
 ._columnRow._isLocked {
   cursor: default;
+}
+
+._columnRow._dropTargetBefore::before,
+._columnRow._dropTargetAfter::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  border: none;
+  pointer-events: none;
+}
+
+._columnRow._dropTargetBefore::before {
+  top: -6px;
+}
+
+._columnRow._dropTargetAfter::after {
+  bottom: -6px;
 }
 
 ._dropZone {
@@ -384,5 +449,14 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 4);
   user-select: none;
+}
+
+._fixedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 5);
+  font-size: var(--sl-font-size-x-small);
+  color: var(--c-gris_fonce);
+  min-width: 72px;
 }
 </style>
