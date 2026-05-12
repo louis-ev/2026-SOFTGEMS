@@ -563,7 +563,7 @@ td[data-metadata-key="$cover"] {
 
 @keyframes _flashCellFade {
   0% {
-    background: color-mix(in srgb, var(--c-bleuvert) 28%, var(--c-bodybg));
+    background: color-mix(in srgb, var(--c-bleuvert) 42%, var(--c-bodybg));
   }
   100% {
     background: var(--c-bodybg);

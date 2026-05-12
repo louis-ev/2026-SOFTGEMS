@@ -1,5 +1,5 @@
 <template>
-  <div class="_gemFieldCard">
+  <div class="_gemFieldCard" :class="{ _flashing: is_flashing }">
     <DLabel :str="label" :icon="icon" />
     <button
       v-if="!readonly"
@@ -34,6 +34,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    is_flashing: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     is_empty() {
@@ -59,6 +63,10 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+._gemFieldCard._flashing ._value {
+  animation: _flashFieldCardFade 2s ease-out 1;
 }
 
 ._value {
@@ -90,6 +98,17 @@ export default {
 
   ._empty {
     color: var(--c-gris_fonce);
+  }
+}
+
+@keyframes _flashFieldCardFade {
+  0% {
+    background: color-mix(in srgb, var(--c-bleuvert) 25%, var(--c-gris_clair));
+    border-color: color-mix(in srgb, var(--c-bleuvert) 70%, transparent);
+  }
+  100% {
+    background: var(--c-gris_clair);
+    border-color: transparent;
   }
 }
 </style>

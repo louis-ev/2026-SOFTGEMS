@@ -1,4 +1,3 @@
-z
 <template>
   <section class="_gemOpenView">
     <button
@@ -77,29 +76,34 @@ z
             :label="$t('sg_internal_name')"
             icon="pencil"
             :value="gem.internal_name"
+            :is_flashing="isFieldFlashing('internal_name')"
             @click="openEditModal(field_configs.internal_name)"
           />
           <SGGemFieldCard
             :label="$t('sg_status')"
             :value="gem.status"
+            :is_flashing="isFieldFlashing('status')"
             @click="openEditModal(field_configs.status)"
           />
           <SGGemFieldCard
             :label="$t('sg_reference_supplier')"
             icon="archive"
             :value="gem.reference_supplier"
+            :is_flashing="isFieldFlashing('reference_supplier')"
             @click="openEditModal(field_configs.reference_supplier)"
           />
           <SGGemFieldCard
             :label="$t('sg_reference_customer')"
             icon="person-circle"
             :value="gem.reference_customer"
+            :is_flashing="isFieldFlashing('reference_customer')"
             @click="openEditModal(field_configs.reference_customer)"
           />
           <SGGemFieldCard
             :label="$t('sg_paired_gem')"
             icon="link"
             :value="gem.paired_gem"
+            :is_flashing="isFieldFlashing('paired_gem')"
             @click="openEditModal(field_configs.paired_gem)"
           />
         </div>
@@ -115,60 +119,70 @@ z
             :label="$t('sg_number_of_pieces')"
             icon="list-ol"
             :value="gem.number_of_pieces"
+            :is_flashing="isFieldFlashing('number_of_pieces')"
             @click="openEditModal(field_configs.number_of_pieces)"
           />
           <SGGemFieldCard
             :label="$t('sg_stone_type')"
             icon="gem"
             :value="gem.stone_type"
+            :is_flashing="isFieldFlashing('stone_type')"
             @click="openEditModal(field_configs.stone_type)"
           />
           <SGGemFieldCard
             :label="$t('sg_weight_ct')"
             icon="rulers"
             :value="gem.weight_ct"
+            :is_flashing="isFieldFlashing('weight_ct')"
             @click="openEditModal(field_configs.weight_ct)"
           />
           <SGGemFieldCard
             :label="$t('sg_color')"
             icon="palette-fill"
             :value="gem.color"
+            :is_flashing="isFieldFlashing('color')"
             @click="openEditModal(field_configs.color)"
           />
           <SGGemFieldCard
             :label="$t('sg_shape')"
             icon="pentagon"
             :value="gem.shape"
+            :is_flashing="isFieldFlashing('shape')"
             @click="openEditModal(field_configs.shape)"
           />
           <SGGemFieldCard
             :label="$t('sg_origin_country')"
             icon="pin-map"
             :value="gem.origin_country"
+            :is_flashing="isFieldFlashing('origin_country')"
             @click="openEditModal(field_configs.origin_country)"
           />
           <SGGemFieldCard
             :label="$t('sg_treatment_type')"
             icon="tools"
             :value="gem.treatment_type"
+            :is_flashing="isFieldFlashing('treatment_type')"
             @click="openEditModal(field_configs.treatment_type)"
           />
           <SGGemFieldCard
             :label="$t('sg_length_mm')"
             icon="aspect-ratio"
             :value="gem.length_mm"
+            :is_flashing="isFieldFlashing('length_mm')"
             @click="openEditModal(field_configs.length_mm)"
           />
           <SGGemFieldCard
             :label="$t('sg_width_mm')"
             icon="aspect-ratio"
             :value="gem.width_mm"
+            :is_flashing="isFieldFlashing('width_mm')"
             @click="openEditModal(field_configs.width_mm)"
           />
           <SGGemFieldCard
             :label="$t('sg_height_mm')"
             icon="aspect-ratio"
             :value="gem.height_mm"
+            :is_flashing="isFieldFlashing('height_mm')"
             @click="openEditModal(field_configs.height_mm)"
           />
         </div>
@@ -182,30 +196,35 @@ z
             :label="$t('sg_base_price_pcb')"
             icon="tag"
             :value="gem.base_price_pcb"
+            :is_flashing="isFieldFlashing('base_price_pcb')"
             @click="openEditModal(field_configs.base_price_pcb)"
           />
           <SGGemFieldCard
             :label="$t('sg_purchased_price_pa')"
             icon="tag"
             :value="gem.purchased_price_pa"
+            :is_flashing="isFieldFlashing('purchased_price_pa')"
             @click="openEditModal(field_configs.purchased_price_pa)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_pcb')"
             icon="diagram2"
             :value="gem.price_per_carat_pcb"
+            :is_flashing="isFieldFlashing('price_per_carat_pcb')"
             @click="openEditModal(field_configs.price_per_carat_pcb)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_pa')"
             icon="diagram2"
             :value="gem.price_per_carat_pa"
+            :is_flashing="isFieldFlashing('price_per_carat_pa')"
             @click="openEditModal(field_configs.price_per_carat_pa)"
           />
           <SGGemFieldCard
             :label="$t('sg_pv_selling_price')"
             icon="tag"
             :value="gem.pv_selling_price"
+            :is_flashing="isFieldFlashing('pv_selling_price')"
             @click="openEditModal(field_configs.pv_selling_price)"
           />
           <SGGemFieldCard
@@ -218,18 +237,21 @@ z
             :label="$t('sg_pc_to')"
             icon="file-earmark-text"
             :value="gem.pc_to"
+            :is_flashing="isFieldFlashing('pc_to')"
             @click="openEditModal(field_configs.pc_to)"
           />
           <SGGemFieldCard
             :label="$t('sg_pf_invoiced_price')"
             icon="file-earmark-text"
             :value="gem.pf_invoiced_price"
+            :is_flashing="isFieldFlashing('pf_invoiced_price')"
             @click="openEditModal(field_configs.pf_invoiced_price)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_all')"
             icon="arrow-up"
             :value="gem.price_per_carat_all"
+            :is_flashing="isFieldFlashing('price_per_carat_all')"
             @click="openEditModal(field_configs.price_per_carat_all)"
           />
         </div>
@@ -316,6 +338,8 @@ export default {
       show_history_modal: false,
       is_loading_history: false,
       gem_history_entries: [],
+      flashing_fields: {},
+      flash_timeouts: {},
     };
   },
   computed: {
@@ -353,6 +377,9 @@ export default {
   },
   mounted() {},
   beforeDestroy() {
+    Object.values(this.flash_timeouts).forEach((timeout_id) => {
+      clearTimeout(timeout_id);
+    });
     this.$api.leave({ room: this.gem_path });
   },
   methods: {
@@ -448,10 +475,28 @@ export default {
       if (!this.gem) return;
       const next_changes =
         changes && typeof changes === "object" ? changes : { [key]: value };
+      this.flashFields(Object.keys(next_changes));
       Object.keys(next_changes).forEach((change_key) => {
         this.$set(this.gem, change_key, next_changes[change_key]);
       });
       this.ensureGemPricingFields(this.gem);
+    },
+    flashFields(field_keys) {
+      if (!Array.isArray(field_keys) || field_keys.length === 0) return;
+      field_keys.forEach((field_key) => {
+        if (!field_key) return;
+        if (this.flash_timeouts[field_key]) {
+          clearTimeout(this.flash_timeouts[field_key]);
+        }
+        this.$set(this.flashing_fields, field_key, true);
+        this.flash_timeouts[field_key] = setTimeout(() => {
+          this.$delete(this.flashing_fields, field_key);
+          this.$delete(this.flash_timeouts, field_key);
+        }, 2000);
+      });
+    },
+    isFieldFlashing(field_key) {
+      return Boolean(this.flashing_fields[field_key]);
     },
     ensureGemPricingFields(gem) {
       if (!gem || typeof gem !== "object") return;
