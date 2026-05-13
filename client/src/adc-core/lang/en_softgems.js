@@ -68,7 +68,7 @@ export default {
   sg_treatment: "Treatment",
   sg_purchase_price_usd: "Purchase price (USD)",
   sg_sale_price_usd: "Sale price (USD)",
-  sg_price_per_carat_usd: "Price per carat (USD)",
+  sg_price_per_carat_usd: "Per carat (USD)",
   sg_supplier: "Supplier",
   sg_acquisition_date: "Acquisition date",
   sg_country_of_cut: "Country of cut (COC)",
@@ -132,4 +132,9 @@ export default {
     "{per_carat_label} will update from {from_per_carat} to {to_per_carat} (derived as {total_label} ÷ {weight_label}).",
   sg_pricing_impact_editing_weight:
     "{weight_label} will update from {from_weight} to {to_weight}. Per-carat amounts everywhere will use each stored total ÷ this weight.",
+  sg_pricing_pair_caption: "{line}",
+  sg_pricing_pair_caption_from_pv: "{line} · computed from PV (read-only pair)",
+  sg_pricing_cell_total: "Total",
+  sg_pricing_cell_per_carat: "Per carat",
+  sg_pricing_standalone_pricing: "Other (not paired above)",
 };

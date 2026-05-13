@@ -1,6 +1,9 @@
 <template>
   <div class="_gemFieldCard" :class="{ _flashing: is_flashing }">
-    <DLabel :str="label" :icon="icon" />
+    <div class="_labelRow">
+      <DLabel :str="label" :icon="icon" />
+      <span v-if="link_role" class="_linkRolePill">{{ link_role }}</span>
+    </div>
     <button
       v-if="!readonly"
       type="button"
@@ -38,6 +41,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    link_role: {
+      type: String,
+      default: "",
+    },
   },
   computed: {
     is_empty() {
@@ -63,6 +70,28 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+._labelRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 3);
+}
+
+._linkRolePill {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--c-gris_fonce);
+  background: var(--c-blanc);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 4px;
+  padding: 3px 6px;
 }
 
 ._gemFieldCard._flashing ._value {

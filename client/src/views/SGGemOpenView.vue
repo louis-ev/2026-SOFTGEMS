@@ -191,96 +191,157 @@
       <!-- Section: Pricing -->
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_pricing") }}</h2>
-        <div class="_fieldsGrid">
-          <SGGemFieldCard
-            :label="$t('sg_base_price_pcb')"
-            icon="tag"
-            :value="gem.base_price_pcb"
-            :is_flashing="isFieldFlashing('base_price_pcb')"
-            @click="openEditModal(field_configs.base_price_pcb)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pcb')"
-            icon="diagram2"
-            :value="displayGemFieldValue('price_per_carat_pcb')"
-            :is_flashing="isFieldFlashing('price_per_carat_pcb')"
-            @click="openEditModal(field_configs.price_per_carat_pcb)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_purchased_price_pa')"
-            icon="tag"
-            :value="gem.purchased_price_pa"
-            :is_flashing="isFieldFlashing('purchased_price_pa')"
-            @click="openEditModal(field_configs.purchased_price_pa)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pa')"
-            icon="diagram2"
-            :value="displayGemFieldValue('price_per_carat_pa')"
-            :is_flashing="isFieldFlashing('price_per_carat_pa')"
-            @click="openEditModal(field_configs.price_per_carat_pa)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_pv_selling_price')"
-            icon="tag"
-            :value="gem.pv_selling_price"
-            :is_flashing="isFieldFlashing('pv_selling_price')"
-            @click="openEditModal(field_configs.pv_selling_price)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pv')"
-            icon="diagram2"
-            :value="displayGemFieldValue('price_per_carat_pv')"
-            :is_flashing="isFieldFlashing('price_per_carat_pv')"
-            @click="openEditModal(field_configs.price_per_carat_pv)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_pvd_asking_price')"
-            icon="diagram2"
-            :value="pvd_asking_price_computed"
-            :readonly="true"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pvd')"
-            icon="diagram2"
-            :value="pvd_per_carat_computed"
-            :readonly="true"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_pc_to')"
-            icon="file-earmark-text"
-            :value="gem.pc_to"
-            :is_flashing="isFieldFlashing('pc_to')"
-            @click="openEditModal(field_configs.pc_to)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pc')"
-            icon="diagram2"
-            :value="displayGemFieldValue('price_per_carat_pc')"
-            :is_flashing="isFieldFlashing('price_per_carat_pc')"
-            @click="openEditModal(field_configs.price_per_carat_pc)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_pf_invoiced_price')"
-            icon="file-earmark-text"
-            :value="gem.pf_invoiced_price"
-            :is_flashing="isFieldFlashing('pf_invoiced_price')"
-            @click="openEditModal(field_configs.pf_invoiced_price)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_pf')"
-            icon="diagram2"
-            :value="displayGemFieldValue('price_per_carat_pf')"
-            :is_flashing="isFieldFlashing('price_per_carat_pf')"
-            @click="openEditModal(field_configs.price_per_carat_pf)"
-          />
-          <SGGemFieldCard
-            :label="$t('sg_price_per_carat_all')"
-            icon="arrow-up"
-            :value="gem.price_per_carat_all"
-            :is_flashing="isFieldFlashing('price_per_carat_all')"
-            @click="openEditModal(field_configs.price_per_carat_all)"
-          />
+        <div class="_pricingGroups">
+          <div class="_pricingPair">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_pair_caption", { line: "PCb" }) }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_base_price_pcb')"
+                icon="tag"
+                :link_role="$t('sg_pricing_cell_total')"
+                :value="gem.base_price_pcb"
+                :is_flashing="isFieldFlashing('base_price_pcb')"
+                @click="openEditModal(field_configs.base_price_pcb)"
+              />
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_pcb')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_pcb')"
+                :is_flashing="isFieldFlashing('price_per_carat_pcb')"
+                @click="openEditModal(field_configs.price_per_carat_pcb)"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_pair_caption", { line: "PA" }) }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_purchased_price_pa')"
+                icon="tag"
+                :link_role="$t('sg_pricing_cell_total')"
+                :value="gem.purchased_price_pa"
+                :is_flashing="isFieldFlashing('purchased_price_pa')"
+                @click="openEditModal(field_configs.purchased_price_pa)"
+              />
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_pa')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_pa')"
+                :is_flashing="isFieldFlashing('price_per_carat_pa')"
+                @click="openEditModal(field_configs.price_per_carat_pa)"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_pair_caption", { line: "PV" }) }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_pv_selling_price')"
+                icon="tag"
+                :link_role="$t('sg_pricing_cell_total')"
+                :value="gem.pv_selling_price"
+                :is_flashing="isFieldFlashing('pv_selling_price')"
+                @click="openEditModal(field_configs.pv_selling_price)"
+              />
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_pv')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_pv')"
+                :is_flashing="isFieldFlashing('price_per_carat_pv')"
+                @click="openEditModal(field_configs.price_per_carat_pv)"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_pair_caption_from_pv", { line: "PVD" }) }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_pvd_asking_price')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_total')"
+                :value="pvd_asking_price_computed"
+                :readonly="true"
+              />
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_pvd')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_per_carat')"
+                :value="pvd_per_carat_computed"
+                :readonly="true"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_pair_caption", { line: "PC" }) }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_pc_to')"
+                icon="file-earmark-text"
+                :link_role="$t('sg_pricing_cell_total')"
+                :value="gem.pc_to"
+                :is_flashing="isFieldFlashing('pc_to')"
+                @click="openEditModal(field_configs.pc_to)"
+              />
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_pc')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_pc')"
+                :is_flashing="isFieldFlashing('price_per_carat_pc')"
+                @click="openEditModal(field_configs.price_per_carat_pc)"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_pair_caption", { line: "PF" }) }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_pf_invoiced_price')"
+                icon="file-earmark-text"
+                :link_role="$t('sg_pricing_cell_total')"
+                :value="gem.pf_invoiced_price"
+                :is_flashing="isFieldFlashing('pf_invoiced_price')"
+                @click="openEditModal(field_configs.pf_invoiced_price)"
+              />
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_pf')"
+                icon="diagram2"
+                :link_role="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_pf')"
+                :is_flashing="isFieldFlashing('price_per_carat_pf')"
+                @click="openEditModal(field_configs.price_per_carat_pf)"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair _pricingPair_other">
+            <p class="_pricingPairCaption">
+              {{ $t("sg_pricing_standalone_pricing") }}
+            </p>
+            <div class="_pricingPairGrid">
+              <SGGemFieldCard
+                :label="$t('sg_price_per_carat_all')"
+                icon="arrow-up"
+                :value="gem.price_per_carat_all"
+                :is_flashing="isFieldFlashing('price_per_carat_all')"
+                @click="openEditModal(field_configs.price_per_carat_all)"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -543,9 +604,7 @@ export default {
         : key
         ? { [key]: value }
         : {};
-      const flash_keys = this.expandPricingFlashKeys(
-        Object.keys(next_changes)
-      );
+      const flash_keys = this.expandPricingFlashKeys(Object.keys(next_changes));
       this.flashFields(flash_keys);
       Object.keys(next_changes).forEach((change_key) => {
         this.$set(this.gem, change_key, next_changes[change_key]);
@@ -716,6 +775,65 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: calc(var(--spacing) / 1.75);
+}
+
+._pricingGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: calc(var(--spacing) * 0.45);
+  align-items: start;
+}
+
+._pricingPair {
+  margin: 0;
+  padding: calc(var(--spacing) * 0.4);
+  border-radius: 8px;
+  border: 1px solid var(--c-gris_clair);
+  // background: var(--c-gris);
+}
+
+._pricingPair_other {
+  grid-column: 1 / -1;
+  border-color: var(--c-gris_clair);
+  background: color-mix(in srgb, var(--c-gris_clair) 22%, var(--c-blanc));
+}
+
+._pricingPairCaption {
+  margin: 0 0 calc(var(--spacing) * 0.3) 0;
+  font-size: var(--sl-font-size-x-small);
+  font-weight: 700;
+  color: var(--c-noir);
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+
+._pricingPairGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: calc(var(--spacing) / 2.5);
+}
+
+/* denser field cards inside pricing only */
+._pricingGroups :deep(._gemFieldCard) {
+  gap: 2px;
+}
+
+._pricingGroups :deep(._labelRow) {
+  gap: calc(var(--spacing) / 5);
+  align-items: center;
+}
+
+._pricingGroups :deep(._linkRolePill) {
+  margin-top: 0;
+  font-size: 0.55rem;
+  padding: 2px 5px;
+  letter-spacing: 0.04em;
+  border-color: var(--c-gris);
+}
+
+._pricingGroups :deep(._value) {
+  padding: calc(var(--spacing) * 0.32);
+  font-size: var(--sl-font-size-x-small);
 }
 
 ._debugActions {
