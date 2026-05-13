@@ -311,15 +311,20 @@ export default {
       }
     },
     flashCell(cell_key) {
+      const flash_duration_ms = 4000;
       if (this.flash_timeouts[cell_key]) {
         clearTimeout(this.flash_timeouts[cell_key]);
+        this.$delete(this.flash_timeouts, cell_key);
       }
 
-      this.$set(this.flashing_cells, cell_key, true);
-      this.flash_timeouts[cell_key] = setTimeout(() => {
-        this.$delete(this.flashing_cells, cell_key);
-        this.$delete(this.flash_timeouts, cell_key);
-      }, 4000);
+      this.$set(this.flashing_cells, cell_key, false);
+      this.$nextTick(() => {
+        this.$set(this.flashing_cells, cell_key, true);
+        this.flash_timeouts[cell_key] = setTimeout(() => {
+          this.$delete(this.flashing_cells, cell_key);
+          this.$delete(this.flash_timeouts, cell_key);
+        }, flash_duration_ms);
+      });
     },
     isCellFlashing(gem, metadata_key) {
       const cell_key = this.getCellFlashKey(gem, metadata_key);
