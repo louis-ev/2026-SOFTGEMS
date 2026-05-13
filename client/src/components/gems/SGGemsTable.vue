@@ -200,7 +200,7 @@ export default {
       if (value === null || value === undefined || value === "") return "-";
       if (typeof value === "number")
         return Number.isFinite(value)
-          ? value.toLocaleString("fr-FR", {
+          ? value.toLocaleString(this.$i18n.locale, {
               maximumFractionDigits: 3,
             })
           : "-";

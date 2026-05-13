@@ -55,7 +55,7 @@ export default {
       if (this.is_empty) return "—";
       if (typeof this.value === "number")
         return Number.isFinite(this.value)
-          ? this.value.toLocaleString("fr-FR", {
+          ? this.value.toLocaleString(this.$i18n.locale, {
               maximumFractionDigits: 3,
             })
           : "—";

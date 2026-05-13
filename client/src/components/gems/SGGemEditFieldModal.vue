@@ -537,7 +537,7 @@ export default {
     formatAffectedFieldValue(value) {
       if (value === null || value === undefined || value === "") return "—";
       if (typeof value === "number" && Number.isFinite(value)) {
-        return value.toLocaleString("fr-FR", {
+        return value.toLocaleString(this.$i18n.locale, {
           maximumFractionDigits: 3,
         });
       }
