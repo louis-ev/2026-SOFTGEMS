@@ -145,6 +145,9 @@ export default {
         this.field.readonly || this.is_saving || !this.field_validation.is_valid
       );
     },
+    history_field_key() {
+      return this.field.pricing_total_key || this.field.key;
+    },
     affected_fields_preview() {
       if (!this.isPricingField(this.field.key) && this.field.key !== "weight_ct")
         return [];
@@ -193,7 +196,10 @@ export default {
         const entries = await this.$api.getFieldHistory({
           path: this.gem_path,
         });
-        this.field_history = this.extractFieldEntries(entries, this.field.key);
+        this.field_history = this.extractFieldEntries(
+          entries,
+          this.history_field_key
+        );
       } catch {
         this.field_history = [];
       } finally {
@@ -264,41 +270,26 @@ export default {
       }
     },
     buildMetaPatch({ field_key, normalized_value }) {
-      const next_meta = { [field_key]: normalized_value };
-      if (!this.isPricingField(field_key) && field_key !== "weight_ct")
-        return next_meta;
-
       const current_gem =
         this.gem && typeof this.gem === "object" ? this.gem : {};
-      const weight_ct = this.toNumberOrDefault(
-        field_key === "weight_ct" ? normalized_value : current_gem.weight_ct
-      );
 
       if (field_key === "weight_ct") {
-        this.getPriceFieldPairs().forEach(({ total_key, per_carat_key }) => {
-          const total_value = this.toNumberOrDefault(current_gem[total_key]);
-          next_meta[per_carat_key] = this.computePerCarat({
-            total_value,
-            weight_ct,
-          });
-        });
-        return next_meta;
+        return { weight_ct: normalized_value };
       }
 
-      this.getPriceFieldPairs().forEach(({ total_key, per_carat_key }) => {
-        if (field_key === total_key) {
-          next_meta[per_carat_key] = this.computePerCarat({
-            total_value: this.toNumberOrDefault(normalized_value),
-            weight_ct,
-          });
-        }
-        if (field_key === per_carat_key) {
-          next_meta[total_key] = this.computeTotal({
+      if (this.isVirtualPerCaratField(field_key)) {
+        const pair = this.getPricingPairByFieldKey(field_key);
+        const weight_ct = this.toNumberOrDefault(current_gem.weight_ct);
+        return {
+          [pair.total_key]: this.computeTotal({
             per_carat_value: this.toNumberOrDefault(normalized_value),
             weight_ct,
-          });
-        }
-      });
+          }),
+        };
+      }
+
+      const next_meta = { [field_key]: normalized_value };
+      if (!this.isPricingField(field_key)) return next_meta;
 
       return next_meta;
     },
@@ -363,14 +354,31 @@ export default {
     },
     formatHistoryValue(value) {
       if (value === null || value === undefined || value === "") return "—";
+      if (this.field.pricing_total_key) {
+        const weight_ct = this.toNumberOrDefault(this.gem?.weight_ct);
+        const per_carat = this.computePerCarat({
+          total_value: this.toNumberOrDefault(value),
+          weight_ct,
+        });
+        return String(per_carat);
+      }
       return String(value);
     },
     copyHistoryValue(entry) {
       if (this.field.readonly) return;
-      this.edit_value =
+      const raw =
         entry && Object.prototype.hasOwnProperty.call(entry, "value")
           ? entry.value
           : "";
+      if (this.field.pricing_total_key) {
+        const weight_ct = this.toNumberOrDefault(this.gem?.weight_ct);
+        this.edit_value = this.computePerCarat({
+          total_value: this.toNumberOrDefault(raw),
+          weight_ct,
+        });
+        return;
+      }
+      this.edit_value = raw;
     },
     formatDate(iso_string) {
       if (!iso_string) return "";
@@ -387,8 +395,14 @@ export default {
       const field_to_i18n = {
         base_price_pcb: "sg_base_price_pcb",
         purchased_price_pa: "sg_purchased_price_pa",
+        pv_selling_price: "sg_pv_selling_price",
+        pc_to: "sg_pc_to",
+        pf_invoiced_price: "sg_pf_invoiced_price",
         price_per_carat_pcb: "sg_price_per_carat_pcb",
         price_per_carat_pa: "sg_price_per_carat_pa",
+        price_per_carat_pv: "sg_price_per_carat_pv",
+        price_per_carat_pc: "sg_price_per_carat_pc",
+        price_per_carat_pf: "sg_price_per_carat_pf",
         weight_ct: "sg_weight_ct",
       };
       const i18n_key = field_to_i18n[field_key];

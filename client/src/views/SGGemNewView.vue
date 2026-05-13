@@ -130,8 +130,6 @@ const v1_new_gem_fields_defaults = {
   weight_ct: 0,
   base_price_pcb: 0,
   purchased_price_pa: 0,
-  price_per_carat_pcb: 0,
-  price_per_carat_pa: 0,
   pv_selling_price: 0,
   pvd_asking_price: 0,
   pc_to: 0,
@@ -388,6 +386,7 @@ export default {
       return Object.values(this.gem_field_configs)
         .filter((field_config) => {
           if (!field_config || typeof field_config !== "object") return false;
+          if (field_config.pricing_total_key) return false;
           if (field_config.key === "status") return false;
           if (field_config.readonly) return false;
           if (target_type === "number") return field_config.type === "number";

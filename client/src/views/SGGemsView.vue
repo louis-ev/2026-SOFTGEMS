@@ -121,8 +121,6 @@ const placeholder_gem_fields_defaults = {
   weight_ct: 0,
   base_price_pcb: 0,
   purchased_price_pa: 0,
-  price_per_carat_pcb: 0,
-  price_per_carat_pa: 0,
   pv_selling_price: 0,
   pvd_asking_price: 0,
   pc_to: 0,
@@ -211,9 +209,12 @@ export default {
         "price_per_carat_pcb",
         "price_per_carat_pa",
         "pv_selling_price",
+        "price_per_carat_pv",
         "pvd_asking_price",
         "pc_to",
+        "price_per_carat_pc",
         "pf_invoiced_price",
+        "price_per_carat_pf",
         "price_per_carat_all",
       ];
       const metadata_key_set = new Set();
@@ -544,9 +545,13 @@ export default {
     openCellEditModal(gem, metadata_key) {
       const field_config = this.getFieldConfig(metadata_key, gem);
       if (!field_config || field_config.readonly) return;
-      const raw_value = gem?.[metadata_key];
+      const raw_value = this.gemFieldDisplayValue(gem, field_config);
       this.editing_current_value =
-        raw_value !== undefined && raw_value !== null ? raw_value : "";
+        raw_value !== undefined && raw_value !== null && raw_value !== ""
+          ? raw_value
+          : raw_value === 0
+          ? 0
+          : "";
       this.editing_gem = gem;
       this.editing_field = field_config;
     },
@@ -568,26 +573,15 @@ export default {
     },
     ensureGemPricingFields(gem) {
       if (!gem || typeof gem !== "object") return;
-      const weight_ct = this.toNumberOrDefault(gem.weight_ct);
-      const legacy_per_carat = this.toNumberOrNull(gem.price_per_carat_pa_pcb);
-      const base_price_pcb = this.toNumberOrDefault(gem.base_price_pcb);
-      const purchased_price_pa = this.toNumberOrDefault(gem.purchased_price_pa);
-
-      const price_per_carat_pcb = this.resolvePerCaratValue({
-        explicit_value: gem.price_per_carat_pcb,
-        legacy_value: legacy_per_carat,
-        total_value: base_price_pcb,
-        weight_ct,
-      });
-      const price_per_carat_pa = this.resolvePerCaratValue({
-        explicit_value: gem.price_per_carat_pa,
-        legacy_value: legacy_per_carat,
-        total_value: purchased_price_pa,
-        weight_ct,
-      });
-
-      this.$set(gem, "price_per_carat_pcb", price_per_carat_pcb);
-      this.$set(gem, "price_per_carat_pa", price_per_carat_pa);
+      this.getPriceFieldPairs().forEach(
+        ({ total_key, virtual_per_carat_key }) => {
+          this.$set(
+            gem,
+            virtual_per_carat_key,
+            this.computeDisplayedPerCaratForGem(gem, total_key)
+          );
+        }
+      );
     },
     getMetadataIcon(metadata_key) {
       const metadata_to_icon = {
@@ -612,9 +606,12 @@ export default {
         price_per_carat_pcb: "diagram2",
         price_per_carat_pa: "diagram2",
         pv_selling_price: "tag",
+        price_per_carat_pv: "diagram2",
         pvd_asking_price: "diagram2",
         pc_to: "file-earmark-text",
+        price_per_carat_pc: "diagram2",
         pf_invoiced_price: "file-earmark-text",
+        price_per_carat_pf: "diagram2",
         price_per_carat_all: "arrow-up",
       };
       return metadata_to_icon[metadata_key] || null;
@@ -643,9 +640,12 @@ export default {
         price_per_carat_pcb: "sg_price_per_carat_pcb",
         price_per_carat_pa: "sg_price_per_carat_pa",
         pv_selling_price: "sg_pv_selling_price",
+        price_per_carat_pv: "sg_price_per_carat_pv",
         pvd_asking_price: "sg_pvd_asking_price",
         pc_to: "sg_pc_to",
+        price_per_carat_pc: "sg_price_per_carat_pc",
         pf_invoiced_price: "sg_pf_invoiced_price",
+        price_per_carat_pf: "sg_price_per_carat_pf",
         price_per_carat_all: "sg_price_per_carat_all",
         $path: "sg_path",
         $date_created: "sg_created",

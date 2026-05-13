@@ -1,11 +1,24 @@
+/** Persisted totals only; virtual_per_carat_key is UI / table display, not stored. */
 const price_field_pairs = [
   {
     total_key: "base_price_pcb",
-    per_carat_key: "price_per_carat_pcb",
+    virtual_per_carat_key: "price_per_carat_pcb",
   },
   {
     total_key: "purchased_price_pa",
-    per_carat_key: "price_per_carat_pa",
+    virtual_per_carat_key: "price_per_carat_pa",
+  },
+  {
+    total_key: "pv_selling_price",
+    virtual_per_carat_key: "price_per_carat_pv",
+  },
+  {
+    total_key: "pc_to",
+    virtual_per_carat_key: "price_per_carat_pc",
+  },
+  {
+    total_key: "pf_invoiced_price",
+    virtual_per_carat_key: "price_per_carat_pf",
   },
 ];
 
@@ -16,9 +29,56 @@ export default {
     },
     isPricingField(field_key) {
       return this.getPriceFieldPairs().some(
-        ({ total_key, per_carat_key }) =>
-          field_key === total_key || field_key === per_carat_key
+        ({ total_key, virtual_per_carat_key }) =>
+          field_key === total_key || field_key === virtual_per_carat_key
       );
+    },
+    getPricingPairByFieldKey(field_key) {
+      return (
+        this.getPriceFieldPairs().find(
+          ({ total_key, virtual_per_carat_key }) =>
+            field_key === total_key || field_key === virtual_per_carat_key
+        ) || null
+      );
+    },
+    isVirtualPerCaratField(field_key) {
+      const pair = this.getPricingPairByFieldKey(field_key);
+      return Boolean(pair && field_key === pair.virtual_per_carat_key);
+    },
+    getVirtualPerCaratKeyForTotal(total_key) {
+      const pair = this.getPriceFieldPairs().find(
+        (p) => p.total_key === total_key
+      );
+      return pair ? pair.virtual_per_carat_key : null;
+    },
+    computeDisplayedPerCaratForGem(gem, total_key) {
+      const weight_ct = this.toNumberOrDefault(gem?.weight_ct);
+      const total_value = this.toNumberOrDefault(gem?.[total_key]);
+      return this.computePerCarat({ total_value, weight_ct });
+    },
+    gemFieldDisplayValue(gem, field_config) {
+      if (!gem || !field_config) return "";
+      if (field_config.pricing_total_key) {
+        return this.computeDisplayedPerCaratForGem(
+          gem,
+          field_config.pricing_total_key
+        );
+      }
+      const raw = gem[field_config.key];
+      if (raw === undefined || raw === null) return "";
+      return raw;
+    },
+    expandPricingFlashKeys(field_keys) {
+      if (!Array.isArray(field_keys)) return [];
+      const expanded = new Set(field_keys.filter(Boolean));
+      const includes_weight = expanded.has("weight_ct");
+      this.getPriceFieldPairs().forEach(
+        ({ total_key, virtual_per_carat_key }) => {
+          if (expanded.has(total_key) || includes_weight)
+            expanded.add(virtual_per_carat_key);
+        }
+      );
+      return Array.from(expanded);
     },
     toNumberOrNull(value) {
       if (value === null || value === undefined || value === "") return null;
@@ -41,17 +101,6 @@ export default {
       if (!Number.isFinite(per_carat_value)) return 0;
       if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
       return Number((per_carat_value * weight_ct).toFixed(2));
-    },
-    resolvePerCaratValue({
-      explicit_value,
-      legacy_value,
-      total_value,
-      weight_ct,
-    }) {
-      const explicit_number = this.toNumberOrNull(explicit_value);
-      if (explicit_number !== null) return explicit_number;
-      if (legacy_value !== null) return legacy_value;
-      return this.computePerCarat({ total_value, weight_ct });
     },
   },
 };

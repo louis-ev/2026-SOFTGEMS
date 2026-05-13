@@ -130,20 +130,49 @@ Multiplicity rule: can be multiple reports for one stone.
 | `cut_cost`               | manual             |                                                                                   |
 | `certification_cost`     | automatic          | From reports category.                                                            |
 | `treatment_cost`         | manual             | Hidden + purple in source. TODO for later (not V1).                               |
-| `base_price_pcb`         | manual / automatic | If full price entered, auto-calc price per carat (`total / weight`).              |
-| `purchased_price_pa`     | manual / automatic | If full price entered, auto-calc price per carat (`total / weight`).              |
-| `price_per_carat_pa_pcb` | manual / automatic | If price per carat entered, auto-calc full price (`price_per_carat x weight`).    |
+| `base_price_pcb`         | manual             | **Total price only** (PCb). Per-carat (PCb/Ct) is **derived in the app** from `weight_ct`; see [Pricing logic](#pricing-pcb-pa-pv-pvd-pc-pf). |
+| `purchased_price_pa`     | manual             | **Total price only** (PA). Per-carat (PA/Ct) is **derived**; see [Pricing logic](#pricing-pcb-pa-pv-pvd-pc-pf). |
 | `total_cost`             | derived            | Purchase price (`T. Buy Px`). Hidden + purple in source. TODO for later (not V1). |
 
-## Pricing
+## Pricing (PCb, PA, PV, PVD, PC, PF)
 
-| Field                 | Fill Method        | Notes                                                                |
-| --------------------- | ------------------ | -------------------------------------------------------------------- |
-| `pv_selling_price`    | manual / automatic | If full price entered, auto-calc price per carat (`total / weight`). |
-| `pvd_asking_price`    | automatic          | `PV + 15%`.                                                          |
-| `pc_to`               | manual / automatic | `prix confie a`.                                                     |
-| `pf_invoiced_price`   | manual / automatic | `prix facture`.                                                      |
-| `price_per_carat_all` | manual / automatic | Applicable to all pricing fields above.                              |
+This section documents **how pricing works in the SoftGems client** (single source of truth per line = **total price** stored in gem meta; **per-carat** values are not persisted for these pairs).
+
+### Rules
+
+- **Persisted**: for each pair line (see table below), only the **total** is stored in meta. Matching “/ Ct” values are **virtual** in the app and are not written as separate price fields for those lines.
+- **Displayed “/ Ct”**: computed when `weight_ct` is valid and > 0: **`per_carat = total / weight_ct`**, rounded for display/calculations as implemented in the client (see `computePerCarat` / `computeTotal` in [`client/src/mixins/GemPricing.js`](client/src/mixins/GemPricing.js); currently 2 decimal places via `toFixed(2)`).
+- **Editing the total**: saves the total; the UI refreshes the derived per-carat.
+- **Editing “/ Ct”** (virtual field): saves **`total = per_carat × weight_ct`** (same rounding rules as code). **`weight_ct` is never changed** by price edits.
+- **No or zero weight**: the intended UX is that **per-carat entry is disabled** (or shows inactive) until a valid carat weight is set; totals remain editable regardless.
+- **Changing `weight_ct`**: totals stay the same; displayed per-carat values update from the new weight.
+
+### Pairs (notation → stored field → virtual “/ Ct” UI key)
+
+| Line | Stored total field (`settings_base` / meta) | Virtual per-carat key (UI / table only, **not** in schema as a persisted price) |
+| ---- | --------------------------------------------- | --------------------------------------------------------------------------------- |
+| PCb  | `base_price_pcb`                              | `price_per_carat_pcb`                                                             |
+| PA   | `purchased_price_pa`                          | `price_per_carat_pa`                                                              |
+| PV   | `pv_selling_price`                            | `price_per_carat_pv`                                                              |
+| PC   | `pc_to`                                       | `price_per_carat_pc`                                                              |
+| PF   | `pf_invoiced_price`                           | `price_per_carat_pf`                                                              |
+
+### PVD (asking price)
+
+- **PVD** and **PVD/Ct** in the open gem view are **read-only**: they are **derived from PV** (e.g. `PV × 1.15`) for display.
+- **`price_per_carat_pvd`**: same derivation, expressed per carat (display-only).
+
+### Other pricing-related fields
+
+| Field                 | Fill Method | Notes                                                                 |
+| --------------------- | ----------- | --------------------------------------------------------------------- |
+| `price_per_carat_all` | manual      | **Persisted** field; separate from the PCb/PA/PV/PC/PF pair model above (not a simple duplicate of one line’s /Ct). |
+
+### Implementation pointers
+
+- Pair definitions: [`client/src/mixins/GemPricing.js`](client/src/mixins/GemPricing.js)
+- Field labels, virtual `pricing_total_key`: [`client/src/components/gems/gem_field_configs.js`](client/src/components/gems/gem_field_configs.js)
+- Persisted gem fields: `settings_base.json` → `schema.$folders.gems.fields`
 
 ## Selection-Driven Entry Flows
 

@@ -202,7 +202,7 @@
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_pcb')"
             icon="diagram2"
-            :value="gem.price_per_carat_pcb"
+            :value="displayGemFieldValue('price_per_carat_pcb')"
             :is_flashing="isFieldFlashing('price_per_carat_pcb')"
             @click="openEditModal(field_configs.price_per_carat_pcb)"
           />
@@ -216,7 +216,7 @@
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_pa')"
             icon="diagram2"
-            :value="gem.price_per_carat_pa"
+            :value="displayGemFieldValue('price_per_carat_pa')"
             :is_flashing="isFieldFlashing('price_per_carat_pa')"
             @click="openEditModal(field_configs.price_per_carat_pa)"
           />
@@ -228,9 +228,22 @@
             @click="openEditModal(field_configs.pv_selling_price)"
           />
           <SGGemFieldCard
+            :label="$t('sg_price_per_carat_pv')"
+            icon="diagram2"
+            :value="displayGemFieldValue('price_per_carat_pv')"
+            :is_flashing="isFieldFlashing('price_per_carat_pv')"
+            @click="openEditModal(field_configs.price_per_carat_pv)"
+          />
+          <SGGemFieldCard
             :label="$t('sg_pvd_asking_price')"
             icon="diagram2"
             :value="pvd_asking_price_computed"
+            :readonly="true"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_price_per_carat_pvd')"
+            icon="diagram2"
+            :value="pvd_per_carat_computed"
             :readonly="true"
           />
           <SGGemFieldCard
@@ -241,11 +254,25 @@
             @click="openEditModal(field_configs.pc_to)"
           />
           <SGGemFieldCard
+            :label="$t('sg_price_per_carat_pc')"
+            icon="diagram2"
+            :value="displayGemFieldValue('price_per_carat_pc')"
+            :is_flashing="isFieldFlashing('price_per_carat_pc')"
+            @click="openEditModal(field_configs.price_per_carat_pc)"
+          />
+          <SGGemFieldCard
             :label="$t('sg_pf_invoiced_price')"
             icon="file-earmark-text"
             :value="gem.pf_invoiced_price"
             :is_flashing="isFieldFlashing('pf_invoiced_price')"
             @click="openEditModal(field_configs.pf_invoiced_price)"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_price_per_carat_pf')"
+            icon="diagram2"
+            :value="displayGemFieldValue('price_per_carat_pf')"
+            :is_flashing="isFieldFlashing('price_per_carat_pf')"
+            @click="openEditModal(field_configs.price_per_carat_pf)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_all')"
@@ -322,9 +349,11 @@
 
 <script>
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
+import GemPricing from "@/mixins/GemPricing";
 
 export default {
   name: "SGGemOpenView",
+  mixins: [GemPricing],
   components: {
     SGGemFilesList: () => import("@/components/gems/SGGemFilesList.vue"),
     SGGemEditFieldModal: () =>
@@ -378,6 +407,12 @@ export default {
       const pv = Number(this.gem?.pv_selling_price);
       if (!Number.isFinite(pv)) return 0;
       return Number((pv * 1.15).toFixed(2));
+    },
+    pvd_per_carat_computed() {
+      return this.computePerCarat({
+        total_value: this.toNumberOrDefault(this.pvd_asking_price_computed),
+        weight_ct: this.toNumberOrDefault(this.gem?.weight_ct),
+      });
     },
     field_configs() {
       return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
@@ -484,10 +519,18 @@ export default {
       return parts[parts.length - 1] || author_path;
     },
     openEditModal(field_config) {
-      const raw_value = this.gem?.[field_config.key];
+      const raw_value = this.gemFieldDisplayValue(this.gem, field_config);
       this.editing_current_value =
-        raw_value !== undefined && raw_value !== null ? raw_value : "";
+        raw_value !== undefined && raw_value !== null && raw_value !== ""
+          ? raw_value
+          : raw_value === 0
+          ? 0
+          : "";
       this.editing_field = field_config;
+    },
+    displayGemFieldValue(field_key) {
+      const field_config = this.field_configs[field_key];
+      return this.gemFieldDisplayValue(this.gem, field_config);
     },
     onFieldSaved({ key, value, changes }) {
       if (!this.gem) return;
@@ -500,10 +543,31 @@ export default {
         : key
         ? { [key]: value }
         : {};
-      this.flashFields(Object.keys(next_changes));
+      const flash_keys = this.expandPricingFlashKeys(
+        Object.keys(next_changes)
+      );
+      this.flashFields(flash_keys);
       Object.keys(next_changes).forEach((change_key) => {
         this.$set(this.gem, change_key, next_changes[change_key]);
       });
+      const should_refresh_all_per_carat = Object.prototype.hasOwnProperty.call(
+        next_changes,
+        "weight_ct"
+      );
+      this.getPriceFieldPairs().forEach(
+        ({ total_key, virtual_per_carat_key }) => {
+          if (
+            should_refresh_all_per_carat ||
+            Object.prototype.hasOwnProperty.call(next_changes, total_key)
+          ) {
+            this.$set(
+              this.gem,
+              virtual_per_carat_key,
+              this.computeDisplayedPerCaratForGem(this.gem, total_key)
+            );
+          }
+        }
+      );
     },
     flashFields(field_keys) {
       if (!Array.isArray(field_keys) || field_keys.length === 0) return;

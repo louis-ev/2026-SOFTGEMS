@@ -171,6 +171,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_type: "number",
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
+      pricing_total_key: "base_price_pcb",
     },
     price_per_carat_pa: {
       key: "price_per_carat_pa",
@@ -180,6 +181,7 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_type: "number",
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
+      pricing_total_key: "purchased_price_pa",
     },
     pv_selling_price: {
       key: "pv_selling_price",
@@ -189,6 +191,16 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_type: "number",
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
+    },
+    price_per_carat_pv: {
+      key: "price_per_carat_pv",
+      label: t("sg_price_per_carat_pv"),
+      icon: "diagram2",
+      type: "number",
+      input_type: "number",
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
+      pricing_total_key: "pv_selling_price",
     },
     pvd_asking_price: {
       key: "pvd_asking_price",
@@ -206,6 +218,16 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_step: 1,
       instructions: t("sg_format_integer"),
     },
+    price_per_carat_pc: {
+      key: "price_per_carat_pc",
+      label: t("sg_price_per_carat_pc"),
+      icon: "diagram2",
+      type: "number",
+      input_type: "number",
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
+      pricing_total_key: "pc_to",
+    },
     pf_invoiced_price: {
       key: "pf_invoiced_price",
       label: t("sg_pf_invoiced_price"),
@@ -214,6 +236,16 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_type: "number",
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
+    },
+    price_per_carat_pf: {
+      key: "price_per_carat_pf",
+      label: t("sg_price_per_carat_pf"),
+      icon: "diagram2",
+      type: "number",
+      input_type: "number",
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
+      pricing_total_key: "pf_invoiced_price",
     },
     price_per_carat_all: {
       key: "price_per_carat_all",
