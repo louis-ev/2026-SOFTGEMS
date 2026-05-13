@@ -148,8 +148,7 @@ export default function () {
         const normalized_room = this.normalizeRoomPath(room);
         if (!normalized_room) return;
 
-        const is_first_subscription =
-          !this.rooms_joined.includes(normalized_room);
+        const is_first_subscription = !this.rooms_joined.includes(normalized_room);
         // We always track locally first so reconnect logic can rejoin later.
         this.rooms_joined.push(normalized_room);
         if (is_first_subscription) this.apiJoinRoom({ room: normalized_room });
@@ -161,13 +160,12 @@ export default function () {
         const index_to_remove = this.rooms_joined.findIndex(
           (rj) => rj === normalized_room
         );
-        if (index_to_remove !== -1)
-          this.rooms_joined.splice(index_to_remove, 1);
+
+        if (index_to_remove !== -1) this.rooms_joined.splice(index_to_remove, 1);
         // if room isnt tracked anymore
         if (!this.rooms_joined.includes(normalized_room)) {
           // console.log("LEAVE – room isnt tracked anymore, delete store", room);
-          if (this.socket)
-            this.socket.emit("leaveRoom", { room: normalized_room });
+          if (this.socket) this.socket.emit("leaveRoom", { room: normalized_room });
           this.$delete(this.store, normalized_room);
         } else {
           // console.log("LEAVE – room still tracked", room);
@@ -408,6 +406,7 @@ export default function () {
       },
       fileUpdated({ path_to_folder, path_to_meta, changed_data }) {
         const folder = this.store[path_to_folder];
+        if (!folder || !folder.$files) return;
         const file = folder.$files.find((file) => file.$path === path_to_meta);
         if (file)
           Object.entries(changed_data).map(([key, value]) => {
@@ -864,6 +863,19 @@ export default function () {
           .catch((err) => {
             throw this.processError(err);
           });
+        const { changed_data } = response.data || {};
+        if (changed_data && Object.keys(changed_data).length > 0) {
+          const path_to_meta = path.split("?")[0];
+          const last_slash_index = path_to_meta.lastIndexOf("/");
+          if (last_slash_index > 0) {
+            const path_to_folder = path_to_meta.slice(0, last_slash_index);
+            this.fileUpdated({
+              path_to_folder,
+              path_to_meta,
+              changed_data,
+            });
+          }
+        }
         this.$eventHub.$emit("hooks.updateMeta", { path });
         return response.data;
       },
