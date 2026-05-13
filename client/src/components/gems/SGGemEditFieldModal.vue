@@ -55,6 +55,7 @@
               v-for="(entry, index) in field_history"
               :key="index"
               class="_historyEntry"
+              @click="copyHistoryValue(entry)"
             >
               <span class="_historyValue">
                 {{ formatHistoryValue(entry.value) }}
@@ -94,20 +95,11 @@
 
 <script>
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
-
-const price_field_pairs = [
-  {
-    total_key: "base_price_pcb",
-    per_carat_key: "price_per_carat_pcb",
-  },
-  {
-    total_key: "purchased_price_pa",
-    per_carat_key: "price_per_carat_pa",
-  },
-];
+import GemPricing from "@/mixins/GemPricing";
 
 export default {
   name: "SGGemEditFieldModal",
+  mixins: [GemPricing],
   components: {
     SGSelectField,
   },
@@ -255,7 +247,7 @@ export default {
       );
 
       if (field_key === "weight_ct") {
-        price_field_pairs.forEach(({ total_key, per_carat_key }) => {
+        this.getPriceFieldPairs().forEach(({ total_key, per_carat_key }) => {
           const total_value = this.toNumberOrDefault(current_gem[total_key]);
           next_meta[per_carat_key] = this.computePerCarat({
             total_value,
@@ -265,7 +257,7 @@ export default {
         return next_meta;
       }
 
-      price_field_pairs.forEach(({ total_key, per_carat_key }) => {
+      this.getPriceFieldPairs().forEach(({ total_key, per_carat_key }) => {
         if (field_key === total_key) {
           next_meta[per_carat_key] = this.computePerCarat({
             total_value: this.toNumberOrDefault(normalized_value),
@@ -282,22 +274,6 @@ export default {
 
       return next_meta;
     },
-    isPricingField(field_key) {
-      return price_field_pairs.some(
-        ({ total_key, per_carat_key }) =>
-          field_key === total_key || field_key === per_carat_key
-      );
-    },
-    computePerCarat({ total_value, weight_ct }) {
-      if (!Number.isFinite(total_value)) return 0;
-      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
-      return Number((total_value / weight_ct).toFixed(2));
-    },
-    computeTotal({ per_carat_value, weight_ct }) {
-      if (!Number.isFinite(per_carat_value)) return 0;
-      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
-      return Number((per_carat_value * weight_ct).toFixed(2));
-    },
     normalizeFieldValue(raw_value) {
       if (this.field.type !== "number") return raw_value;
       if (raw_value === "" || raw_value === null || raw_value === undefined)
@@ -307,14 +283,6 @@ export default {
       const number_value = Number(normalized_value);
       if (Number.isFinite(number_value)) return number_value;
       return raw_value;
-    },
-    toNumberOrDefault(value, fallback_value = 0) {
-      const normalized_value = String(value ?? "")
-        .trim()
-        .replace(",", ".");
-      const number_value = Number(normalized_value);
-      if (Number.isFinite(number_value)) return number_value;
-      return fallback_value;
     },
     validateFieldValue(raw_value) {
       if (this.field.type !== "number")
@@ -368,6 +336,13 @@ export default {
     formatHistoryValue(value) {
       if (value === null || value === undefined || value === "") return "—";
       return String(value);
+    },
+    copyHistoryValue(entry) {
+      if (this.field.readonly) return;
+      this.edit_value =
+        entry && Object.prototype.hasOwnProperty.call(entry, "value")
+          ? entry.value
+          : "";
     },
     formatDate(iso_string) {
       if (!iso_string) return "";
@@ -466,6 +441,12 @@ export default {
   background: var(--c-blanc);
   border-radius: 4px;
   border-left: 2px solid var(--c-gris);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--c-gris_clair);
+  }
 }
 
 ._historyValue {

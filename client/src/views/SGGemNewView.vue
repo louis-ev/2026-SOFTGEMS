@@ -78,6 +78,9 @@
         <p v-if="invalid_field_keys.length > 0" class="_formError">
           {{ invalid_fields_summary }}
         </p>
+        <button type="button" class="u-button" @click="toggleDebugMeta">
+          debug
+        </button>
         <button type="button" class="u-button" @click="goBack">
           {{ $t("sg_cancel") }}
         </button>
@@ -90,6 +93,11 @@
             is_creating ? $t("sg_create_gem_in_progress") : $t("sg_create_gem")
           }}
         </button>
+      </div>
+
+      <div v-if="show_debug_meta" class="_debugPanel">
+        <p class="_debugTitle">Current creation meta</p>
+        <pre class="_debugPre">{{ debug_creation_meta_json }}</pre>
       </div>
     </form>
   </section>
@@ -147,7 +155,9 @@ export default {
       gems_path: "gems",
       new_gem_internal_name: "",
       new_gem_fields: { ...v1_new_gem_fields_defaults },
+      touched_field_keys: {},
       is_creating: false,
+      show_debug_meta: false,
     };
   },
   computed: {
@@ -229,6 +239,18 @@ export default {
     is_create_disabled() {
       return this.is_creating || this.invalid_field_keys.length > 0;
     },
+    debug_creation_meta() {
+      return {
+        $status: "public",
+        $admins: "everyone",
+        $contributors: "everyone",
+        ...this.getFilledGemFields(this.new_gem_fields),
+        ...this.getCreationMeta(),
+      };
+    },
+    debug_creation_meta_json() {
+      return this.formatDebugMeta(this.debug_creation_meta);
+    },
   },
   methods: {
     isFieldDisabled(field_key) {
@@ -237,9 +259,13 @@ export default {
     setFieldValue(field_key, value) {
       if (this.isFieldDisabled(field_key)) return;
       this.$set(this.new_gem_fields, field_key, value);
+      this.$set(this.touched_field_keys, field_key, true);
     },
     goBack() {
       this.$router.push("/gems");
+    },
+    toggleDebugMeta() {
+      this.show_debug_meta = !this.show_debug_meta;
     },
     getGemIdFromPath(gem_path) {
       const cleaned_path = this.cleanString(gem_path);
@@ -250,10 +276,8 @@ export default {
     async createGem() {
       if (this.is_creating || this.invalid_field_keys.length > 0) return;
 
-      const normalized_gem_fields = this.normalizeGemFields(
-        this.new_gem_fields
-      );
-      const paired_gem_id = normalized_gem_fields.paired_gem;
+      const filled_gem_fields = this.getFilledGemFields(this.new_gem_fields);
+      const paired_gem_id = filled_gem_fields.paired_gem;
       const creation_meta = this.getCreationMeta();
 
       this.is_creating = true;
@@ -264,7 +288,7 @@ export default {
             $status: "public",
             $admins: "everyone",
             $contributors: "everyone",
-            ...normalized_gem_fields,
+            ...filled_gem_fields,
             ...creation_meta,
           },
         });
@@ -311,7 +335,6 @@ export default {
     },
     normalizeGemFields(raw_fields) {
       const normalized_fields = {
-        ...v1_new_gem_fields_defaults,
         ...raw_fields,
       };
 
@@ -333,21 +356,33 @@ export default {
         );
       });
 
-      const weight_ct = this.toNumberOrDefault(normalized_fields.weight_ct, 0);
-      normalized_fields.price_per_carat_pcb = this.computePerCarat({
-        total_value: normalized_fields.base_price_pcb,
-        weight_ct,
-      });
-      normalized_fields.price_per_carat_pa = this.computePerCarat({
-        total_value: normalized_fields.purchased_price_pa,
-        weight_ct,
-      });
-
-      normalized_fields.pvd_asking_price = Number(
-        (normalized_fields.pv_selling_price * 1.15).toFixed(2)
-      );
-
       return normalized_fields;
+    },
+    getFilledGemFields(raw_fields) {
+      const normalized_fields = this.normalizeGemFields(raw_fields);
+      const filled_fields = {};
+
+      Object.keys(this.touched_field_keys).forEach((field_key) => {
+        if (!this.touched_field_keys[field_key]) return;
+        if (!Object.prototype.hasOwnProperty.call(normalized_fields, field_key))
+          return;
+
+        const field_value = normalized_fields[field_key];
+        if (!this.shouldSendFieldValue(field_key, field_value)) return;
+        filled_fields[field_key] = field_value;
+      });
+
+      return filled_fields;
+    },
+    shouldSendFieldValue(field_key, field_value) {
+      const field_config = this.gem_field_configs[field_key];
+      if (!field_config) return false;
+
+      if (field_config.type === "number") {
+        return Number.isFinite(field_value);
+      }
+
+      return this.cleanString(field_value) !== "";
     },
     getFieldKeysByType(target_type) {
       return Object.values(this.gem_field_configs)
@@ -433,18 +468,12 @@ export default {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
-    toNumberOrDefault(value, fallback_value = 0) {
-      const normalized_value = String(value ?? "")
-        .trim()
-        .replace(",", ".");
-      const as_number = Number(normalized_value);
-      if (Number.isFinite(as_number)) return as_number;
-      return fallback_value;
-    },
-    computePerCarat({ total_value, weight_ct }) {
-      if (!Number.isFinite(total_value)) return 0;
-      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
-      return Number((total_value / weight_ct).toFixed(2));
+    formatDebugMeta(meta) {
+      try {
+        return JSON.stringify(meta, null, 2);
+      } catch {
+        return "{}";
+      }
     },
   },
 };
@@ -542,5 +571,26 @@ export default {
 
 ._formError {
   margin-right: auto;
+}
+
+._debugPanel {
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 8px;
+  background: var(--c-bodybg);
+  padding: calc(var(--spacing) / 2);
+}
+
+._debugTitle {
+  margin: 0 0 calc(var(--spacing) / 4) 0;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-gris_fonce);
+}
+
+._debugPre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--sl-font-size-x-small);
+  font-family: var(--sl-font-mono);
 }
 </style>

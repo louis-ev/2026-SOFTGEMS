@@ -256,6 +256,18 @@
           />
         </div>
       </section>
+
+      <section class="_formSection">
+        <div class="_debugActions">
+          <button type="button" class="u-button" @click="toggleDebugMeta">
+            debug
+          </button>
+        </div>
+        <div v-if="show_debug_meta" class="_debugPanel">
+          <p class="_debugTitle">Current gem meta</p>
+          <pre class="_debugPre">{{ debug_gem_meta_json }}</pre>
+        </div>
+      </section>
     </div>
 
     <SGGemEditFieldModal
@@ -340,6 +352,7 @@ export default {
       gem_history_entries: [],
       flashing_fields: {},
       flash_timeouts: {},
+      show_debug_meta: false,
     };
   },
   computed: {
@@ -369,6 +382,9 @@ export default {
     field_configs() {
       return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
     },
+    debug_gem_meta_json() {
+      return this.formatDebugMeta(this.gem || {});
+    },
   },
   async created() {
     await this.fetchGem();
@@ -390,12 +406,14 @@ export default {
       }
       this.$router.push("/");
     },
+    toggleDebugMeta() {
+      this.show_debug_meta = !this.show_debug_meta;
+    },
     async fetchGem() {
       this.is_loading = true;
       this.fetch_error = "";
       try {
         this.gem = await this.$api.getFolder({ path: this.gem_path });
-        this.ensureGemPricingFields(this.gem);
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_gem");
       } finally {
@@ -473,13 +491,19 @@ export default {
     },
     onFieldSaved({ key, value, changes }) {
       if (!this.gem) return;
-      const next_changes =
-        changes && typeof changes === "object" ? changes : { [key]: value };
+      const has_changed_keys =
+        changes &&
+        typeof changes === "object" &&
+        Object.keys(changes).length > 0;
+      const next_changes = has_changed_keys
+        ? changes
+        : key
+          ? { [key]: value }
+          : {};
       this.flashFields(Object.keys(next_changes));
       Object.keys(next_changes).forEach((change_key) => {
         this.$set(this.gem, change_key, next_changes[change_key]);
       });
-      this.ensureGemPricingFields(this.gem);
     },
     flashFields(field_keys) {
       if (!Array.isArray(field_keys) || field_keys.length === 0) return;
@@ -498,57 +522,6 @@ export default {
     isFieldFlashing(field_key) {
       return Boolean(this.flashing_fields[field_key]);
     },
-    ensureGemPricingFields(gem) {
-      if (!gem || typeof gem !== "object") return;
-      const weight_ct = this.toNumberOrDefault(gem.weight_ct);
-      const legacy_per_carat = this.toNumberOrNull(gem.price_per_carat_pa_pcb);
-      const base_price_pcb = this.toNumberOrDefault(gem.base_price_pcb);
-      const purchased_price_pa = this.toNumberOrDefault(gem.purchased_price_pa);
-
-      const price_per_carat_pcb = this.resolvePerCaratValue({
-        explicit_value: gem.price_per_carat_pcb,
-        legacy_value: legacy_per_carat,
-        total_value: base_price_pcb,
-        weight_ct,
-      });
-      const price_per_carat_pa = this.resolvePerCaratValue({
-        explicit_value: gem.price_per_carat_pa,
-        legacy_value: legacy_per_carat,
-        total_value: purchased_price_pa,
-        weight_ct,
-      });
-
-      this.$set(gem, "price_per_carat_pcb", price_per_carat_pcb);
-      this.$set(gem, "price_per_carat_pa", price_per_carat_pa);
-    },
-    resolvePerCaratValue({
-      explicit_value,
-      legacy_value,
-      total_value,
-      weight_ct,
-    }) {
-      const explicit_number = this.toNumberOrNull(explicit_value);
-      if (explicit_number !== null) return explicit_number;
-      if (legacy_value !== null) return legacy_value;
-      return this.computePerCarat({ total_value, weight_ct });
-    },
-    computePerCarat({ total_value, weight_ct }) {
-      if (!Number.isFinite(total_value)) return 0;
-      if (!Number.isFinite(weight_ct) || weight_ct <= 0) return 0;
-      return Number((total_value / weight_ct).toFixed(2));
-    },
-    toNumberOrNull(value) {
-      if (value === null || value === undefined || value === "") return null;
-      const normalized_value = String(value).trim().replace(",", ".");
-      const number_value = Number(normalized_value);
-      if (!Number.isFinite(number_value)) return null;
-      return number_value;
-    },
-    toNumberOrDefault(value, fallback_value = 0) {
-      const number_value = this.toNumberOrNull(value);
-      if (number_value === null) return fallback_value;
-      return number_value;
-    },
     onGemRemoved() {
       this.show_remove_modal = false;
       this.$router.push("/gems");
@@ -556,6 +529,13 @@ export default {
     cleanString(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
+    },
+    formatDebugMeta(meta) {
+      try {
+        return JSON.stringify(meta, null, 2);
+      } catch {
+        return "{}";
+      }
     },
   },
 };
@@ -667,6 +647,33 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: calc(var(--spacing) / 1.75);
+}
+
+._debugActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+._debugPanel {
+  margin-top: calc(var(--spacing) / 2);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 8px;
+  background: var(--c-bodybg);
+  padding: calc(var(--spacing) / 2);
+}
+
+._debugTitle {
+  margin: 0 0 calc(var(--spacing) / 4) 0;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-gris_fonce);
+}
+
+._debugPre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--sl-font-size-x-small);
+  font-family: var(--sl-font-mono);
 }
 
 ._historyModalBody {
