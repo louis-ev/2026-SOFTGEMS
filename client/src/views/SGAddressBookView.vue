@@ -3,8 +3,11 @@
     <div class="_addressBookView--content">
       <div class="_pageHeader">
         <h1 class="_pageTitle">{{ $t("sg_address_book") }}</h1>
-        <div class="_headerActions">
-          <router-link to="/address-book/new" class="u-button u-button_bleuvert">
+        <div class="_headerActions" v-if="false">
+          <router-link
+            to="/address-book/new"
+            class="u-button u-button_bleuvert"
+          >
             <b-icon icon="plus-lg" />
             {{ $t("sg_create_contact") }}
           </router-link>
@@ -99,12 +102,10 @@ export default {
       return segments[segments.length - 1] || "";
     },
     contactLabel(contact) {
-      const raw =
-        typeof contact?.name === "string" ? contact.name.trim() : "";
+      const raw = typeof contact?.name === "string" ? contact.name.trim() : "";
       if (raw) return raw;
       return (
-        this.contactIdFromPath(contact?.$path) ||
-        this.$t("sg_contact_untitled")
+        this.contactIdFromPath(contact?.$path) || this.$t("sg_contact_untitled")
       );
     },
     contactTypeLabel(contact_type) {
@@ -130,8 +131,7 @@ export default {
         });
         this.address_book_entries = Array.isArray(fetched) ? fetched : [];
       } catch ({ code }) {
-        this.fetch_error =
-          code || this.$t("sg_could_not_load_address_book");
+        this.fetch_error = code || this.$t("sg_could_not_load_address_book");
         this.address_book_entries = [];
       } finally {
         this.is_loading = false;
