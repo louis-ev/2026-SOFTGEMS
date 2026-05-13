@@ -15,8 +15,9 @@
         />
         <label
           :for="upload_input_id"
-          class="u-button u-button_small u-button_red u-button_icon"
+          class="u-button u-button_verysmall u-button_red"
         >
+          {{ $t("sg_certificate_upload") }}
           <b-icon icon="upload" :label="$t('sg_certificate_upload')" />
         </label>
         <UploadFiles
