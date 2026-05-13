@@ -1,7 +1,10 @@
 <template>
   <div class="_sgHome">
     <h1 class="_pageTitle">Home</h1>
-    <p>Use the left sidebar to navigate to Gems, Selection, and Contacts.</p>
+    <p>
+      Use the left sidebar to navigate to Gems, Selection, and the address
+      book.
+    </p>
     <p class="_versionText">App version {{ app_version }}</p>
   </div>
 </template>

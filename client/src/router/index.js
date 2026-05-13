@@ -29,8 +29,23 @@ const routes = [
   },
   {
     path: "/contact",
-    name: "Contact",
-    component: () => import("@/views/SGContactView.vue"),
+    redirect: "/address-book",
+  },
+  {
+    path: "/contacts",
+    redirect: "/address-book",
+  },
+  {
+    path: "/address-book",
+    name: "Address book",
+    component: () => import("@/views/SGAddressBookView.vue"),
+    children: [
+      {
+        path: "new",
+        name: "Create contact",
+        component: () => import("@/views/SGContactNewView.vue"),
+      },
+    ],
   },
   {
     path: "/selections",
@@ -92,7 +107,10 @@ const router = new VueRouter({
   scrollBehavior(to, from, savedPosition) {
     const navigating_within_gems =
       to.path.startsWith("/gems") && from.path.startsWith("/gems");
-    if (navigating_within_gems) return false;
+    const navigating_within_address_book =
+      to.path.startsWith("/address-book") &&
+      from.path.startsWith("/address-book");
+    if (navigating_within_gems || navigating_within_address_book) return false;
 
     return new Promise((resolve, reject) => {
       // only if changing page and not just query or hash

@@ -28,8 +28,8 @@ export default {
           match_type: "starts_with",
         },
         {
-          to: "/contact",
-          title: "Contact",
+          to: "/address-book",
+          title: "Address book",
           icon: "people",
           match_type: "starts_with",
         },

@@ -236,6 +236,28 @@
           }
         }
       },
+      "address_book": {
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$can_be_created_by": "everyone",
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [50, 320, 640, 2000]
+          }
+        },
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true,
+            "unique": true
+          },
+          "contact_type": {
+            "type": "string"
+          }
+        }
+      },
       "authors": {
         "$can_be_created_by": "everyone",
         "$cover": {
