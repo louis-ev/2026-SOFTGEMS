@@ -226,10 +226,10 @@ export default {
           path: this.gem_path,
           new_meta: meta_patch,
         });
-        const saved_changes = this.getSavedValuesFromUpdateResponse({
-          update_response,
-          fallback_changes: meta_patch,
-        });
+        const saved_changes =
+          update_response && update_response.changed_data
+            ? update_response.changed_data
+            : {};
         this.$emit("saved", {
           changes: saved_changes,
           key: this.field.key,
@@ -243,25 +243,13 @@ export default {
         this.is_saving = false;
       }
     },
-    getSavedValuesFromUpdateResponse({ update_response, fallback_changes }) {
-      const normalized_fallback_changes = {
-        ...(fallback_changes || {}),
-      };
-      const changed_data =
-        update_response && update_response.changed_data
-          ? update_response.changed_data
-          : {};
-      return {
-        ...normalized_fallback_changes,
-        ...changed_data,
-      };
-    },
     buildMetaPatch({ field_key, normalized_value }) {
       const next_meta = { [field_key]: normalized_value };
       if (!this.isPricingField(field_key) && field_key !== "weight_ct")
         return next_meta;
 
-      const current_gem = this.gem && typeof this.gem === "object" ? this.gem : {};
+      const current_gem =
+        this.gem && typeof this.gem === "object" ? this.gem : {};
       const weight_ct = this.toNumberOrDefault(
         field_key === "weight_ct" ? normalized_value : current_gem.weight_ct
       );
