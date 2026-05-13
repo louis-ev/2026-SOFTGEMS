@@ -95,7 +95,11 @@ export default {
   },
   computed: {
     sorted_files() {
-      const files = Array.isArray(this.gem_files) ? [...this.gem_files] : [];
+      const raw = Array.isArray(this.gem_files) ? this.gem_files : [];
+      const files = raw.filter(
+        (item) =>
+          item && item.is_gem_certificate !== true,
+      );
       return files.sort(
         (a, b) =>
           +new Date(b?.$date_uploaded || 0) - +new Date(a?.$date_uploaded || 0)

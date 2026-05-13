@@ -214,6 +214,21 @@
           "fields": {
             "caption": {
               "type": "string"
+            },
+            "is_gem_certificate": {
+              "type": "boolean"
+            },
+            "provider_path": {
+              "type": "string"
+            },
+            "certificate_reference": {
+              "type": "string"
+            },
+            "certificate_date": {
+              "type": "string"
+            },
+            "certificate_price": {
+              "type": "any"
             }
           }
         }

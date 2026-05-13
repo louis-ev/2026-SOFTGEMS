@@ -1,0 +1,23 @@
+---
+description: >-
+  Points agents to SoftGems Markdown specs under docs/: field inventory,
+  certificates, and schema alignment.
+globs:
+  - "**/components/gems/**"
+  - "**/views/SGGem*.vue"
+  - "**/views/SGGems*.vue"
+  - "**/gem_field_configs.js"
+  - "**/mixins/GemPricing.js"
+  - "**/settings_base.json"
+  - "docs/**/*.md"
+alwaysApply: false
+---
+
+# SoftGems specification Markdown
+
+When editing or reviewing code matched above—or when answering about SoftGems gem fields, `settings_base`, pricing rules, or certificate PDFs:
+
+1. Open and align with **`docs/FIELDS.md`** (field specification from the client sheet; pricing derivation; pointers to root **`settings_base.json`** and gem client code paths).
+2. For certificates: **`docs/CERTIFICATES.md`** (`$files` + `is_gem_certificate`, uploads, Files grid exclusions).
+
+After behaviour changes that affect those contracts, update the corresponding Markdown under **`docs/`** in the same change when practical.

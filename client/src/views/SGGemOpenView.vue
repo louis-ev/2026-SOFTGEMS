@@ -346,6 +346,14 @@
       </section>
 
       <section class="_formSection">
+        <SGGemCertificatesSection
+          :gem_path="gem_path"
+          :gem="gem"
+          :can_edit="can_edit"
+        />
+      </section>
+
+      <section class="_formSection">
         <div class="_debugActions">
           <button type="button" class="u-button" @click="toggleDebugMeta">
             debug
@@ -420,6 +428,8 @@ export default {
     SGGemEditFieldModal: () =>
       import("@/components/gems/SGGemEditFieldModal.vue"),
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
+    SGGemCertificatesSection: () =>
+      import("@/components/gems/SGGemCertificatesSection.vue"),
   },
   props: {
     gem_id: {
