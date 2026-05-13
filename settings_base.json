@@ -188,6 +188,12 @@
           "purchased_price_pa": {
             "type": "number"
           },
+          "price_per_carat_pcb": {
+            "type": "number"
+          },
+          "price_per_carat_pa": {
+            "type": "number"
+          },
           "price_per_carat_pa_pcb": {
             "type": "number"
           },

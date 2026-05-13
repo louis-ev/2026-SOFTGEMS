@@ -29,6 +29,9 @@
         <p v-if="field_validation_error" class="_fieldError">
           {{ field_validation_error }}
         </p>
+        <p v-if="affected_fields_notice" class="_impactNotice">
+          {{ affected_fields_notice }}
+        </p>
       </div>
 
       <div class="u-spacingBottom"></div>
@@ -141,6 +144,31 @@ export default {
       return (
         this.field.readonly || this.is_saving || !this.field_validation.is_valid
       );
+    },
+    affected_fields_preview() {
+      if (!this.isPricingField(this.field.key) && this.field.key !== "weight_ct")
+        return [];
+
+      const normalized_value = this.normalizeFieldValue(this.edit_value);
+      const meta_patch = this.buildMetaPatch({
+        field_key: this.field.key,
+        normalized_value,
+      });
+      return Object.keys(meta_patch)
+        .filter((field_key) => field_key !== this.field.key)
+        .map((field_key) => ({
+          key: field_key,
+          label: this.getPricingFieldLabel(field_key),
+          value: meta_patch[field_key],
+        }));
+    },
+    affected_fields_notice() {
+      if (this.affected_fields_preview.length === 0) return "";
+      const affected_field_with_values = this.affected_fields_preview.map(
+        ({ label, value }) =>
+          `${label} -> ${this.formatAffectedFieldValue(value)}`
+      );
+      return `Will also update: ${affected_field_with_values.join(", ")}`;
     },
   },
   data() {
@@ -355,6 +383,30 @@ export default {
       const parts = String(author_path).split("/");
       return parts[parts.length - 1] || author_path;
     },
+    getPricingFieldLabel(field_key) {
+      const field_to_i18n = {
+        base_price_pcb: "sg_base_price_pcb",
+        purchased_price_pa: "sg_purchased_price_pa",
+        price_per_carat_pcb: "sg_price_per_carat_pcb",
+        price_per_carat_pa: "sg_price_per_carat_pa",
+        weight_ct: "sg_weight_ct",
+      };
+      const i18n_key = field_to_i18n[field_key];
+      if (i18n_key) {
+        const translated = this.$t(i18n_key);
+        if (translated && translated !== i18n_key) return translated;
+      }
+      return field_key;
+    },
+    formatAffectedFieldValue(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return value.toLocaleString("fr-FR", {
+          maximumFractionDigits: 3,
+        });
+      }
+      return String(value);
+    },
   },
 };
 </script>
@@ -382,6 +434,12 @@ export default {
 ._fieldError {
   margin: calc(var(--spacing) / 6) 0 0;
   color: var(--c-rouge);
+  font-size: var(--sl-font-size-x-small);
+}
+
+._impactNotice {
+  margin: calc(var(--spacing) / 6) 0 0;
+  color: var(--c-gris_fonce);
   font-size: var(--sl-font-size-x-small);
 }
 

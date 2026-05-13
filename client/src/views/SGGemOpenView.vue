@@ -200,18 +200,18 @@
             @click="openEditModal(field_configs.base_price_pcb)"
           />
           <SGGemFieldCard
-            :label="$t('sg_purchased_price_pa')"
-            icon="tag"
-            :value="gem.purchased_price_pa"
-            :is_flashing="isFieldFlashing('purchased_price_pa')"
-            @click="openEditModal(field_configs.purchased_price_pa)"
-          />
-          <SGGemFieldCard
             :label="$t('sg_price_per_carat_pcb')"
             icon="diagram2"
             :value="gem.price_per_carat_pcb"
             :is_flashing="isFieldFlashing('price_per_carat_pcb')"
             @click="openEditModal(field_configs.price_per_carat_pcb)"
+          />
+          <SGGemFieldCard
+            :label="$t('sg_purchased_price_pa')"
+            icon="tag"
+            :value="gem.purchased_price_pa"
+            :is_flashing="isFieldFlashing('purchased_price_pa')"
+            @click="openEditModal(field_configs.purchased_price_pa)"
           />
           <SGGemFieldCard
             :label="$t('sg_price_per_carat_pa')"
@@ -498,8 +498,8 @@ export default {
       const next_changes = has_changed_keys
         ? changes
         : key
-          ? { [key]: value }
-          : {};
+        ? { [key]: value }
+        : {};
       this.flashFields(Object.keys(next_changes));
       Object.keys(next_changes).forEach((change_key) => {
         this.$set(this.gem, change_key, next_changes[change_key]);
