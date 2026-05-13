@@ -129,11 +129,18 @@ export default {
             $admins: "everyone",
             $contributors: "everyone",
             name: this.trimmed_name,
+            requested_slug: this.trimmed_name,
             contact_type: this.new_contact_type,
           },
         });
         if (new_slug) {
-          this.$router.push("/address-book");
+          if (this.new_contact_type === "company") {
+            this.$router.push(
+              `/address-book/${encodeURIComponent(new_slug)}`
+            );
+          } else {
+            this.$router.push("/address-book");
+          }
         } else {
           this.$router.push("/address-book");
         }

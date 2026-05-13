@@ -1,80 +1,80 @@
 <template>
   <div class="_gemsView">
-    <div class="_gemsView--content">
-      <div class="_pageHeader">
-        <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
-        <div class="_headerActions">
-          <button
-            type="button"
-            class="u-button"
-            @click="show_columns_modal = true"
-          >
-            <b-icon icon="layout-three-columns" />
-            {{ $t("sg_customize_columns") }}
-          </button>
-          <router-link to="/gems/new" class="u-button u-button_bleuvert">
-            <b-icon icon="plus-lg" />
-            {{ $t("sg_create_gem") }}
-          </router-link>
-          <!-- <button
-            type="button"
-            class="u-button"
-            :disabled="is_generating_placeholders || is_removing_all_gems"
-            @click="generatePlaceholderGems"
-          >
-            {{
-              is_generating_placeholders
-                ? $t("sg_generating_placeholder_gems")
-                : $t("sg_generate_placeholder_gems")
-            }}
-          </button> -->
-          <!-- <button
-            type="button"
-            class="u-button u-button_red"
-            :disabled="is_generating_placeholders || is_removing_all_gems"
-            @click="removeAllGems"
-          >
-            {{
-              is_removing_all_gems
-                ? $t("sg_removing_all_gems")
-                : $t("sg_remove_all_gems")
-            }}
-          </button> -->
+    <SGOverlaySidePanelLayout
+      :panel_open="is_gem_open"
+      @close="closeGemPanel"
+    >
+      <div class="_gemsView--content">
+        <div class="_pageHeader">
+          <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
+          <div class="_headerActions">
+            <button
+              type="button"
+              class="u-button"
+              @click="show_columns_modal = true"
+            >
+              <b-icon icon="layout-three-columns" />
+              {{ $t("sg_customize_columns") }}
+            </button>
+            <router-link to="/gems/new" class="u-button u-button_bleuvert">
+              <b-icon icon="plus-lg" />
+              {{ $t("sg_create_gem") }}
+            </router-link>
+            <!-- <button
+              type="button"
+              class="u-button"
+              :disabled="is_generating_placeholders || is_removing_all_gems"
+              @click="generatePlaceholderGems"
+            >
+              {{
+                is_generating_placeholders
+                  ? $t("sg_generating_placeholder_gems")
+                  : $t("sg_generate_placeholder_gems")
+              }}
+            </button> -->
+            <!-- <button
+              type="button"
+              class="u-button u-button_red"
+              :disabled="is_generating_placeholders || is_removing_all_gems"
+              @click="removeAllGems"
+            >
+              {{
+                is_removing_all_gems
+                  ? $t("sg_removing_all_gems")
+                  : $t("sg_remove_all_gems")
+              }}
+            </button> -->
+          </div>
+        </div>
+
+        <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
+        <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
+        <div v-else class="_tableSection">
+          <SGGemsTable
+            :gems="gems"
+            :metadata_keys="metadata_keys"
+            :metadata_labels="metadata_labels"
+            :metadata_icons="metadata_icons"
+            :field_editable_map="field_editable_map"
+            :selected_gem_id="$route.params.gem_id"
+            :is_gem_open="is_gem_open"
+            :view_density="view_density"
+            @rowClick="openGem"
+            @editCell="onTableEditCell"
+          />
+
+          <GemCsvExportButton
+            :gems="sorted_gems"
+            :metadata_keys="metadata_keys"
+            :metadata_labels="metadata_labels"
+            :gems_path="gems_path"
+          />
         </div>
       </div>
-
-      <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
-      <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
-      <div v-else class="_tableSection">
-        <SGGemsTable
-          :gems="gems"
-          :metadata_keys="metadata_keys"
-          :metadata_labels="metadata_labels"
-          :metadata_icons="metadata_icons"
-          :field_editable_map="field_editable_map"
-          :selected_gem_id="$route.params.gem_id"
-          :is_gem_open="is_gem_open"
-          :view_density="view_density"
-          @rowClick="openGem"
-          @editCell="onTableEditCell"
-        />
-
-        <GemCsvExportButton
-          :gems="sorted_gems"
-          :metadata_keys="metadata_keys"
-          :metadata_labels="metadata_labels"
-          :gems_path="gems_path"
-        />
-      </div>
-    </div>
-
-    <transition name="fade">
-      <div v-if="is_gem_open" class="_gemOverlay" @click.self="closeGemPanel">
-        <section class="_gemPanel">
-          <router-view :all_gems="gems" />
-        </section>
-      </div>
-    </transition>
+      <template #panel>
+        <router-view :all_gems="gems" />
+      </template>
+    </SGOverlaySidePanelLayout>
 
     <SGGemEditFieldModal
       v-if="editing_field && editing_gem"
@@ -134,6 +134,8 @@ export default {
   name: "SGGemsView",
   mixins: [GemPricing],
   components: {
+    SGOverlaySidePanelLayout: () =>
+      import("@/components/softgems/SGOverlaySidePanelLayout.vue"),
     SGGemEditFieldModal: () =>
       import("@/components/gems/SGGemEditFieldModal.vue"),
     SGGemsTable: () => import("@/components/gems/SGGemsTable.vue"),
@@ -662,8 +664,7 @@ export default {
 ._gemsView {
   position: relative;
   height: 100%;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
-    calc(var(--spacing) * 1);
+  min-height: 0;
 }
 
 ._gemsView--content {
@@ -673,6 +674,9 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
+    calc(var(--spacing) * 1);
+  box-sizing: border-box;
 }
 
 ._pageTitle {
@@ -699,23 +703,5 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
-}
-
-._gemOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.2);
-  z-index: 30;
-  padding-left: 15vw;
-}
-
-._gemPanel {
-  width: 100%;
-
-  background: var(--c-bodybg);
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
 }
 </style>

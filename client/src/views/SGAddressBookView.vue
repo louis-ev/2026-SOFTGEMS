@@ -1,62 +1,67 @@
 <template>
   <div class="_addressBookView">
-    <div class="_addressBookView--content">
-      <div class="_pageHeader">
-        <h1 class="_pageTitle">{{ $t("sg_address_book") }}</h1>
-        <div class="_headerActions" v-if="false">
-          <router-link
-            to="/address-book/new"
-            class="u-button u-button_bleuvert"
-          >
-            <b-icon icon="plus-lg" />
-            {{ $t("sg_create_contact") }}
-          </router-link>
+    <SGOverlaySidePanelLayout
+      :panel_open="is_address_book_panel_open"
+      @close="closePanel"
+    >
+      <div class="_addressBookView--content">
+        <div class="_pageHeader">
+          <h1 class="_pageTitle">{{ $t("sg_address_book") }}</h1>
+          <div class="_headerActions">
+            <router-link
+              to="/address-book/new"
+              class="u-button u-button_bleuvert"
+            >
+              <b-icon icon="plus-lg" />
+              {{ $t("sg_create_contact") }}
+            </router-link>
+          </div>
+        </div>
+
+        <div v-if="is_loading">{{ $t("sg_loading_address_book") }}</div>
+        <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
+        <div v-else class="_listSection">
+          <div class="_cardsGrid">
+            <article
+              v-for="contact in sorted_entries"
+              :key="contact.$path || contactIdFromPath(contact.$path)"
+              class="_contactCard"
+              role="button"
+              tabindex="0"
+              @click="openContact(contact)"
+              @keydown.enter.prevent="openContact(contact)"
+            >
+              <div class="_contactHeader">
+                <h2 class="_contactName">{{ contactLabel(contact) }}</h2>
+                <span
+                  v-if="contactTypeLabel(contact.contact_type)"
+                  class="_typeBadge"
+                >
+                  {{ contactTypeLabel(contact.contact_type) }}
+                </span>
+              </div>
+            </article>
+          </div>
+          <p v-if="sorted_entries.length === 0" class="_emptyState">
+            {{ $t("sg_address_book_empty") }}
+          </p>
         </div>
       </div>
-
-      <div v-if="is_loading">{{ $t("sg_loading_address_book") }}</div>
-      <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
-      <div v-else class="_listSection">
-        <div class="_cardsGrid">
-          <article
-            v-for="contact in sorted_entries"
-            :key="contact.$path || contactIdFromPath(contact.$path)"
-            class="_contactCard"
-          >
-            <div class="_contactHeader">
-              <h2 class="_contactName">{{ contactLabel(contact) }}</h2>
-              <span
-                v-if="contactTypeLabel(contact.contact_type)"
-                class="_typeBadge"
-              >
-                {{ contactTypeLabel(contact.contact_type) }}
-              </span>
-            </div>
-          </article>
-        </div>
-        <p v-if="sorted_entries.length === 0" class="_emptyState">
-          {{ $t("sg_address_book_empty") }}
-        </p>
-      </div>
-    </div>
-
-    <transition name="fade">
-      <div
-        v-if="is_create_contact_open"
-        class="_contactOverlay"
-        @click.self="closeCreatePanel"
-      >
-        <section class="_contactPanel">
-          <router-view />
-        </section>
-      </div>
-    </transition>
+      <template #panel>
+        <router-view />
+      </template>
+    </SGOverlaySidePanelLayout>
   </div>
 </template>
 
 <script>
+import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
+
 export default {
   name: "SGAddressBookView",
+  components: {
+    SGOverlaySidePanelLayout,
+  },
   data() {
     return {
       address_book_path: "address_book",
@@ -66,8 +71,8 @@ export default {
     };
   },
   computed: {
-    is_create_contact_open() {
-      return this.$route.name === "Create contact";
+    is_address_book_panel_open() {
+      return ["Create contact", "Open contact"].includes(this.$route.name);
     },
     sorted_entries() {
       if (!Array.isArray(this.address_book_entries)) return [];
@@ -118,8 +123,13 @@ export default {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
-    closeCreatePanel() {
+    closePanel() {
       this.$router.push("/address-book");
+    },
+    openContact(contact) {
+      const slug = this.contactIdFromPath(contact?.$path);
+      if (!slug) return;
+      this.$router.push(`/address-book/${encodeURIComponent(slug)}`);
     },
     async fetchAddressBook() {
       this.is_loading = true;
@@ -145,8 +155,7 @@ export default {
 ._addressBookView {
   position: relative;
   height: 100%;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
-    calc(var(--spacing) * 1);
+  min-height: 0;
 }
 
 ._addressBookView--content {
@@ -156,6 +165,9 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
+    calc(var(--spacing) * 1);
+  box-sizing: border-box;
 }
 
 ._pageTitle {
@@ -189,6 +201,7 @@ export default {
 }
 
 ._contactCard {
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) * 0.75);
@@ -196,6 +209,15 @@ export default {
   border: 1px solid var(--c-gris_clair);
   border-radius: calc(var(--spacing) * 0.75);
   background: var(--c-blanc);
+}
+
+._contactCard:focus {
+  outline: 2px solid var(--c-orange);
+  outline-offset: 2px;
+}
+
+._contactCard:focus:not(:focus-visible) {
+  outline: none;
 }
 
 ._contactHeader {
@@ -221,22 +243,5 @@ export default {
 ._emptyState {
   margin-top: calc(var(--spacing) * 1.5);
   color: var(--c-gris_fonce);
-}
-
-._contactOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.2);
-  z-index: 30;
-  padding-left: 15vw;
-}
-
-._contactPanel {
-  width: 100%;
-  background: var(--c-bodybg);
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
 }
 </style>

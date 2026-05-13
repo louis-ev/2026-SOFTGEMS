@@ -45,6 +45,12 @@ const routes = [
         name: "Create contact",
         component: () => import("@/views/SGContactNewView.vue"),
       },
+      {
+        path: ":contact_slug",
+        name: "Open contact",
+        component: () => import("@/views/SGContactOpenView.vue"),
+        props: true,
+      },
     ],
   },
   {

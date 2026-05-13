@@ -237,8 +237,6 @@
         }
       },
       "address_book": {
-        "slug_naming": "sequence",
-        "slug_sequence_start": 1,
         "$can_be_created_by": "everyone",
         "$cover": {
           "width": 2000,
@@ -255,6 +253,44 @@
           },
           "contact_type": {
             "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "company_email": {
+            "type": "string"
+          },
+          "tva_number": {
+            "type": "string"
+          },
+          "tva_attestation": {
+            "type": "string"
+          }
+        },
+        "$folders": {
+          "contacts": {
+            "$can_be_created_by": "everyone",
+            "fields": {
+              "last_name": {
+                "type": "string",
+                "required": true
+              },
+              "first_name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            }
           }
         }
       },
