@@ -148,30 +148,84 @@ export default {
     history_field_key() {
       return this.field.pricing_total_key || this.field.key;
     },
-    affected_fields_preview() {
-      if (!this.isPricingField(this.field.key) && this.field.key !== "weight_ct")
-        return [];
+    affected_fields_notice() {
+      const field_key = this.field.key;
+      const touches_pricing =
+        this.isPricingField(field_key) || field_key === "weight_ct";
+      if (!touches_pricing) return "";
+      if (!this.field_validation.is_valid) return "";
 
       const normalized_value = this.normalizeFieldValue(this.edit_value);
-      const meta_patch = this.buildMetaPatch({
-        field_key: this.field.key,
-        normalized_value,
-      });
-      return Object.keys(meta_patch)
-        .filter((field_key) => field_key !== this.field.key)
-        .map((field_key) => ({
-          key: field_key,
-          label: this.getPricingFieldLabel(field_key),
-          value: meta_patch[field_key],
-        }));
-    },
-    affected_fields_notice() {
-      if (this.affected_fields_preview.length === 0) return "";
-      const affected_field_with_values = this.affected_fields_preview.map(
-        ({ label, value }) =>
-          `${label} -> ${this.formatAffectedFieldValue(value)}`
-      );
-      return `Will also update: ${affected_field_with_values.join(", ")}`;
+      const weight_label = this.$t("sg_weight_ct");
+      const current_gem =
+        this.gem && typeof this.gem === "object" ? this.gem : {};
+
+      if (field_key === "weight_ct") {
+        const from_weight = this.toNumberOrDefault(current_gem.weight_ct);
+        const to_weight = this.toNumberOrDefault(normalized_value);
+        if (this.storedNumericValuesEqual(from_weight, to_weight)) return "";
+        return this.$t("sg_pricing_impact_editing_weight", {
+          weight_label,
+          from_weight: this.formatAffectedFieldValue(from_weight),
+          to_weight: this.formatAffectedFieldValue(to_weight),
+        });
+      }
+
+      if (this.isVirtualPerCaratField(field_key)) {
+        const pair = this.getPricingPairByFieldKey(field_key);
+        if (!pair) return "";
+        const meta_patch = this.buildMetaPatch({
+          field_key: this.field.key,
+          normalized_value,
+        });
+        const new_total = meta_patch[pair.total_key];
+        if (new_total === undefined) return "";
+        const previous_total = this.toNumberOrDefault(
+          current_gem[pair.total_key]
+        );
+        if (this.storedNumericValuesEqual(previous_total, new_total)) return "";
+        const total_label = this.getPricingFieldLabel(pair.total_key);
+        return this.$t("sg_pricing_impact_editing_per_carat", {
+          total_label,
+          from_value: this.formatAffectedFieldValue(previous_total),
+          to_value: this.formatAffectedFieldValue(new_total),
+          weight_label,
+        });
+      }
+
+      const pair = this.getPricingPairByFieldKey(field_key);
+      if (pair && field_key === pair.total_key) {
+        const weight_ct = this.toNumberOrDefault(current_gem.weight_ct);
+        const previous_total = this.toNumberOrDefault(
+          current_gem[pair.total_key]
+        );
+        const new_total = this.toNumberOrDefault(normalized_value);
+        if (this.storedNumericValuesEqual(previous_total, new_total)) return "";
+        const from_per_carat = this.computePerCarat({
+          total_value: previous_total,
+          weight_ct,
+        });
+        const to_per_carat = this.computePerCarat({
+          total_value: new_total,
+          weight_ct,
+        });
+        if (
+          this.storedNumericValuesEqual(from_per_carat, to_per_carat)
+        ) {
+          return "";
+        }
+        return this.$t("sg_pricing_impact_editing_total", {
+          per_carat_label: this.getPricingFieldLabel(
+            pair.virtual_per_carat_key
+          ),
+          from_per_carat: this.formatAffectedFieldValue(from_per_carat),
+          to_per_carat: this.formatAffectedFieldValue(to_per_carat),
+          total_label: this.getPricingFieldLabel(pair.total_key),
+          weight_label,
+        });
+      }
+
+      return "";
     },
   },
   data() {
@@ -420,6 +474,12 @@ export default {
         });
       }
       return String(value);
+    },
+    storedNumericValuesEqual(a, b) {
+      return (
+        Number(this.toNumberOrDefault(a).toFixed(2)) ===
+        Number(this.toNumberOrDefault(b).toFixed(2))
+      );
     },
   },
 };

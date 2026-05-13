@@ -109,8 +109,7 @@ export default {
   sg_internal_name_optional: "Internal name (optional)",
   sg_creation_notice_documents:
     "You can add a cover image and documents (images, videos, PDF certificates, etc.) after creating the gem.",
-  sg_creation_notice_editable:
-    "All fields remain editable after creation.",
+  sg_creation_notice_editable: "All fields remain editable after creation.",
   sg_field_history: "History",
   sg_modifications_history: "Modifications history",
   sg_no_history: "No history yet.",
@@ -127,4 +126,10 @@ export default {
   sg_invalid_decimals: "Use up to {decimals} decimals.",
   sg_invalid_fields_summary: "Please fix invalid fields: {fields}",
   sg_invalid_field_before_save: "Fix the invalid value before saving.",
+  sg_pricing_impact_editing_per_carat:
+    "Will update {total_label} from {from_value} to {to_value}. Per-carat amounts are derived as {total_label} ÷ {weight_label}; only the total is saved.",
+  sg_pricing_impact_editing_total:
+    "{per_carat_label} will update from {from_per_carat} to {to_per_carat} (derived as {total_label} ÷ {weight_label}).",
+  sg_pricing_impact_editing_weight:
+    "{weight_label} will update from {from_weight} to {to_weight}. Per-carat amounts everywhere will use each stored total ÷ this weight.",
 };
