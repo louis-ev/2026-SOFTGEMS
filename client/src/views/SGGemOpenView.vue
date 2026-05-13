@@ -40,15 +40,7 @@
     <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="gem" class="_content">
-      <!-- Overview: cover + files -->
-
-      <section class="_formSection">
-        <SGGemFilesList
-          :path="gem_path"
-          :can_edit="can_edit"
-          :gem_files="gem.$files || []"
-          @filesUpdated="fetchGem"
-        />
+      <section class="_formSection _gemActionsSection">
         <div class="_dangerZone">
           <button
             type="button"
@@ -424,7 +416,6 @@ export default {
   name: "SGGemOpenView",
   mixins: [GemPricing],
   components: {
-    SGGemFilesList: () => import("@/components/gems/SGGemFilesList.vue"),
     SGGemEditFieldModal: () =>
       import("@/components/gems/SGGemEditFieldModal.vue"),
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
@@ -779,6 +770,12 @@ export default {
   padding-top: calc(var(--spacing) / 2);
   margin-top: calc(var(--spacing) * 0.25);
   border-top: 1px solid var(--c-gris_clair);
+}
+
+._gemActionsSection ._dangerZone {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 ._fieldsGrid {

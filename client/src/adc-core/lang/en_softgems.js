@@ -31,6 +31,10 @@ export default {
   sg_certificate_date: "Date",
   sg_certificate_price: "Price",
   sg_certificate_remove: "Remove",
+  sg_certificate_remove_modal_title: "Delete certificate file",
+  sg_certificate_remove_modal_body:
+    'Permanently delete "{filename}" from this gem? This removes the PDF from the server.',
+  sg_certificate_remove_success: "Certificate file deleted.",
   sg_certificate_open_pdf: "Open",
   sg_certificate_download_pdf: "Download",
   sg_section_creation: "Creation",
@@ -120,7 +124,7 @@ export default {
   sg_internal_name: "Internal name",
   sg_internal_name_optional: "Internal name (optional)",
   sg_creation_notice_documents:
-    "You can add a cover image and documents (images, videos, PDF certificates, etc.) after creating the gem.",
+    "You can add a cover image and PDF certificates after creating the gem.",
   sg_creation_notice_editable: "All fields remain editable after creation.",
   sg_field_history: "History",
   sg_modifications_history: "Modifications history",

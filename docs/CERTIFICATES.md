@@ -13,7 +13,7 @@ Defined file-level fields relevant to certificates:
 
 | Field | Schema type | Role |
 | --- | --- | --- |
-| `is_gem_certificate` | `boolean` | Marks this file as a certificate for the Certificates section. |
+| `is_gem_certificate` | `boolean` | Marks this file as a certificate for the Certificates section (set on upload via `additional_meta`). |
 | `provider_path` | `string` | Provider/contact; value is typically an **`authors`** folder path (address book convention in the client). |
 | `certificate_reference` | `string` | Report / reference number (free text). |
 | `certificate_date` | `string` | Date (stored as ISO `YYYY-MM-DD` from the `<input type="date">`; keep format stable for exports). |
@@ -32,17 +32,14 @@ Defined file-level fields relevant to certificates:
 **Certificates section** ([`SGGemCertificatesSection.vue`](../client/src/components/gems/SGGemCertificatesSection.vue)):
 
 - Lists files where **`is_gem_certificate === true`**, newest first (`$date_uploaded` descending).
+- The gem **open view does not expose a separate “Files” grid** (`SGGemFilesList` was removed there); attachments on the gem that are surfaced in the UI for this workflow are certificates (plus **`$cover`** on the gem for the overview image).
 
-**General “Files” grid** ([`SGGemFilesList.vue`](../client/src/components/gems/SGGemFilesList.vue)):
-
-- Lists files where **`is_gem_certificate !== true`**, so certificate PDFs are not duplicated beside the Certificates block.
-
-Open/download links follow the same media URL rules as other gem files (`makeMediaFileURL`).
+Open/download links follow the same media URL rules as other gem files (`makeMediaFileURL`). PDF thumbnails use **`MediaContent`** with a modest **`resolution`** (thumb quality / payload trade-off).
 
 ## Editing and removal
 
 - Field edits (**provider**, **reference**, **date**, **price**) PATCH the **file meta** (`file.$path` via the client **`updateMeta`** helper); the server validates against **`gems.$files.fields`**.
-- **Remove** does **not** delete the blob: it sets **`is_gem_certificate: false`**. The file then appears again in the general Files grid (metadata such as provider fields may remain on the meta object until cleared manually if needed).
+- **Remove**: after confirmation (**`BaseModal2`**, destructive action), the client calls **`deleteItem`** on the file meta path — the PDF and its meta are **removed from storage** and **`$files`** updates via the usual store/socket path (`fileRemoved`).
 
 Live updates rely on existing store/socket behaviour (`getFolder` store reference plus `folderUpdated` / `fileUpdated`); no dedicated refetch hook is required for certificate saves.
 
@@ -56,6 +53,7 @@ Older data may still contain **`gem_certificates`** on gem meta from an earlier 
 | --- | --- |
 | Gems file field schema | [`settings_base.json`](../settings_base.json) → `schema.$folders.gems.$files.fields` |
 | Certificates UI | [`SGGemCertificatesSection.vue`](../client/src/components/gems/SGGemCertificatesSection.vue) |
-| Files grid filter | [`SGGemFilesList.vue`](../client/src/components/gems/SGGemFilesList.vue) |
+| Gem open shell (cover, no Files grid here) | [`SGGemOpenView.vue`](../client/src/views/SGGemOpenView.vue) |
+| Reusable files grid component (unused on gem open) | [`SGGemFilesList.vue`](../client/src/components/gems/SGGemFilesList.vue) |
 | Upload merges user meta onto file meta | [`core2/file.js`](../core2/file.js) → `importFile` (`validateMeta` + assignment into stored meta) |
 | Copy / field spec sibling | [`FIELDS.md`](./FIELDS.md) |

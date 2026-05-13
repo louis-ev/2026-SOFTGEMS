@@ -40,124 +40,157 @@
         :key="certificate_file.$path"
         class="_row"
       >
-        <div class="_rowTop">
-          <div class="_fileBlock">
-            <p class="_fileName">
-              {{ displayCertificateFilename(certificate_file) }}
-            </p>
-            <div
-              v-if="getCertificateDownloadUrl(certificate_file)"
-              class="_fileActions"
-            >
-              <a
-                class="u-buttonLink"
-                :href="getCertificateDownloadUrl(certificate_file)"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {{ $t("sg_certificate_open_pdf") }}
-              </a>
-              <a
-                class="u-buttonLink"
-                :href="getCertificateDownloadUrl(certificate_file)"
-                :download="
-                  certificate_file.$media_filename ||
-                  displayCertificateFilename(certificate_file)
-                "
-              >
-                {{ $t("sg_certificate_download_pdf") }}
-              </a>
-            </div>
-          </div>
-
-          <button
-            v-if="can_edit"
-            type="button"
-            class="u-buttonLink u-buttonLink_red"
-            :disabled="is_persisting"
-            @click="removeCertificateFromSection(certificate_file)"
+        <div
+          class="_rowBody"
+          :class="{
+            _rowBody_withPreview: !!getCertificateDownloadUrl(certificate_file),
+          }"
+        >
+          <div
+            v-if="getCertificateDownloadUrl(certificate_file)"
+            class="_certificatePreview"
           >
-            {{ $t("sg_certificate_remove") }}
-          </button>
-        </div>
+            <MediaContent
+              :file="certificate_file"
+              context="preview"
+              :resolution="certificate_preview_resolution"
+            />
+          </div>
+          <div class="_certificateMain">
+            <div class="_rowTop">
+              <div class="_fileBlock">
+                <p class="_fileName">
+                  {{ displayCertificateFilename(certificate_file) }}
+                </p>
+                <div
+                  v-if="getCertificateDownloadUrl(certificate_file)"
+                  class="_fileActions"
+                >
+                  <a
+                    class="u-buttonLink"
+                    :href="getCertificateDownloadUrl(certificate_file)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {{ $t("sg_certificate_open_pdf") }}
+                  </a>
+                  <a
+                    class="u-buttonLink"
+                    :href="getCertificateDownloadUrl(certificate_file)"
+                    :download="
+                      certificate_file.$media_filename ||
+                      displayCertificateFilename(certificate_file)
+                    "
+                  >
+                    {{ $t("sg_certificate_download_pdf") }}
+                  </a>
+                </div>
+              </div>
 
-        <div class="_fieldsGrid">
-          <div class="_field">
-            <label class="_fieldLabel">{{
-              $t("sg_certificate_provider")
-            }}</label>
-            <SGSelectField
-              :value="certificate_file.provider_path || ''"
-              :options="contact_select_options"
-              :disabled="!can_edit || is_persisting || is_loading_contacts"
-              @input="
-                patchCertificateFile(certificate_file, {
-                  provider_path: String($event || ''),
-                })
-              "
-            />
-          </div>
-          <div class="_field">
-            <label class="_fieldLabel">{{
-              $t("sg_certificate_reference")
-            }}</label>
-            <input
-              class="u-input"
-              type="text"
-              :disabled="!can_edit || is_persisting"
-              :value="certificate_file.certificate_reference || ''"
-              @change="
-                patchCertificateFile(certificate_file, {
-                  certificate_reference: String($event.target.value || ''),
-                })
-              "
-            />
-          </div>
-          <div class="_field">
-            <label class="_fieldLabel">{{ $t("sg_certificate_date") }}</label>
-            <input
-              class="u-input"
-              type="date"
-              :disabled="!can_edit || is_persisting"
-              :value="certificate_file.certificate_date || ''"
-              @change="
-                patchCertificateFile(certificate_file, {
-                  certificate_date: String($event.target.value || ''),
-                })
-              "
-            />
-          </div>
-          <div class="_field">
-            <label class="_fieldLabel">{{ $t("sg_certificate_price") }}</label>
-            <input
-              class="u-input"
-              type="number"
-              inputmode="decimal"
-              step="0.01"
-              :disabled="!can_edit || is_persisting"
-              :value="
-                certificate_file.certificate_price === null ||
-                certificate_file.certificate_price === undefined
-                  ? ''
-                  : certificate_file.certificate_price
-              "
-              @change="onCertificatePriceChange(certificate_file, $event)"
-            />
+              <button
+                v-if="can_edit"
+                type="button"
+                class="u-buttonLink u-buttonLink_red"
+                :disabled="is_persisting || certificate_remove_modal_open"
+                @click="openCertificateRemoveModal(certificate_file)"
+              >
+                {{ $t("sg_certificate_remove") }}
+              </button>
+            </div>
+
+            <div class="_fieldsGrid">
+              <div class="_field">
+                <label class="_fieldLabel">{{
+                  $t("sg_certificate_provider")
+                }}</label>
+                <SGSelectField
+                  :value="certificate_file.provider_path || ''"
+                  :options="contact_select_options"
+                  :disabled="!can_edit || is_persisting || is_loading_contacts"
+                  @input="
+                    patchCertificateFile(certificate_file, {
+                      provider_path: String($event || ''),
+                    })
+                  "
+                />
+              </div>
+              <div class="_field">
+                <label class="_fieldLabel">{{
+                  $t("sg_certificate_reference")
+                }}</label>
+                <input
+                  class="u-input"
+                  type="text"
+                  :disabled="!can_edit || is_persisting"
+                  :value="certificate_file.certificate_reference || ''"
+                  @change="
+                    patchCertificateFile(certificate_file, {
+                      certificate_reference: String($event.target.value || ''),
+                    })
+                  "
+                />
+              </div>
+              <div class="_field">
+                <label class="_fieldLabel">{{
+                  $t("sg_certificate_date")
+                }}</label>
+                <input
+                  class="u-input"
+                  type="date"
+                  :disabled="!can_edit || is_persisting"
+                  :value="certificate_file.certificate_date || ''"
+                  @change="
+                    patchCertificateFile(certificate_file, {
+                      certificate_date: String($event.target.value || ''),
+                    })
+                  "
+                />
+              </div>
+              <div class="_field">
+                <label class="_fieldLabel">{{
+                  $t("sg_certificate_price")
+                }}</label>
+                <input
+                  class="u-input"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.01"
+                  :disabled="!can_edit || is_persisting"
+                  :value="
+                    certificate_file.certificate_price === null ||
+                    certificate_file.certificate_price === undefined
+                      ? ''
+                      : certificate_file.certificate_price
+                  "
+                  @change="onCertificatePriceChange(certificate_file, $event)"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </li>
     </ul>
+
+    <SGGemCertificateRemoveModal
+      v-if="certificate_remove_modal_open"
+      :file_path="certificate_remove_path"
+      :display_filename="certificate_remove_filename"
+      :can_delete="can_edit"
+      @close="closeCertificateRemoveModal"
+    />
   </section>
 </template>
 
 <script>
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import SGGemCertificateRemoveModal from "@/components/gems/SGGemCertificateRemoveModal.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
 
 export default {
   name: "SGGemCertificatesSection",
   components: {
     SGSelectField,
+    SGGemCertificateRemoveModal,
     UploadFiles,
   },
   props: {
@@ -181,6 +214,10 @@ export default {
       is_loading_contacts: false,
       is_persisting: false,
       certificate_upload_meta: { is_gem_certificate: true },
+      certificate_preview_resolution: 640,
+      certificate_remove_modal_open: false,
+      certificate_remove_path: "",
+      certificate_remove_filename: "",
       upload_input_id: `sg_gem_certificate_upload_${(
         Math.random().toString(36) + "00000000000000000"
       ).slice(2, 7)}`,
@@ -307,19 +344,17 @@ export default {
         certificate_price: Number.isFinite(price_value) ? price_value : null,
       });
     },
-    async removeCertificateFromSection(certificate_file) {
+    closeCertificateRemoveModal() {
+      this.certificate_remove_modal_open = false;
+      this.certificate_remove_path = "";
+      this.certificate_remove_filename = "";
+    },
+    openCertificateRemoveModal(certificate_file) {
       if (!this.can_edit || !certificate_file?.$path) return;
-      this.is_persisting = true;
-      try {
-        await this.$api.updateMeta({
-          path: certificate_file.$path,
-          new_meta: { is_gem_certificate: false },
-        });
-      } catch ({ code }) {
-        this.$alertify.delay(4000).error(code || this.$t("couldntbesaved"));
-      } finally {
-        this.is_persisting = false;
-      }
+      this.certificate_remove_path = certificate_file.$path;
+      this.certificate_remove_filename =
+        this.displayCertificateFilename(certificate_file);
+      this.certificate_remove_modal_open = true;
     },
   },
 };
@@ -372,6 +407,47 @@ export default {
   background: var(--c-bodybg);
 }
 
+._rowBody {
+  display: grid;
+  gap: calc(var(--spacing) * 0.75);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+._rowBody_withPreview {
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+}
+
+._certificatePreview {
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c-gris_clair);
+}
+
+._certificatePreview :deep(._mediaContent) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  max-width: 220px;
+  margin-inline: auto;
+}
+
+._certificatePreview :deep(img._mediaContent--image) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+._certificatePreview :deep(._fileName) {
+  padding: calc(var(--spacing) / 2);
+}
+
+._certificateMain {
+  min-width: 0;
+}
+
 ._rowTop {
   display: flex;
   align-items: flex-start;
@@ -409,5 +485,16 @@ export default {
   margin: 0 0 0.2rem 0;
   font-size: var(--sl-font-size-x-small);
   color: var(--c-gris_fonce);
+}
+
+@media (max-width: 720px) {
+  ._rowBody_withPreview {
+    grid-template-columns: 1fr;
+  }
+
+  ._certificatePreview {
+    max-width: min(220px, 100%);
+    margin-inline: auto;
+  }
 }
 </style>
