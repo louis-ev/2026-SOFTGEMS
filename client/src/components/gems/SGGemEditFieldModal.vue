@@ -17,6 +17,7 @@
           v-model="edit_value"
           :options="field.options || []"
           :allow_empty="true"
+          :disabled="auxiliary_disable"
         />
         <TextInput
           v-else
@@ -24,6 +25,7 @@
           :input_type="field.input_type || 'text'"
           :input_step="field.input_step"
           :instructions="field.instructions"
+          :disabled="auxiliary_disable"
           :autofocus="true"
         />
         <p v-if="field_validation_error" class="_fieldError">
@@ -34,50 +36,52 @@
         </p>
       </div>
 
-      <div class="u-spacingBottom"></div>
+      <div v-if="!meta_target_path" class="u-spacingBottom"></div>
 
-      <button type="button" class="_historyToggle" @click="toggleHistory">
-        <b-icon icon="clock-history" />
-        <span>{{ $t("sg_field_history") }}</span>
-        <b-icon
-          :icon="show_history ? 'chevron-up' : 'chevron-down'"
-          class="_chevron"
-        />
-      </button>
+      <template v-if="!meta_target_path">
+        <button type="button" class="_historyToggle" @click="toggleHistory">
+          <b-icon icon="clock-history" />
+          <span>{{ $t("sg_field_history") }}</span>
+          <b-icon
+            :icon="show_history ? 'chevron-up' : 'chevron-down'"
+            class="_chevron"
+          />
+        </button>
 
-      <transition name="fade_fast">
-        <div v-if="show_history" class="_historyPanel">
-          <div v-if="is_loading_history" class="_historyLoading">
-            <LoaderSpinner />
-          </div>
-          <p v-else-if="field_history.length === 0" class="_historyEmpty">
-            {{ $t("sg_no_history") }}
-          </p>
-          <ul v-else class="_historyList">
-            <li
-              v-for="(entry, index) in field_history"
-              :key="index"
-              class="_historyEntry"
-              @click="copyHistoryValue(entry)"
-            >
-              <span class="_historyValue">
-                {{ formatHistoryValue(entry.value) }}
-                <span v-if="entry.event === 'created'" class="_createdBadge">
-                  initial
+        <transition name="fade_fast">
+          <div v-if="show_history" class="_historyPanel">
+            <div v-if="is_loading_history" class="_historyLoading">
+              <LoaderSpinner />
+            </div>
+            <p v-else-if="field_history.length === 0" class="_historyEmpty">
+              {{ $t("sg_no_history") }}
+            </p>
+            <ul v-else class="_historyList">
+              <li
+                v-for="(entry, index) in field_history"
+                :key="index"
+                class="_historyEntry"
+                @click="copyHistoryValue(entry)"
+              >
+                <span class="_historyValue">
+                  {{ formatHistoryValue(entry.value) }}
+                  <span v-if="entry.event === 'created'" class="_createdBadge">
+                    initial
+                  </span>
                 </span>
-              </span>
-              <span class="_historyMeta">
-                {{ $t("sg_history_changed_on") }}
-                <time :datetime="entry.ts">{{ formatDate(entry.ts) }}</time>
-                <template v-if="entry.author_path">
-                  {{ $t("sg_history_by") }}
-                  <strong>{{ formatAuthor(entry.author_path) }}</strong>
-                </template>
-              </span>
-            </li>
-          </ul>
-        </div>
-      </transition>
+                <span class="_historyMeta">
+                  {{ $t("sg_history_changed_on") }}
+                  <time :datetime="entry.ts">{{ formatDate(entry.ts) }}</time>
+                  <template v-if="entry.author_path">
+                    {{ $t("sg_history_by") }}
+                    <strong>{{ formatAuthor(entry.author_path) }}</strong>
+                  </template>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </transition>
+      </template>
     </div>
 
     <template slot="footer">
@@ -122,6 +126,20 @@ export default {
       type: Object,
       default: null,
     },
+    /** When set, save patches this path (gem file meta) instead of gem folder meta */
+    meta_target_path: {
+      type: String,
+      default: "",
+    },
+    /** First line for modal title (e.g. certificate filename) when editing file meta */
+    context_heading: {
+      type: String,
+      default: "",
+    },
+    auxiliary_disable: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     gem_id() {
@@ -129,6 +147,10 @@ export default {
       return parts[parts.length - 1] || this.gem_path;
     },
     modal_title() {
+      const heading_line = String(this.context_heading || "").trim();
+      if (heading_line) {
+        return `${heading_line} — ${this.field.label}`;
+      }
       return `${this.$t("sg_gem_title", { id: this.gem_id })} — ${
         this.field.label
       }`;
@@ -142,13 +164,17 @@ export default {
     },
     is_save_disabled() {
       return (
-        this.field.readonly || this.is_saving || !this.field_validation.is_valid
+        this.auxiliary_disable ||
+        this.field.readonly ||
+        this.is_saving ||
+        !this.field_validation.is_valid
       );
     },
     history_field_key() {
       return this.field.pricing_total_key || this.field.key;
     },
     affected_fields_notice() {
+      if (this.meta_target_path) return "";
       const field_key = this.field.key;
       const touches_pricing =
         this.isPricingField(field_key) || field_key === "weight_ct";
@@ -295,25 +321,67 @@ export default {
         !this.field_validation.is_valid
       )
         return;
-      const normalized_value = this.normalizeFieldValue(this.edit_value);
-      const meta_patch = this.buildMetaPatch({
-        field_key: this.field.key,
-        normalized_value,
-      });
+
+      const field_key_saved = this.field.key;
+      const targets_file_meta =
+        typeof this.meta_target_path === "string" &&
+        this.meta_target_path.trim() !== "";
+
+      let meta_patch;
+      if (targets_file_meta) {
+        const raw = this.edit_value;
+        if (
+          this.field.persist_empty_number_as_null &&
+          this.field.type === "number"
+        ) {
+          const is_empty =
+            raw === "" || raw === null || raw === undefined;
+          meta_patch = {
+            [field_key_saved]: is_empty
+              ? null
+              : this.normalizeFieldValue(raw),
+          };
+        } else if (this.field.type === "number") {
+          meta_patch = {
+            [field_key_saved]: this.normalizeFieldValue(raw),
+          };
+        } else {
+          meta_patch = { [field_key_saved]: raw };
+        }
+      } else {
+        const normalized_value = this.normalizeFieldValue(this.edit_value);
+        meta_patch = this.buildMetaPatch({
+          field_key: field_key_saved,
+          normalized_value,
+        });
+      }
+
+      const update_path = targets_file_meta
+        ? this.meta_target_path.trim()
+        : this.gem_path;
+
       this.is_saving = true;
       try {
         const update_response = await this.$api.updateMeta({
-          path: this.gem_path,
+          path: update_path,
           new_meta: meta_patch,
         });
-        const saved_changes =
+        let saved_changes =
           update_response && update_response.changed_data
             ? update_response.changed_data
             : {};
+        if (targets_file_meta && Object.keys(saved_changes).length === 0) {
+          saved_changes = meta_patch;
+        }
+
+        const value_from_response = saved_changes[field_key_saved];
         this.$emit("saved", {
           changes: saved_changes,
-          key: this.field.key,
-          value: saved_changes[this.field.key],
+          key: field_key_saved,
+          value:
+            value_from_response !== undefined
+              ? value_from_response
+              : meta_patch[field_key_saved],
           update_response,
         });
         this.$emit("close");

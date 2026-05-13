@@ -91,7 +91,7 @@
                 v-if="can_edit"
                 type="button"
                 class="u-buttonLink u-buttonLink_red"
-                :disabled="is_persisting || certificate_remove_modal_open"
+                :disabled="certificate_remove_modal_open"
                 @click="openCertificateRemoveModal(certificate_file)"
               >
                 {{ $t("sg_certificate_remove") }}
@@ -99,72 +99,55 @@
             </div>
 
             <div class="_fieldsGrid">
-              <div class="_field">
-                <label class="_fieldLabel">{{
-                  $t("sg_certificate_provider")
-                }}</label>
-                <SGSelectField
-                  :value="certificate_file.provider_path || ''"
-                  :options="contact_select_options"
-                  :disabled="!can_edit || is_persisting || is_loading_contacts"
-                  @input="
-                    patchCertificateFile(certificate_file, {
-                      provider_path: String($event || ''),
-                    })
-                  "
-                />
-              </div>
-              <div class="_field">
-                <label class="_fieldLabel">{{
-                  $t("sg_certificate_reference")
-                }}</label>
-                <input
-                  class="u-input"
-                  type="text"
-                  :disabled="!can_edit || is_persisting"
-                  :value="certificate_file.certificate_reference || ''"
-                  @change="
-                    patchCertificateFile(certificate_file, {
-                      certificate_reference: String($event.target.value || ''),
-                    })
-                  "
-                />
-              </div>
-              <div class="_field">
-                <label class="_fieldLabel">{{
-                  $t("sg_certificate_date")
-                }}</label>
-                <input
-                  class="u-input"
-                  type="date"
-                  :disabled="!can_edit || is_persisting"
-                  :value="certificate_file.certificate_date || ''"
-                  @change="
-                    patchCertificateFile(certificate_file, {
-                      certificate_date: String($event.target.value || ''),
-                    })
-                  "
-                />
-              </div>
-              <div class="_field">
-                <label class="_fieldLabel">{{
-                  $t("sg_certificate_price")
-                }}</label>
-                <input
-                  class="u-input"
-                  type="number"
-                  inputmode="decimal"
-                  step="0.01"
-                  :disabled="!can_edit || is_persisting"
-                  :value="
-                    certificate_file.certificate_price === null ||
-                    certificate_file.certificate_price === undefined
-                      ? ''
-                      : certificate_file.certificate_price
-                  "
-                  @change="onCertificatePriceChange(certificate_file, $event)"
-                />
-              </div>
+              <SGGemFieldCard
+                :label="$t('sg_certificate_provider')"
+                icon="person-badge"
+                :value="
+                  displayCertificateProviderLabel(certificate_file)
+                "
+                :readonly="!can_edit"
+                @click="
+                  openCertificateFieldModal(certificate_file, 'provider_path')
+                "
+              />
+              <SGGemFieldCard
+                :label="$t('sg_certificate_reference')"
+                icon="file-earmark-text"
+                :value="certificate_file.certificate_reference || ''"
+                :readonly="!can_edit"
+                @click="
+                  openCertificateFieldModal(
+                    certificate_file,
+                    'certificate_reference'
+                  )
+                "
+              />
+              <SGGemFieldCard
+                :label="$t('sg_certificate_date')"
+                icon="calendar3"
+                :value="certificate_file.certificate_date || ''"
+                :readonly="!can_edit"
+                @click="
+                  openCertificateFieldModal(
+                    certificate_file,
+                    'certificate_date'
+                  )
+                "
+              />
+              <SGGemFieldCard
+                :label="$t('sg_certificate_price')"
+                icon="tag"
+                :value="
+                  certificatePriceForFieldCard(certificate_file)
+                "
+                :readonly="!can_edit"
+                @click="
+                  openCertificateFieldModal(
+                    certificate_file,
+                    'certificate_price'
+                  )
+                "
+              />
             </div>
           </div>
         </div>
@@ -178,19 +161,37 @@
       :can_delete="can_edit"
       @close="closeCertificateRemoveModal"
     />
+
+    <SGGemEditFieldModal
+      v-if="certificate_field_edit !== null"
+      :key="certificate_field_edit_modal_key"
+      :field="certificate_field_edit.field"
+      :current_value="certificate_field_edit.current_value"
+      :gem_path="gem_path"
+      :gem="gem"
+      :meta_target_path="certificate_field_edit.meta_target_path"
+      :context_heading="certificate_field_edit.context_heading"
+      :auxiliary_disable="
+        auxiliary_disable_certificate_field_modal
+      "
+      @saved="closeCertificateFieldModal"
+      @close="closeCertificateFieldModal"
+    />
   </section>
 </template>
 
 <script>
-import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGGemCertificateRemoveModal from "@/components/gems/SGGemCertificateRemoveModal.vue";
+import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
+import SGGemFieldCard from "@/components/gems/SGGemFieldCard.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
 
 export default {
   name: "SGGemCertificatesSection",
   components: {
-    SGSelectField,
     SGGemCertificateRemoveModal,
+    SGGemEditFieldModal,
+    SGGemFieldCard,
     UploadFiles,
   },
   props: {
@@ -212,18 +213,27 @@ export default {
       pdf_files_queue: [],
       contacts_list: [],
       is_loading_contacts: false,
-      is_persisting: false,
       certificate_upload_meta: { is_gem_certificate: true },
       certificate_preview_resolution: 640,
       certificate_remove_modal_open: false,
       certificate_remove_path: "",
       certificate_remove_filename: "",
+      certificate_field_edit: null,
       upload_input_id: `sg_gem_certificate_upload_${(
         Math.random().toString(36) + "00000000000000000"
       ).slice(2, 7)}`,
     };
   },
   computed: {
+    auxiliary_disable_certificate_field_modal() {
+      if (!this.certificate_field_edit?.field?.key) return false;
+      if (this.is_loading_contacts !== true) return false;
+      return this.certificate_field_edit.field.key === "provider_path";
+    },
+    certificate_field_edit_modal_key() {
+      if (!this.certificate_field_edit) return "closed";
+      return `${this.certificate_field_edit.meta_target_path}::${this.certificate_field_edit.field.key}`;
+    },
     gem_certificate_files() {
       const files = Array.isArray(this.gem?.$files) ? this.gem.$files : [];
       return files
@@ -266,6 +276,90 @@ export default {
     await this.refreshContacts();
   },
   methods: {
+    getCertificateFieldConfig(field_key) {
+      const map = {
+        provider_path: {
+          key: "provider_path",
+          label: this.$t("sg_certificate_provider"),
+          icon: "person-badge",
+          type: "select",
+          options: this.contact_select_options,
+        },
+        certificate_reference: {
+          key: "certificate_reference",
+          label: this.$t("sg_certificate_reference"),
+          icon: "file-earmark-text",
+          type: "text",
+        },
+        certificate_date: {
+          key: "certificate_date",
+          label: this.$t("sg_certificate_date"),
+          icon: "calendar3",
+          type: "text",
+          input_type: "date",
+        },
+        certificate_price: {
+          key: "certificate_price",
+          label: this.$t("sg_certificate_price"),
+          icon: "tag",
+          type: "number",
+          input_step: 0.01,
+          persist_empty_number_as_null: true,
+        },
+      };
+      return map[field_key] || null;
+    },
+    certificatePriceForFieldCard(certificate_file) {
+      const raw = certificate_file?.certificate_price;
+      if (raw === null || raw === undefined) return "";
+      const n = typeof raw === "number" ? raw : Number(raw);
+      return Number.isFinite(n) ? n : "";
+    },
+    displayCertificateProviderLabel(certificate_file) {
+      const path_raw = certificate_file?.provider_path;
+      const path_str = typeof path_raw === "string" ? path_raw.trim() : "";
+      if (!path_str) return "";
+      const opts = Array.isArray(this.contact_select_options)
+        ? this.contact_select_options
+        : [];
+      const match = opts.find((opt) => opt && opt.value === path_str);
+      if (match && match.label) return String(match.label);
+      return path_str;
+    },
+    openCertificateFieldModal(certificate_file, field_key) {
+      if (
+        !this.can_edit ||
+        !certificate_file ||
+        !certificate_file.$path ||
+        this.certificate_remove_modal_open
+      )
+        return;
+      const field_def = this.getCertificateFieldConfig(field_key);
+      if (!field_def) return;
+
+      let current_value =
+        certificate_file[field_key] === null ||
+        certificate_file[field_key] === undefined
+          ? ""
+          : certificate_file[field_key];
+      if (field_key === "certificate_price") {
+        current_value =
+          certificate_file.certificate_price === null ||
+          certificate_file.certificate_price === undefined
+            ? ""
+            : certificate_file.certificate_price;
+      }
+
+      this.certificate_field_edit = {
+        field: field_def,
+        current_value,
+        meta_target_path: certificate_file.$path,
+        context_heading: this.displayCertificateFilename(certificate_file),
+      };
+    },
+    closeCertificateFieldModal() {
+      this.certificate_field_edit = null;
+    },
     async refreshContacts() {
       this.is_loading_contacts = true;
       try {
@@ -320,37 +414,18 @@ export default {
     onCertificateUploadClosed() {
       this.pdf_files_queue = [];
     },
-    async patchCertificateFile(certificate_file, patch) {
-      if (!this.can_edit || !certificate_file?.$path) return;
-      this.is_persisting = true;
-      try {
-        await this.$api.updateMeta({
-          path: certificate_file.$path,
-          new_meta: patch,
-        });
-      } catch ({ code }) {
-        this.$alertify.delay(4000).error(code || this.$t("couldntbesaved"));
-      } finally {
-        this.is_persisting = false;
-      }
-    },
-    onCertificatePriceChange(certificate_file, event) {
-      const raw = event?.target?.value;
-      const price_value =
-        raw === null || raw === undefined || String(raw).trim() === ""
-          ? null
-          : Number(String(raw).trim().replace(",", "."));
-      this.patchCertificateFile(certificate_file, {
-        certificate_price: Number.isFinite(price_value) ? price_value : null,
-      });
-    },
     closeCertificateRemoveModal() {
       this.certificate_remove_modal_open = false;
       this.certificate_remove_path = "";
       this.certificate_remove_filename = "";
     },
     openCertificateRemoveModal(certificate_file) {
-      if (!this.can_edit || !certificate_file?.$path) return;
+      if (
+        !this.can_edit ||
+        !certificate_file?.$path ||
+        this.certificate_field_edit !== null
+      )
+        return;
       this.certificate_remove_path = certificate_file.$path;
       this.certificate_remove_filename =
         this.displayCertificateFilename(certificate_file);
@@ -478,13 +553,6 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: calc(var(--spacing) / 1.5);
-}
-
-._fieldLabel {
-  display: block;
-  margin: 0 0 0.2rem 0;
-  font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce);
 }
 
 @media (max-width: 720px) {

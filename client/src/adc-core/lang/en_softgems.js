@@ -22,6 +22,7 @@ export default {
   sg_section_stone_characteristics: "Stone characteristics",
   sg_section_pricing: "Pricing",
   sg_section_certificates: "Certificates",
+  sg_section_photos_videos: "Photos & videos",
   sg_certificate_upload: "Upload (PDF)",
   sg_no_certificates_yet:
     "No certificates yet. Upload a PDF certificate to add one.",
@@ -37,6 +38,15 @@ export default {
   sg_certificate_remove_success: "Certificate file deleted.",
   sg_certificate_open_pdf: "Open",
   sg_certificate_download_pdf: "Download",
+  sg_media_upload: "Upload (photos/videos)",
+  sg_no_media_yet:
+    "No photos or videos yet. Upload images or videos to add some.",
+  sg_media_invalid_type: "Please choose image or video files only.",
+  sg_media_remove: "Remove",
+  sg_media_remove_modal_title: "Delete media file",
+  sg_media_remove_modal_body:
+    'Permanently delete "{filename}" from this gem? This removes the file from the server.',
+  sg_media_remove_success: "Media file deleted.",
   sg_section_creation: "Creation",
   sg_see_all_gems: "See all gems",
   sg_back_home: "Back to home",

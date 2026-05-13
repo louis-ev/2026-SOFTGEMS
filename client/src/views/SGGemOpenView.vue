@@ -338,6 +338,14 @@
       </section>
 
       <section class="_formSection">
+        <SGGemMediaSection
+          :gem_path="gem_path"
+          :gem="gem"
+          :can_edit="can_edit"
+        />
+      </section>
+
+      <section class="_formSection">
         <SGGemCertificatesSection
           :gem_path="gem_path"
           :gem="gem"
@@ -421,6 +429,7 @@ export default {
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
     SGGemCertificatesSection: () =>
       import("@/components/gems/SGGemCertificatesSection.vue"),
+    SGGemMediaSection: () => import("@/components/gems/SGGemMediaSection.vue"),
   },
   props: {
     gem_id: {

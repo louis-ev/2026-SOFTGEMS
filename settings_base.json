@@ -209,13 +209,16 @@
         },
         "$files": {
           "thumbs": {
-            "resolutions": [50, 320, 640, 2000]
+            "resolutions": [50, 320, 640, 1600]
           },
           "fields": {
             "caption": {
               "type": "string"
             },
             "is_gem_certificate": {
+              "type": "boolean"
+            },
+            "is_gem_media": {
               "type": "boolean"
             },
             "provider_path": {
