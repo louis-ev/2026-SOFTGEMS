@@ -102,12 +102,15 @@ describe("FormatDates mixin", () => {
       expect(formatted).toBe("Hier, à 14h12");
     });
 
-    it("falls back to ISO string for older dates", () => {
+    it("formats older dates with locale-aware date-time (not raw UTC ISO)", () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-05-06T14:32:00.000Z"));
 
-      const formatted = vm.formatRecentDateTime("2026-05-02T10:11:12.000Z");
-      expect(formatted).toBe("2026-05-02T10:11:12.000Z");
+      const iso = "2026-05-02T10:11:12.000Z";
+      const formatted = vm.formatRecentDateTime(iso);
+      const expected = vm.formatDateTimeToPrecise(iso);
+      expect(formatted).toBe(expected);
+      expect(formatted).not.toMatch(/T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
   });
 });

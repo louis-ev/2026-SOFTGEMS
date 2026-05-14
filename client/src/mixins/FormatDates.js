@@ -166,7 +166,7 @@ export default {
         })}`;
       }
 
-      return parsed_date.toISOString();
+      return this.formatDateTimeToPrecise(parsed_date);
     },
   },
 };
