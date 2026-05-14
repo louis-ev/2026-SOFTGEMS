@@ -208,7 +208,7 @@ export default {
   sg_company_details_updated: "Company details saved.",
   sg_could_not_save_company_details: "Could not save company details.",
   sg_section_company_contacts: "Contacts at this company",
-  sg_add_company_contact: "Add a contact",
+  sg_add_company_contact: "Add person",
   sg_person_last_name: "Last name",
   sg_person_first_name: "First name",
   sg_person_last_name_required: "Last name is required.",

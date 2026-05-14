@@ -18,11 +18,17 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_contact_identity") }}</h2>
         <div>
-          <DLabel :str="$t('sg_contact_name')" icon="person" />
-          <TextInput
-            ref="name_input"
+          <SGClickRevealTextField
+            :ref="(el) => registerRevealRef('contact_name', el)"
+            :label="$t('sg_contact_name')"
+            label_icon="person"
             :content.sync="edited_name"
             :required="true"
+            :is_saving="is_saving_name"
+            :is_save_disabled_externally="
+              contact_name_save_blocked_without_request
+            "
+            @save="saveName"
             @update:content="onEditedName"
           />
           <p v-if="name_duplicate_warning" class="u-warning _duplicateWarning">
@@ -32,71 +38,79 @@
             {{ name_validation_error }}
           </p>
         </div>
-        <div class="_saveRow">
-          <button
-            type="button"
-            class="u-button u-button_bleuvert"
-            :disabled="is_save_name_disabled"
-            @click="saveName"
-          >
-            {{ is_saving_name ? $t("saving") : $t("save") }}
-          </button>
-        </div>
       </section>
 
       <section v-if="is_company" class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_company_details") }}</h2>
         <div class="_fieldsGrid">
           <div class="_fullWidthField">
-            <DLabel :str="$t('sg_company_address')" icon="geo-alt" />
-            <TextInput
+            <SGClickRevealTextField
+              :ref="(el) => registerRevealRef('company_address', el)"
+              :label="$t('sg_company_address')"
+              label_icon="geo-alt"
               :content.sync="edited_address"
               :required="false"
-              @update:content="onCompanyFieldInput"
+              :is_saving="saving_company_field_key === 'address'"
+              :is_save_disabled_externally="
+                company_field_matches_stored('address')
+              "
+              @save="saveCompanyDetailField('address')"
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_company_phone')" icon="telephone" />
-            <TextInput
+            <SGClickRevealTextField
+              :ref="(el) => registerRevealRef('company_phone', el)"
+              :label="$t('sg_company_phone')"
+              label_icon="telephone"
               :content.sync="edited_phone"
               :required="false"
-              @update:content="onCompanyFieldInput"
+              :is_saving="saving_company_field_key === 'phone'"
+              :is_save_disabled_externally="company_field_matches_stored('phone')"
+              @save="saveCompanyDetailField('phone')"
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_company_email')" icon="envelope" />
-            <TextInput
+            <SGClickRevealTextField
+              :ref="(el) => registerRevealRef('company_email', el)"
+              :label="$t('sg_company_email')"
+              label_icon="envelope"
               :content.sync="edited_company_email"
               :required="false"
-              @update:content="onCompanyFieldInput"
+              :is_saving="saving_company_field_key === 'company_email'"
+              :is_save_disabled_externally="
+                company_field_matches_stored('company_email')
+              "
+              @save="saveCompanyDetailField('company_email')"
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_company_tva_number')" icon="hash" />
-            <TextInput
+            <SGClickRevealTextField
+              :ref="(el) => registerRevealRef('company_tva_number', el)"
+              :label="$t('sg_company_tva_number')"
+              label_icon="hash"
               :content.sync="edited_tva_number"
               :required="false"
-              @update:content="onCompanyFieldInput"
+              :is_saving="saving_company_field_key === 'tva_number'"
+              :is_save_disabled_externally="
+                company_field_matches_stored('tva_number')
+              "
+              @save="saveCompanyDetailField('tva_number')"
             />
           </div>
           <div>
-            <DLabel :str="$t('sg_company_tva_attestation')" icon="file-earmark-text" />
-            <TextInput
+            <SGClickRevealTextField
+              :ref="(el) => registerRevealRef('company_tva_attestation', el)"
+              :label="$t('sg_company_tva_attestation')"
+              label_icon="file-earmark-text"
               :content.sync="edited_tva_attestation"
               :required="false"
-              @update:content="onCompanyFieldInput"
+              :is_saving="saving_company_field_key === 'tva_attestation'"
+              :is_save_disabled_externally="
+                company_field_matches_stored('tva_attestation')
+              "
+              @save="saveCompanyDetailField('tva_attestation')"
             />
           </div>
-        </div>
-        <div class="_saveRow">
-          <button
-            type="button"
-            class="u-button u-button_bleuvert"
-            :disabled="is_save_company_disabled"
-            @click="saveCompanyDetails"
-          >
-            {{ is_saving_company ? $t("saving") : $t("save") }}
-          </button>
         </div>
       </section>
 
@@ -164,9 +178,7 @@
               :disabled="is_create_person_disabled"
             >
               {{
-                is_creating_company_person
-                  ? $t("sg_create_contact_in_progress")
-                  : $t("sg_add_company_contact")
+                is_creating_company_person ? $t("saving") : $t("save")
               }}
             </button>
           </div>
@@ -193,10 +205,25 @@
               class="_fieldsGrid"
             >
               <div>
-                <DLabel :str="$t('sg_person_last_name')" icon="person" />
-                <TextInput
+                <SGClickRevealTextField
+                  :ref="
+                    (el) =>
+                      personRevealRef(
+                        personSlugFromFolder(person),
+                        'last_name',
+                        el
+                      )
+                  "
+                  :label="$t('sg_person_last_name')"
+                  label_icon="person"
                   :content="personField(person, 'last_name')"
                   :required="true"
+                  :is_saving="
+                    savingPersonPair(personSlugFromFolder(person), 'last_name')
+                  "
+                  :is_save_disabled_externally="
+                    companyPersonFieldMatchesStored(person, 'last_name')
+                  "
                   @update:content="
                     (v) =>
                       setPersonField(
@@ -205,13 +232,34 @@
                         v
                       )
                   "
+                  @save="
+                    saveCompanyPersonField(
+                      personSlugFromFolder(person),
+                      'last_name'
+                    )
+                  "
                 />
               </div>
               <div>
-                <DLabel :str="$t('sg_person_first_name')" icon="person" />
-                <TextInput
+                <SGClickRevealTextField
+                  :ref="
+                    (el) =>
+                      personRevealRef(
+                        personSlugFromFolder(person),
+                        'first_name',
+                        el
+                      )
+                  "
+                  :label="$t('sg_person_first_name')"
+                  label_icon="person"
                   :content="personField(person, 'first_name')"
                   :required="false"
+                  :is_saving="
+                    savingPersonPair(personSlugFromFolder(person), 'first_name')
+                  "
+                  :is_save_disabled_externally="
+                    companyPersonFieldMatchesStored(person, 'first_name')
+                  "
                   @update:content="
                     (v) =>
                       setPersonField(
@@ -220,70 +268,99 @@
                         v
                       )
                   "
+                  @save="
+                    saveCompanyPersonField(
+                      personSlugFromFolder(person),
+                      'first_name'
+                    )
+                  "
                 />
               </div>
               <div>
-                <DLabel :str="$t('sg_person_email')" icon="envelope" />
-                <TextInput
+                <SGClickRevealTextField
+                  :ref="
+                    (el) =>
+                      personRevealRef(personSlugFromFolder(person), 'email', el)
+                  "
+                  :label="$t('sg_person_email')"
+                  label_icon="envelope"
                   :content="personField(person, 'email')"
                   :required="false"
+                  :is_saving="
+                    savingPersonPair(personSlugFromFolder(person), 'email')
+                  "
+                  :is_save_disabled_externally="
+                    companyPersonFieldMatchesStored(person, 'email')
+                  "
                   @update:content="
                     (v) =>
-                      setPersonField(
-                        personSlugFromFolder(person),
-                        'email',
-                        v
-                      )
+                      setPersonField(personSlugFromFolder(person), 'email', v)
+                  "
+                  @save="
+                    saveCompanyPersonField(
+                      personSlugFromFolder(person),
+                      'email'
+                    )
                   "
                 />
               </div>
               <div class="_fullWidthField">
-                <DLabel :str="$t('sg_person_address')" icon="geo-alt" />
-                <TextInput
-                  :content="personField(person, 'address')"
-                  :required="false"
-                  @update:content="
-                    (v) =>
-                      setPersonField(
+                <SGClickRevealTextField
+                  :ref="
+                    (el) =>
+                      personRevealRef(
                         personSlugFromFolder(person),
                         'address',
-                        v
+                        el
                       )
+                  "
+                  :label="$t('sg_person_address')"
+                  label_icon="geo-alt"
+                  :content="personField(person, 'address')"
+                  :required="false"
+                  :is_saving="
+                    savingPersonPair(personSlugFromFolder(person), 'address')
+                  "
+                  :is_save_disabled_externally="
+                    companyPersonFieldMatchesStored(person, 'address')
+                  "
+                  @update:content="
+                    (v) =>
+                      setPersonField(personSlugFromFolder(person), 'address', v)
+                  "
+                  @save="
+                    saveCompanyPersonField(
+                      personSlugFromFolder(person),
+                      'address'
+                    )
                   "
                 />
               </div>
               <div>
-                <DLabel :str="$t('sg_person_phone')" icon="telephone" />
-                <TextInput
+                <SGClickRevealTextField
+                  :ref="
+                    (el) =>
+                      personRevealRef(personSlugFromFolder(person), 'phone', el)
+                  "
+                  :label="$t('sg_person_phone')"
+                  label_icon="telephone"
                   :content="personField(person, 'phone')"
                   :required="false"
+                  :is_saving="
+                    savingPersonPair(personSlugFromFolder(person), 'phone')
+                  "
+                  :is_save_disabled_externally="
+                    companyPersonFieldMatchesStored(person, 'phone')
+                  "
                   @update:content="
                     (v) =>
-                      setPersonField(
-                        personSlugFromFolder(person),
-                        'phone',
-                        v
-                      )
+                      setPersonField(personSlugFromFolder(person), 'phone', v)
+                  "
+                  @save="
+                    saveCompanyPersonField(personSlugFromFolder(person), 'phone')
                   "
                 />
               </div>
-            </div>
-            <div class="_saveRow">
-              <button
-                type="button"
-                class="u-button u-button_bleuvert"
-                :disabled="
-                  isCompanyPersonSaveDisabled(personSlugFromFolder(person))
-                "
-                @click="saveCompanyPerson(personSlugFromFolder(person))"
-              >
-                {{
-                  saving_company_person_slug ===
-                  personSlugFromFolder(person)
-                    ? $t("saving")
-                    : $t("save")
-                }}
-              </button>
             </div>
           </article>
         </div>
@@ -299,8 +376,13 @@
 </template>
 
 <script>
+import SGClickRevealTextField from "@/components/softgems/SGClickRevealTextField.vue";
+
 export default {
   name: "SGContactOpenView",
+  components: {
+    SGClickRevealTextField,
+  },
   props: {
     contact_slug: {
       type: String,
@@ -319,7 +401,7 @@ export default {
       edited_tva_attestation: "",
       is_loading: false,
       is_saving_name: false,
-      is_saving_company: false,
+      saving_company_field_key: "",
       fetch_error: "",
       name_duplicate_warning: "",
       name_save_attempted: false,
@@ -333,7 +415,8 @@ export default {
       new_person_address: "",
       new_person_phone: "",
       is_creating_company_person: false,
-      saving_company_person_slug: "",
+      reveal_component_refs: {},
+      saving_person_slug_field: "",
     };
   },
   computed: {
@@ -364,33 +447,10 @@ export default {
       if (!this.trimmed_edited_name) return this.$t("sg_contact_name_required");
       return "";
     },
-    is_save_name_disabled() {
+    contact_name_save_blocked_without_request() {
       return (
-        this.is_saving_name ||
         !this.trimmed_edited_name ||
         this.trimmed_edited_name === this.stored_name
-      );
-    },
-    company_details_match_stored() {
-      if (!this.contact) return true;
-      return (
-        this.clean_string(this.edited_address) ===
-          this.stored_string_field("address") &&
-        this.clean_string(this.edited_phone) ===
-          this.stored_string_field("phone") &&
-        this.clean_string(this.edited_company_email) ===
-          this.stored_string_field("company_email") &&
-        this.clean_string(this.edited_tva_number) ===
-          this.stored_string_field("tva_number") &&
-        this.clean_string(this.edited_tva_attestation) ===
-          this.stored_string_field("tva_attestation")
-      );
-    },
-    is_save_company_disabled() {
-      return (
-        this.is_saving_company ||
-        !this.is_company ||
-        this.company_details_match_stored
       );
     },
     is_create_person_disabled() {
@@ -425,6 +485,74 @@ export default {
     goBack() {
       this.$router.push("/address-book");
     },
+    registerRevealRef(key, component) {
+      if (component) this.$set(this.reveal_component_refs, key, component);
+      else this.$delete(this.reveal_component_refs, key);
+    },
+    personRevealRef(slug, field_key, component) {
+      const k = `pp:${this.clean_string(slug)}:${field_key}`;
+      return this.registerRevealRef(k, component);
+    },
+    reveal_component_for_company_detail(meta_key) {
+      const reveal_map = {
+        address: "company_address",
+        phone: "company_phone",
+        company_email: "company_email",
+        tva_number: "company_tva_number",
+        tva_attestation: "company_tva_attestation",
+      };
+      const ref_key = reveal_map[meta_key];
+      return ref_key ? this.reveal_component_refs[ref_key] : null;
+    },
+    collapse_reveal_component(cmp) {
+      if (
+        cmp &&
+        typeof cmp.collapseAfterSave === "function"
+      ) {
+        cmp.collapseAfterSave();
+      }
+    },
+    focus_reveal_inner_input(ref_key) {
+      const cmp = this.reveal_component_refs[ref_key];
+      if (cmp && typeof cmp.focusInnerInput === "function") {
+        cmp.focusInnerInput();
+      }
+    },
+    company_detail_edited_value(meta_key) {
+      if (meta_key === "address") return this.edited_address;
+      if (meta_key === "phone") return this.edited_phone;
+      if (meta_key === "company_email") return this.edited_company_email;
+      if (meta_key === "tva_number") return this.edited_tva_number;
+      if (meta_key === "tva_attestation") return this.edited_tva_attestation;
+      return "";
+    },
+    company_field_matches_stored(meta_key) {
+      return (
+        this.clean_string(this.company_detail_edited_value(meta_key)) ===
+        this.stored_string_field(meta_key)
+      );
+    },
+    savingPersonPair(slug, field_key) {
+      return (
+        this.saving_person_slug_field ===
+        `${this.clean_string(slug)}::${field_key}`
+      );
+    },
+    companyPersonFieldMatchesStored(person, field_key) {
+      const slug = this.personSlugFromFolder(person);
+      if (!slug) return true;
+      const buf = this.person_edit_buffers[slug];
+      if (!buf) return true;
+      const buf_val = this.clean_string(
+        typeof buf[field_key] === "string" ? buf[field_key] : ""
+      );
+      if (field_key === "last_name") {
+        return (
+          buf_val === this.stored_person_field_normalized(person, "last_name")
+        );
+      }
+      return buf_val === this.storedPersonField(person, field_key);
+    },
     clean_string(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
@@ -449,7 +577,6 @@ export default {
       this.name_duplicate_warning = "";
       this.name_save_attempted = false;
     },
-    onCompanyFieldInput() {},
     async fetchContact() {
       this.is_loading = true;
       this.fetch_error = "";
@@ -502,6 +629,9 @@ export default {
           await this.fetchCompanyContacts();
         }
         this.name_save_attempted = false;
+        this.collapse_reveal_component(
+          this.reveal_component_refs.contact_name
+        );
         this.$alertify.delay(3000).success(this.$t("sg_contact_name_updated"));
       } catch (err) {
         const code = err && err.code;
@@ -516,11 +646,7 @@ export default {
           this.name_duplicate_warning = message;
           this.$alertify.delay(4000).error(message);
           this.$nextTick(() => {
-            const input_el =
-              this.$refs.name_input &&
-              this.$refs.name_input.$el &&
-              this.$refs.name_input.$el.querySelector("input");
-            if (input_el) input_el.select();
+            this.focus_reveal_inner_input("contact_name");
           });
         } else {
           this.$alertify
@@ -531,19 +657,26 @@ export default {
         this.is_saving_name = false;
       }
     },
-    async saveCompanyDetails() {
-      if (!this.is_company || this.is_save_company_disabled) return;
+    async saveCompanyDetailField(meta_key) {
+      if (
+        !this.is_company ||
+        !this.clean_string(meta_key) ||
+        this.company_field_matches_stored(meta_key) ||
+        this.saving_company_field_key
+      ) {
+        return;
+      }
 
-      this.is_saving_company = true;
+      this.saving_company_field_key = meta_key;
+      const reveal_cmp =
+        this.reveal_component_for_company_detail(meta_key);
       try {
         await this.$api.updateMeta({
           path: this.contact_path,
           new_meta: {
-            address: this.clean_string(this.edited_address),
-            phone: this.clean_string(this.edited_phone),
-            company_email: this.clean_string(this.edited_company_email),
-            tva_number: this.clean_string(this.edited_tva_number),
-            tva_attestation: this.clean_string(this.edited_tva_attestation),
+            [meta_key]: this.clean_string(
+              this.company_detail_edited_value(meta_key)
+            ),
           },
         });
         this.contact = await this.$api.getFolder({
@@ -551,6 +684,7 @@ export default {
           no_files: true,
         });
         this.populate_company_editors_from_contact();
+        this.collapse_reveal_component(reveal_cmp);
         this.$alertify
           .delay(3000)
           .success(this.$t("sg_company_details_updated"));
@@ -560,7 +694,7 @@ export default {
           .delay(4000)
           .error(code || this.$t("sg_could_not_save_company_details"));
       } finally {
-        this.is_saving_company = false;
+        this.saving_company_field_key = "";
       }
     },
     personSlugFromFolder(folder) {
@@ -611,28 +745,6 @@ export default {
         v = this.string_from_contact(folder, "full_name");
       }
       return v;
-    },
-    isCompanyPersonSaveDisabled(slug) {
-      if (!slug) return true;
-      if (this.saving_company_person_slug === slug) return true;
-      const folder = this.company_person_folders.find(
-        (item) => this.personSlugFromFolder(item) === slug
-      );
-      if (!folder) return true;
-      const buf = this.person_edit_buffers[slug];
-      if (!buf) return true;
-      return (
-        this.clean_string(buf.last_name) ===
-          this.stored_person_field_normalized(folder, "last_name") &&
-        this.clean_string(buf.first_name) ===
-          this.stored_person_field_normalized(folder, "first_name") &&
-        this.clean_string(buf.email) ===
-          this.storedPersonField(folder, "email") &&
-        this.clean_string(buf.address) ===
-          this.storedPersonField(folder, "address") &&
-        this.clean_string(buf.phone) ===
-          this.storedPersonField(folder, "phone")
-      );
     },
     toggleNewPersonForm() {
       this.show_new_person_form = !this.show_new_person_form;
@@ -731,43 +843,44 @@ export default {
         this.is_creating_company_person = false;
       }
     },
-    async saveCompanyPerson(slug) {
-      const cleaned_slug = this.clean_string(slug);
-      if (
-        !cleaned_slug ||
-        this.isCompanyPersonSaveDisabled(cleaned_slug) ||
-        this.saving_company_person_slug
-      ) {
-        return;
-      }
+    async saveCompanyPersonField(slug_raw, field_key) {
+      const slug = this.clean_string(slug_raw);
+      const fk = this.clean_string(field_key);
+      if (!slug || !fk || this.saving_person_slug_field) return;
 
-      const buf = this.person_edit_buffers[cleaned_slug];
+      const folder = this.company_person_folders.find(
+        (item) => this.personSlugFromFolder(item) === slug
+      );
+      if (!folder) return;
+      if (this.companyPersonFieldMatchesStored(folder, fk)) return;
+
+      const buf = this.person_edit_buffers[slug];
       if (!buf) return;
 
-      const last_name = this.clean_string(buf.last_name);
-      if (!last_name) {
+      if (fk === "last_name" && !this.clean_string(buf.last_name)) {
         this.$alertify
           .delay(4000)
           .error(this.$t("sg_person_last_name_required"));
         return;
       }
 
-      const first_name = this.clean_string(buf.first_name);
+      const reveal_cmp =
+        this.reveal_component_refs[`pp:${slug}:${fk}`];
 
-      this.saving_company_person_slug = cleaned_slug;
+      const pair_key = `${slug}::${fk}`;
+      this.saving_person_slug_field = pair_key;
       try {
-        const person_path = `${this.company_contacts_path}/${cleaned_slug}`;
+        const person_path = `${this.company_contacts_path}/${slug}`;
         await this.$api.updateMeta({
           path: person_path,
           new_meta: {
-            last_name,
-            first_name,
-            email: this.clean_string(buf.email),
-            address: this.clean_string(buf.address),
-            phone: this.clean_string(buf.phone),
+            [fk]: this.clean_string(
+              typeof buf[fk] === "string" ? buf[fk] : ""
+            ),
           },
         });
         await this.fetchCompanyContacts();
+        this.collapse_reveal_component(reveal_cmp);
         this.$alertify
           .delay(3000)
           .success(this.$t("sg_company_contact_saved"));
@@ -777,7 +890,9 @@ export default {
           .delay(4000)
           .error(code || this.$t("sg_could_not_save_company_contact"));
       } finally {
-        this.saving_company_person_slug = "";
+        if (this.saving_person_slug_field === pair_key) {
+          this.saving_person_slug_field = "";
+        }
       }
     },
   },

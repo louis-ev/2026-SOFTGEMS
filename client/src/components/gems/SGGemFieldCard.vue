@@ -1,26 +1,23 @@
 <template>
-  <div class="_gemFieldCard" :class="{ _flashing: is_flashing }">
-    <div class="_labelRow">
-      <DLabel :str="label" :icon="icon" />
-      <span v-if="link_role" class="_linkRolePill">{{ link_role }}</span>
-    </div>
-    <button
-      v-if="!readonly"
-      type="button"
-      class="_value u-input"
-      @click="$emit('click')"
-    >
-      <span :class="{ _empty: is_empty }">{{ display_value }}</span>
-    </button>
-    <div v-else class="_value u-input _readonly">
-      <span :class="{ _empty: is_empty }">{{ display_value }}</span>
-    </div>
-  </div>
+  <SGFieldValuePresent
+    :label="label"
+    :icon="icon"
+    :value="value"
+    :readonly="readonly"
+    :is_flashing="is_flashing"
+    :pill_text="link_role"
+    @click="$emit('click')"
+  />
 </template>
 
 <script>
+import SGFieldValuePresent from "@/components/softgems/SGFieldValuePresent.vue";
+
 export default {
   name: "SGGemFieldCard",
+  components: {
+    SGFieldValuePresent,
+  },
   props: {
     label: {
       type: String,
@@ -28,7 +25,7 @@ export default {
     },
     icon: {
       type: String,
-      default: null,
+      default: "",
     },
     value: {
       default: "",
@@ -46,98 +43,5 @@ export default {
       default: "",
     },
   },
-  computed: {
-    is_empty() {
-      const v = this.value;
-      return v === null || v === undefined || v === "";
-    },
-    display_value() {
-      if (this.is_empty) return "—";
-      if (typeof this.value === "number")
-        return Number.isFinite(this.value)
-          ? this.value.toLocaleString(this.$i18n.locale, {
-              maximumFractionDigits: 3,
-            })
-          : "—";
-      return String(this.value);
-    },
-  },
 };
 </script>
-
-<style lang="scss" scoped>
-._gemFieldCard {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-._labelRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: calc(var(--spacing) / 3);
-}
-
-._linkRolePill {
-  flex-shrink: 0;
-  margin-top: 2px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--c-gris_fonce);
-  background: var(--c-blanc);
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 4px;
-  padding: 3px 6px;
-}
-
-._gemFieldCard._flashing ._value {
-  animation: _flashFieldCardFade 4s ease-out 1;
-}
-
-._value {
-  all: unset;
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
-  padding: calc(var(--spacing) * 0.5);
-  border: 2px solid transparent;
-  border-radius: var(--input-border-radius);
-  background-color: var(--c-gris_clair);
-  line-height: inherit;
-  cursor: pointer;
-  transition: border-color 0.25s cubic-bezier(0.19, 1, 0.22, 1),
-    background-color 0.25s cubic-bezier(0.19, 1, 0.22, 1);
-
-  &:hover {
-    border-color: var(--c-gris);
-  }
-
-  &._readonly {
-    cursor: default;
-    opacity: 0.7;
-
-    &:hover {
-      border-color: transparent;
-    }
-  }
-
-  ._empty {
-    color: var(--c-gris_fonce);
-  }
-}
-
-@keyframes _flashFieldCardFade {
-  0% {
-    background: color-mix(in srgb, var(--c-bleuvert) 25%, var(--c-gris_clair));
-    border-color: color-mix(in srgb, var(--c-bleuvert) 70%, transparent);
-  }
-  100% {
-    background: var(--c-gris_clair);
-    border-color: transparent;
-  }
-}
-</style>
