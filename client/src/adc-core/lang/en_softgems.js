@@ -2,7 +2,7 @@ export default {
   sg_inventory: "Inventory",
   sg_all_gems: "All gems",
   sg_gems_search_placeholder:
-    "Search: exact numeric ID; weight: 3. or 3, → all 3.x ct; 3.1 → 3.0–3.2 ct; =2 exact ct; ± / +/- range; sap / rub; text matches stone type",
+    "Search: exact numeric ID; weight: 3. or 3, → all 3.x ct; 3.1 → 3.0–3.2 ct; =2 exact ct; sap / rub; text matches stone type",
   sg_gems_filter_caption: "Filtered: {clauses} · {shown} of {total} gems",
   sg_gems_filter_id_exact: "ID equals “{needle}”",
   sg_gems_filter_weight_exact: "{value} ct exact",

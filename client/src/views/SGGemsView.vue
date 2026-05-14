@@ -468,27 +468,7 @@ export default {
 
       if (!s) return result;
 
-      s = s
-        .replace(/\s*\u00B1\s*/g, "\u00B1")
-        .replace(/\s*\+\/-\s*/g, "\u00B1");
-
-      let m = s.match(
-        /^=?(\d+(?:[.,]\d+)?)\u00B1(\d+(?:[.,]\d+)?)\s*$/i
-      );
-      if (m) {
-        const c = this.normalizeGemsSearchNumber(m[1]);
-        const d = this.normalizeGemsSearchNumber(m[2]);
-        if (Number.isFinite(c) && Number.isFinite(d) && d >= 0) {
-          result.weight_spec = {
-            type: "range",
-            min: c - d,
-            max: c + d,
-          };
-          return result;
-        }
-      }
-
-      m = s.match(/^=\s*(\d+(?:[.,]\d+)?)\s*$/);
+      let m = s.match(/^=\s*(\d+(?:[.,]\d+)?)\s*$/);
       if (m) {
         const v = this.normalizeGemsSearchNumber(m[1]);
         if (Number.isFinite(v)) {
@@ -538,19 +518,6 @@ export default {
           );
           if (Number.isFinite(v)) {
             weight_specs.push({ type: "exact", value: v });
-          }
-          return;
-        }
-        const pm = token.match(/^(\d+(?:[.,]\d+)?)\u00B1(\d+(?:[.,]\d+)?)$/i);
-        if (pm) {
-          const c = this.normalizeGemsSearchNumber(pm[1]);
-          const d = this.normalizeGemsSearchNumber(pm[2]);
-          if (Number.isFinite(c) && Number.isFinite(d) && d >= 0) {
-            weight_specs.push({
-              type: "range",
-              min: c - d,
-              max: c + d,
-            });
           }
           return;
         }
