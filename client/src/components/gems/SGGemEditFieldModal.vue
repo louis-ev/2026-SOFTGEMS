@@ -504,7 +504,10 @@ export default {
     },
     formatDate(iso_string) {
       if (!iso_string) return "";
-      return new Date(iso_string).toLocaleString();
+      return new Date(iso_string).toLocaleString(this.$i18n.locale, {
+        dateStyle: "short",
+        timeStyle: "short",
+      });
     },
     formatAuthor(author_path) {
       if (!author_path) return "";

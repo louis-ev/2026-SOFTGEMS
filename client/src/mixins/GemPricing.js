@@ -22,10 +22,22 @@ const price_field_pairs = [
   },
 ];
 
+export const gem_virtual_per_carat_column_keys = price_field_pairs
+  .map((p) => p.virtual_per_carat_key)
+  .concat(["price_per_carat_pvd"]);
+
+/** One table column per line: total + derived /ct (includes read-only PVD). */
+export const gem_pricing_total_column_keys = price_field_pairs
+  .map((p) => p.total_key)
+  .concat(["pvd_asking_price"]);
+
 export default {
   methods: {
     getPriceFieldPairs() {
       return price_field_pairs;
+    },
+    isGemPricingTotalColumnKey(field_key) {
+      return gem_pricing_total_column_keys.includes(field_key);
     },
     isPricingField(field_key) {
       return this.getPriceFieldPairs().some(

@@ -115,6 +115,7 @@ export default {
   sg_remarks: "Remarks",
   sg_path: "Path",
   sg_created: "Created",
+  sg_last_edited: "Last edited",
   sg_last_modified: "Last modified",
   sg_metadata: "Informations",
   sg_reference_supplier: "Reference supplier",

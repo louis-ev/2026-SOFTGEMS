@@ -26,8 +26,11 @@
 </template>
 
 <script>
+import GemPricing from "@/mixins/GemPricing";
+
 export default {
   name: "GemCsvExportButton",
+  mixins: [GemPricing],
   props: {
     gems: { type: Array, default: () => [] },
     metadata_keys: { type: Array, default: () => [] },
@@ -66,6 +69,31 @@ export default {
     },
     resolveCellValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
+
+      if (metadata_key === "$date_modified") {
+        const raw = gem?.$date_modified;
+        if (raw === null || raw === undefined || raw === "") return "";
+        const time_value = new Date(raw).getTime();
+        if (!Number.isFinite(time_value)) return String(raw);
+        return new Date(raw).toLocaleString(this.$i18n.locale, {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+      }
+
+      if (this.isGemPricingTotalColumnKey(metadata_key)) {
+        const raw_total = gem?.[metadata_key];
+        const total_str =
+          raw_total === null || raw_total === undefined || raw_total === ""
+            ? "-"
+            : String(raw_total);
+        const w = this.toNumberOrDefault(gem?.weight_ct);
+        if (!Number.isFinite(w) || w <= 0) {
+          return `${total_str} | - /ct`;
+        }
+        const per = this.computeDisplayedPerCaratForGem(gem, metadata_key);
+        return `${total_str} | ${per} /ct`;
+      }
 
       const raw_value = gem?.[metadata_key];
       if (raw_value === null || raw_value === undefined) return "";

@@ -172,6 +172,7 @@ This section documents **how pricing works in the SoftGems client** (single sour
 
 - Pair definitions: [`client/src/mixins/GemPricing.js`](../client/src/mixins/GemPricing.js)
 - Field labels, virtual `pricing_total_key`: [`client/src/components/gems/gem_field_configs.js`](../client/src/components/gems/gem_field_configs.js)
+- Gems list table ([`client/src/components/gems/SGGemsTable.vue`](../client/src/components/gems/SGGemsTable.vue)): one column per pricing line (PCb, PA, PV, PVD, PC, PF) — **total** on the first line, derived **per carat + `/ct`** on the second; virtual `price_per_carat_*` keys are not separate columns ([`gem_virtual_per_carat_column_keys`](../client/src/mixins/GemPricing.js)).
 - Persisted gem fields: [`settings_base.json`](../settings_base.json) → `schema.$folders.gems.fields`
 
 ## Selection-Driven Entry Flows

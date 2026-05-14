@@ -1,9 +1,6 @@
 <template>
   <div class="_gemsView">
-    <SGOverlaySidePanelLayout
-      :panel_open="is_gem_open"
-      @close="closeGemPanel"
-    >
+    <SGOverlaySidePanelLayout :panel_open="is_gem_open" @close="closeGemPanel">
       <div class="_gemsView--content">
         <div class="_pageHeader">
           <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
@@ -118,7 +115,9 @@
 <script>
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
-import GemPricing from "@/mixins/GemPricing";
+import GemPricing, {
+  gem_virtual_per_carat_column_keys,
+} from "@/mixins/GemPricing";
 
 const placeholder_gem_fields_defaults = {
   status: "reference",
@@ -204,18 +203,13 @@ export default {
       const ignored_keys = new Set([
         "name",
         "title",
-        "$path",
-        "$date_created",
-        "$date_modified",
-        "$status",
-        "$admins",
-        "$contributors",
-        "$files",
         "price_per_carat_pa_pcb",
+        ...gem_virtual_per_carat_column_keys,
       ]);
       const known_order = [
         "id",
         "$cover",
+        "$date_modified",
         "internal_name",
         "status",
         "reference_supplier",
@@ -233,26 +227,29 @@ export default {
         "height_mm",
         "base_price_pcb",
         "purchased_price_pa",
-        "price_per_carat_pcb",
-        "price_per_carat_pa",
         "pv_selling_price",
-        "price_per_carat_pv",
         "pvd_asking_price",
         "pc_to",
-        "price_per_carat_pc",
         "pf_invoiced_price",
-        "price_per_carat_pf",
         "price_per_carat_all",
       ];
       const metadata_key_set = new Set();
 
       this.gems.forEach((gem) => {
         Object.keys(gem || {}).forEach((key) => {
-          if (!ignored_keys.has(key)) metadata_key_set.add(key);
+          if (ignored_keys.has(key)) return;
+          if (
+            key.startsWith("$") &&
+            key !== "$date_modified" &&
+            key !== "$cover"
+          )
+            return;
+          metadata_key_set.add(key);
         });
       });
       metadata_key_set.add("id");
       metadata_key_set.add("$cover");
+      metadata_key_set.add("$date_modified");
 
       return Array.from(metadata_key_set).sort((a, b) => {
         const a_index = known_order.indexOf(a);
@@ -268,8 +265,10 @@ export default {
       if (all_keys.length === 0) return [];
       if (!Array.isArray(this.selected_metadata_keys)) return all_keys;
 
-      const selected_in_order = this.selected_metadata_keys.filter(
-        (metadata_key) => all_keys.includes(metadata_key)
+      const selected_in_order = this.stripVirtualPerCaratKeys(
+        this.selected_metadata_keys.filter((metadata_key) =>
+          all_keys.includes(metadata_key)
+        )
       );
       const selected_or_default =
         selected_in_order.length > 0 ? selected_in_order : all_keys;
@@ -322,7 +321,8 @@ export default {
         lines.push(
           this.$t("sg_gems_filter_stone_text", {
             needle: parsed.stone_type_needle,
-            matches: this.formatStoneTypeMatchesForFilterCaption(matching_labels),
+            matches:
+              this.formatStoneTypeMatchesForFilterCaption(matching_labels),
           })
         );
       }
@@ -513,9 +513,7 @@ export default {
 
       tokens.forEach((token) => {
         if (/^=\s*\d+(?:[.,]\d+)?$/i.test(token)) {
-          const v = this.normalizeGemsSearchNumber(
-            token.replace(/^=\s*/i, "")
-          );
+          const v = this.normalizeGemsSearchNumber(token.replace(/^=\s*/i, ""));
           if (Number.isFinite(v)) {
             weight_specs.push({ type: "exact", value: v });
           }
@@ -585,9 +583,7 @@ export default {
       if (weight_spec.type === "range") {
         const eps = 1e-9;
         if (weight_spec.max_exclusive) {
-          return (
-            w >= weight_spec.min - eps && w < weight_spec.max - eps
-          );
+          return w >= weight_spec.min - eps && w < weight_spec.max - eps;
         }
         return w >= weight_spec.min - eps && w <= weight_spec.max + eps;
       }
@@ -600,10 +596,20 @@ export default {
       ) {
         return false;
       }
-      if (!this.gemStoneMatchesTextNeedle(gem.stone_type, parsed.stone_type_needle)) {
+      if (
+        !this.gemStoneMatchesTextNeedle(
+          gem.stone_type,
+          parsed.stone_type_needle
+        )
+      ) {
         return false;
       }
-      if (!this.gemStoneMatchesQuickFamilies(gem.stone_type, parsed.stone_families)) {
+      if (
+        !this.gemStoneMatchesQuickFamilies(
+          gem.stone_type,
+          parsed.stone_families
+        )
+      ) {
         return false;
       }
       if (!this.gemMatchesWeightQuickSpec(gem, parsed.weight_spec)) {
@@ -639,9 +645,18 @@ export default {
       const head = labels.slice(0, max_shown);
       const rest = labels.length - max_shown;
       if (rest > 0) {
-        return `${head.join(", ")} ${this.$t("sg_gems_filter_stone_match_more", { n: rest })}`;
+        return `${head.join(", ")} ${this.$t(
+          "sg_gems_filter_stone_match_more",
+          { n: rest }
+        )}`;
       }
       return head.join(", ");
+    },
+    stripVirtualPerCaratKeys(metadata_keys) {
+      if (!Array.isArray(metadata_keys)) return [];
+      return metadata_keys.filter(
+        (key) => !gem_virtual_per_carat_column_keys.includes(key)
+      );
     },
     loadMetadataKeysFromStorage() {
       try {
@@ -651,9 +666,12 @@ export default {
         if (!stored_keys_json) return;
         const stored_keys = JSON.parse(stored_keys_json);
         if (!Array.isArray(stored_keys)) return;
-        this.selected_metadata_keys = stored_keys.filter(
-          (metadata_key) => typeof metadata_key === "string"
-        );
+        this.selected_metadata_keys = stored_keys
+          .filter((metadata_key) => typeof metadata_key === "string")
+          .filter(
+            (metadata_key) =>
+              !gem_virtual_per_carat_column_keys.includes(metadata_key)
+          );
       } catch {
         // Keep defaults when storage is unavailable or invalid.
       }
@@ -678,18 +696,15 @@ export default {
       }
 
       const selected_keys = Array.isArray(this.selected_metadata_keys)
-        ? this.selected_metadata_keys
+        ? this.stripVirtualPerCaratKeys(this.selected_metadata_keys)
         : [];
       const selected_in_order = selected_keys.filter((metadata_key) =>
         all_keys.includes(metadata_key)
       );
-      const missing_keys = all_keys.filter(
-        (metadata_key) => !selected_in_order.includes(metadata_key)
-      );
+      // Keep only keys the user left active (persisted whitelist). Do not merge
+      // in missing columns — that would re-enable columns they turned off.
       const next_selected_keys =
-        selected_in_order.length > 0
-          ? [...selected_in_order, ...missing_keys]
-          : [...all_keys];
+        selected_in_order.length > 0 ? [...selected_in_order] : [...all_keys];
       const normalized_selected_keys = this.enforcePinnedColumns(
         next_selected_keys,
         all_keys
@@ -713,7 +728,7 @@ export default {
         return;
       }
       this.selected_metadata_keys = this.enforcePinnedColumns(
-        next_selected_metadata_keys,
+        this.stripVirtualPerCaratKeys(next_selected_metadata_keys),
         this.all_metadata_keys
       );
       this.persistMetadataKeysToStorage();
@@ -945,6 +960,7 @@ export default {
       const metadata_to_icon = {
         id: "card-list",
         $cover: "images",
+        $date_modified: "clock-history",
         internal_name: "pencil",
         reference_supplier: "archive",
         reference_customer: "person-circle",
@@ -977,6 +993,7 @@ export default {
     getMetadataLabel(metadata_key) {
       const metadata_to_translation_key = {
         id: "sg_id",
+        $date_modified: "sg_last_edited",
         status: "sg_status",
         $cover: "sg_cover",
         internal_name: "sg_internal_name",
@@ -1007,7 +1024,6 @@ export default {
         price_per_carat_all: "sg_price_per_carat_all",
         $path: "sg_path",
         $date_created: "sg_created",
-        $date_modified: "sg_last_modified",
       };
       const translation_key = metadata_to_translation_key[metadata_key];
       if (!translation_key) return metadata_key;

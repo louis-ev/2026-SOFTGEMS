@@ -99,8 +99,19 @@
                 :available_options="['import']"
               />
             </div>
+            <div
+              v-else-if="isGemPricingTotalColumnKey(metadata_key)"
+              class="_pricingCell"
+            >
+              <span class="_pricingLine _pricingTotal">{{
+                formatPriceCellNumber(resolveMetadataValue(gem, metadata_key))
+              }}</span>
+              <span class="_pricingLine _pricingPerCt">{{
+                formatPricingPerCtLine(gem, metadata_key)
+              }}</span>
+            </div>
             <span v-else class="_gemMetadataValue">{{
-              formatValue(resolveMetadataValue(gem, metadata_key))
+              formatValue(formatMetadataCellDisplay(gem, metadata_key))
             }}</span>
           </td>
         </tr>
@@ -111,9 +122,11 @@
 
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
+import GemPricing from "@/mixins/GemPricing";
 
 export default {
   name: "SGGemsTable",
+  mixins: [GemPricing],
   components: { CoverField },
   props: {
     gems: { type: Array, default: () => [] },
@@ -199,6 +212,19 @@ export default {
       const path_parts = gem_path.split("/");
       return path_parts[path_parts.length - 1] || "";
     },
+    formatMetadataCellDisplay(gem, metadata_key) {
+      if (metadata_key === "$date_modified") {
+        const raw = gem?.$date_modified;
+        if (raw === null || raw === undefined || raw === "") return "";
+        const time_value = new Date(raw).getTime();
+        if (!Number.isFinite(time_value)) return String(raw);
+        return new Date(raw).toLocaleString(this.$i18n.locale, {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
+      }
+      return this.resolveMetadataValue(gem, metadata_key);
+    },
     resolveMetadataValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
       return gem?.[metadata_key];
@@ -214,7 +240,27 @@ export default {
       if (typeof value === "object") return JSON.stringify(value);
       return String(value);
     },
+    formatPriceCellNumber(value) {
+      if (value === null || value === undefined || value === "") return "-";
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      return n.toLocaleString(this.$i18n.locale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+    },
+    formatPricingPerCtLine(gem, total_key) {
+      const w = this.toNumberOrDefault(gem?.weight_ct);
+      if (!Number.isFinite(w) || w <= 0) return "- /ct";
+      const per = this.computeDisplayedPerCaratForGem(gem, total_key);
+      return `${this.formatPriceCellNumber(per)} /ct`;
+    },
     resolveSortValue(gem, metadata_key) {
+      if (metadata_key === "$date_modified") {
+        const raw = gem?.$date_modified;
+        const time_value = raw ? new Date(raw).getTime() : 0;
+        return Number.isFinite(time_value) ? time_value : 0;
+      }
       const raw_value = this.resolveMetadataValue(gem, metadata_key);
       if (raw_value === null || raw_value === undefined) return "";
       if (typeof raw_value === "number") return raw_value;
@@ -287,6 +333,16 @@ export default {
       gems.forEach((gem) => {
         this.metadata_keys.forEach((metadata_key) => {
           const cell_key = this.getCellFlashKey(gem, metadata_key);
+          if (this.isGemPricingTotalColumnKey(metadata_key)) {
+            const total = this.resolveMetadataValue(gem, metadata_key);
+            const per = this.computeDisplayedPerCaratForGem(gem, metadata_key);
+            snapshot[cell_key] = [
+              this.serializeCellValue(total),
+              this.serializeCellValue(per),
+              this.serializeCellValue(gem?.weight_ct),
+            ].join("|");
+            return;
+          }
           const cell_value = this.resolveMetadataValue(gem, metadata_key);
           snapshot[cell_key] = this.serializeCellValue(cell_value);
         });
@@ -433,6 +489,7 @@ export default {
     padding: var(--sg-cell-padding);
     vertical-align: top;
     background: var(--c-bodybg);
+    font-size: var(--sg-metadata-font-size);
   }
 
   tr > :last-child {
@@ -483,6 +540,11 @@ export default {
 
   th._stickyCoverCol {
     z-index: 8;
+  }
+
+  td {
+    font-size: var(--sg-metadata-font-size);
+    font-family: var(--sl-font-mono);
   }
 }
 
@@ -563,7 +625,8 @@ td[data-metadata-key="$cover"] {
       --c-vert,
       color-mix(in srgb, var(--c-bleuvert) 12%, transparent)
     );
-    ._gemMetadataValue {
+    ._gemMetadataValue,
+    ._pricingLine {
       color: var(--c-noir);
     }
   }
@@ -582,9 +645,22 @@ td[data-metadata-key="$cover"] {
   }
 }
 
-._gemMetadataValue {
+._pricingCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  line-height: 1.25;
+}
+
+._pricingLine {
   font-family: var(--sl-font-mono);
-  font-size: var(--sg-metadata-font-size);
+}
+
+._pricingPerCt {
+  // color: var(--c-gris_fonce);
+}
+
+._gemMetadataValue {
 }
 td[data-metadata-key="id"] {
   ._gemMetadataValue {
@@ -608,24 +684,10 @@ td[data-metadata-key="$cover"] {
   opacity: 0.7;
 }
 
-._coverFilesCell {
-}
-
 ._coverThumb {
   width: var(--sticky-cover-col-width);
   height: var(--sticky-cover-col-height);
   flex-shrink: 0;
-}
-
-._filesCount {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: var(--sl-font-size-x-small);
-  font-family: var(--sl-font-mono);
-  color: var(--c-gris_fonce);
-  padding-top: 2px;
 }
 
 .row-sort-move {
