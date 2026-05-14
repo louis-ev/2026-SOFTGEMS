@@ -622,16 +622,16 @@ td[data-metadata-key="$cover"] {
 }
 
 .row-sort-move {
-  transition: transform 380ms ease;
+  // transition: transform 380ms ease;
 }
 
 .row-sort-enter-active,
 .row-sort-leave-active {
-  transition: opacity 520ms ease;
+  // transition: opacity 520ms ease;
 }
 
 .row-sort-enter,
 .row-sort-leave-to {
-  opacity: 0;
+  // opacity: 0;
 }
 </style>

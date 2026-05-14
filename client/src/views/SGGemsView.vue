@@ -50,8 +50,22 @@
         <div v-if="is_loading">{{ $t("sg_loading_gems") }}</div>
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
         <div v-else class="_tableSection">
+          <div class="_gemsSearchBar">
+            <SearchInput
+              v-model="gems_quick_search"
+              :search_placeholder="$t('sg_gems_search_placeholder')"
+              :name="'gems_quick_search'"
+            />
+          </div>
+          <p
+            v-if="gems_quick_search_filter_caption"
+            class="_gemsActiveFilters"
+            role="status"
+          >
+            {{ gems_quick_search_filter_caption }}
+          </p>
           <SGGemsTable
-            :gems="gems"
+            :gems="filtered_gems"
             :metadata_keys="metadata_keys"
             :metadata_labels="metadata_labels"
             :metadata_icons="metadata_icons"
@@ -101,6 +115,7 @@
   </div>
 </template>
 <script>
+import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing from "@/mixins/GemPricing";
 
@@ -129,11 +144,13 @@ const placeholder_gem_fields_defaults = {
 };
 const metadata_keys_localstorage_key = "sg_gems_metadata_keys";
 const pinned_metadata_keys = ["id", "$cover"];
+const gems_quick_search_debounce_ms = 200;
 
 export default {
   name: "SGGemsView",
   mixins: [GemPricing],
   components: {
+    SearchInput,
     SGOverlaySidePanelLayout: () =>
       import("@/components/softgems/SGOverlaySidePanelLayout.vue"),
     SGGemEditFieldModal: () =>
@@ -157,6 +174,9 @@ export default {
       view_density: "compact",
       show_columns_modal: false,
       selected_metadata_keys: [],
+      gems_quick_search: "",
+      gems_quick_search_debounced: "",
+      gems_quick_search_debounce_timer_id: null,
     };
   },
   created() {
@@ -168,6 +188,10 @@ export default {
   },
   beforeDestroy() {
     this.$api.leave({ room: this.gems_path });
+    if (this.gems_quick_search_debounce_timer_id !== null) {
+      clearTimeout(this.gems_quick_search_debounce_timer_id);
+      this.gems_quick_search_debounce_timer_id = null;
+    }
   },
   computed: {
     is_gem_open() {
@@ -250,9 +274,87 @@ export default {
         selected_in_order.length > 0 ? selected_in_order : all_keys;
       return this.enforcePinnedColumns(selected_or_default, all_keys);
     },
-    sorted_gems() {
+    filtered_gems() {
       if (!Array.isArray(this.gems)) return [];
-      return [...this.gems].sort((a, b) =>
+      const parsed = this.parseGemsQuickSearchInput(
+        this.gems_quick_search_debounced
+      );
+      return this.gems.filter((gem) => this.gemMatchesQuickSearch(gem, parsed));
+    },
+    gems_quick_search_filter_lines() {
+      const raw = this.gems_quick_search_debounced;
+      if (!raw || !String(raw).trim()) return [];
+
+      const parsed = this.parseGemsQuickSearchInput(raw);
+      const lines = [];
+      const locale = this.$i18n.locale;
+      const fmt_weight = (n) =>
+        Number.isFinite(n)
+          ? n.toLocaleString(locale, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 6,
+            })
+          : "";
+
+      if (parsed.id_needle) {
+        lines.push(
+          this.$t("sg_gems_filter_id_starts_with", {
+            needle: parsed.id_needle,
+          })
+        );
+      }
+
+      if (parsed.stone_families.length === 1) {
+        if (parsed.stone_families[0] === "sapphire") {
+          lines.push(this.$t("sg_gems_filter_stone_sapphire"));
+        } else {
+          lines.push(this.$t("sg_gems_filter_stone_ruby"));
+        }
+      } else if (parsed.stone_families.length >= 2) {
+        lines.push(this.$t("sg_gems_filter_stone_sapphire_or_ruby"));
+      }
+
+      const ws = parsed.weight_spec;
+      if (ws) {
+        if (ws.type === "exact") {
+          lines.push(
+            this.$t("sg_gems_filter_weight_exact", {
+              value: fmt_weight(ws.value),
+            })
+          );
+        } else if (ws.type === "range") {
+          if (ws.max_exclusive) {
+            lines.push(
+              this.$t("sg_gems_filter_weight_half_open", {
+                min: fmt_weight(ws.min),
+                max: fmt_weight(ws.max),
+              })
+            );
+          } else {
+            lines.push(
+              this.$t("sg_gems_filter_weight_range", {
+                min: fmt_weight(ws.min),
+                max: fmt_weight(ws.max),
+              })
+            );
+          }
+        }
+      }
+
+      return lines;
+    },
+    gems_quick_search_filter_caption() {
+      const lines = this.gems_quick_search_filter_lines;
+      if (!lines.length) return "";
+      return this.$t("sg_gems_filter_caption", {
+        clauses: lines.join(" · "),
+        shown: this.filtered_gems.length,
+        total: this.gems.length,
+      });
+    },
+    sorted_gems() {
+      if (!Array.isArray(this.filtered_gems)) return [];
+      return [...this.filtered_gems].sort((a, b) =>
         this.getGemId(b).localeCompare(this.getGemId(a), undefined, {
           numeric: true,
           sensitivity: "base",
@@ -279,6 +381,17 @@ export default {
     },
   },
   watch: {
+    gems_quick_search(next_value) {
+      if (this.gems_quick_search_debounce_timer_id !== null) {
+        clearTimeout(this.gems_quick_search_debounce_timer_id);
+        this.gems_quick_search_debounce_timer_id = null;
+      }
+      this.gems_quick_search_debounce_timer_id = setTimeout(() => {
+        this.gems_quick_search_debounce_timer_id = null;
+        this.gems_quick_search_debounced =
+          typeof next_value === "string" ? next_value : "";
+      }, gems_quick_search_debounce_ms);
+    },
     all_metadata_keys: {
       immediate: true,
       handler() {
@@ -287,6 +400,220 @@ export default {
     },
   },
   methods: {
+    normalizeGemsSearchNumber(str) {
+      if (str === undefined || str === null) return NaN;
+      const s = String(str).trim().replace(",", ".");
+      return parseFloat(s);
+    },
+    inferWeightSpecFromPlainNumberToken(token) {
+      const normalized_token = String(token).trim();
+      const with_dot = normalized_token.replace(",", ".");
+      if (!/^\d+\.\d+$/.test(with_dot)) return null;
+      const v = parseFloat(with_dot);
+      if (!Number.isFinite(v)) return null;
+      const frac = with_dot.split(".")[1] || "";
+      const frac_len = frac.length;
+      const tol = Math.pow(10, -frac_len);
+      return {
+        type: "range",
+        min: v - tol,
+        max: v + tol,
+      };
+    },
+    parseGemsQuickSearchInput(raw) {
+      const base = { id_needle: "", weight_spec: null, stone_families: [] };
+      if (!raw || typeof raw !== "string") return { ...base };
+
+      let s = raw.trim();
+      if (!s) return { ...base };
+
+      const stone_families = [];
+      const addStone = (key) => {
+        if (!stone_families.includes(key)) stone_families.push(key);
+      };
+      if (/\bsap\b/i.test(s)) {
+        addStone("sapphire");
+        s = s.replace(/\bsap\b/gi, " ");
+      }
+      if (/\brub\b/i.test(s)) {
+        addStone("ruby");
+        s = s.replace(/\brub\b/gi, " ");
+      }
+      s = s.replace(/\s+/g, " ").trim();
+
+      const result = {
+        id_needle: "",
+        weight_spec: null,
+        stone_families,
+      };
+
+      if (!s) return result;
+
+      s = s
+        .replace(/\s*\u00B1\s*/g, "\u00B1")
+        .replace(/\s*\+\/-\s*/g, "\u00B1");
+
+      let m = s.match(
+        /^=?(\d+(?:[.,]\d+)?)\u00B1(\d+(?:[.,]\d+)?)\s*$/i
+      );
+      if (m) {
+        const c = this.normalizeGemsSearchNumber(m[1]);
+        const d = this.normalizeGemsSearchNumber(m[2]);
+        if (Number.isFinite(c) && Number.isFinite(d) && d >= 0) {
+          result.weight_spec = {
+            type: "range",
+            min: c - d,
+            max: c + d,
+          };
+          return result;
+        }
+      }
+
+      m = s.match(/^=\s*(\d+(?:[.,]\d+)?)\s*$/);
+      if (m) {
+        const v = this.normalizeGemsSearchNumber(m[1]);
+        if (Number.isFinite(v)) {
+          result.weight_spec = { type: "exact", value: v };
+          return result;
+        }
+      }
+
+      m = s.match(/^(\d+[.,]\d+)\s*$/);
+      if (m) {
+        const spec = this.inferWeightSpecFromPlainNumberToken(m[1]);
+        if (spec) {
+          result.weight_spec = spec;
+          return result;
+        }
+      }
+
+      m = s.match(/^(\d+)[.,]\s*$/);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (Number.isFinite(n) && n >= 0) {
+          result.weight_spec = {
+            type: "range",
+            min: n,
+            max: n + 1,
+            max_exclusive: true,
+          };
+          return result;
+        }
+      }
+
+      m = s.match(/^(\d+)\s*$/);
+      if (m) {
+        result.id_needle = m[1];
+        return result;
+      }
+
+      const tokens = s.split(" ").filter(Boolean);
+      const text_parts = [];
+      const id_digit_parts = [];
+      const weight_specs = [];
+
+      tokens.forEach((token) => {
+        if (/^=\s*\d+(?:[.,]\d+)?$/i.test(token)) {
+          const v = this.normalizeGemsSearchNumber(
+            token.replace(/^=\s*/i, "")
+          );
+          if (Number.isFinite(v)) {
+            weight_specs.push({ type: "exact", value: v });
+          }
+          return;
+        }
+        const pm = token.match(/^(\d+(?:[.,]\d+)?)\u00B1(\d+(?:[.,]\d+)?)$/i);
+        if (pm) {
+          const c = this.normalizeGemsSearchNumber(pm[1]);
+          const d = this.normalizeGemsSearchNumber(pm[2]);
+          if (Number.isFinite(c) && Number.isFinite(d) && d >= 0) {
+            weight_specs.push({
+              type: "range",
+              min: c - d,
+              max: c + d,
+            });
+          }
+          return;
+        }
+        if (/^\d+$/.test(token)) {
+          id_digit_parts.push(token);
+          return;
+        }
+        const trunc_weight = token.match(/^(\d+)[.,]\s*$/);
+        if (trunc_weight) {
+          const n = parseInt(trunc_weight[1], 10);
+          if (Number.isFinite(n) && n >= 0) {
+            weight_specs.push({
+              type: "range",
+              min: n,
+              max: n + 1,
+              max_exclusive: true,
+            });
+          }
+          return;
+        }
+        if (/^\d+[.,]\d+$/.test(token)) {
+          const spec = this.inferWeightSpecFromPlainNumberToken(token);
+          if (spec) weight_specs.push(spec);
+          return;
+        }
+        text_parts.push(token);
+      });
+
+      if (weight_specs.length > 0) {
+        result.weight_spec = weight_specs[weight_specs.length - 1];
+      }
+      const id_from_digits = id_digit_parts.join("");
+      const id_from_text = text_parts.join(" ").trim();
+      const id_pieces = [id_from_digits, id_from_text].filter(Boolean);
+      if (id_pieces.length > 0) {
+        result.id_needle = id_pieces.join(" ").trim();
+      }
+
+      return result;
+    },
+    gemStoneMatchesQuickFamilies(stone_type, stone_families) {
+      if (!stone_families || stone_families.length === 0) return true;
+      const st = String(stone_type || "").toLowerCase();
+      return stone_families.some((fam) => {
+        if (fam === "sapphire") return st.includes("sapphire");
+        if (fam === "ruby") return st.includes("ruby");
+        return false;
+      });
+    },
+    gemMatchesWeightQuickSpec(gem, weight_spec) {
+      if (!weight_spec) return true;
+      const w = Number(gem.weight_ct);
+      if (!Number.isFinite(w)) return false;
+      if (weight_spec.type === "exact") {
+        return Math.abs(w - weight_spec.value) <= 1e-6;
+      }
+      if (weight_spec.type === "range") {
+        const eps = 1e-9;
+        if (weight_spec.max_exclusive) {
+          return (
+            w >= weight_spec.min - eps && w < weight_spec.max - eps
+          );
+        }
+        return w >= weight_spec.min - eps && w <= weight_spec.max + eps;
+      }
+      return false;
+    },
+    gemMatchesQuickSearch(gem, parsed) {
+      if (
+        parsed.id_needle &&
+        !this.getGemId(gem).toLowerCase().startsWith(parsed.id_needle.toLowerCase())
+      ) {
+        return false;
+      }
+      if (!this.gemStoneMatchesQuickFamilies(gem.stone_type, parsed.stone_families)) {
+        return false;
+      }
+      if (!this.gemMatchesWeightQuickSpec(gem, parsed.weight_spec)) {
+        return false;
+      }
+      return true;
+    },
     loadMetadataKeysFromStorage() {
       try {
         const stored_keys_json = localStorage.getItem(
@@ -703,5 +1030,28 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
+}
+
+._gemsSearchBar {
+  flex: 0 0 auto;
+  max-width: 52rem;
+}
+
+._gemsSearchBar ::v-deep ._searchInput {
+  width: 100%;
+  min-width: 12rem;
+}
+
+._gemsActiveFilters {
+  flex: 0 0 auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--sl-font-size-x-small);
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--c-gris_fonce) 82%, transparent);
+  font-weight: 400;
 }
 </style>

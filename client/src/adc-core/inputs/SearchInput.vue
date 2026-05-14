@@ -4,7 +4,7 @@
       <input
         type="text"
         class="_searchInput"
-        size="small"
+        size="medium"
         :value="value"
         @input="$emit('input', $event.target.value)"
         :placeholder="search_placeholder"
