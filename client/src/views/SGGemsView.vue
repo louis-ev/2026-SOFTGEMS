@@ -314,6 +314,18 @@ export default {
         lines.push(this.$t("sg_gems_filter_stone_sapphire_or_ruby"));
       }
 
+      if (parsed.stone_type_needle) {
+        const matching_labels = this.collectDistinctStoneTypesMatchingNeedle(
+          parsed.stone_type_needle
+        );
+        lines.push(
+          this.$t("sg_gems_filter_stone_text", {
+            needle: parsed.stone_type_needle,
+            matches: this.formatStoneTypeMatchesForFilterCaption(matching_labels),
+          })
+        );
+      }
+
       const ws = parsed.weight_spec;
       if (ws) {
         if (ws.type === "exact") {
@@ -421,7 +433,12 @@ export default {
       };
     },
     parseGemsQuickSearchInput(raw) {
-      const base = { id_needle: "", weight_spec: null, stone_families: [] };
+      const base = {
+        id_needle: "",
+        weight_spec: null,
+        stone_families: [],
+        stone_type_needle: "",
+      };
       if (!raw || typeof raw !== "string") return { ...base };
 
       let s = raw.trim();
@@ -445,6 +462,7 @@ export default {
         id_needle: "",
         weight_spec: null,
         stone_families,
+        stone_type_needle: "",
       };
 
       if (!s) return result;
@@ -563,14 +581,22 @@ export default {
       if (weight_specs.length > 0) {
         result.weight_spec = weight_specs[weight_specs.length - 1];
       }
-      const id_from_digits = id_digit_parts.join("");
-      const id_from_text = text_parts.join(" ").trim();
-      const id_pieces = [id_from_digits, id_from_text].filter(Boolean);
-      if (id_pieces.length > 0) {
-        result.id_needle = id_pieces.join(" ").trim();
+      if (id_digit_parts.length > 0) {
+        result.id_needle = id_digit_parts.join("");
+      }
+      const stone_text = text_parts.join(" ").trim();
+      if (stone_text) {
+        result.stone_type_needle = stone_text;
       }
 
       return result;
+    },
+    gemStoneMatchesTextNeedle(stone_type, needle) {
+      if (!needle || typeof needle !== "string") return true;
+      const n = needle.trim().toLowerCase();
+      if (!n) return true;
+      const st = String(stone_type || "").toLowerCase();
+      return st.includes(n);
     },
     gemStoneMatchesQuickFamilies(stone_type, stone_families) {
       if (!stone_families || stone_families.length === 0) return true;
@@ -606,6 +632,9 @@ export default {
       ) {
         return false;
       }
+      if (!this.gemStoneMatchesTextNeedle(gem.stone_type, parsed.stone_type_needle)) {
+        return false;
+      }
       if (!this.gemStoneMatchesQuickFamilies(gem.stone_type, parsed.stone_families)) {
         return false;
       }
@@ -613,6 +642,38 @@ export default {
         return false;
       }
       return true;
+    },
+    collectDistinctStoneTypesMatchingNeedle(needle) {
+      if (!needle || typeof needle !== "string") return [];
+      const n = needle.trim().toLowerCase();
+      if (!n) return [];
+      const seen = new Set();
+      const labels = [];
+      (Array.isArray(this.gems) ? this.gems : []).forEach((gem) => {
+        const st = gem?.stone_type;
+        if (st === undefined || st === null || st === "") return;
+        const s = String(st);
+        if (!s.toLowerCase().includes(n)) return;
+        if (seen.has(s)) return;
+        seen.add(s);
+        labels.push(s);
+      });
+      labels.sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+      );
+      return labels;
+    },
+    formatStoneTypeMatchesForFilterCaption(labels) {
+      const max_shown = 6;
+      if (!labels.length) {
+        return this.$t("sg_gems_filter_stone_match_none");
+      }
+      const head = labels.slice(0, max_shown);
+      const rest = labels.length - max_shown;
+      if (rest > 0) {
+        return `${head.join(", ")} ${this.$t("sg_gems_filter_stone_match_more", { n: rest })}`;
+      }
+      return head.join(", ");
     },
     loadMetadataKeysFromStorage() {
       try {
