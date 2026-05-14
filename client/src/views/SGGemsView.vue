@@ -299,7 +299,7 @@ export default {
 
       if (parsed.id_needle) {
         lines.push(
-          this.$t("sg_gems_filter_id_starts_with", {
+          this.$t("sg_gems_filter_id_exact", {
             needle: parsed.id_needle,
           })
         );
@@ -629,7 +629,7 @@ export default {
     gemMatchesQuickSearch(gem, parsed) {
       if (
         parsed.id_needle &&
-        !this.getGemId(gem).toLowerCase().startsWith(parsed.id_needle.toLowerCase())
+        this.getGemId(gem).toLowerCase() !== parsed.id_needle.toLowerCase()
       ) {
         return false;
       }
