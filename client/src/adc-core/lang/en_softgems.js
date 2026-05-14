@@ -89,6 +89,8 @@ export default {
   sg_remove_gem: "Remove gem",
   sg_remove_gem_in_progress: "Removing...",
   sg_remove_gem_confirm: 'Remove "{name}" permanently?',
+  sg_remove_contact: "Remove contact",
+  sg_remove_contact_confirm: 'Remove "{name}" permanently?',
   sg_back: "Back",
   sg_field: "Field",
   sg_value: "Value",

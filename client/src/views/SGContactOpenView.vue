@@ -10,6 +10,35 @@
 
     <div class="_pageHeader">
       <h1 class="_pageTitle">{{ page_title }}</h1>
+
+      <div v-if="contact" class="_headerMeta">
+        <p class="_headerType">
+          {{ $t("sg_contact_type") }}:
+          {{ contact_type_label }}
+        </p>
+        <div class="_headerMetaRow">
+          <p class="_readonlyHint _headerReadonlyHint">
+            {{ $t("sg_contact_type_readonly") }}
+          </p>
+          <button
+            type="button"
+            class="u-buttonLink u-buttonLink_red"
+            @click="show_remove_contact_modal = true"
+          >
+            {{ $t("sg_remove_contact") }}
+          </button>
+        </div>
+        <RemoveMenu2
+          v-if="show_remove_contact_modal"
+          :path="contact_path"
+          :modal_title="
+            $t('sg_remove_contact_confirm', { name: page_title })
+          "
+          :success_notification="$t('removed_successfully')"
+          @removedSuccessfully="on_contact_removed_successfully"
+          @close="show_remove_contact_modal = false"
+        />
+      </div>
     </div>
 
     <div v-if="is_loading">{{ $t("sg_loading_contact") }}</div>
@@ -18,25 +47,13 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_contact_identity") }}</h2>
         <div>
-          <SGClickRevealTextField
-            :ref="(el) => registerRevealRef('contact_name', el)"
+          <SGFieldValuePresent
             :label="$t('sg_contact_name')"
-            label_icon="person"
-            :content.sync="edited_name"
-            :required="true"
-            :is_saving="is_saving_name"
-            :is_save_disabled_externally="
-              contact_name_save_blocked_without_request
-            "
-            @save="saveName"
-            @update:content="onEditedName"
+            icon="person"
+            :value="edited_name"
+            :is_flashing="isFieldFlashing(flash_contact_name_key)"
+            @click="openContactNameModal"
           />
-          <p v-if="name_duplicate_warning" class="u-warning _duplicateWarning">
-            {{ name_duplicate_warning }}
-          </p>
-          <p v-if="name_validation_error" class="_fieldError">
-            {{ name_validation_error }}
-          </p>
         </div>
       </section>
 
@@ -44,71 +61,56 @@
         <h2 class="_sectionTitle">{{ $t("sg_section_company_details") }}</h2>
         <div class="_fieldsGrid">
           <div class="_fullWidthField">
-            <SGClickRevealTextField
-              :ref="(el) => registerRevealRef('company_address', el)"
+            <SGFieldValuePresent
               :label="$t('sg_company_address')"
-              label_icon="geo-alt"
-              :content.sync="edited_address"
-              :required="false"
-              :is_saving="saving_company_field_key === 'address'"
-              :is_save_disabled_externally="
-                company_field_matches_stored('address')
+              icon="geo-alt"
+              :value="edited_address"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('address'))
               "
-              @save="saveCompanyDetailField('address')"
+              @click="openCompanyDetailModal('address')"
             />
           </div>
           <div>
-            <SGClickRevealTextField
-              :ref="(el) => registerRevealRef('company_phone', el)"
+            <SGFieldValuePresent
               :label="$t('sg_company_phone')"
-              label_icon="telephone"
-              :content.sync="edited_phone"
-              :required="false"
-              :is_saving="saving_company_field_key === 'phone'"
-              :is_save_disabled_externally="company_field_matches_stored('phone')"
-              @save="saveCompanyDetailField('phone')"
+              icon="telephone"
+              :value="edited_phone"
+              :is_flashing="isFieldFlashing(flashCompanyFieldKey('phone'))"
+              @click="openCompanyDetailModal('phone')"
             />
           </div>
           <div>
-            <SGClickRevealTextField
-              :ref="(el) => registerRevealRef('company_email', el)"
+            <SGFieldValuePresent
               :label="$t('sg_company_email')"
-              label_icon="envelope"
-              :content.sync="edited_company_email"
-              :required="false"
-              :is_saving="saving_company_field_key === 'company_email'"
-              :is_save_disabled_externally="
-                company_field_matches_stored('company_email')
+              icon="envelope"
+              :value="edited_company_email"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('company_email'))
               "
-              @save="saveCompanyDetailField('company_email')"
+              @click="openCompanyDetailModal('company_email')"
             />
           </div>
           <div>
-            <SGClickRevealTextField
-              :ref="(el) => registerRevealRef('company_tva_number', el)"
+            <SGFieldValuePresent
               :label="$t('sg_company_tva_number')"
-              label_icon="hash"
-              :content.sync="edited_tva_number"
-              :required="false"
-              :is_saving="saving_company_field_key === 'tva_number'"
-              :is_save_disabled_externally="
-                company_field_matches_stored('tva_number')
+              icon="hash"
+              :value="edited_tva_number"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('tva_number'))
               "
-              @save="saveCompanyDetailField('tva_number')"
+              @click="openCompanyDetailModal('tva_number')"
             />
           </div>
           <div>
-            <SGClickRevealTextField
-              :ref="(el) => registerRevealRef('company_tva_attestation', el)"
+            <SGFieldValuePresent
               :label="$t('sg_company_tva_attestation')"
-              label_icon="file-earmark-text"
-              :content.sync="edited_tva_attestation"
-              :required="false"
-              :is_saving="saving_company_field_key === 'tva_attestation'"
-              :is_save_disabled_externally="
-                company_field_matches_stored('tva_attestation')
+              icon="file-earmark-text"
+              :value="edited_tva_attestation"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('tva_attestation'))
               "
-              @save="saveCompanyDetailField('tva_attestation')"
+              @click="openCompanyDetailModal('tva_attestation')"
             />
           </div>
         </div>
@@ -205,160 +207,60 @@
               class="_fieldsGrid"
             >
               <div>
-                <SGClickRevealTextField
-                  :ref="
-                    (el) =>
-                      personRevealRef(
-                        personSlugFromFolder(person),
-                        'last_name',
-                        el
-                      )
-                  "
+                <SGFieldValuePresent
                   :label="$t('sg_person_last_name')"
-                  label_icon="person"
-                  :content="personField(person, 'last_name')"
-                  :required="true"
-                  :is_saving="
-                    savingPersonPair(personSlugFromFolder(person), 'last_name')
+                  icon="person"
+                  :value="personField(person, 'last_name')"
+                  :is_flashing="
+                    isFieldFlashing(personFieldFlashKey(person, 'last_name'))
                   "
-                  :is_save_disabled_externally="
-                    companyPersonFieldMatchesStored(person, 'last_name')
-                  "
-                  @update:content="
-                    (v) =>
-                      setPersonField(
-                        personSlugFromFolder(person),
-                        'last_name',
-                        v
-                      )
-                  "
-                  @save="
-                    saveCompanyPersonField(
-                      personSlugFromFolder(person),
-                      'last_name'
-                    )
-                  "
+                  @click="openPersonDetailModal(person, 'last_name')"
                 />
               </div>
               <div>
-                <SGClickRevealTextField
-                  :ref="
-                    (el) =>
-                      personRevealRef(
-                        personSlugFromFolder(person),
-                        'first_name',
-                        el
-                      )
-                  "
+                <SGFieldValuePresent
                   :label="$t('sg_person_first_name')"
-                  label_icon="person"
-                  :content="personField(person, 'first_name')"
-                  :required="false"
-                  :is_saving="
-                    savingPersonPair(personSlugFromFolder(person), 'first_name')
-                  "
-                  :is_save_disabled_externally="
-                    companyPersonFieldMatchesStored(person, 'first_name')
-                  "
-                  @update:content="
-                    (v) =>
-                      setPersonField(
-                        personSlugFromFolder(person),
-                        'first_name',
-                        v
-                      )
-                  "
-                  @save="
-                    saveCompanyPersonField(
-                      personSlugFromFolder(person),
-                      'first_name'
+                  icon="person"
+                  :value="personField(person, 'first_name')"
+                  :is_flashing="
+                    isFieldFlashing(
+                      personFieldFlashKey(person, 'first_name')
                     )
                   "
+                  @click="openPersonDetailModal(person, 'first_name')"
                 />
               </div>
               <div>
-                <SGClickRevealTextField
-                  :ref="
-                    (el) =>
-                      personRevealRef(personSlugFromFolder(person), 'email', el)
-                  "
+                <SGFieldValuePresent
                   :label="$t('sg_person_email')"
-                  label_icon="envelope"
-                  :content="personField(person, 'email')"
-                  :required="false"
-                  :is_saving="
-                    savingPersonPair(personSlugFromFolder(person), 'email')
+                  icon="envelope"
+                  :value="personField(person, 'email')"
+                  :is_flashing="
+                    isFieldFlashing(personFieldFlashKey(person, 'email'))
                   "
-                  :is_save_disabled_externally="
-                    companyPersonFieldMatchesStored(person, 'email')
-                  "
-                  @update:content="
-                    (v) =>
-                      setPersonField(personSlugFromFolder(person), 'email', v)
-                  "
-                  @save="
-                    saveCompanyPersonField(
-                      personSlugFromFolder(person),
-                      'email'
-                    )
-                  "
+                  @click="openPersonDetailModal(person, 'email')"
                 />
               </div>
               <div class="_fullWidthField">
-                <SGClickRevealTextField
-                  :ref="
-                    (el) =>
-                      personRevealRef(
-                        personSlugFromFolder(person),
-                        'address',
-                        el
-                      )
-                  "
+                <SGFieldValuePresent
                   :label="$t('sg_person_address')"
-                  label_icon="geo-alt"
-                  :content="personField(person, 'address')"
-                  :required="false"
-                  :is_saving="
-                    savingPersonPair(personSlugFromFolder(person), 'address')
+                  icon="geo-alt"
+                  :value="personField(person, 'address')"
+                  :is_flashing="
+                    isFieldFlashing(personFieldFlashKey(person, 'address'))
                   "
-                  :is_save_disabled_externally="
-                    companyPersonFieldMatchesStored(person, 'address')
-                  "
-                  @update:content="
-                    (v) =>
-                      setPersonField(personSlugFromFolder(person), 'address', v)
-                  "
-                  @save="
-                    saveCompanyPersonField(
-                      personSlugFromFolder(person),
-                      'address'
-                    )
-                  "
+                  @click="openPersonDetailModal(person, 'address')"
                 />
               </div>
               <div>
-                <SGClickRevealTextField
-                  :ref="
-                    (el) =>
-                      personRevealRef(personSlugFromFolder(person), 'phone', el)
-                  "
+                <SGFieldValuePresent
                   :label="$t('sg_person_phone')"
-                  label_icon="telephone"
-                  :content="personField(person, 'phone')"
-                  :required="false"
-                  :is_saving="
-                    savingPersonPair(personSlugFromFolder(person), 'phone')
+                  icon="telephone"
+                  :value="personField(person, 'phone')"
+                  :is_flashing="
+                    isFieldFlashing(personFieldFlashKey(person, 'phone'))
                   "
-                  :is_save_disabled_externally="
-                    companyPersonFieldMatchesStored(person, 'phone')
-                  "
-                  @update:content="
-                    (v) =>
-                      setPersonField(personSlugFromFolder(person), 'phone', v)
-                  "
-                  @save="
-                    saveCompanyPersonField(personSlugFromFolder(person), 'phone')
-                  "
+                  @click="openPersonDetailModal(person, 'phone')"
                 />
               </div>
             </div>
@@ -366,22 +268,40 @@
         </div>
       </section>
 
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_contact_type") }}</h2>
-        <p class="_readonlyType">{{ contact_type_label }}</p>
-        <p class="_readonlyHint">{{ $t("sg_contact_type_readonly") }}</p>
-      </section>
+      <SGContactEditTextModal
+        v-if="contact_edit_modal"
+        ref="contactEditTextModalRef"
+        :key="contact_edit_modal_key"
+        :modal_title_str="contact_edit_modal_title"
+        :label="contact_edit_modal_label"
+        :label_icon="contact_edit_modal_label_icon"
+        :initial_value="contact_edit_modal_initial_value"
+        :stored_comparison_value="contact_edit_modal_stored_comparison"
+        :required="contact_edit_modal_required"
+        :required_empty_hint="contact_edit_modal_required_empty_hint"
+        :is_saving="contact_edit_modal_is_saving"
+        :external_warning="contact_edit_modal_external_warning"
+        :history_path="contact_edit_modal_history_path"
+        :history_field_key="contact_edit_modal_history_field_key"
+        @close="closeContactEditModal"
+        @draftChange="contactEditModalDraftChange"
+        @save="onContactEditModalSave"
+      />
     </div>
   </section>
 </template>
 
 <script>
-import SGClickRevealTextField from "@/components/softgems/SGClickRevealTextField.vue";
+import SGFieldValuePresent from "@/components/softgems/SGFieldValuePresent.vue";
+import SGContactEditTextModal from "@/components/softgems/SGContactEditTextModal.vue";
+import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 
 export default {
   name: "SGContactOpenView",
   components: {
-    SGClickRevealTextField,
+    SGFieldValuePresent,
+    SGContactEditTextModal,
+    RemoveMenu2,
   },
   props: {
     contact_slug: {
@@ -404,7 +324,6 @@ export default {
       saving_company_field_key: "",
       fetch_error: "",
       name_duplicate_warning: "",
-      name_save_attempted: false,
       company_person_folders: [],
       person_edit_buffers: {},
       is_loading_company_contacts: false,
@@ -415,8 +334,14 @@ export default {
       new_person_address: "",
       new_person_phone: "",
       is_creating_company_person: false,
-      reveal_component_refs: {},
+      contact_edit_modal: null,
+      contact_edit_modal_key: 0,
       saving_person_slug_field: "",
+      show_remove_contact_modal: false,
+      /** Tracks slug whose `…/{slug}/contacts` Socket room is joined */
+      joined_company_contacts_slug: "",
+      flashing_fields: {},
+      flash_timeouts: {},
     };
   },
   computed: {
@@ -442,16 +367,134 @@ export default {
     stored_name() {
       return this.clean_string(this.contact?.name);
     },
-    name_validation_error() {
-      if (!this.name_save_attempted) return "";
-      if (!this.trimmed_edited_name) return this.$t("sg_contact_name_required");
+    contact_edit_modal_title() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name") {
+        return `${this.page_title} — ${this.$t("sg_contact_name")}`;
+      }
+      if (m.kind === "company") {
+        return `${this.page_title} — ${this.company_details_field_label(m.meta_key)}`;
+      }
+      if (m.kind === "person") {
+        const heading = this.person_heading_for_modal(m.slug);
+        return `${heading} — ${this.person_details_field_label(m.meta_key)}`;
+      }
       return "";
     },
-    contact_name_save_blocked_without_request() {
-      return (
-        !this.trimmed_edited_name ||
-        this.trimmed_edited_name === this.stored_name
-      );
+    contact_edit_modal_label() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name") return this.$t("sg_contact_name");
+      if (m.kind === "company")
+        return this.company_details_field_label(m.meta_key);
+      if (m.kind === "person")
+        return this.person_details_field_label(m.meta_key);
+      return "";
+    },
+    contact_edit_modal_label_icon() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name") return "person";
+      if (m.kind === "company") {
+        const icons = {
+          address: "geo-alt",
+          phone: "telephone",
+          company_email: "envelope",
+          tva_number: "hash",
+          tva_attestation: "file-earmark-text",
+        };
+        return icons[m.meta_key] || "";
+      }
+      if (m.kind === "person") {
+        const icons = {
+          last_name: "person",
+          first_name: "person",
+          email: "envelope",
+          address: "geo-alt",
+          phone: "telephone",
+        };
+        return icons[m.meta_key] || "";
+      }
+      return "";
+    },
+    contact_edit_modal_initial_value() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name") return this.edited_name;
+      if (m.kind === "company")
+        return this.company_detail_edited_value(m.meta_key);
+      if (m.kind === "person") {
+        const fo = this.person_folder_from_slug(m.slug);
+        return fo ? this.personField(fo, m.meta_key) : "";
+      }
+      return "";
+    },
+    contact_edit_modal_stored_comparison() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name") return this.stored_name;
+      if (m.kind === "company")
+        return this.stored_string_field(m.meta_key);
+      if (m.kind === "person") {
+        const fo = this.person_folder_from_slug(m.slug);
+        if (!fo) return "";
+        if (m.meta_key === "last_name") {
+          return this.stored_person_field_normalized(fo, "last_name");
+        }
+        return this.storedPersonField(fo, m.meta_key);
+      }
+      return "";
+    },
+    contact_edit_modal_required() {
+      const m = this.contact_edit_modal;
+      if (!m) return false;
+      if (m.kind === "name") return true;
+      if (m.kind === "person") return m.meta_key === "last_name";
+      return false;
+    },
+    contact_edit_modal_required_empty_hint() {
+      const m = this.contact_edit_modal;
+      if (!m || !this.contact_edit_modal_required) return "";
+      if (m.kind === "name") return this.$t("sg_contact_name_required");
+      return this.$t("sg_person_last_name_required");
+    },
+    contact_edit_modal_is_saving() {
+      const m = this.contact_edit_modal;
+      if (!m) return false;
+      if (m.kind === "name") return this.is_saving_name;
+      if (m.kind === "company")
+        return this.saving_company_field_key === m.meta_key;
+      if (m.kind === "person") {
+        return (
+          this.saving_person_slug_field ===
+          `${this.clean_string(m.slug)}::${m.meta_key}`
+        );
+      }
+      return false;
+    },
+    contact_edit_modal_external_warning() {
+      const m = this.contact_edit_modal;
+      if (!m || m.kind !== "name") return "";
+      return this.name_duplicate_warning;
+    },
+    contact_edit_modal_history_path() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name" || m.kind === "company") return this.contact_path;
+      if (m.kind === "person") {
+        const slug = this.clean_string(m.slug);
+        return slug ? `${this.company_contacts_path}/${slug}` : "";
+      }
+      return "";
+    },
+    contact_edit_modal_history_field_key() {
+      const m = this.contact_edit_modal;
+      if (!m) return "";
+      if (m.kind === "name") return "name";
+      if (m.kind === "company") return m.meta_key;
+      if (m.kind === "person") return m.meta_key;
+      return "";
     },
     is_create_person_disabled() {
       return (
@@ -464,6 +507,9 @@ export default {
       if (t === "company") return this.$t("sg_contact_type_company");
       if (t === "individual") return this.$t("sg_contact_type_individual");
       return "—";
+    },
+    flash_contact_name_key() {
+      return "contact_name";
     },
   },
   watch: {
@@ -479,44 +525,145 @@ export default {
     this.$api.join({ room: this.contact_path });
   },
   beforeDestroy() {
+    Object.values(this.flash_timeouts).forEach((timeout_id) => {
+      clearTimeout(timeout_id);
+    });
+    this.leaveCompanyContactsListRoomTracked();
     this.$api.leave({ room: this.contact_path });
   },
   methods: {
     goBack() {
       this.$router.push("/address-book");
     },
-    registerRevealRef(key, component) {
-      if (component) this.$set(this.reveal_component_refs, key, component);
-      else this.$delete(this.reveal_component_refs, key);
+    on_contact_removed_successfully() {
+      this.show_remove_contact_modal = false;
+      this.goBack();
     },
-    personRevealRef(slug, field_key, component) {
-      const k = `pp:${this.clean_string(slug)}:${field_key}`;
-      return this.registerRevealRef(k, component);
+    flashCompanyFieldKey(meta_key_raw) {
+      const mk = this.clean_string(meta_key_raw);
+      return mk ? `company::${mk}` : "";
     },
-    reveal_component_for_company_detail(meta_key) {
-      const reveal_map = {
-        address: "company_address",
-        phone: "company_phone",
-        company_email: "company_email",
-        tva_number: "company_tva_number",
-        tva_attestation: "company_tva_attestation",
+    personFieldFlashKey(person_folder, field_key_raw) {
+      const slug = this.personSlugFromFolder(person_folder);
+      const fk = this.clean_string(field_key_raw);
+      return slug && fk ? `${slug}::${fk}` : "";
+    },
+    flashFields(field_keys) {
+      if (!Array.isArray(field_keys) || field_keys.length === 0) return;
+      const flash_duration_ms = 4000;
+      field_keys.forEach((field_key) => {
+        if (!field_key) return;
+        if (this.flash_timeouts[field_key]) {
+          clearTimeout(this.flash_timeouts[field_key]);
+          this.$delete(this.flash_timeouts, field_key);
+        }
+        this.$set(this.flashing_fields, field_key, false);
+        this.$nextTick(() => {
+          this.$set(this.flashing_fields, field_key, true);
+          this.flash_timeouts[field_key] = setTimeout(() => {
+            this.$delete(this.flashing_fields, field_key);
+            this.$delete(this.flash_timeouts, field_key);
+          }, flash_duration_ms);
+        });
+      });
+    },
+    isFieldFlashing(field_key) {
+      return Boolean(this.flashing_fields[field_key]);
+    },
+    openContactNameModal() {
+      this.name_duplicate_warning = "";
+      this.contact_edit_modal_key += 1;
+      this.contact_edit_modal = { kind: "name" };
+    },
+    openCompanyDetailModal(meta_key) {
+      if (!this.is_company || !this.clean_string(meta_key)) return;
+      this.contact_edit_modal_key += 1;
+      this.contact_edit_modal = { kind: "company", meta_key };
+    },
+    openPersonDetailModal(person, field_key) {
+      const slug = this.personSlugFromFolder(person);
+      if (!slug || !field_key) return;
+      this.contact_edit_modal_key += 1;
+      this.contact_edit_modal = {
+        kind: "person",
+        slug,
+        meta_key: field_key,
       };
-      const ref_key = reveal_map[meta_key];
-      return ref_key ? this.reveal_component_refs[ref_key] : null;
     },
-    collapse_reveal_component(cmp) {
-      if (
-        cmp &&
-        typeof cmp.collapseAfterSave === "function"
-      ) {
-        cmp.collapseAfterSave();
+    closeContactEditModal() {
+      this.contact_edit_modal = null;
+    },
+    contactEditModalDraftChange() {
+      this.name_duplicate_warning = "";
+    },
+    async onContactEditModalSave({ value }) {
+      const modal = this.contact_edit_modal;
+      if (!modal) return;
+      const raw_value = typeof value === "string" ? value : "";
+      if (modal.kind === "name") {
+        this.edited_name = raw_value;
+        await this.persistContactNameModal();
+        return;
+      }
+      if (modal.kind === "company") {
+        this.assign_company_detail_value_from_modal(
+          modal.meta_key,
+          raw_value
+        );
+        await this.persistCompanyDetailModal(modal.meta_key);
+        return;
+      }
+      if (modal.kind === "person") {
+        this.setPersonField(modal.slug, modal.meta_key, raw_value);
+        await this.persistPersonFieldModal(modal.slug, modal.meta_key);
       }
     },
-    focus_reveal_inner_input(ref_key) {
-      const cmp = this.reveal_component_refs[ref_key];
-      if (cmp && typeof cmp.focusInnerInput === "function") {
-        cmp.focusInnerInput();
-      }
+    company_details_field_label(meta_key) {
+      const labels = {
+        address: this.$t("sg_company_address"),
+        phone: this.$t("sg_company_phone"),
+        company_email: this.$t("sg_company_email"),
+        tva_number: this.$t("sg_company_tva_number"),
+        tva_attestation: this.$t("sg_company_tva_attestation"),
+      };
+      return labels[meta_key] || "";
+    },
+    person_details_field_label(meta_key) {
+      const labels = {
+        last_name: this.$t("sg_person_last_name"),
+        first_name: this.$t("sg_person_first_name"),
+        email: this.$t("sg_person_email"),
+        address: this.$t("sg_person_address"),
+        phone: this.$t("sg_person_phone"),
+      };
+      return labels[meta_key] || "";
+    },
+    person_heading_for_modal(slug_raw) {
+      const slug = this.clean_string(slug_raw);
+      if (!slug) return "";
+      const buf = this.person_edit_buffers[slug];
+      const last = buf ? this.clean_string(buf.last_name) : "";
+      const first = buf ? this.clean_string(buf.first_name) : "";
+      if (first && last) return `${first} ${last}`;
+      if (last) return last;
+      if (first) return first;
+      return slug;
+    },
+    person_folder_from_slug(slug_raw) {
+      const slug = this.clean_string(slug_raw);
+      return this.company_person_folders.find(
+        (item) => this.personSlugFromFolder(item) === slug
+      );
+    },
+    assign_company_detail_value_from_modal(meta_key, raw_string) {
+      const v =
+        typeof raw_string === "string" ? raw_string : String(raw_string || "");
+      if (meta_key === "address") this.edited_address = v;
+      else if (meta_key === "phone") this.edited_phone = v;
+      else if (meta_key === "company_email") this.edited_company_email = v;
+      else if (meta_key === "tva_number") this.edited_tva_number = v;
+      else if (meta_key === "tva_attestation")
+        this.edited_tva_attestation = v;
     },
     company_detail_edited_value(meta_key) {
       if (meta_key === "address") return this.edited_address;
@@ -530,12 +677,6 @@ export default {
       return (
         this.clean_string(this.company_detail_edited_value(meta_key)) ===
         this.stored_string_field(meta_key)
-      );
-    },
-    savingPersonPair(slug, field_key) {
-      return (
-        this.saving_person_slug_field ===
-        `${this.clean_string(slug)}::${field_key}`
       );
     },
     companyPersonFieldMatchesStored(person, field_key) {
@@ -573,11 +714,11 @@ export default {
       this.edited_tva_number = this.string_from_contact(c, "tva_number");
       this.edited_tva_attestation = this.string_from_contact(c, "tva_attestation");
     },
-    onEditedName() {
-      this.name_duplicate_warning = "";
-      this.name_save_attempted = false;
-    },
     async fetchContact() {
+      this.closeContactEditModal();
+      if (this.joined_company_contacts_slug !== this.contact_slug) {
+        this.leaveCompanyContactsListRoomTracked();
+      }
       this.is_loading = true;
       this.fetch_error = "";
       this.contact = null;
@@ -593,21 +734,27 @@ export default {
         this.populate_company_editors_from_contact();
         if (this.contact?.contact_type === "company") {
           await this.fetchCompanyContacts();
+          this.$api.join({ room: this.company_contacts_path });
+          this.joined_company_contacts_slug = this.contact_slug;
         } else {
+          this.leaveCompanyContactsListRoomTracked();
           this.company_person_folders = [];
           this.person_edit_buffers = {};
         }
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_contact");
+        this.leaveCompanyContactsListRoomTracked();
       } finally {
         this.is_loading = false;
       }
     },
-    async saveName() {
-      this.name_save_attempted = true;
+    async persistContactNameModal() {
       this.name_duplicate_warning = "";
       if (!this.trimmed_edited_name) return;
-      if (this.trimmed_edited_name === this.stored_name) return;
+      if (this.trimmed_edited_name === this.stored_name) {
+        this.closeContactEditModal();
+        return;
+      }
       if (this.is_saving_name) return;
 
       this.is_saving_name = true;
@@ -628,10 +775,8 @@ export default {
         if (this.is_company) {
           await this.fetchCompanyContacts();
         }
-        this.name_save_attempted = false;
-        this.collapse_reveal_component(
-          this.reveal_component_refs.contact_name
-        );
+        this.closeContactEditModal();
+        this.flashFields([this.flash_contact_name_key]);
         this.$alertify.delay(3000).success(this.$t("sg_contact_name_updated"));
       } catch (err) {
         const code = err && err.code;
@@ -646,7 +791,10 @@ export default {
           this.name_duplicate_warning = message;
           this.$alertify.delay(4000).error(message);
           this.$nextTick(() => {
-            this.focus_reveal_inner_input("contact_name");
+            const ref = this.$refs.contactEditTextModalRef;
+            if (ref && typeof ref.focusInputSelect === "function") {
+              ref.focusInputSelect();
+            }
           });
         } else {
           this.$alertify
@@ -657,19 +805,20 @@ export default {
         this.is_saving_name = false;
       }
     },
-    async saveCompanyDetailField(meta_key) {
+    async persistCompanyDetailModal(meta_key) {
       if (
         !this.is_company ||
         !this.clean_string(meta_key) ||
         this.company_field_matches_stored(meta_key) ||
         this.saving_company_field_key
       ) {
+        if (this.company_field_matches_stored(meta_key)) {
+          this.closeContactEditModal();
+        }
         return;
       }
 
       this.saving_company_field_key = meta_key;
-      const reveal_cmp =
-        this.reveal_component_for_company_detail(meta_key);
       try {
         await this.$api.updateMeta({
           path: this.contact_path,
@@ -684,7 +833,8 @@ export default {
           no_files: true,
         });
         this.populate_company_editors_from_contact();
-        this.collapse_reveal_component(reveal_cmp);
+        this.closeContactEditModal();
+        this.flashFields([this.flashCompanyFieldKey(meta_key)]);
         this.$alertify
           .delay(3000)
           .success(this.$t("sg_company_details_updated"));
@@ -768,13 +918,29 @@ export default {
       }
       return last_name || first_name;
     },
+    leaveCompanyContactsListRoomTracked() {
+      if (!this.joined_company_contacts_slug) return;
+      const p = `${this.address_book_path}/${this.joined_company_contacts_slug}/contacts`;
+      this.$api.leave({ room: p });
+      this.joined_company_contacts_slug = "";
+    },
     async fetchCompanyContacts() {
       if (!this.contact || this.contact.contact_type !== "company") return;
+
+      const listing_path = this.company_contacts_path;
+      /* getFolders returns api.store[path] without refetch when set; [] is truthy — stale
+         listings never reload. Socket folderCreated only mutates tracked joined rooms. */
+      if (
+        this.$api.store &&
+        Object.prototype.hasOwnProperty.call(this.$api.store, listing_path)
+      ) {
+        this.$delete(this.$api.store, listing_path);
+      }
 
       this.is_loading_company_contacts = true;
       try {
         const rows = await this.$api.getFolders({
-          path: this.company_contacts_path,
+          path: listing_path,
         });
         const list = Array.isArray(rows) ? rows : [];
         const buffers = {};
@@ -843,7 +1009,7 @@ export default {
         this.is_creating_company_person = false;
       }
     },
-    async saveCompanyPersonField(slug_raw, field_key) {
+    async persistPersonFieldModal(slug_raw, field_key) {
       const slug = this.clean_string(slug_raw);
       const fk = this.clean_string(field_key);
       if (!slug || !fk || this.saving_person_slug_field) return;
@@ -852,7 +1018,10 @@ export default {
         (item) => this.personSlugFromFolder(item) === slug
       );
       if (!folder) return;
-      if (this.companyPersonFieldMatchesStored(folder, fk)) return;
+      if (this.companyPersonFieldMatchesStored(folder, fk)) {
+        this.closeContactEditModal();
+        return;
+      }
 
       const buf = this.person_edit_buffers[slug];
       if (!buf) return;
@@ -863,9 +1032,6 @@ export default {
           .error(this.$t("sg_person_last_name_required"));
         return;
       }
-
-      const reveal_cmp =
-        this.reveal_component_refs[`pp:${slug}:${fk}`];
 
       const pair_key = `${slug}::${fk}`;
       this.saving_person_slug_field = pair_key;
@@ -880,7 +1046,8 @@ export default {
           },
         });
         await this.fetchCompanyContacts();
-        this.collapse_reveal_component(reveal_cmp);
+        this.closeContactEditModal();
+        this.flashFields([pair_key]);
         this.$alertify
           .delay(3000)
           .success(this.$t("sg_company_contact_saved"));
@@ -911,6 +1078,30 @@ export default {
 
 ._pageTitle {
   margin: 0;
+}
+
+._headerMeta {
+  margin-top: calc(var(--spacing) * 0.55);
+}
+
+._headerType {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+._headerMetaRow {
+  margin-top: calc(var(--spacing) * 0.45);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 2);
+}
+
+._headerReadonlyHint {
+  margin: 0;
+  flex: 1 1 200px;
 }
 
 ._closeButton {
@@ -955,12 +1146,6 @@ export default {
   justify-content: flex-end;
 }
 
-._readonlyType {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
 ._readonlyHint {
   margin: calc(var(--spacing) * 0.5) 0 0;
   color: var(--c-gris_fonce);
@@ -970,11 +1155,6 @@ export default {
 ._fieldError {
   margin: calc(var(--spacing) / 6) 0 0;
   color: var(--c-rouge);
-  font-size: var(--sl-font-size-x-small);
-}
-
-._duplicateWarning {
-  margin: calc(var(--spacing) / 6) 0 0;
   font-size: var(--sl-font-size-x-small);
 }
 
