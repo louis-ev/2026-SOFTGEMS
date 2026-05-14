@@ -66,6 +66,7 @@
           </p>
           <SGGemsTable
             :gems="filtered_gems"
+            :inventory_has_gems="gems.length > 0"
             :metadata_keys="metadata_keys"
             :metadata_labels="metadata_labels"
             :metadata_icons="metadata_icons"

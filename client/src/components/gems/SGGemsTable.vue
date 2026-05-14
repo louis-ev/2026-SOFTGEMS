@@ -54,7 +54,13 @@
       </thead>
       <transition-group name="row-sort" tag="tbody">
         <tr v-if="sorted_gems.length === 0" key="_empty">
-          <td :colspan="metadata_keys.length">{{ $t("sg_no_gems_yet") }}</td>
+          <td :colspan="metadata_keys.length">
+            {{
+              inventory_has_gems
+                ? $t("sg_no_gems_match_filters")
+                : $t("sg_no_gems_yet")
+            }}
+          </td>
         </tr>
         <tr
           v-for="gem in sorted_gems"
@@ -118,6 +124,7 @@ export default {
     selected_gem_id: { type: String, default: "" },
     is_gem_open: { type: Boolean, default: false },
     view_density: { type: String, default: "medium" },
+    inventory_has_gems: { type: Boolean, default: false },
   },
   data() {
     return {

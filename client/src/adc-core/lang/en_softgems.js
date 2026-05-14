@@ -69,6 +69,7 @@ export default {
   sg_loading_gems: "Loading gems...",
   sg_loading_gem: "Loading gem...",
   sg_no_gems_yet: "No gems yet.",
+  sg_no_gems_match_filters: "No gems match your search.",
   sg_could_not_load_gems: "Could not load gems.",
   sg_could_not_load_gem: "Could not load gem.",
   sg_could_not_create_gem: "Could not create gem.",
