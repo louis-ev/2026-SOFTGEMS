@@ -9,11 +9,16 @@
       v-if="!readonly"
       type="button"
       class="_value u-input"
+      :title="hint_title || undefined"
       @click="$emit('click')"
     >
       <span :class="{ _empty: is_empty }">{{ display_value }}</span>
     </button>
-    <div v-else class="_value u-input _readonly">
+    <div
+      v-else
+      class="_value u-input _readonly"
+      :title="hint_title || undefined"
+    >
       <span :class="{ _empty: is_empty }">{{ display_value }}</span>
     </div>
   </div>
@@ -43,6 +48,10 @@ export default {
       default: false,
     },
     pill_text: {
+      type: String,
+      default: "",
+    },
+    hint_title: {
       type: String,
       default: "",
     },

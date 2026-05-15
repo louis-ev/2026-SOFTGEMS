@@ -42,11 +42,13 @@
     <div v-else-if="gem" class="_content">
       <section class="_formSection _gemActionsSection">
         <div class="_dangerZone">
-          <button
-            type="button"
-            class="u-buttonLink u-buttonLink_red"
-            @click="show_remove_modal = true"
-          >
+        <button
+          type="button"
+          class="u-buttonLink u-buttonLink_red"
+          :disabled="!can_edit"
+          :title="gem_remove_guest_title_hint"
+          @click="show_remove_modal = true"
+        >
             {{ $t("sg_remove_gem") }}
           </button>
           <RemoveMenu2
@@ -599,7 +601,10 @@ export default {
   },
   computed: {
     can_edit() {
-      return true;
+      return !!this.connected_as;
+    },
+    gem_remove_guest_title_hint() {
+      return this.can_edit ? "" : this.$t("sg_action_requires_account");
     },
     gem_path() {
       return `${this.gems_path}/${this.gem_id}`;
@@ -729,6 +734,7 @@ export default {
       return parts[parts.length - 1] || author_path;
     },
     openEditModal(field_config) {
+      if (!this.connected_as) return;
       this.editing_field = field_config;
     },
     gemFieldModalTitle(field_config) {

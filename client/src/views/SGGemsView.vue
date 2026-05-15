@@ -908,6 +908,7 @@ export default {
       return configs[metadata_key] || null;
     },
     isFieldEditable(metadata_key) {
+      if (!this.connected_as) return false;
       if (metadata_key === "id" || metadata_key === "$cover") return false;
       const config = this.getFieldConfig(metadata_key, {});
       return config !== null && !config.readonly;
@@ -916,6 +917,7 @@ export default {
       this.openCellEditModal(gem, metadata_key);
     },
     openCellEditModal(gem, metadata_key) {
+      if (!this.connected_as) return;
       const field_config = this.getFieldConfig(metadata_key, gem);
       if (!field_config || field_config.readonly) return;
       const raw_value = this.gemFieldDisplayValue(gem, field_config);

@@ -23,6 +23,8 @@
           <button
             type="button"
             class="u-buttonLink u-buttonLink_red"
+            :disabled="!connected_as"
+            :title="contact_guest_action_hint"
             @click="show_remove_contact_modal = true"
           >
             {{ $t("sg_remove_contact") }}
@@ -175,6 +177,8 @@
         <button
           type="button"
           class="u-button u-button_bleuvert _addPersonButton"
+          :disabled="!connected_as"
+          :title="contact_guest_action_hint"
           @click="toggleNewPersonForm"
         >
           <b-icon icon="plus-lg" />
@@ -503,6 +507,7 @@ export default {
     },
     is_create_person_disabled() {
       return (
+        !this.connected_as ||
         this.is_creating_company_person ||
         !this.clean_string(this.new_person_last_name)
       );
@@ -515,6 +520,9 @@ export default {
     },
     flash_contact_name_key() {
       return "contact_name";
+    },
+    contact_guest_action_hint() {
+      return this.connected_as ? "" : this.$t("sg_action_requires_account");
     },
   },
   watch: {
@@ -551,6 +559,7 @@ export default {
       return slug && fk ? `${slug}::${fk}` : "";
     },
     openContactNameModal() {
+      if (!this.connected_as) return;
       this.name_duplicate_warning = "";
       this.contact_edit_modal = { kind: "name" };
     },
@@ -621,10 +630,12 @@ export default {
       };
     },
     openCompanyDetailModal(meta_key) {
-      if (!this.is_company || !this.clean_string(meta_key)) return;
+      if (!this.connected_as || !this.is_company || !this.clean_string(meta_key))
+        return;
       this.contact_edit_modal = { kind: "company", meta_key };
     },
     openPersonDetailModal(person, field_key) {
+      if (!this.connected_as) return;
       const slug = this.personSlugFromFolder(person);
       if (!slug || !field_key) return;
       this.contact_edit_modal = {
@@ -940,6 +951,7 @@ export default {
       return v;
     },
     toggleNewPersonForm() {
+      if (!this.connected_as) return;
       this.show_new_person_form = !this.show_new_person_form;
       if (!this.show_new_person_form) {
         this.clearNewPersonForm();

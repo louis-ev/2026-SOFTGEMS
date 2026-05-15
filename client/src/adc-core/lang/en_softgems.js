@@ -1,4 +1,8 @@
 export default {
+  sg_editing_requires_account:
+    "Sign in with an author account to edit this field.",
+  sg_action_requires_account:
+    "Sign in with an author account to use this action.",
   sg_inventory: "Inventory",
   sg_all_gems: "All gems",
   sg_gems_search_placeholder:

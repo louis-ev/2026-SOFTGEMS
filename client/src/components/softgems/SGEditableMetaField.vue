@@ -4,9 +4,10 @@
       :label="label"
       :icon="icon"
       :value="value"
-      :readonly="readonly"
+      :readonly="effective_readonly"
       :is_flashing="is_flashing"
       :pill_text="pill_text"
+      :hint_title="guest_value_hint_title"
       @click="onPresentClick"
     />
     <BaseModal2
@@ -125,6 +126,13 @@ export default {
       type: [Number, String],
       default: 0,
     },
+    /**
+     * When false (default), guests (no `connected_as`) see the value as read-only and cannot open the editor.
+     */
+    allow_guest_edit: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -134,6 +142,15 @@ export default {
     };
   },
   computed: {
+    effective_readonly() {
+      if (this.readonly) return true;
+      if (this.allow_guest_edit) return false;
+      return !this.connected_as;
+    },
+    guest_value_hint_title() {
+      if (this.readonly || this.allow_guest_edit || this.connected_as) return "";
+      return this.$t("sg_editing_requires_account");
+    },
     resolved_modal_title() {
       return this.modal_title || this.modal_title_str || "";
     },
@@ -204,7 +221,7 @@ export default {
   },
   methods: {
     onPresentClick() {
-      if (this.readonly) return;
+      if (this.effective_readonly) return;
       this.$emit("presentClick");
     },
     onModalClose() {
