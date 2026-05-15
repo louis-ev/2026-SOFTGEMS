@@ -106,6 +106,7 @@
 <script>
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import GemPricing from "@/mixins/GemPricing";
 
 const creation_locked_field_keys = [
   "reference_supplier",
@@ -139,6 +140,7 @@ const v1_new_gem_fields_defaults = {
 
 export default {
   name: "SGGemNewView",
+  mixins: [GemPricing],
   components: {
     SGSelectField,
   },

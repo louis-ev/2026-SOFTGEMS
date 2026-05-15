@@ -17,6 +17,11 @@
               <b-icon icon="plus-lg" />
               {{ $t("sg_create_gem") }}
             </router-link>
+            <SGGemBulkPerfSeedPanel
+              :gems_path="gems_path"
+              :disabled="is_loading || Boolean(fetch_error)"
+              @finished="onBulkPerfSeedFinished"
+            />
             <!-- <button
               type="button"
               class="u-button"
@@ -159,6 +164,8 @@ export default {
     GemCsvExportButton: () =>
       import("@/components/gems/GemCsvExportButton.vue"),
     SGGemColumnsModal: () => import("@/components/gems/SGGemColumnsModal.vue"),
+    SGGemBulkPerfSeedPanel: () =>
+      import("@/components/gems/SGGemBulkPerfSeedPanel.vue"),
   },
   data() {
     return {
@@ -760,6 +767,9 @@ export default {
     },
     closeGemPanel() {
       this.$router.push("/gems");
+    },
+    onBulkPerfSeedFinished() {
+      this.fetchGems();
     },
     async fetchGems() {
       this.is_loading = true;

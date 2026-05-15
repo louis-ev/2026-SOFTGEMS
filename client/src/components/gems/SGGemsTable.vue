@@ -1,6 +1,7 @@
 <template>
-  <div class="_gemsTable" :class="density_class">
-    <table class="_table">
+  <div class="_gemsTableRoot">
+    <div class="_gemsTable" :class="density_class">
+      <table class="_table">
       <thead>
         <tr>
           <th
@@ -63,7 +64,7 @@
           </td>
         </tr>
         <tr
-          v-for="gem in sorted_gems"
+          v-for="gem in paginated_gems"
           :key="gem.$path"
           class="_clickableRow"
           :class="{
@@ -116,7 +117,8 @@
           </td>
         </tr>
       </transition-group>
-    </table>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -138,9 +140,12 @@ export default {
     is_gem_open: { type: Boolean, default: false },
     view_density: { type: String, default: "medium" },
     inventory_has_gems: { type: Boolean, default: false },
+    gems_page_size: { type: Number, default: 100 },
   },
   data() {
     return {
+      gems_page_index: 0,
+      gems_watch_previous_length: null,
       sort_key: "id",
       sort_direction: "desc",
       has_initialized_snapshot: false,
@@ -176,13 +181,55 @@ export default {
         });
       });
     },
+    gems_effective_page_size() {
+      return Math.max(1, Number(this.gems_page_size) || 100);
+    },
+    gems_page_count() {
+      const total = this.sorted_gems.length;
+      if (total <= 0) return 1;
+      const size = this.gems_effective_page_size;
+      return Math.max(1, Math.ceil(total / size));
+    },
+    paginated_gems() {
+      const gems = this.sorted_gems;
+      const size = this.gems_effective_page_size;
+      const start = this.gems_page_index * size;
+      return gems.slice(start, start + size);
+    },
+    gems_page_range_start() {
+      const total = this.sorted_gems.length;
+      if (total <= 0) return 0;
+      return this.gems_page_index * this.gems_effective_page_size + 1;
+    },
+    gems_page_range_end() {
+      const total = this.sorted_gems.length;
+      if (total <= 0) return 0;
+      const end = (this.gems_page_index + 1) * this.gems_effective_page_size;
+      return Math.min(end, total);
+    },
   },
   watch: {
+    gems_page_index() {
+      this.emitGemsPagerPayload();
+    },
+    gems_page_count() {
+      this.emitGemsPagerPayload();
+    },
     gems: {
       immediate: true,
       deep: true,
       handler(new_gems) {
+        const new_len = Array.isArray(new_gems) ? new_gems.length : 0;
+        if (
+          this.gems_watch_previous_length !== null &&
+          this.gems_watch_previous_length !== new_len
+        ) {
+          this.gems_page_index = 0;
+        }
+        this.gems_watch_previous_length = new_len;
+        this.clampGemsPageIndex();
         this.detectUpdatedCells(new_gems);
+        this.emitGemsPagerPayload();
       },
     },
     metadata_keys: {
@@ -196,9 +243,15 @@ export default {
         if (!new_keys.includes(this.sort_key)) {
           this.sort_key = new_keys.includes("id") ? "id" : new_keys[0];
           this.sort_direction = this.sort_key === "id" ? "desc" : "asc";
+          this.gems_page_index = 0;
+          this.scrollGemsTableToTop();
+          this.$nextTick(() => this.emitGemsPagerPayload());
         }
       },
     },
+  },
+  mounted() {
+    this.$nextTick(() => this.emitGemsPagerPayload());
   },
   beforeDestroy() {
     Object.values(this.flash_timeouts).forEach((timeout_id) => {
@@ -206,6 +259,23 @@ export default {
     });
   },
   methods: {
+    clampGemsPageIndex() {
+      const max_index = Math.max(0, this.gems_page_count - 1);
+      if (this.gems_page_index > max_index) this.gems_page_index = max_index;
+    },
+    goToGemsPage(delta) {
+      const next = this.gems_page_index + delta;
+      if (next < 0 || next >= this.gems_page_count) return;
+      this.gems_page_index = next;
+      this.scrollGemsTableToTop();
+      this.emitGemsPagerPayload();
+    },
+    scrollGemsTableToTop() {
+      this.$nextTick(() => {
+        const el = this.$el?.querySelector("._gemsTable");
+        if (el && typeof el.scrollTop !== "undefined") el.scrollTop = 0;
+      });
+    },
     getGemId(gem) {
       const gem_path = gem?.$path || "";
       if (!gem_path) return "";
@@ -289,11 +359,13 @@ export default {
 
       if (this.sort_key === metadata_key) {
         this.sort_direction = this.sort_direction === "asc" ? "desc" : "asc";
-        return;
+      } else {
+        this.sort_key = metadata_key;
+        this.sort_direction = metadata_key === "id" ? "desc" : "asc";
       }
-
-      this.sort_key = metadata_key;
-      this.sort_direction = metadata_key === "id" ? "desc" : "asc";
+      this.gems_page_index = 0;
+      this.scrollGemsTableToTop();
+      this.emitGemsPagerPayload();
     },
     getAriaSort(metadata_key) {
       if (!this.isSortableColumn(metadata_key)) return "none";
@@ -431,6 +503,34 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+._gemsTableRoot {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: calc(var(--spacing) / 2);
+}
+
+._gemsPager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spacing) / 2);
+  padding: calc(var(--spacing) / 3) 0;
+}
+
+._gemsPagerStatus {
+  margin: 0;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-gris_fonce);
+  text-align: center;
+}
+
+._gemsPagerBtn {
+  flex-shrink: 0;
+}
+
 ._gemsTable {
   --sticky-id-col-width: 80px;
   --sticky-cover-col-width: 80px;

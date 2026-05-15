@@ -17,6 +17,11 @@ export default {
   sg_gems_filter_stone_text: "Stone type contains “{needle}” — {matches}",
   sg_gems_filter_stone_match_none: "no such label in list",
   sg_gems_filter_stone_match_more: "+{n} more",
+  sg_gems_page_previous: "Previous",
+  sg_gems_page_next: "Next",
+  sg_gems_page_nav_label: "Gems table pages",
+  sg_gems_page_status:
+    "{start}–{end} of {total} · Page {page} of {pages}",
   sg_create_gem: "Add a gem",
   sg_export_gems_csv: "Export full database (CSV)",
   sg_download_all_gems_zip: "Download all gems (ZIP)",
@@ -80,6 +85,31 @@ export default {
   sg_generate_placeholder_gems: "Generate 10 placeholder gems",
   sg_generating_placeholder_gems: "Generating placeholders...",
   sg_generated_placeholder_gems: "Generated 10 placeholder gems.",
+  sg_bulk_perf_seed_button: "Perf seed (bulk copy)",
+  sg_bulk_perf_seed_title: "Bulk copy gems for performance testing",
+  sg_bulk_perf_seed_warning:
+    "This duplicates existing gem folders with the server copy API. Many copies can take a long time, stress the server, and use significant disk space (full folder + thumbnails each time). Use only in a test or backup environment.",
+  sg_bulk_perf_seed_target_label: "Target total gems",
+  sg_bulk_perf_seed_seed_count_label:
+    "Seed templates (first N originals by ID, excluding *-copy folders)",
+  sg_bulk_perf_seed_current_count: "Current inventory: {count} gems",
+  sg_bulk_perf_seed_seeds_selected: "Seed folders used in rotation: {n}",
+  sg_bulk_perf_seed_will_create: "Copies to create (sequential): {n}",
+  sg_bulk_perf_seed_progress: "Progress: {done} / {total}",
+  sg_bulk_perf_seed_confirm_instructions:
+    "To confirm, type the phrase {phrase} exactly (case-insensitive).",
+  sg_bulk_perf_seed_confirm_placeholder: "Confirmation phrase",
+  sg_bulk_perf_seed_start: "Start",
+  sg_bulk_perf_seed_stop: "Stop",
+  sg_bulk_perf_seed_no_seeds:
+    "No seed gems found (need at least one folder that is not a *-copy duplicate).",
+  sg_bulk_perf_seed_already_at_target:
+    "Inventory is already at or above the target; nothing to create.",
+  sg_bulk_perf_seed_error: "Bulk copy failed.",
+  sg_bulk_perf_seed_not_allowed:
+    "You are not allowed to copy into this folder.",
+  sg_bulk_perf_seed_stopped: "Stopped after {done} copies.",
+  sg_bulk_perf_seed_completed: "Created {count} copies. Reloading list.",
   sg_remove_all_gems: "Remove all gems",
   sg_removing_all_gems: "Removing all gems...",
   sg_remove_all_gems_confirm: "Remove all gems permanently? ({count} items)",
