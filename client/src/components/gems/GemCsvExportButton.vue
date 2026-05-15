@@ -1,5 +1,5 @@
 <template>
-  <div class="_csvExport">
+  <div class="_csvExport" :class="{ _csvExport_menu: menu_mode }">
     <button
       type="button"
       class="u-buttonLink"
@@ -36,6 +36,7 @@ export default {
     metadata_keys: { type: Array, default: () => [] },
     metadata_labels: { type: Object, default: () => ({}) },
     gems_path: { type: String, default: "gems" },
+    menu_mode: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -149,5 +150,24 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: calc(var(--spacing) / 2);
+}
+
+._csvExport_menu {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  justify-content: flex-start;
+
+  .u-buttonLink {
+    justify-content: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+    text-decoration: none;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.35;
+    padding-top: calc(var(--spacing) / 2);
+    padding-bottom: calc(var(--spacing) / 2);
+  }
 }
 </style>

@@ -17,7 +17,22 @@
               <b-icon icon="plus-lg" />
               {{ $t("sg_create_gem") }}
             </router-link>
+            <DropDown
+              v-if="!is_loading && !fetch_error"
+              class="_gemsExportDropdown"
+              :right="true"
+              :show_label="false"
+            >
+              <GemCsvExportButton
+                menu_mode
+                :gems="sorted_gems"
+                :metadata_keys="metadata_keys"
+                :metadata_labels="metadata_labels"
+                :gems_path="gems_path"
+              />
+            </DropDown>
             <SGGemBulkPerfSeedPanel
+              v-if="false"
               :gems_path="gems_path"
               :disabled="is_loading || Boolean(fetch_error)"
               @finished="onBulkPerfSeedFinished"
@@ -79,13 +94,6 @@
             @rowClick="openGem"
             @editCell="onTableEditCell"
           />
-
-          <GemCsvExportButton
-            :gems="sorted_gems"
-            :metadata_keys="metadata_keys"
-            :metadata_labels="metadata_labels"
-            :gems_path="gems_path"
-          />
         </div>
       </div>
       <template #panel>
@@ -118,6 +126,7 @@
   </div>
 </template>
 <script>
+import DropDown from "@/adc-core/ui/DropDown.vue";
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing, {
@@ -155,6 +164,7 @@ export default {
   name: "SGGemsView",
   mixins: [GemPricing],
   components: {
+    DropDown,
     SearchInput,
     SGOverlaySidePanelLayout: () =>
       import("@/components/softgems/SGOverlaySidePanelLayout.vue"),
@@ -1079,6 +1089,10 @@ export default {
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
+}
+
+._gemsExportDropdown {
+  flex-shrink: 0;
 }
 
 ._tableSection {

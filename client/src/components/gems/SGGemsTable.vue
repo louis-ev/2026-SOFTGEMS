@@ -2,122 +2,159 @@
   <div class="_gemsTableRoot">
     <div class="_gemsTable" :class="density_class">
       <table class="_table">
-      <thead>
-        <tr>
-          <th
-            v-for="metadata_key in metadata_keys"
-            :key="metadata_key"
-            :class="[
-              getStickyColumnClass(metadata_key),
-              { _sortableHeader: isSortableColumn(metadata_key) },
-            ]"
-            :aria-sort="getAriaSort(metadata_key)"
-          >
-            <button
-              type="button"
-              class="_thButton"
-              :disabled="!isSortableColumn(metadata_key)"
-              @click="onHeaderClick(metadata_key)"
+        <thead>
+          <tr>
+            <th
+              v-for="metadata_key in metadata_keys"
+              :key="metadata_key"
+              :class="[
+                getStickyColumnClass(metadata_key),
+                { _sortableHeader: isSortableColumn(metadata_key) },
+              ]"
+              :aria-sort="getAriaSort(metadata_key)"
             >
-              <span class="_thContent">
-                <b-icon
-                  v-if="metadata_icons[metadata_key]"
-                  :icon="metadata_icons[metadata_key]"
-                  class="_thIcon"
-                />
-                <span>{{ metadata_labels[metadata_key] || metadata_key }}</span>
-              </span>
-              <span
-                v-if="isSortableColumn(metadata_key)"
-                class="_sortArrows"
-                :class="{ _activeSort: sort_key === metadata_key }"
+              <button
+                type="button"
+                class="_thButton"
+                :disabled="!isSortableColumn(metadata_key)"
+                @click="onHeaderClick(metadata_key)"
               >
-                <b-icon
-                  icon="caret-up-fill"
-                  class="_sortArrow"
-                  :class="{
-                    _active:
-                      sort_key === metadata_key && sort_direction === 'asc',
-                  }"
-                />
-                <b-icon
-                  icon="caret-down-fill"
-                  class="_sortArrow"
-                  :class="{
-                    _active:
-                      sort_key === metadata_key && sort_direction === 'desc',
-                  }"
-                />
-              </span>
-            </button>
-          </th>
-        </tr>
-      </thead>
-      <transition-group name="row-sort" tag="tbody">
-        <tr v-if="sorted_gems.length === 0" key="_empty">
-          <td :colspan="metadata_keys.length">
-            {{
-              inventory_has_gems
-                ? $t("sg_no_gems_match_filters")
-                : $t("sg_no_gems_yet")
-            }}
-          </td>
-        </tr>
-        <tr
-          v-for="gem in paginated_gems"
-          :key="gem.$path"
-          class="_clickableRow"
-          :class="{
-            _selected: is_gem_open && getGemId(gem) === selected_gem_id,
-          }"
-          @click="onRowClick(gem)"
-        >
-          <td
-            v-for="metadata_key in metadata_keys"
-            :key="`${gem.$path}-${metadata_key}`"
-            :class="[
-              getStickyColumnClass(metadata_key),
-              {
-                _editableCell: isFieldEditable(metadata_key),
-                _flashCell: isCellFlashing(gem, metadata_key),
-              },
-            ]"
-            :data-cell-key="getCellFlashKey(gem, metadata_key)"
-            :data-metadata-key="metadata_key"
-            @click="onCellClick(gem, metadata_key, $event)"
+                <span class="_thContent">
+                  <b-icon
+                    v-if="metadata_icons[metadata_key]"
+                    :icon="metadata_icons[metadata_key]"
+                    class="_thIcon"
+                  />
+                  <span>{{
+                    metadata_labels[metadata_key] || metadata_key
+                  }}</span>
+                </span>
+                <span
+                  v-if="isSortableColumn(metadata_key)"
+                  class="_sortArrows"
+                  :class="{ _activeSort: sort_key === metadata_key }"
+                >
+                  <b-icon
+                    icon="caret-up-fill"
+                    class="_sortArrow"
+                    :class="{
+                      _active:
+                        sort_key === metadata_key && sort_direction === 'asc',
+                    }"
+                  />
+                  <b-icon
+                    icon="caret-down-fill"
+                    class="_sortArrow"
+                    :class="{
+                      _active:
+                        sort_key === metadata_key && sort_direction === 'desc',
+                    }"
+                  />
+                </span>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <transition-group name="row-sort" tag="tbody">
+          <tr v-if="sorted_gems.length === 0" key="_empty">
+            <td :colspan="metadata_keys.length">
+              {{
+                inventory_has_gems
+                  ? $t("sg_no_gems_match_filters")
+                  : $t("sg_no_gems_yet")
+              }}
+            </td>
+          </tr>
+          <tr
+            v-for="gem in paginated_gems"
+            :key="gem.$path"
+            class="_clickableRow"
+            :class="{
+              _selected: is_gem_open && getGemId(gem) === selected_gem_id,
+            }"
+            @click="onRowClick(gem)"
           >
-            <div
-              v-if="metadata_key === '$cover'"
-              class="_coverThumb"
-              @click.stop
+            <td
+              v-for="metadata_key in metadata_keys"
+              :key="`${gem.$path}-${metadata_key}`"
+              :class="[
+                getStickyColumnClass(metadata_key),
+                {
+                  _editableCell: isFieldEditable(metadata_key),
+                  _flashCell: isCellFlashing(gem, metadata_key),
+                },
+              ]"
+              :data-cell-key="getCellFlashKey(gem, metadata_key)"
+              :data-metadata-key="metadata_key"
+              @click="onCellClick(gem, metadata_key, $event)"
             >
-              <CoverField
-                :context="'tiny'"
-                :ratio="'1 / 1'"
-                :cover="gem.$cover"
-                :path="gem.$path"
-                :can_edit="true"
-                :available_options="['import']"
-              />
-            </div>
-            <div
-              v-else-if="isGemPricingTotalColumnKey(metadata_key)"
-              class="_pricingCell"
-            >
-              <span class="_pricingLine _pricingTotal">{{
-                formatPriceCellNumber(resolveMetadataValue(gem, metadata_key))
+              <div
+                v-if="metadata_key === '$cover'"
+                class="_coverThumb"
+                @click.stop
+              >
+                <CoverField
+                  :context="'tiny'"
+                  :ratio="'1 / 1'"
+                  :cover="gem.$cover"
+                  :path="gem.$path"
+                  :can_edit="true"
+                  :available_options="['import']"
+                />
+              </div>
+              <div
+                v-else-if="isGemPricingTotalColumnKey(metadata_key)"
+                class="_pricingCell"
+              >
+                <span class="_pricingLine _pricingTotal">{{
+                  formatPriceCellNumber(resolveMetadataValue(gem, metadata_key))
+                }}</span>
+                <span class="_pricingLine _pricingPerCt">{{
+                  formatPricingPerCtLine(gem, metadata_key)
+                }}</span>
+              </div>
+              <span v-else class="_gemMetadataValue">{{
+                formatValue(formatMetadataCellDisplay(gem, metadata_key))
               }}</span>
-              <span class="_pricingLine _pricingPerCt">{{
-                formatPricingPerCtLine(gem, metadata_key)
-              }}</span>
-            </div>
-            <span v-else class="_gemMetadataValue">{{
-              formatValue(formatMetadataCellDisplay(gem, metadata_key))
-            }}</span>
-          </td>
-        </tr>
-      </transition-group>
+            </td>
+          </tr>
+        </transition-group>
       </table>
+    </div>
+
+    <div
+      v-if="gems_page_count > 1"
+      class="_gemsPager"
+      role="navigation"
+      :aria-label="$t('sg_gems_page_nav_label')"
+    >
+      <button
+        type="button"
+        class="u-buttonLink _gemsPagerLink"
+        :disabled="gems_page_index === 0"
+        @click="goToGemsPage(-1)"
+      >
+        {{ $t("sg_gems_page_previous") }}
+      </button>
+      <p class="_gemsPagerStatus" role="status">
+        {{
+          $t("sg_gems_page_status", {
+            start: gems_page_range_start,
+            end: gems_page_range_end,
+            total: sorted_gems.length,
+            page: gems_page_index + 1,
+            pages: gems_page_count,
+          })
+        }}
+      </p>
+      <button
+        type="button"
+        class="u-buttonLink _gemsPagerLink"
+        :disabled="gems_page_index >= gems_page_count - 1"
+        @click="goToGemsPage(1)"
+      >
+        {{ $t("sg_gems_page_next") }}
+      </button>
     </div>
   </div>
 </template>
@@ -209,12 +246,6 @@ export default {
     },
   },
   watch: {
-    gems_page_index() {
-      this.emitGemsPagerPayload();
-    },
-    gems_page_count() {
-      this.emitGemsPagerPayload();
-    },
     gems: {
       immediate: true,
       deep: true,
@@ -229,7 +260,6 @@ export default {
         this.gems_watch_previous_length = new_len;
         this.clampGemsPageIndex();
         this.detectUpdatedCells(new_gems);
-        this.emitGemsPagerPayload();
       },
     },
     metadata_keys: {
@@ -245,13 +275,9 @@ export default {
           this.sort_direction = this.sort_key === "id" ? "desc" : "asc";
           this.gems_page_index = 0;
           this.scrollGemsTableToTop();
-          this.$nextTick(() => this.emitGemsPagerPayload());
         }
       },
     },
-  },
-  mounted() {
-    this.$nextTick(() => this.emitGemsPagerPayload());
   },
   beforeDestroy() {
     Object.values(this.flash_timeouts).forEach((timeout_id) => {
@@ -268,12 +294,16 @@ export default {
       if (next < 0 || next >= this.gems_page_count) return;
       this.gems_page_index = next;
       this.scrollGemsTableToTop();
-      this.emitGemsPagerPayload();
     },
     scrollGemsTableToTop() {
       this.$nextTick(() => {
-        const el = this.$el?.querySelector("._gemsTable");
-        if (el && typeof el.scrollTop !== "undefined") el.scrollTop = 0;
+        const el =
+          typeof this.$el?.querySelector === "function"
+            ? this.$el.querySelector("._gemsTable")
+            : null;
+        if (el && typeof el.scrollTop === "number" && el.scrollTop !== 0) {
+          el.scrollTop = 0;
+        }
       });
     },
     getGemId(gem) {
@@ -365,7 +395,6 @@ export default {
       }
       this.gems_page_index = 0;
       this.scrollGemsTableToTop();
-      this.emitGemsPagerPayload();
     },
     getAriaSort(metadata_key) {
       if (!this.isSortableColumn(metadata_key)) return "none";
@@ -467,7 +496,10 @@ export default {
     },
     scrollCellIntoViewIfNeeded(cell_key) {
       this.$nextTick(() => {
-        const scroll_container = this.$el?.querySelector("._gemsTable");
+        const scroll_container =
+          typeof this.$el?.querySelector === "function"
+            ? this.$el.querySelector("._gemsTable")
+            : null;
         if (!scroll_container) return;
 
         const cell_elements = this.$el.querySelectorAll("td[data-cell-key]");
@@ -508,27 +540,29 @@ export default {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  gap: calc(var(--spacing) / 2);
+  gap: calc(var(--spacing) / 4);
 }
 
 ._gemsPager {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
-  gap: calc(var(--spacing) / 2);
-  padding: calc(var(--spacing) / 3) 0;
+  gap: calc(var(--spacing) / 3);
+  padding: calc(var(--spacing) / 8) 0;
 }
 
 ._gemsPagerStatus {
   margin: 0;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
+  font-size: var(--sl-font-size-x-small);
+  color: color-mix(in srgb, var(--c-gris_fonce) 88%, transparent);
   text-align: center;
+  line-height: 1.25;
 }
 
-._gemsPagerBtn {
+._gemsPagerLink {
   flex-shrink: 0;
+  font-size: var(--sl-font-size-x-small);
 }
 
 ._gemsTable {
