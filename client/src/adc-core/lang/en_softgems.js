@@ -91,6 +91,8 @@ export default {
   sg_remove_gem_confirm: 'Remove "{name}" permanently?',
   sg_remove_contact: "Remove contact",
   sg_remove_contact_confirm: 'Remove "{name}" permanently?',
+  sg_gem_field_updated_remotely:
+    "This field was updated elsewhere. Your draft was left unchanged.",
   sg_back: "Back",
   sg_field: "Field",
   sg_value: "Value",
@@ -198,6 +200,8 @@ export default {
   sg_loading_contact: "Loading contact...",
   sg_could_not_load_contact: "Could not load contact.",
   sg_contact_name_updated: "Name saved.",
+  sg_contact_field_updated_remotely:
+    "This field was updated elsewhere. Your draft was left unchanged.",
   sg_could_not_save_contact_name: "Could not save name.",
   sg_contact_type_readonly:
     "Type is set when the contact is created and cannot be changed.",

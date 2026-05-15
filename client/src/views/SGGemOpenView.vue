@@ -64,39 +64,64 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
         <div class="_fieldsGrid">
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_internal_name')"
             icon="pencil"
             :value="gem.internal_name"
             :is_flashing="isFieldFlashing('internal_name')"
-            @click="openEditModal(field_configs.internal_name)"
+            :modal_open="editing_field === field_configs.internal_name"
+            :modal_title="gemFieldModalTitle(field_configs.internal_name)"
+            :gem_edit="gemEditorProps(field_configs.internal_name)"
+            @presentClick="openEditModal(field_configs.internal_name)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_status')"
             :value="gem.status"
             :is_flashing="isFieldFlashing('status')"
-            @click="openEditModal(field_configs.status)"
+            :modal_open="editing_field === field_configs.status"
+            :modal_title="gemFieldModalTitle(field_configs.status)"
+            :gem_edit="gemEditorProps(field_configs.status)"
+            @presentClick="openEditModal(field_configs.status)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_reference_supplier')"
             icon="archive"
             :value="gem.reference_supplier"
             :is_flashing="isFieldFlashing('reference_supplier')"
-            @click="openEditModal(field_configs.reference_supplier)"
+            :modal_open="editing_field === field_configs.reference_supplier"
+            :modal_title="gemFieldModalTitle(field_configs.reference_supplier)"
+            :gem_edit="gemEditorProps(field_configs.reference_supplier)"
+            @presentClick="openEditModal(field_configs.reference_supplier)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_reference_customer')"
             icon="person-circle"
             :value="gem.reference_customer"
             :is_flashing="isFieldFlashing('reference_customer')"
-            @click="openEditModal(field_configs.reference_customer)"
+            :modal_open="editing_field === field_configs.reference_customer"
+            :modal_title="gemFieldModalTitle(field_configs.reference_customer)"
+            :gem_edit="gemEditorProps(field_configs.reference_customer)"
+            @presentClick="openEditModal(field_configs.reference_customer)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_paired_gem')"
             icon="link"
             :value="gem.paired_gem"
             :is_flashing="isFieldFlashing('paired_gem')"
-            @click="openEditModal(field_configs.paired_gem)"
+            :modal_open="editing_field === field_configs.paired_gem"
+            :modal_title="gemFieldModalTitle(field_configs.paired_gem)"
+            :gem_edit="gemEditorProps(field_configs.paired_gem)"
+            @presentClick="openEditModal(field_configs.paired_gem)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
         </div>
       </section>
@@ -107,75 +132,125 @@
           {{ $t("sg_section_stone_characteristics") }}
         </h2>
         <div class="_fieldsGrid">
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_number_of_pieces')"
             icon="list-ol"
             :value="gem.number_of_pieces"
             :is_flashing="isFieldFlashing('number_of_pieces')"
-            @click="openEditModal(field_configs.number_of_pieces)"
+            :modal_open="editing_field === field_configs.number_of_pieces"
+            :modal_title="gemFieldModalTitle(field_configs.number_of_pieces)"
+            :gem_edit="gemEditorProps(field_configs.number_of_pieces)"
+            @presentClick="openEditModal(field_configs.number_of_pieces)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_stone_type')"
             icon="gem"
             :value="gem.stone_type"
             :is_flashing="isFieldFlashing('stone_type')"
-            @click="openEditModal(field_configs.stone_type)"
+            :modal_open="editing_field === field_configs.stone_type"
+            :modal_title="gemFieldModalTitle(field_configs.stone_type)"
+            :gem_edit="gemEditorProps(field_configs.stone_type)"
+            @presentClick="openEditModal(field_configs.stone_type)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_weight_ct')"
             icon="rulers"
             :value="gem.weight_ct"
             :is_flashing="isFieldFlashing('weight_ct')"
-            @click="openEditModal(field_configs.weight_ct)"
+            :modal_open="editing_field === field_configs.weight_ct"
+            :modal_title="gemFieldModalTitle(field_configs.weight_ct)"
+            :gem_edit="gemEditorProps(field_configs.weight_ct)"
+            @presentClick="openEditModal(field_configs.weight_ct)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_color')"
             icon="palette-fill"
             :value="gem.color"
             :is_flashing="isFieldFlashing('color')"
-            @click="openEditModal(field_configs.color)"
+            :modal_open="editing_field === field_configs.color"
+            :modal_title="gemFieldModalTitle(field_configs.color)"
+            :gem_edit="gemEditorProps(field_configs.color)"
+            @presentClick="openEditModal(field_configs.color)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_shape')"
             icon="pentagon"
             :value="gem.shape"
             :is_flashing="isFieldFlashing('shape')"
-            @click="openEditModal(field_configs.shape)"
+            :modal_open="editing_field === field_configs.shape"
+            :modal_title="gemFieldModalTitle(field_configs.shape)"
+            :gem_edit="gemEditorProps(field_configs.shape)"
+            @presentClick="openEditModal(field_configs.shape)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_origin_country')"
             icon="pin-map"
             :value="gem.origin_country"
             :is_flashing="isFieldFlashing('origin_country')"
-            @click="openEditModal(field_configs.origin_country)"
+            :modal_open="editing_field === field_configs.origin_country"
+            :modal_title="gemFieldModalTitle(field_configs.origin_country)"
+            :gem_edit="gemEditorProps(field_configs.origin_country)"
+            @presentClick="openEditModal(field_configs.origin_country)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_treatment_type')"
             icon="tools"
             :value="gem.treatment_type"
             :is_flashing="isFieldFlashing('treatment_type')"
-            @click="openEditModal(field_configs.treatment_type)"
+            :modal_open="editing_field === field_configs.treatment_type"
+            :modal_title="gemFieldModalTitle(field_configs.treatment_type)"
+            :gem_edit="gemEditorProps(field_configs.treatment_type)"
+            @presentClick="openEditModal(field_configs.treatment_type)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_length_mm')"
             icon="aspect-ratio"
             :value="gem.length_mm"
             :is_flashing="isFieldFlashing('length_mm')"
-            @click="openEditModal(field_configs.length_mm)"
+            :modal_open="editing_field === field_configs.length_mm"
+            :modal_title="gemFieldModalTitle(field_configs.length_mm)"
+            :gem_edit="gemEditorProps(field_configs.length_mm)"
+            @presentClick="openEditModal(field_configs.length_mm)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_width_mm')"
             icon="aspect-ratio"
             :value="gem.width_mm"
             :is_flashing="isFieldFlashing('width_mm')"
-            @click="openEditModal(field_configs.width_mm)"
+            :modal_open="editing_field === field_configs.width_mm"
+            :modal_title="gemFieldModalTitle(field_configs.width_mm)"
+            :gem_edit="gemEditorProps(field_configs.width_mm)"
+            @presentClick="openEditModal(field_configs.width_mm)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
-          <SGGemFieldCard
+          <SGEditableMetaField
             :label="$t('sg_height_mm')"
             icon="aspect-ratio"
             :value="gem.height_mm"
             :is_flashing="isFieldFlashing('height_mm')"
-            @click="openEditModal(field_configs.height_mm)"
+            :modal_open="editing_field === field_configs.height_mm"
+            :modal_title="gemFieldModalTitle(field_configs.height_mm)"
+            :gem_edit="gemEditorProps(field_configs.height_mm)"
+            @presentClick="openEditModal(field_configs.height_mm)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
           />
         </div>
       </section>
@@ -189,21 +264,35 @@
               {{ $t("sg_pricing_pair_caption", { line: "PCb" }) }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_base_price_pcb')"
                 icon="tag"
-                :link_role="$t('sg_pricing_cell_total')"
+                :pill_text="$t('sg_pricing_cell_total')"
                 :value="gem.base_price_pcb"
                 :is_flashing="isFieldFlashing('base_price_pcb')"
-                @click="openEditModal(field_configs.base_price_pcb)"
+                :modal_open="editing_field === field_configs.base_price_pcb"
+                :modal_title="gemFieldModalTitle(field_configs.base_price_pcb)"
+                :gem_edit="gemEditorProps(field_configs.base_price_pcb)"
+                @presentClick="openEditModal(field_configs.base_price_pcb)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_pcb')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_per_carat')"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
                 :value="displayGemFieldValue('price_per_carat_pcb')"
                 :is_flashing="isFieldFlashing('price_per_carat_pcb')"
-                @click="openEditModal(field_configs.price_per_carat_pcb)"
+                :modal_open="
+                  editing_field === field_configs.price_per_carat_pcb
+                "
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_pcb)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_pcb)"
+                @presentClick="openEditModal(field_configs.price_per_carat_pcb)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -212,21 +301,35 @@
               {{ $t("sg_pricing_pair_caption", { line: "PA" }) }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_purchased_price_pa')"
                 icon="tag"
-                :link_role="$t('sg_pricing_cell_total')"
+                :pill_text="$t('sg_pricing_cell_total')"
                 :value="gem.purchased_price_pa"
                 :is_flashing="isFieldFlashing('purchased_price_pa')"
-                @click="openEditModal(field_configs.purchased_price_pa)"
+                :modal_open="editing_field === field_configs.purchased_price_pa"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.purchased_price_pa)
+                "
+                :gem_edit="gemEditorProps(field_configs.purchased_price_pa)"
+                @presentClick="openEditModal(field_configs.purchased_price_pa)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_pa')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_per_carat')"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
                 :value="displayGemFieldValue('price_per_carat_pa')"
                 :is_flashing="isFieldFlashing('price_per_carat_pa')"
-                @click="openEditModal(field_configs.price_per_carat_pa)"
+                :modal_open="editing_field === field_configs.price_per_carat_pa"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_pa)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_pa)"
+                @presentClick="openEditModal(field_configs.price_per_carat_pa)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -235,21 +338,35 @@
               {{ $t("sg_pricing_pair_caption", { line: "PV" }) }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_pv_selling_price')"
                 icon="tag"
-                :link_role="$t('sg_pricing_cell_total')"
+                :pill_text="$t('sg_pricing_cell_total')"
                 :value="gem.pv_selling_price"
                 :is_flashing="isFieldFlashing('pv_selling_price')"
-                @click="openEditModal(field_configs.pv_selling_price)"
+                :modal_open="editing_field === field_configs.pv_selling_price"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.pv_selling_price)
+                "
+                :gem_edit="gemEditorProps(field_configs.pv_selling_price)"
+                @presentClick="openEditModal(field_configs.pv_selling_price)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_pv')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_per_carat')"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
                 :value="displayGemFieldValue('price_per_carat_pv')"
                 :is_flashing="isFieldFlashing('price_per_carat_pv')"
-                @click="openEditModal(field_configs.price_per_carat_pv)"
+                :modal_open="editing_field === field_configs.price_per_carat_pv"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_pv)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_pv)"
+                @presentClick="openEditModal(field_configs.price_per_carat_pv)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -279,21 +396,33 @@
               {{ $t("sg_pricing_pair_caption", { line: "PC" }) }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_pc_to')"
                 icon="file-earmark-text"
-                :link_role="$t('sg_pricing_cell_total')"
+                :pill_text="$t('sg_pricing_cell_total')"
                 :value="gem.pc_to"
                 :is_flashing="isFieldFlashing('pc_to')"
-                @click="openEditModal(field_configs.pc_to)"
+                :modal_open="editing_field === field_configs.pc_to"
+                :modal_title="gemFieldModalTitle(field_configs.pc_to)"
+                :gem_edit="gemEditorProps(field_configs.pc_to)"
+                @presentClick="openEditModal(field_configs.pc_to)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_pc')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_per_carat')"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
                 :value="displayGemFieldValue('price_per_carat_pc')"
                 :is_flashing="isFieldFlashing('price_per_carat_pc')"
-                @click="openEditModal(field_configs.price_per_carat_pc)"
+                :modal_open="editing_field === field_configs.price_per_carat_pc"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_pc)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_pc)"
+                @presentClick="openEditModal(field_configs.price_per_carat_pc)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -302,21 +431,35 @@
               {{ $t("sg_pricing_pair_caption", { line: "PF" }) }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_pf_invoiced_price')"
                 icon="file-earmark-text"
-                :link_role="$t('sg_pricing_cell_total')"
+                :pill_text="$t('sg_pricing_cell_total')"
                 :value="gem.pf_invoiced_price"
                 :is_flashing="isFieldFlashing('pf_invoiced_price')"
-                @click="openEditModal(field_configs.pf_invoiced_price)"
+                :modal_open="editing_field === field_configs.pf_invoiced_price"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.pf_invoiced_price)
+                "
+                :gem_edit="gemEditorProps(field_configs.pf_invoiced_price)"
+                @presentClick="openEditModal(field_configs.pf_invoiced_price)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_pf')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_per_carat')"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
                 :value="displayGemFieldValue('price_per_carat_pf')"
                 :is_flashing="isFieldFlashing('price_per_carat_pf')"
-                @click="openEditModal(field_configs.price_per_carat_pf)"
+                :modal_open="editing_field === field_configs.price_per_carat_pf"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_pf)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_pf)"
+                @presentClick="openEditModal(field_configs.price_per_carat_pf)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -325,12 +468,21 @@
               {{ $t("sg_pricing_standalone_pricing") }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_all')"
                 icon="arrow-up"
                 :value="gem.price_per_carat_all"
                 :is_flashing="isFieldFlashing('price_per_carat_all')"
-                @click="openEditModal(field_configs.price_per_carat_all)"
+                :modal_open="
+                  editing_field === field_configs.price_per_carat_all
+                "
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_all)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_all)"
+                @presentClick="openEditModal(field_configs.price_per_carat_all)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -365,16 +517,6 @@
         </div>
       </section>
     </div>
-
-    <SGGemEditFieldModal
-      v-if="editing_field"
-      :field="editing_field"
-      :current_value="editing_current_value"
-      :gem_path="gem_path"
-      :gem="gem"
-      @saved="onFieldSaved"
-      @close="editing_field = null"
-    />
 
     <BaseModal2
       v-if="show_history_modal"
@@ -417,15 +559,18 @@
 </template>
 
 <script>
+import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing from "@/mixins/GemPricing";
+import FieldFlashMixin from "@/mixins/FieldFlashMixin";
+import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 
 export default {
   name: "SGGemOpenView",
-  mixins: [GemPricing],
+  mixins: [GemPricing, FieldFlashMixin],
   components: {
-    SGGemEditFieldModal: () =>
-      import("@/components/gems/SGGemEditFieldModal.vue"),
+    RemoveMenu2,
+    SGEditableMetaField,
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
     SGGemCertificatesSection: () =>
       import("@/components/gems/SGGemCertificatesSection.vue"),
@@ -446,12 +591,9 @@ export default {
       fetch_error: "",
       paired_gem_options: [],
       editing_field: null,
-      editing_current_value: "",
       show_history_modal: false,
       is_loading_history: false,
       gem_history_entries: [],
-      flashing_fields: {},
-      flash_timeouts: {},
       show_debug_meta: false,
     };
   },
@@ -499,9 +641,6 @@ export default {
   },
   mounted() {},
   beforeDestroy() {
-    Object.values(this.flash_timeouts).forEach((timeout_id) => {
-      clearTimeout(timeout_id);
-    });
     this.$api.leave({ room: this.gem_path });
   },
   methods: {
@@ -590,14 +729,21 @@ export default {
       return parts[parts.length - 1] || author_path;
     },
     openEditModal(field_config) {
-      const raw_value = this.gemFieldDisplayValue(this.gem, field_config);
-      this.editing_current_value =
-        raw_value !== undefined && raw_value !== null && raw_value !== ""
-          ? raw_value
-          : raw_value === 0
-          ? 0
-          : "";
       this.editing_field = field_config;
+    },
+    gemFieldModalTitle(field_config) {
+      if (!field_config) return this.gem_title;
+      return `${this.gem_title} — ${field_config.label}`;
+    },
+    gemEditorProps(field_config) {
+      return {
+        field: field_config,
+        current_value: this.gemFieldDisplayValue(this.gem, field_config),
+        gem_path: this.gem_path,
+        gem: this.gem,
+        meta_target_path: "",
+        auxiliary_disable: false,
+      };
     },
     displayGemFieldValue(field_key) {
       const field_config = this.field_configs[field_key];
@@ -637,28 +783,6 @@ export default {
           }
         }
       );
-    },
-    flashFields(field_keys) {
-      if (!Array.isArray(field_keys) || field_keys.length === 0) return;
-      const flash_duration_ms = 4000;
-      field_keys.forEach((field_key) => {
-        if (!field_key) return;
-        if (this.flash_timeouts[field_key]) {
-          clearTimeout(this.flash_timeouts[field_key]);
-          this.$delete(this.flash_timeouts, field_key);
-        }
-        this.$set(this.flashing_fields, field_key, false);
-        this.$nextTick(() => {
-          this.$set(this.flashing_fields, field_key, true);
-          this.flash_timeouts[field_key] = setTimeout(() => {
-            this.$delete(this.flashing_fields, field_key);
-            this.$delete(this.flash_timeouts, field_key);
-          }, flash_duration_ms);
-        });
-      });
-    },
-    isFieldFlashing(field_key) {
-      return Boolean(this.flashing_fields[field_key]);
     },
     onGemRemoved() {
       this.show_remove_modal = false;

@@ -47,12 +47,22 @@
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_contact_identity") }}</h2>
         <div>
-          <SGFieldValuePresent
+          <SGEditableMetaField
+            ref="contact_name_editable_field"
             :label="$t('sg_contact_name')"
             icon="person"
             :value="edited_name"
             :is_flashing="isFieldFlashing(flash_contact_name_key)"
-            @click="openContactNameModal"
+            :modal_open="
+              !!(contact_edit_modal && contact_edit_modal.kind === 'name')
+            "
+            :modal_title="contact_edit_modal_title"
+            :modal_is_loading="contact_edit_modal_is_saving_for_name"
+            :meta_text="contact_name_meta_text"
+            @presentClick="openContactNameModal"
+            @close="closeContactEditModal"
+            @save="onContactEditModalSave"
+            @draftChange="contactEditModalDraftChange"
           />
         </div>
       </section>
@@ -61,56 +71,100 @@
         <h2 class="_sectionTitle">{{ $t("sg_section_company_details") }}</h2>
         <div class="_fieldsGrid">
           <div class="_fullWidthField">
-            <SGFieldValuePresent
+            <SGEditableMetaField
               :label="$t('sg_company_address')"
               icon="geo-alt"
               :value="edited_address"
-              :is_flashing="
-                isFieldFlashing(flashCompanyFieldKey('address'))
+              :is_flashing="isFieldFlashing(flashCompanyFieldKey('address'))"
+              :modal_open="company_detail_modal_open('address')"
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="
+                company_detail_modal_saving('address')
               "
-              @click="openCompanyDetailModal('address')"
+              :meta_text="company_field_meta_text('address')"
+              @presentClick="openCompanyDetailModal('address')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
             />
           </div>
           <div>
-            <SGFieldValuePresent
+            <SGEditableMetaField
               :label="$t('sg_company_phone')"
               icon="telephone"
               :value="edited_phone"
               :is_flashing="isFieldFlashing(flashCompanyFieldKey('phone'))"
-              @click="openCompanyDetailModal('phone')"
+              :modal_open="company_detail_modal_open('phone')"
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="company_detail_modal_saving('phone')"
+              :meta_text="company_field_meta_text('phone')"
+              @presentClick="openCompanyDetailModal('phone')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
             />
           </div>
           <div>
-            <SGFieldValuePresent
+            <SGEditableMetaField
               :label="$t('sg_company_email')"
               icon="envelope"
               :value="edited_company_email"
               :is_flashing="
                 isFieldFlashing(flashCompanyFieldKey('company_email'))
               "
-              @click="openCompanyDetailModal('company_email')"
+              :modal_open="
+                company_detail_modal_open('company_email')
+              "
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="
+                company_detail_modal_saving('company_email')
+              "
+              :meta_text="company_field_meta_text('company_email')"
+              @presentClick="openCompanyDetailModal('company_email')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
             />
           </div>
           <div>
-            <SGFieldValuePresent
+            <SGEditableMetaField
               :label="$t('sg_company_tva_number')"
               icon="hash"
               :value="edited_tva_number"
               :is_flashing="
                 isFieldFlashing(flashCompanyFieldKey('tva_number'))
               "
-              @click="openCompanyDetailModal('tva_number')"
+              :modal_open="
+                company_detail_modal_open('tva_number')
+              "
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="
+                company_detail_modal_saving('tva_number')
+              "
+              :meta_text="company_field_meta_text('tva_number')"
+              @presentClick="openCompanyDetailModal('tva_number')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
             />
           </div>
           <div>
-            <SGFieldValuePresent
+            <SGEditableMetaField
               :label="$t('sg_company_tva_attestation')"
               icon="file-earmark-text"
               :value="edited_tva_attestation"
               :is_flashing="
                 isFieldFlashing(flashCompanyFieldKey('tva_attestation'))
               "
-              @click="openCompanyDetailModal('tva_attestation')"
+              :modal_open="
+                company_detail_modal_open('tva_attestation')
+              "
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="
+                company_detail_modal_saving('tva_attestation')
+              "
+              :meta_text="company_field_meta_text('tva_attestation')"
+              @presentClick="
+                openCompanyDetailModal('tva_attestation')
+              "
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
             />
           </div>
         </div>
@@ -207,18 +261,34 @@
               class="_fieldsGrid"
             >
               <div>
-                <SGFieldValuePresent
+                <SGEditableMetaField
                   :label="$t('sg_person_last_name')"
                   icon="person"
                   :value="personField(person, 'last_name')"
                   :is_flashing="
-                    isFieldFlashing(personFieldFlashKey(person, 'last_name'))
+                    isFieldFlashing(
+                      personFieldFlashKey(person, 'last_name')
+                    )
                   "
-                  @click="openPersonDetailModal(person, 'last_name')"
+                  :modal_open="
+                    person_detail_modal_open(person, 'last_name')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'last_name')
+                  "
+                  :meta_text="
+                    person_field_meta_text(person, 'last_name')
+                  "
+                  @presentClick="
+                    openPersonDetailModal(person, 'last_name')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
                 />
               </div>
               <div>
-                <SGFieldValuePresent
+                <SGEditableMetaField
                   :label="$t('sg_person_first_name')"
                   icon="person"
                   :value="personField(person, 'first_name')"
@@ -227,40 +297,96 @@
                       personFieldFlashKey(person, 'first_name')
                     )
                   "
-                  @click="openPersonDetailModal(person, 'first_name')"
+                  :modal_open="
+                    person_detail_modal_open(person, 'first_name')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'first_name')
+                  "
+                  :meta_text="
+                    person_field_meta_text(person, 'first_name')
+                  "
+                  @presentClick="
+                    openPersonDetailModal(person, 'first_name')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
                 />
               </div>
               <div>
-                <SGFieldValuePresent
+                <SGEditableMetaField
                   :label="$t('sg_person_email')"
                   icon="envelope"
                   :value="personField(person, 'email')"
                   :is_flashing="
                     isFieldFlashing(personFieldFlashKey(person, 'email'))
                   "
-                  @click="openPersonDetailModal(person, 'email')"
+                  :modal_open="
+                    person_detail_modal_open(person, 'email')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'email')
+                  "
+                  :meta_text="person_field_meta_text(person, 'email')"
+                  @presentClick="
+                    openPersonDetailModal(person, 'email')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
                 />
               </div>
               <div class="_fullWidthField">
-                <SGFieldValuePresent
+                <SGEditableMetaField
                   :label="$t('sg_person_address')"
                   icon="geo-alt"
                   :value="personField(person, 'address')"
                   :is_flashing="
-                    isFieldFlashing(personFieldFlashKey(person, 'address'))
+                    isFieldFlashing(
+                      personFieldFlashKey(person, 'address')
+                    )
                   "
-                  @click="openPersonDetailModal(person, 'address')"
+                  :modal_open="
+                    person_detail_modal_open(person, 'address')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'address')
+                  "
+                  :meta_text="
+                    person_field_meta_text(person, 'address')
+                  "
+                  @presentClick="
+                    openPersonDetailModal(person, 'address')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
                 />
               </div>
               <div>
-                <SGFieldValuePresent
+                <SGEditableMetaField
                   :label="$t('sg_person_phone')"
                   icon="telephone"
                   :value="personField(person, 'phone')"
                   :is_flashing="
                     isFieldFlashing(personFieldFlashKey(person, 'phone'))
                   "
-                  @click="openPersonDetailModal(person, 'phone')"
+                  :modal_open="
+                    person_detail_modal_open(person, 'phone')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'phone')
+                  "
+                  :meta_text="
+                    person_field_meta_text(person, 'phone')
+                  "
+                  @presentClick="
+                    openPersonDetailModal(person, 'phone')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
                 />
               </div>
             </div>
@@ -268,39 +394,20 @@
         </div>
       </section>
 
-      <SGContactEditTextModal
-        v-if="contact_edit_modal"
-        ref="contactEditTextModalRef"
-        :key="contact_edit_modal_key"
-        :modal_title_str="contact_edit_modal_title"
-        :label="contact_edit_modal_label"
-        :label_icon="contact_edit_modal_label_icon"
-        :initial_value="contact_edit_modal_initial_value"
-        :stored_comparison_value="contact_edit_modal_stored_comparison"
-        :required="contact_edit_modal_required"
-        :required_empty_hint="contact_edit_modal_required_empty_hint"
-        :is_saving="contact_edit_modal_is_saving"
-        :external_warning="contact_edit_modal_external_warning"
-        :history_path="contact_edit_modal_history_path"
-        :history_field_key="contact_edit_modal_history_field_key"
-        @close="closeContactEditModal"
-        @draftChange="contactEditModalDraftChange"
-        @save="onContactEditModalSave"
-      />
     </div>
   </section>
 </template>
 
 <script>
-import SGFieldValuePresent from "@/components/softgems/SGFieldValuePresent.vue";
-import SGContactEditTextModal from "@/components/softgems/SGContactEditTextModal.vue";
+import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
+import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 
 export default {
   name: "SGContactOpenView",
+  mixins: [FieldFlashMixin],
   components: {
-    SGFieldValuePresent,
-    SGContactEditTextModal,
+    SGEditableMetaField,
     RemoveMenu2,
   },
   props: {
@@ -335,13 +442,10 @@ export default {
       new_person_phone: "",
       is_creating_company_person: false,
       contact_edit_modal: null,
-      contact_edit_modal_key: 0,
       saving_person_slug_field: "",
       show_remove_contact_modal: false,
       /** Tracks slug whose `…/{slug}/contacts` Socket room is joined */
       joined_company_contacts_slug: "",
-      flashing_fields: {},
-      flash_timeouts: {},
     };
   },
   computed: {
@@ -382,119 +486,20 @@ export default {
       }
       return "";
     },
-    contact_edit_modal_label() {
+    contact_edit_modal_is_saving_for_name() {
       const m = this.contact_edit_modal;
-      if (!m) return "";
-      if (m.kind === "name") return this.$t("sg_contact_name");
-      if (m.kind === "company")
-        return this.company_details_field_label(m.meta_key);
-      if (m.kind === "person")
-        return this.person_details_field_label(m.meta_key);
-      return "";
+      return !!(m && m.kind === "name" && this.is_saving_name);
     },
-    contact_edit_modal_label_icon() {
-      const m = this.contact_edit_modal;
-      if (!m) return "";
-      if (m.kind === "name") return "person";
-      if (m.kind === "company") {
-        const icons = {
-          address: "geo-alt",
-          phone: "telephone",
-          company_email: "envelope",
-          tva_number: "hash",
-          tva_attestation: "file-earmark-text",
-        };
-        return icons[m.meta_key] || "";
-      }
-      if (m.kind === "person") {
-        const icons = {
-          last_name: "person",
-          first_name: "person",
-          email: "envelope",
-          address: "geo-alt",
-          phone: "telephone",
-        };
-        return icons[m.meta_key] || "";
-      }
-      return "";
-    },
-    contact_edit_modal_initial_value() {
-      const m = this.contact_edit_modal;
-      if (!m) return "";
-      if (m.kind === "name") return this.edited_name;
-      if (m.kind === "company")
-        return this.company_detail_edited_value(m.meta_key);
-      if (m.kind === "person") {
-        const fo = this.person_folder_from_slug(m.slug);
-        return fo ? this.personField(fo, m.meta_key) : "";
-      }
-      return "";
-    },
-    contact_edit_modal_stored_comparison() {
-      const m = this.contact_edit_modal;
-      if (!m) return "";
-      if (m.kind === "name") return this.stored_name;
-      if (m.kind === "company")
-        return this.stored_string_field(m.meta_key);
-      if (m.kind === "person") {
-        const fo = this.person_folder_from_slug(m.slug);
-        if (!fo) return "";
-        if (m.meta_key === "last_name") {
-          return this.stored_person_field_normalized(fo, "last_name");
-        }
-        return this.storedPersonField(fo, m.meta_key);
-      }
-      return "";
-    },
-    contact_edit_modal_required() {
-      const m = this.contact_edit_modal;
-      if (!m) return false;
-      if (m.kind === "name") return true;
-      if (m.kind === "person") return m.meta_key === "last_name";
-      return false;
-    },
-    contact_edit_modal_required_empty_hint() {
-      const m = this.contact_edit_modal;
-      if (!m || !this.contact_edit_modal_required) return "";
-      if (m.kind === "name") return this.$t("sg_contact_name_required");
-      return this.$t("sg_person_last_name_required");
-    },
-    contact_edit_modal_is_saving() {
-      const m = this.contact_edit_modal;
-      if (!m) return false;
-      if (m.kind === "name") return this.is_saving_name;
-      if (m.kind === "company")
-        return this.saving_company_field_key === m.meta_key;
-      if (m.kind === "person") {
-        return (
-          this.saving_person_slug_field ===
-          `${this.clean_string(m.slug)}::${m.meta_key}`
-        );
-      }
-      return false;
-    },
-    contact_edit_modal_external_warning() {
-      const m = this.contact_edit_modal;
-      if (!m || m.kind !== "name") return "";
-      return this.name_duplicate_warning;
-    },
-    contact_edit_modal_history_path() {
-      const m = this.contact_edit_modal;
-      if (!m) return "";
-      if (m.kind === "name" || m.kind === "company") return this.contact_path;
-      if (m.kind === "person") {
-        const slug = this.clean_string(m.slug);
-        return slug ? `${this.company_contacts_path}/${slug}` : "";
-      }
-      return "";
-    },
-    contact_edit_modal_history_field_key() {
-      const m = this.contact_edit_modal;
-      if (!m) return "";
-      if (m.kind === "name") return "name";
-      if (m.kind === "company") return m.meta_key;
-      if (m.kind === "person") return m.meta_key;
-      return "";
+    contact_name_meta_text() {
+      return {
+        meta_path: this.contact_path,
+        field_key: "name",
+        stored_value: this.stored_name,
+        is_saving: this.contact_edit_modal_is_saving_for_name,
+        required: true,
+        required_empty_hint: this.$t("sg_contact_name_required"),
+        external_warning: this.name_duplicate_warning || "",
+      };
     },
     is_create_person_disabled() {
       return (
@@ -525,9 +530,6 @@ export default {
     this.$api.join({ room: this.contact_path });
   },
   beforeDestroy() {
-    Object.values(this.flash_timeouts).forEach((timeout_id) => {
-      clearTimeout(timeout_id);
-    });
     this.leaveCompanyContactsListRoomTracked();
     this.$api.leave({ room: this.contact_path });
   },
@@ -548,42 +550,83 @@ export default {
       const fk = this.clean_string(field_key_raw);
       return slug && fk ? `${slug}::${fk}` : "";
     },
-    flashFields(field_keys) {
-      if (!Array.isArray(field_keys) || field_keys.length === 0) return;
-      const flash_duration_ms = 4000;
-      field_keys.forEach((field_key) => {
-        if (!field_key) return;
-        if (this.flash_timeouts[field_key]) {
-          clearTimeout(this.flash_timeouts[field_key]);
-          this.$delete(this.flash_timeouts, field_key);
-        }
-        this.$set(this.flashing_fields, field_key, false);
-        this.$nextTick(() => {
-          this.$set(this.flashing_fields, field_key, true);
-          this.flash_timeouts[field_key] = setTimeout(() => {
-            this.$delete(this.flashing_fields, field_key);
-            this.$delete(this.flash_timeouts, field_key);
-          }, flash_duration_ms);
-        });
-      });
-    },
-    isFieldFlashing(field_key) {
-      return Boolean(this.flashing_fields[field_key]);
-    },
     openContactNameModal() {
       this.name_duplicate_warning = "";
-      this.contact_edit_modal_key += 1;
       this.contact_edit_modal = { kind: "name" };
+    },
+    company_detail_modal_open(meta_key) {
+      const m = this.contact_edit_modal;
+      return !!(
+        m &&
+        m.kind === "company" &&
+        m.meta_key === meta_key
+      );
+    },
+    company_detail_modal_saving(meta_key) {
+      return (
+        this.company_detail_modal_open(meta_key) &&
+        this.saving_company_field_key === meta_key
+      );
+    },
+    company_field_meta_text(meta_key) {
+      return {
+        meta_path: this.contact_path,
+        field_key: meta_key,
+        stored_value: this.stored_string_field(meta_key),
+        is_saving: this.company_detail_modal_saving(meta_key),
+        required: false,
+        required_empty_hint: "",
+        external_warning: "",
+      };
+    },
+    person_detail_modal_open(person, field_key) {
+      const slug = this.personSlugFromFolder(person);
+      const m = this.contact_edit_modal;
+      return !!(
+        m &&
+        m.kind === "person" &&
+        this.clean_string(m.slug) === slug &&
+        m.meta_key === field_key
+      );
+    },
+    person_detail_modal_saving(person, field_key) {
+      const slug = this.personSlugFromFolder(person);
+      if (!slug || !field_key) return false;
+      const pair_key = `${slug}::${field_key}`;
+      return (
+        this.person_detail_modal_open(person, field_key) &&
+        this.saving_person_slug_field === pair_key
+      );
+    },
+    person_stored_comparison_string(person, field_key) {
+      if (field_key === "last_name") {
+        return this.stored_person_field_normalized(person, "last_name");
+      }
+      return this.storedPersonField(person, field_key);
+    },
+    person_field_meta_text(person, field_key) {
+      const slug = this.personSlugFromFolder(person);
+      const person_path = slug ? `${this.company_contacts_path}/${slug}` : "";
+      return {
+        meta_path: person_path,
+        field_key,
+        stored_value: this.person_stored_comparison_string(person, field_key),
+        is_saving: this.person_detail_modal_saving(person, field_key),
+        required: field_key === "last_name",
+        required_empty_hint:
+          field_key === "last_name"
+            ? this.$t("sg_person_last_name_required")
+            : "",
+        external_warning: "",
+      };
     },
     openCompanyDetailModal(meta_key) {
       if (!this.is_company || !this.clean_string(meta_key)) return;
-      this.contact_edit_modal_key += 1;
       this.contact_edit_modal = { kind: "company", meta_key };
     },
     openPersonDetailModal(person, field_key) {
       const slug = this.personSlugFromFolder(person);
       if (!slug || !field_key) return;
-      this.contact_edit_modal_key += 1;
       this.contact_edit_modal = {
         kind: "person",
         slug,
@@ -791,7 +834,7 @@ export default {
           this.name_duplicate_warning = message;
           this.$alertify.delay(4000).error(message);
           this.$nextTick(() => {
-            const ref = this.$refs.contactEditTextModalRef;
+            const ref = this.$refs.contact_name_editable_field;
             if (ref && typeof ref.focusInputSelect === "function") {
               ref.focusInputSelect();
             }
