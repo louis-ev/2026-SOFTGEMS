@@ -763,6 +763,27 @@ export default function () {
         } catch (err) {}
         saveAs(response.data, filename);
       },
+      /** ZIP of all folders under a folder type (e.g. path_to_type `gems` → `gems.zip`). */
+      async downloadFolderType({ path_to_type }) {
+        const response = await this.$axios({
+          url: `${path_to_type}.zip`,
+          method: "GET",
+          responseType: "blob",
+        }).catch((err) => {
+          throw this.processError(err);
+        });
+        this.$eventHub.$emit("hooks.downloadFolderType", { path_to_type });
+        let filename = "download.zip";
+        try {
+          const contentDispositionHeader =
+            response.headers["content-disposition"];
+          const regExpFilename = /filename="(?<filename>.*)"/;
+          filename =
+            regExpFilename.exec(contentDispositionHeader)?.groups?.filename ??
+            "download.zip";
+        } catch (err) {}
+        saveAs(response.data, filename);
+      },
       async downloadSources({ path, meta_filenames }) {
         const response = await this.$axios({
           url: `${path}/_downloadSources`,

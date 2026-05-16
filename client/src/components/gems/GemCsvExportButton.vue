@@ -53,7 +53,7 @@ export default {
       if (!this.has_gems || this.is_downloading_zip) return;
       this.is_downloading_zip = true;
       try {
-        await this.$api.downloadFolder({ path: this.gems_path });
+        await this.$api.downloadFolderType({ path_to_type: this.gems_path });
       } catch ({ code }) {
         this.$alertify
           .delay(4000)

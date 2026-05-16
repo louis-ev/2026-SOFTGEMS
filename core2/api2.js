@@ -205,6 +205,28 @@ module.exports = (function () {
     );
 
     /* FOLDERS */
+    // Register `*.zip` before `/:folder_type` — otherwise `GET /_api2/gems.zip` is
+    // captured as :folder_type = "gems.zip" and hits _getFolders instead of the archive.
+    app.get(
+      [
+        "/_api2/:folder_type.zip",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type.zip",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type.zip",
+      ],
+      _generalPasswordCheck,
+      _restrictToLocalAdminsForFolderTypeZip,
+      _downloadFolderType
+    );
+    app.get(
+      [
+        "/_api2/:folder_type/:folder_slug.zip",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug.zip",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/:subsub_folder_slug.zip",
+      ],
+      _generalPasswordCheck,
+      _restrictToLocalAdmins,
+      _downloadFolder
+    );
     app.get(
       [
         "/_api2/:folder_type",
@@ -275,32 +297,6 @@ module.exports = (function () {
       _generalPasswordCheck,
       _restrictToLocalAdmins,
       _copyFolder
-    );
-    app.get(
-      ["/_api2/:folder_type.zip"],
-      _generalPasswordCheck,
-      _onlyAdmins,
-      _downloadFolderType
-    );
-    app.get(
-      [
-        "/_api2/:folder_type.zip",
-        "/_api2/:folder_type/:folder_slug/:sub_folder_type.zip",
-        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type.zip",
-      ],
-      _generalPasswordCheck,
-      _restrictToLocalAdminsForFolderTypeZip,
-      _downloadFolderType
-    );
-    app.get(
-      [
-        "/_api2/:folder_type/:folder_slug.zip",
-        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug.zip",
-        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/:subsub_folder_slug.zip",
-      ],
-      _generalPasswordCheck,
-      _restrictToLocalAdmins,
-      _downloadFolder
     );
     app.post(
       [
@@ -1589,17 +1585,6 @@ module.exports = (function () {
       token_path,
     });
   }
-  async function _downloadFolderType(req, res, next) {
-    const { path_to_type } = utils.makePathFromReq(req);
-    const { token_path } = JSON.parse(req.headers.authorization || "{}");
-
-    await downloads.downloadFolderType({
-      path_to_type,
-      res,
-      token_path,
-    });
-  }
-
   async function _downloadFolderType(req, res, next) {
     const { path_to_type } = utils.makePathFromReq(req);
     const { token_path } = JSON.parse(req.headers.authorization || "{}");
