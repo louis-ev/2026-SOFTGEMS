@@ -21,30 +21,77 @@
         <div v-if="is_loading">{{ $t("sg_loading_address_book") }}</div>
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
         <div v-else class="_listSection">
-          <div class="_cardsGrid">
-            <article
-              v-for="contact in sorted_entries"
-              :key="contact.$path || contactIdFromPath(contact.$path)"
-              class="_contactCard"
-              role="button"
-              tabindex="0"
-              @click="openContact(contact)"
-              @keydown.enter.prevent="openContact(contact)"
-            >
-              <div class="_contactHeader">
-                <h2 class="_contactName">{{ contactLabel(contact) }}</h2>
-                <span
-                  v-if="contactTypeLabel(contact.contact_type)"
-                  class="_typeBadge"
-                >
-                  {{ contactTypeLabel(contact.contact_type) }}
-                </span>
-              </div>
-            </article>
+          <div class="_tableWrap">
+            <table class="_table" :aria-label="$t('sg_address_book')">
+              <thead>
+                <tr>
+                  <th scope="col" class="_colName">
+                    {{ $t("sg_contact_name") }}
+                  </th>
+                  <th scope="col" class="_colType">
+                    {{ $t("sg_contact_type") }}
+                  </th>
+                  <th scope="col" class="_colAddress">
+                    {{ $t("sg_company_address") }}
+                  </th>
+                  <th scope="col" class="_colPhone">
+                    {{ $t("sg_company_phone") }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="sorted_entries.length === 0" class="_emptyRow">
+                  <td colspan="4" class="_emptyCell">
+                    {{ $t("sg_address_book_empty") }}
+                  </td>
+                </tr>
+                <template v-else>
+                  <tr
+                    v-for="contact in sorted_entries"
+                    :key="contact.$path || contactIdFromPath(contact.$path)"
+                    class="_dataRow"
+                    :class="{
+                      _selected:
+                        selected_contact_slug ===
+                        contactIdFromPath(contact.$path),
+                    }"
+                    tabindex="0"
+                    role="button"
+                    @click="openContact(contact)"
+                    @keydown.enter.prevent="openContact(contact)"
+                  >
+                    <td class="_colName">
+                      <span class="_nameText">{{ contactLabel(contact) }}</span>
+                    </td>
+                    <td class="_colType">
+                      <span
+                        v-if="contactTypeLabel(contact.contact_type)"
+                        class="_typeBadge"
+                      >
+                        {{ contactTypeLabel(contact.contact_type) }}
+                      </span>
+                    </td>
+                    <td class="_colAddress">
+                      <span
+                        class="_cellText"
+                        :title="contactFieldDisplay(contact, 'address')"
+                      >
+                        {{ contactFieldDisplay(contact, "address") }}
+                      </span>
+                    </td>
+                    <td class="_colPhone">
+                      <span
+                        class="_cellText"
+                        :title="contactFieldDisplay(contact, 'phone')"
+                      >
+                        {{ contactFieldDisplay(contact, "phone") }}
+                      </span>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
           </div>
-          <p v-if="sorted_entries.length === 0" class="_emptyState">
-            {{ $t("sg_address_book_empty") }}
-          </p>
         </div>
       </div>
       <template #panel>
@@ -82,6 +129,10 @@ export default {
         })
       );
     },
+    selected_contact_slug() {
+      if (this.$route.name !== "Open contact") return "";
+      return this.cleanString(this.$route.params.contact_slug);
+    },
   },
   watch: {
     "$route.name": {
@@ -118,6 +169,12 @@ export default {
       if (contact_type === "individual")
         return this.$t("sg_contact_type_individual");
       return "";
+    },
+    contactFieldDisplay(contact, field_key) {
+      if (!contact || !field_key) return "";
+      const raw = contact[field_key];
+      if (typeof raw !== "string") return "";
+      return this.cleanString(raw);
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";
@@ -194,54 +251,103 @@ export default {
   overflow-y: auto;
 }
 
-._cardsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: calc(var(--spacing) * 1.5);
+._tableWrap {
+  background: transparent;
 }
 
-._contactCard {
+._table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--sl-font-size-small);
+
+  th,
+  td {
+    text-align: left;
+    padding: calc(var(--spacing) * 0.75) calc(var(--spacing) * 1);
+    border-bottom: 1px solid var(--c-gris_clair);
+    vertical-align: middle;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--c-bodybg);
+    font-weight: 600;
+    font-size: var(--sl-font-size-x-small);
+    color: var(--c-gris_fonce);
+    border-bottom: 1px solid var(--c-gris);
+  }
+
+  tr._dataRow:last-child td {
+    border-bottom-color: var(--c-gris);
+  }
+}
+
+._colName {
+  width: 26%;
+}
+
+._colType {
+  width: 14%;
+  white-space: nowrap;
+}
+
+._colAddress {
+  width: 38%;
+}
+
+._colPhone {
+  width: 22%;
+  white-space: nowrap;
+}
+
+._nameText {
+  font-size: var(--sl-font-size-small);
+}
+
+._cellText {
+  display: block;
+  font-size: var(--sl-font-size-x-small);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+._dataRow {
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) * 0.75);
-  padding: calc(var(--spacing) * 1.25);
-  border: 1px solid var(--c-gris_clair);
-  border-radius: calc(var(--spacing) * 0.75);
   background: var(--c-blanc);
+
+  &._selected {
+    background: var(--c-gris_clair);
+  }
+
+  &:hover {
+    background: var(--c-gris_clair);
+  }
+
+  &:focus {
+    outline: 2px solid var(--c-orange);
+    outline-offset: -2px;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
-._contactCard:focus {
-  outline: 2px solid var(--c-orange);
-  outline-offset: 2px;
-}
-
-._contactCard:focus:not(:focus-visible) {
-  outline: none;
-}
-
-._contactHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: calc(var(--spacing) * 0.75);
-}
-
-._contactName {
-  margin: 0;
-  font-size: 1rem;
+._emptyRow ._emptyCell {
+  text-align: center;
+  color: var(--c-gris_fonce);
+  padding: calc(var(--spacing) * 2);
 }
 
 ._typeBadge {
+  display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.75rem;
   background: var(--c-gris_clair);
   white-space: nowrap;
-}
-
-._emptyState {
-  margin-top: calc(var(--spacing) * 1.5);
-  color: var(--c-gris_fonce);
 }
 </style>
