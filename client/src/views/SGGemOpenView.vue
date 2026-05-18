@@ -1,13 +1,5 @@
 <template>
   <section class="_gemOpenView">
-    <button
-      type="button"
-      class="u-button u-button_icon _backButton"
-      @click="goBack"
-    >
-      <b-icon icon="x-lg" />
-    </button>
-
     <div class="_pageHeader">
       <div>
         <h1 class="_pageTitle">{{ gem_title }}</h1>
@@ -745,17 +737,6 @@ export default {
     this.$api.leave({ room: this.gem_path });
   },
   methods: {
-    goBack() {
-      if (this.panel_mode) {
-        this.$emit("closePanel");
-        return;
-      }
-      if (this.$route.path.startsWith("/gems/")) {
-        this.$router.push("/gems");
-        return;
-      }
-      this.$router.push("/");
-    },
     toggleDebugMeta() {
       this.show_debug_meta = !this.show_debug_meta;
     },
@@ -1056,7 +1037,8 @@ export default {
 ._gemOpenView {
   position: relative;
   min-height: 100%;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 1.35) calc(var(--spacing) * 3)
+    calc(var(--spacing) * 2);
 }
 
 ._pageHeader {
@@ -1093,13 +1075,6 @@ export default {
   &:hover {
     color: var(--c-noir);
   }
-}
-
-._backButton {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1000;
 }
 
 ._content {

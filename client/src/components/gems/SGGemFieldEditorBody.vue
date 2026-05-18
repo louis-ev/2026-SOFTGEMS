@@ -14,7 +14,47 @@
         :allow_empty="true"
         :disabled="auxiliary_disable"
         @input="onEditorInput"
+        @enterSubmit="onEnterSubmitFromShell"
       />
+      <div v-else-if="active_pricing_pair" class="_pricingPairInputs">
+        <p class="_pricingPairWeight" role="note">
+          <span class="_pricingPairWeightLabel">{{ $t("sg_weight_ct") }}</span>
+          <span class="_pricingPairWeightSep" aria-hidden="true">:</span>
+          <span class="_pricingPairWeightValue">{{
+            pair_editor_weight_display
+          }}</span>
+        </p>
+        <div class="_pricingPairRow">
+          <span class="_pricingPairLabel">{{
+            $t("sg_pricing_cell_total")
+          }}</span>
+          <TextInput
+            :content="pair_edit_total"
+            :input_type="pair_field_configs.total.input_type || 'number'"
+            :input_step="pair_field_configs.total.input_step"
+            :instructions="pair_field_configs.total.instructions"
+            :disabled="auxiliary_disable"
+            :autofocus="pair_autofocus_total"
+            @update:content="onPairTotalUpdate"
+            @onEnter="onEnterSubmitFromShell"
+          />
+        </div>
+        <div class="_pricingPairRow">
+          <span class="_pricingPairLabel">{{
+            $t("sg_pricing_cell_per_carat")
+          }}</span>
+          <TextInput
+            :content="pair_edit_per_carat"
+            :input_type="pair_field_configs.per.input_type || 'number'"
+            :input_step="pair_field_configs.per.input_step"
+            :instructions="pair_field_configs.per.instructions"
+            :disabled="auxiliary_disable"
+            :autofocus="pair_autofocus_per"
+            @update:content="onPairPerCaratUpdate"
+            @onEnter="onEnterSubmitFromShell"
+          />
+        </div>
+      </div>
       <TextInput
         v-else
         :content.sync="edit_value"
@@ -24,6 +64,7 @@
         :disabled="auxiliary_disable"
         :autofocus="true"
         @update:content="onEditorInput"
+        @onEnter="onEnterSubmitFromShell"
       />
       <p v-if="field_validation_error" class="_fieldError">
         {{ field_validation_error }}
@@ -55,6 +96,7 @@ import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGFieldHistoryPanel from "@/components/softgems/SGFieldHistoryPanel.vue";
 import SGGemFieldPricingExtras from "@/components/gems/SGGemFieldPricingExtras.vue";
 import GemPricing from "@/mixins/GemPricing";
+import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { extract_field_entries } from "@/utils/field_history.js";
 
 export default {
@@ -93,6 +135,8 @@ export default {
   data() {
     return {
       edit_value: "",
+      pair_edit_total: "",
+      pair_edit_per_carat: "",
       server_edit_baseline: null,
       remote_update_notice: "",
       is_committing: false,
@@ -102,19 +146,87 @@ export default {
     };
   },
   created() {
-    this.edit_value = this.current_value;
-    this.server_edit_baseline = this.normalize_snapshot_value(
-      this.current_value
-    );
+    if (this.active_pricing_pair) {
+      this.initializePricingPairStateFromGem();
+      const pair = this.active_pricing_pair;
+      this.server_edit_baseline = this.normalizeFieldValueWithConfig(
+        this.gem?.[pair.total_key] ?? "",
+        this.pair_field_configs.total
+      );
+    } else {
+      this.edit_value = this.current_value;
+      this.server_edit_baseline = this.normalize_snapshot_value(
+        this.current_value
+      );
+    }
   },
   mounted() {
     this.emitFooterState();
   },
   computed: {
+    active_pricing_pair() {
+      if (
+        typeof this.meta_target_path === "string" &&
+        this.meta_target_path.trim() !== ""
+      ) {
+        return null;
+      }
+      if (!this.field || this.field.type !== "number" || this.field.readonly) {
+        return null;
+      }
+      const pair = this.getPricingPairByFieldKey(this.field.key);
+      if (!pair) return null;
+      if (
+        this.field.key !== pair.total_key &&
+        this.field.key !== pair.virtual_per_carat_key
+      ) {
+        return null;
+      }
+      return pair;
+    },
+    pair_field_configs() {
+      if (!this.active_pricing_pair) {
+        return { total: null, per: null };
+      }
+      const configs = buildGemFieldConfigs(this.$t.bind(this), []);
+      const pair = this.active_pricing_pair;
+      return {
+        total: configs[pair.total_key],
+        per: configs[pair.virtual_per_carat_key],
+      };
+    },
+    pair_autofocus_total() {
+      if (!this.active_pricing_pair) return false;
+      return this.field.key === this.active_pricing_pair.total_key;
+    },
+    pair_autofocus_per() {
+      if (!this.active_pricing_pair) return false;
+      return this.field.key === this.active_pricing_pair.virtual_per_carat_key;
+    },
+    pair_editor_weight_display() {
+      const w = this.toNumberOrNull(this.gem?.weight_ct);
+      if (w === null || !Number.isFinite(w)) return "—";
+      return w.toLocaleString(this.$i18n.locale, {
+        maximumFractionDigits: 3,
+      });
+    },
     history_field_key() {
-      return this.field.pricing_total_key || this.field.key;
+      return (
+        (this.active_pricing_pair && this.active_pricing_pair.total_key) ||
+        this.field.pricing_total_key ||
+        this.field.key
+      );
     },
     field_validation() {
+      if (this.active_pricing_pair) {
+        const { total, per } = this.pair_field_configs;
+        const total_check = this.validateFieldValueWithConfig(
+          this.pair_edit_total,
+          total
+        );
+        if (!total_check.is_valid) return total_check;
+        return this.validateFieldValueWithConfig(this.pair_edit_per_carat, per);
+      }
       return this.validateFieldValue(this.edit_value);
     },
     field_validation_error() {
@@ -131,6 +243,10 @@ export default {
     },
     affected_fields_notice() {
       if (this.meta_target_path) return "";
+      if (this.active_pricing_pair) {
+        if (!this.field_validation.is_valid) return "";
+        return this.$t("sg_pricing_pair_editor_save_hint");
+      }
       const field_key = this.field.key;
       const touches_pricing =
         this.isPricingField(field_key) || field_key === "weight_ct";
@@ -215,7 +331,47 @@ export default {
   },
   watch: {
     current_value(nv) {
+      if (this.active_pricing_pair) return;
       this.on_server_value_changed(nv);
+    },
+    gem: {
+      deep: true,
+      handler() {
+        if (!this.active_pricing_pair || this.is_committing) return;
+        const pair = this.active_pricing_pair;
+        const { total: total_cfg } = this.pair_field_configs;
+        if (!pair || !total_cfg) return;
+        const new_snap = this.normalizeFieldValueWithConfig(
+          this.gem?.[pair.total_key] ?? "",
+          total_cfg
+        );
+        if (this.storedNumericValuesEqual(new_snap, this.server_edit_baseline))
+          return;
+
+        const had_unsaved_divergence = !this.pair_edit_matches_baseline();
+
+        if (!had_unsaved_divergence) {
+          this.initializePricingPairStateFromGem();
+          this.remote_update_notice = "";
+        } else if (
+          !this.storedNumericValuesEqual(
+            new_snap,
+            this.normalizeFieldValueWithConfig(
+              this.pair_edit_total,
+              total_cfg
+            )
+          )
+        ) {
+          const msg = this.$t("sg_gem_field_updated_remotely");
+          this.remote_update_notice =
+            msg && msg !== "sg_gem_field_updated_remotely" ? msg : "";
+        } else {
+          this.remote_update_notice = "";
+        }
+
+        this.server_edit_baseline = new_snap;
+        this.emitFooterState();
+      },
     },
     edit_value() {
       this.emitFooterState();
@@ -231,6 +387,136 @@ export default {
     },
   },
   methods: {
+    pair_edit_matches_baseline() {
+      if (!this.active_pricing_pair) return true;
+      const norm = this.normalizeFieldValueWithConfig(
+        this.pair_edit_total,
+        this.pair_field_configs.total
+      );
+      return this.storedNumericValuesEqual(norm, this.server_edit_baseline);
+    },
+    initializePricingPairStateFromGem() {
+      const pair = this.active_pricing_pair;
+      if (!pair) return;
+      const { total: t_cfg, per: p_cfg } = this.pair_field_configs;
+      if (!t_cfg || !p_cfg) return;
+      const total = this.normalizeFieldValueWithConfig(
+        this.gem?.[pair.total_key] ?? "",
+        t_cfg
+      );
+      const weight = this.toNumberOrDefault(this.gem?.weight_ct);
+      const per = this.computePerCarat({
+        total_value: total,
+        weight_ct: weight,
+      });
+      this.pair_edit_total = this.formatNumberForPairField(total, t_cfg);
+      this.pair_edit_per_carat = this.formatNumberForPairField(per, p_cfg);
+    },
+    onPairTotalUpdate(val) {
+      this.pair_edit_total = val;
+      this.onEditorInput();
+      const total_cfg = this.pair_field_configs.total;
+      const per_cfg = this.pair_field_configs.per;
+      if (!total_cfg || !per_cfg) return;
+      const validation = this.validateFieldValueWithConfig(val, total_cfg);
+      if (!validation.is_valid) {
+        this.emitFooterState();
+        return;
+      }
+      const norm = this.normalizeFieldValueWithConfig(val, total_cfg);
+      const weight = this.toNumberOrDefault(this.gem?.weight_ct);
+      const per = this.computePerCarat({
+        total_value: norm,
+        weight_ct: weight,
+      });
+      this.pair_edit_per_carat = this.formatNumberForPairField(per, per_cfg);
+      this.emitFooterState();
+    },
+    onPairPerCaratUpdate(val) {
+      this.pair_edit_per_carat = val;
+      this.onEditorInput();
+      const total_cfg = this.pair_field_configs.total;
+      const per_cfg = this.pair_field_configs.per;
+      if (!total_cfg || !per_cfg) return;
+      const validation = this.validateFieldValueWithConfig(val, per_cfg);
+      if (!validation.is_valid) {
+        this.emitFooterState();
+        return;
+      }
+      const per_norm = this.normalizeFieldValueWithConfig(val, per_cfg);
+      const weight = this.toNumberOrDefault(this.gem?.weight_ct);
+      const raw_total = this.computeTotal({
+        per_carat_value: per_norm,
+        weight_ct: weight,
+      });
+      const norm_total = this.normalizeFieldValueWithConfig(
+        raw_total,
+        total_cfg
+      );
+      this.pair_edit_total = this.formatNumberForPairField(
+        norm_total,
+        total_cfg
+      );
+      this.emitFooterState();
+    },
+    formatNumberForPairField(n, field_config) {
+      if (n === null || n === undefined || n === "") return "";
+      const num = Number(n);
+      if (!Number.isFinite(num)) return "";
+      const dec = this.getAllowedDecimals(field_config?.input_step);
+      if (dec === null) return String(num);
+      if (dec === 0) return String(Math.round(num));
+      return String(Number(num.toFixed(dec)));
+    },
+    normalizeFieldValueWithConfig(raw_value, field_config) {
+      if (!field_config || field_config.type !== "number") return raw_value;
+      if (raw_value === "" || raw_value === null || raw_value === undefined)
+        return 0;
+      const normalized_value = String(raw_value).trim().replace(",", ".");
+      const number_value = Number(normalized_value);
+      if (!Number.isFinite(number_value)) return 0;
+      const dec = this.getAllowedDecimals(field_config.input_step);
+      if (dec === null) return number_value;
+      if (dec === 0) return Math.round(number_value);
+      return Number(number_value.toFixed(dec));
+    },
+    validateFieldValueWithConfig(raw_value, field_config) {
+      if (!field_config || field_config.type !== "number")
+        return { is_valid: true, error_message: "" };
+      if (raw_value === null || raw_value === undefined || raw_value === "")
+        return { is_valid: true, error_message: "" };
+      const normalized_value = String(raw_value).trim().replace(",", ".");
+      if (!/^-?\d+(?:\.\d+)?$/.test(normalized_value)) {
+        return {
+          is_valid: false,
+          error_message: this.$t("sg_invalid_number"),
+        };
+      }
+      const number_value = Number(normalized_value);
+      if (!Number.isFinite(number_value)) {
+        return {
+          is_valid: false,
+          error_message: this.$t("sg_invalid_number"),
+        };
+      }
+      const allowed_decimals = this.getAllowedDecimals(field_config.input_step);
+      if (allowed_decimals === null)
+        return { is_valid: true, error_message: "" };
+      const decimal_count = this.getDecimalCount(normalized_value);
+      if (decimal_count <= allowed_decimals)
+        return { is_valid: true, error_message: "" };
+      return {
+        is_valid: false,
+        error_message:
+          allowed_decimals === 0
+            ? this.$t("sg_invalid_integer")
+            : this.$t("sg_invalid_decimals", { decimals: allowed_decimals }),
+      };
+    },
+    onEnterSubmitFromShell() {
+      if ((this.field.input_type || "") === "editor") return;
+      this.tryShellSave();
+    },
     onEditorInput() {
       this.remote_update_notice = "";
     },
@@ -242,6 +528,13 @@ export default {
       return v;
     },
     edit_matches_baseline(baseline) {
+      if (this.active_pricing_pair) {
+        const norm = this.normalizeFieldValueWithConfig(
+          this.pair_edit_total,
+          this.pair_field_configs.total
+        );
+        return this.storedNumericValuesEqual(norm, baseline);
+      }
       if (this.field.type === "number") {
         return this.storedNumericValuesEqual(
           this.normalizeFieldValue(this.edit_value),
@@ -256,6 +549,7 @@ export default {
       return e === b;
     },
     on_server_value_changed(nv) {
+      if (this.active_pricing_pair) return;
       const new_snap = this.normalize_snapshot_value(nv);
       if (this.field.type === "number") {
         if (this.storedNumericValuesEqual(new_snap, this.server_edit_baseline))
@@ -312,38 +606,49 @@ export default {
       )
         return false;
 
-      const field_key_saved = this.field.key;
       const targets_file_meta =
         typeof this.meta_target_path === "string" &&
         this.meta_target_path.trim() !== "";
 
       let meta_patch;
-      if (targets_file_meta) {
-        const raw = this.edit_value;
-        if (
-          this.field.persist_empty_number_as_null &&
-          this.field.type === "number"
-        ) {
-          const is_empty =
-            raw === "" || raw === null || raw === undefined;
-          meta_patch = {
-            [field_key_saved]: is_empty
-              ? null
-              : this.normalizeFieldValue(raw),
-          };
-        } else if (this.field.type === "number") {
-          meta_patch = {
-            [field_key_saved]: this.normalizeFieldValue(raw),
-          };
-        } else {
-          meta_patch = { [field_key_saved]: raw };
-        }
+      let field_key_saved;
+
+      if (this.active_pricing_pair && !targets_file_meta) {
+        field_key_saved = this.active_pricing_pair.total_key;
+        const norm = this.normalizeFieldValueWithConfig(
+          this.pair_edit_total,
+          this.pair_field_configs.total
+        );
+        meta_patch = { [field_key_saved]: norm };
       } else {
-        const normalized_value = this.normalizeFieldValue(this.edit_value);
-        meta_patch = this.buildMetaPatch({
-          field_key: field_key_saved,
-          normalized_value,
-        });
+        field_key_saved = this.field.key;
+        if (targets_file_meta) {
+          const raw = this.edit_value;
+          if (
+            this.field.persist_empty_number_as_null &&
+            this.field.type === "number"
+          ) {
+            const is_empty =
+              raw === "" || raw === null || raw === undefined;
+            meta_patch = {
+              [field_key_saved]: is_empty
+                ? null
+                : this.normalizeFieldValue(raw),
+            };
+          } else if (this.field.type === "number") {
+            meta_patch = {
+              [field_key_saved]: this.normalizeFieldValue(raw),
+            };
+          } else {
+            meta_patch = { [field_key_saved]: raw };
+          }
+        } else {
+          const normalized_value = this.normalizeFieldValue(this.edit_value);
+          meta_patch = this.buildMetaPatch({
+            field_key: field_key_saved,
+            normalized_value,
+          });
+        }
       }
 
       const update_path = targets_file_meta
@@ -466,6 +771,10 @@ export default {
       return normalized_value.split(".")[1].length;
     },
     formatHistoryValue(value) {
+      if (this.active_pricing_pair) {
+        if (value === null || value === undefined || value === "") return "—";
+        return this.formatAffectedFieldValue(this.toNumberOrDefault(value));
+      }
       if (value === null || value === undefined || value === "") return "—";
       if (this.field.pricing_total_key) {
         const weight_ct = this.toNumberOrDefault(this.gem?.weight_ct);
@@ -483,6 +792,21 @@ export default {
         entry && Object.prototype.hasOwnProperty.call(entry, "value")
           ? entry.value
           : "";
+      if (this.active_pricing_pair) {
+        const total = this.toNumberOrDefault(raw);
+        const t_cfg = this.pair_field_configs.total;
+        const p_cfg = this.pair_field_configs.per;
+        if (!t_cfg || !p_cfg) return;
+        this.pair_edit_total = this.formatNumberForPairField(total, t_cfg);
+        const weight = this.toNumberOrDefault(this.gem?.weight_ct);
+        const per = this.computePerCarat({
+          total_value: total,
+          weight_ct: weight,
+        });
+        this.pair_edit_per_carat = this.formatNumberForPairField(per, p_cfg);
+        this.onEditorInput();
+        return;
+      }
       if (this.field.pricing_total_key) {
         const weight_ct = this.toNumberOrDefault(this.gem?.weight_ct);
         this.edit_value = this.computePerCarat({
@@ -572,5 +896,43 @@ export default {
 ._remoteNotice {
   margin: 0;
   font-size: var(--sl-font-size-x-small);
+}
+
+._pricingPairInputs {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 0.75);
+}
+
+._pricingPairWeight {
+  margin: 0;
+  font-size: var(--sl-font-size-x-small);
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--c-gris_fonce) 88%, transparent);
+}
+
+._pricingPairWeightLabel {
+  font-weight: 600;
+  margin-right: 0.2em;
+}
+
+._pricingPairWeightSep {
+  margin-right: 0.35em;
+}
+
+._pricingPairWeightValue {
+  font-family: var(--sl-font-mono);
+}
+
+._pricingPairRow {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 6);
+}
+
+._pricingPairLabel {
+  font-size: var(--sl-font-size-x-small);
+  font-weight: 600;
+  color: color-mix(in srgb, var(--c-gris_fonce) 92%, transparent);
 }
 </style>

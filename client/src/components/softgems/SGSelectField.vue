@@ -5,6 +5,7 @@
     :required="required"
     :disabled="disabled"
     @change="onValueChange"
+    @keyup.enter.exact="onEnterKeyup"
   >
     <option v-if="allow_empty" value="">
       {{ empty_label }}
@@ -106,6 +107,10 @@ export default {
     },
   },
   methods: {
+    onEnterKeyup() {
+      if (this.disabled) return;
+      this.$emit("enterSubmit");
+    },
     onValueChange(event) {
       const next_value = event?.target?.value ?? "";
       this.$emit("input", next_value);

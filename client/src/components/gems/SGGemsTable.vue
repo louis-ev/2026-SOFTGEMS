@@ -7,11 +7,7 @@
       <table class="_table">
         <thead>
           <tr>
-            <th
-              v-if="selection_pick_column"
-              scope="col"
-              class="_pickColTh"
-            >
+            <th v-if="selection_pick_column" scope="col" class="_pickColTh">
               <span class="_srOnly">{{
                 $t("sg_gems_table_pick_column_header_aria")
               }}</span>
@@ -117,7 +113,7 @@
               :class="[
                 getStickyColumnClass(metadata_key),
                 {
-                  _editableCell: isFieldEditable(metadata_key),
+                  _editableCell: isMetadataCellEditable(metadata_key),
                   _flashCell: isCellFlashing(gem, metadata_key),
                 },
               ]"
@@ -144,7 +140,9 @@
                 class="_pricingCell"
               >
                 <span class="_pricingLine _pricingTotal">{{
-                  formatPriceCellNumber(resolveMetadataValue(gem, metadata_key))
+                  formatPriceCellNumber(
+                    resolveMetadataValue(gem, metadata_key)
+                  )
                 }}</span>
                 <span class="_pricingLine _pricingPerCt">{{
                   formatPricingPerCtLine(gem, metadata_key)
@@ -154,11 +152,7 @@
                 formatValue(formatMetadataCellDisplay(gem, metadata_key))
               }}</span>
             </td>
-            <td
-              v-if="show_append_column"
-              class="_appendColTd"
-              @click.stop
-            >
+            <td v-if="show_append_column" class="_appendColTd" @click.stop>
               <slot name="appendCell" :gem="gem" />
             </td>
           </tr>
@@ -247,7 +241,7 @@ export default {
       return new Set(
         (Array.isArray(this.disabled_row_paths) ? this.disabled_row_paths : [])
           .map((p) => String(p || "").trim())
-          .filter(Boolean),
+          .filter(Boolean)
       );
     },
     density_class() {
@@ -303,9 +297,7 @@ export default {
       return Math.min(end, total);
     },
     gems_table_empty_colspan() {
-      let n = Array.isArray(this.metadata_keys)
-        ? this.metadata_keys.length
-        : 0;
+      let n = Array.isArray(this.metadata_keys) ? this.metadata_keys.length : 0;
       if (this.selection_pick_column) n += 1;
       if (this.show_append_column) n += 1;
       return n;
@@ -477,6 +469,14 @@ export default {
     isFieldEditable(metadata_key) {
       return Boolean(this.field_editable_map[metadata_key]);
     },
+    isMetadataCellEditable(metadata_key) {
+      if (this.isGemPricingTotalColumnKey(metadata_key)) {
+        if (this.isFieldEditable(metadata_key)) return true;
+        const virtual_key = this.getVirtualPerCaratKeyForTotal(metadata_key);
+        return Boolean(virtual_key && this.isFieldEditable(virtual_key));
+      }
+      return this.isFieldEditable(metadata_key);
+    },
     isRowPickerDisabled(gem) {
       const p = gem?.$path;
       if (!p) return false;
@@ -495,7 +495,7 @@ export default {
       this.$emit("rowClick", gem);
     },
     onCellClick(gem, metadata_key, event) {
-      if (!this.isFieldEditable(metadata_key)) return;
+      if (!this.isMetadataCellEditable(metadata_key)) return;
       event.stopPropagation();
       this.$emit("editCell", { gem, metadata_key });
     },
@@ -539,7 +539,6 @@ export default {
     },
     detectUpdatedCells(new_gems) {
       const next_snapshot = this.buildCellSnapshot(new_gems);
-      let first_changed_cell_key = "";
 
       if (!this.has_initialized_snapshot) {
         this.previous_cell_values = next_snapshot;
@@ -551,15 +550,10 @@ export default {
         if (!(cell_key in this.previous_cell_values)) return;
         if (this.previous_cell_values[cell_key] === next_snapshot[cell_key])
           return;
-        if (!first_changed_cell_key) first_changed_cell_key = cell_key;
         this.flashCell(cell_key);
       });
 
       this.previous_cell_values = next_snapshot;
-
-      if (first_changed_cell_key) {
-        this.scrollCellIntoViewIfNeeded(first_changed_cell_key);
-      }
     },
     flashCell(cell_key) {
       const flash_duration_ms = 4000;
@@ -581,20 +575,57 @@ export default {
       const cell_key = this.getCellFlashKey(gem, metadata_key);
       return Boolean(this.flashing_cells[cell_key]);
     },
-    scrollCellIntoViewIfNeeded(cell_key) {
+    /**
+     * After the user saves an edit (e.g. modal), bring that row/column into view,
+     * including switching pager page when the row is off-screen.
+     */
+    scrollGemCellIntoView({ gem_path, metadata_key }) {
+      const path = gem_path != null ? String(gem_path).trim() : "";
+      const column_key = this.resolveScrollTargetMetadataKey(metadata_key);
+      if (!path || !column_key) return;
+
+      const sorted = this.sorted_gems;
+      const row_index = sorted.findIndex((g) => g && g.$path === path);
+      if (row_index < 0) return;
+
+      const size = this.gems_effective_page_size;
+      const target_page = Math.floor(row_index / size);
+      if (this.gems_page_index !== target_page) {
+        this.gems_page_index = target_page;
+      }
+
+      const gem = sorted[row_index];
+      const cell_key = this.getCellFlashKey(gem, column_key);
       this.$nextTick(() => {
-        const scroll_container =
-          typeof this.$el?.querySelector === "function"
-            ? this.$el.querySelector("._gemsTable")
-            : null;
-        if (!scroll_container) return;
+        this.$nextTick(() => {
+          this.scrollCellIntoViewForKey(cell_key, { force: true });
+        });
+      });
+    },
+    /** Map saved field key to `metadata_keys` / `data-cell-key` column (pricing /ct uses total column). */
+    resolveScrollTargetMetadataKey(metadata_key) {
+      const raw = metadata_key != null ? String(metadata_key).trim() : "";
+      if (!raw) return "";
+      if (this.isVirtualPerCaratField(raw)) {
+        const pair = this.getPricingPairByFieldKey(raw);
+        return pair ? pair.total_key : "";
+      }
+      return raw;
+    },
+    scrollCellIntoViewForKey(cell_key, { force = false } = {}) {
+      if (!this.$el) return;
+      const scroll_container =
+        typeof this.$el.querySelector === "function"
+          ? this.$el.querySelector("._gemsTable")
+          : null;
+      if (!scroll_container) return;
 
-        const cell_elements = this.$el.querySelectorAll("td[data-cell-key]");
-        const cell_element = Array.from(cell_elements).find(
-          (element) => element?.dataset?.cellKey === cell_key
-        );
-        if (!cell_element) return;
+      const cell_element = Array.from(
+        this.$el.querySelectorAll("td[data-cell-key]")
+      ).find((element) => element?.dataset?.cellKey === cell_key);
+      if (!cell_element) return;
 
+      if (!force) {
         const cell_rect = cell_element.getBoundingClientRect();
         const container_rect = scroll_container.getBoundingClientRect();
         const is_outside_vertical =
@@ -604,18 +635,15 @@ export default {
           cell_rect.left < container_rect.left ||
           cell_rect.right > container_rect.right;
         if (!is_outside_vertical && !is_outside_horizontal) return;
+      }
 
-        if (typeof cell_element.scrollIntoViewIfNeeded === "function") {
-          cell_element.scrollIntoViewIfNeeded(false);
-          return;
-        }
-
+      if (typeof cell_element.scrollIntoView === "function") {
         cell_element.scrollIntoView({
           behavior: "smooth",
           block: "nearest",
           inline: "nearest",
         });
-      });
+      }
     },
   },
 };
@@ -879,9 +907,10 @@ td[data-metadata-key="$cover"] {
   cursor: pointer;
 
   &:hover {
-    background: var(
-      --c-vert,
-      color-mix(in srgb, var(--c-bleuvert) 12%, transparent)
+    background: color-mix(
+      in srgb,
+      var(--c-bleuvert) 5%,
+      var(--c-bodybg, transparent)
     );
     ._gemMetadataValue,
     ._pricingLine {

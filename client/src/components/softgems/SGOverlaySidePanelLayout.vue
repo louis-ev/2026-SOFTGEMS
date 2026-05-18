@@ -19,7 +19,18 @@
             key="panel"
             class="_sgOverlaySidePanelLayout--panel"
           >
-            <slot name="panel" />
+            <button
+              v-if="panel_show_close_button"
+              type="button"
+              class="u-button u-button_icon _sgOverlaySidePanelLayout--panelClose"
+              :aria-label="$t('close')"
+              @click="onPanelCloseClick"
+            >
+              <b-icon icon="x-lg" />
+            </button>
+            <div class="_sgOverlaySidePanelLayout--panelBody">
+              <slot name="panel" />
+            </div>
           </section>
         </transition>
       </div>
@@ -35,9 +46,20 @@ export default {
       type: Boolean,
       default: false,
     },
+    /** When the panel is open, shows an overlay close control (same effect as backdrop click). */
+    panel_show_close_button: {
+      type: Boolean,
+      default: false,
+    },
   },
   methods: {
     onBackdropClick() {
+      this.emitClose();
+    },
+    onPanelCloseClick() {
+      this.emitClose();
+    },
+    emitClose() {
       this.$emit("close");
     },
   },
@@ -79,7 +101,7 @@ export default {
 ._sgOverlaySidePanelLayout--backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -97,17 +119,54 @@ export default {
 }
 
 ._sgOverlaySidePanelLayout--panel {
+  position: relative;
   flex: 1;
   min-width: 0;
   width: 100%;
   max-width: 100%;
   background: var(--c-bodybg);
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+._sgOverlaySidePanelLayout--panelClose {
+  position: absolute;
+  top: calc(var(--spacing) * 0.5);
+  right: calc(var(--spacing) * 0.5);
+  z-index: 25;
+  pointer-events: auto;
+}
+
+._sgOverlaySidePanelLayout--panelTop {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
+  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 1.35)
+    calc(var(--spacing) * 0.45);
+  box-sizing: border-box;
+}
+
+._sgOverlaySidePanelLayout--panelTopLeading {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+._sgOverlaySidePanelLayout--panelBody {
+  flex: 1;
+  min-height: 0;
+  background: var(--c-bodybg);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  pointer-events: auto;
 }
 
 @media (max-width: 767px) {
@@ -120,6 +179,17 @@ export default {
   ._sgOverlaySidePanelLayout--panel {
     flex: 1 1 100%;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  ._sgOverlaySidePanelLayout--panelClose {
+    right: calc(var(--spacing) * 1.35 + env(safe-area-inset-right, 0px));
+  }
+
+  ._sgOverlaySidePanelLayout--panelTop {
+    padding-right: calc(
+      var(--spacing) * 1.35 + env(safe-area-inset-right, 0px)
+    );
+    padding-left: env(safe-area-inset-left, 0px);
   }
 }
 

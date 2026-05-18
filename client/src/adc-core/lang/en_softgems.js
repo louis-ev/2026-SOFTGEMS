@@ -215,6 +215,8 @@ export default {
   sg_pricing_pair_caption_from_pv: "{line} · computed from PV (read-only pair)",
   sg_pricing_cell_total: "Total",
   sg_pricing_cell_per_carat: "Per carat",
+  sg_pricing_pair_editor_save_hint:
+    "Only the total amount is saved. Per carat updates automatically from total ÷ weight.",
   sg_pricing_standalone_pricing: "Other (not paired above)",
   sg_address_book: "Address book",
   sg_create_contact: "Add a contact",

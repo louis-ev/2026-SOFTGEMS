@@ -1,6 +1,10 @@
 <template>
   <div class="_gemsView">
-    <SGOverlaySidePanelLayout :panel_open="is_gem_open" @close="closeGemPanel">
+    <SGOverlaySidePanelLayout
+      :panel_open="is_gem_open"
+      :panel_show_close_button="$route.name === 'Open gem'"
+      @close="closeGemPanel"
+    >
       <div class="_gemsView--content">
         <div class="_pageHeader">
           <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
@@ -82,6 +86,7 @@
             {{ gems_quick_search_filter_caption }}
           </p>
           <SGGemsTable
+            ref="gems_table"
             :gems="filtered_gems"
             :inventory_has_gems="gems.length > 0"
             :metadata_keys="metadata_keys"
@@ -306,10 +311,16 @@ export default {
       }, {});
     },
     field_editable_map() {
-      return this.all_metadata_keys.reduce((accumulator, metadata_key) => {
-        accumulator[metadata_key] = this.isFieldEditable(metadata_key);
-        return accumulator;
+      const accumulator = this.all_metadata_keys.reduce((acc, metadata_key) => {
+        acc[metadata_key] = this.isFieldEditable(metadata_key);
+        return acc;
       }, {});
+      this.getPriceFieldPairs().forEach(({ virtual_per_carat_key }) => {
+        accumulator[virtual_per_carat_key] = this.isFieldEditable(
+          virtual_per_carat_key
+        );
+      });
+      return accumulator;
     },
   },
   watch: {
@@ -599,6 +610,8 @@ export default {
     onFieldSaved({ key, value, changes }) {
       if (!this.editing_gem) return;
       const gem_path = this.editing_gem.$path;
+      const scroll_metadata_key =
+        key != null && String(key).trim() !== "" ? String(key) : "";
       const index = this.gems.findIndex((g) => g.$path === gem_path);
       if (index !== -1) {
         const target_gem = this.gems[index];
@@ -611,6 +624,17 @@ export default {
       }
       this.editing_gem = null;
       this.editing_field = null;
+      if (gem_path && scroll_metadata_key) {
+        this.$nextTick(() => {
+          const table = this.$refs.gems_table;
+          if (table && typeof table.scrollGemCellIntoView === "function") {
+            table.scrollGemCellIntoView({
+              gem_path,
+              metadata_key: scroll_metadata_key,
+            });
+          }
+        });
+      }
     },
     ensureGemPricingFields(gem) {
       if (!gem || typeof gem !== "object") return;
@@ -659,6 +683,17 @@ export default {
       return metadata_to_icon[metadata_key] || null;
     },
     getMetadataLabel(metadata_key) {
+      const pricing_table_header_i18n = {
+        base_price_pcb: "sg_price_per_carat_pcb",
+        purchased_price_pa: "sg_price_per_carat_pa",
+        pv_selling_price: "sg_price_per_carat_pv",
+        pvd_asking_price: "sg_price_per_carat_pvd",
+        pc_to: "sg_price_per_carat_pc",
+        pf_invoiced_price: "sg_price_per_carat_pf",
+      };
+      const pricing_header = pricing_table_header_i18n[metadata_key];
+      if (pricing_header) return this.$t(pricing_header);
+
       const metadata_to_translation_key = {
         id: "sg_id",
         $date_modified: "sg_last_edited",

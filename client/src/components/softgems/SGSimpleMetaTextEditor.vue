@@ -6,6 +6,7 @@
       :required="required"
       :autofocus="true"
       @update:content="onDraftInput"
+      @onEnter="onSingleLineEnter"
     />
     <p v-if="required_field_hint" class="_fieldError">{{ required_field_hint }}</p>
     <p v-if="external_warning" class="u-warning _externalWarning" role="alert">
@@ -73,6 +74,11 @@ export default {
       default: "",
     },
     is_saving: {
+      type: Boolean,
+      default: false,
+    },
+    /** When true, Enter is left to the control (e.g. multi-line); otherwise Enter submits like the Save button. */
+    multiline: {
       type: Boolean,
       default: false,
     },
@@ -219,6 +225,10 @@ export default {
       this.attempted_save_without_value = false;
       this.remote_update_notice = "";
       this.$emit("draftChange");
+    },
+    onSingleLineEnter() {
+      if (this.multiline) return;
+      this.tryEmitSave();
     },
     tryEmitSave() {
       if (this.is_saving) return false;

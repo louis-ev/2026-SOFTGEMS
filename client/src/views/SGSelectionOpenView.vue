@@ -2,202 +2,225 @@
   <div class="_selectionOpenViewRoot">
     <SGOverlaySidePanelLayout
       :panel_open="is_gem_side_panel_open"
+      :panel_show_close_button="is_gem_side_panel_open"
       @close="closeGemSidePanel"
     >
       <section class="_selectionOpenView">
-    <button
-      type="button"
-      class="u-button u-button_icon _closeButton"
-      @click="goBack"
-    >
-      <b-icon icon="x-lg" />
-    </button>
+        <button
+          type="button"
+          class="u-button u-button_icon _closeButton"
+          @click="goBack"
+        >
+          <b-icon icon="x-lg" />
+        </button>
 
-    <div class="_pageHeader">
-      <div v-if="selection">
-        <p class="_typeLine">
-          {{ $t("sg_selection_type_label") }}:
-          <strong>{{ formatSelectionType(selection.selection_type) }}</strong>
-        </p>
-        <p class="_readonlyHint">{{ $t("sg_selection_type_readonly") }}</p>
-        <div class="_headerMetaRow">
-          <button
-            type="button"
-            class="u-buttonLink u-buttonLink_red"
-            :disabled="!connected_as"
-            :title="guest_action_hint"
-            @click="show_remove_modal = true"
-          >
-            {{ $t("sg_remove_selection") }}
-          </button>
-        </div>
-        <RemoveMenu2
-          v-if="show_remove_modal"
-          :path="selection_folder_path"
-          :modal_title="$t('sg_remove_selection_confirm', { name: page_title })"
-          :success_notification="$t('removed_successfully')"
-          @removedSuccessfully="onRemovedSuccessfully"
-          @close="show_remove_modal = false"
-        />
-      </div>
-    </div>
-
-    <div v-if="is_loading">{{ $t("sg_loading_selection") }}</div>
-    <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
-    <div v-else-if="selection" class="_form">
-      <div class="_titleBlock">
-        <h1 class="_pageTitle">{{ page_title }}</h1>
-      </div>
-
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_contact_identity") }}</h2>
-        <div>
-          <SGEditableMetaField
-            ref="internal_name_field"
-            :label="$t('sg_selection_internal_name')"
-            icon="pencil"
-            :value="edited_internal_name"
-            :modal_open="
-              !!(
-                selection_edit_modal &&
-                selection_edit_modal.kind === 'internal_name'
-              )
-            "
-            :modal_title="edit_modal_title"
-            :modal_is_loading="is_saving_internal_name"
-            :meta_text="internal_name_meta_text"
-            @presentClick="openInternalNameModal"
-            @close="closeEditModal"
-            @save="onEditModalSave"
-            @draftChange="onEditDraftChange"
-          />
-        </div>
-      </section>
-
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_selection_notes") }}</h2>
-        <div>
-          <SGEditableMetaField
-            :label="$t('sg_selection_notes')"
-            icon="journal-text"
-            :value="edited_notes"
-            :modal_open="
-              !!(selection_edit_modal && selection_edit_modal.kind === 'notes')
-            "
-            :modal_title="edit_modal_title"
-            :modal_is_loading="is_saving_notes"
-            :meta_text="notes_meta_text"
-            @presentClick="openNotesModal"
-            @close="closeEditModal"
-            @save="onEditModalSave"
-            @draftChange="onEditDraftChange"
-          />
-        </div>
-      </section>
-
-      <section class="_formSection">
-        <div class="_entriesHeader">
-          <h2 class="_sectionTitle">{{ $t("sg_selection_entries") }}</h2>
-          <button
-            v-if="can_edit"
-            type="button"
-            class="u-button u-button_verysmall u-button_bleuvert"
-            @click="openPickGems"
-          >
-            {{ $t("sg_selection_add_gems") }}
-          </button>
-        </div>
-        <p v-if="sorted_entries.length === 0" class="_hint">
-          {{ $t("sg_selection_entries_empty") }}
-        </p>
-        <p v-else-if="entry_gems_loading" class="_hint">
-          {{ $t("sg_loading_gems") }}
-        </p>
-        <div v-else class="_entriesTableShell">
-          <SGGemsTable
-            :gems="entry_gems_list"
-            :inventory_has_gems="entry_gems_list.length > 0"
-            :metadata_keys="pick_metadata_keys"
-            :metadata_labels="pick_metadata_labels"
-            :metadata_icons="pick_metadata_icons"
-            :field_editable_map="pick_field_editable_map"
-            selected_gem_id=""
-            :is_gem_open="false"
-            view_density="compact"
-            :cover_can_edit="false"
-            :gems_page_size="50"
-            :append_column="can_edit"
-            @rowClick="onSelectionEntriesRowClick"
-          >
-            <template #appendCell="{ gem }">
+        <div class="_pageHeader">
+          <div v-if="selection">
+            <p class="_typeLine">
+              {{ $t("sg_selection_type_label") }}:
+              <strong>{{
+                formatSelectionType(selection.selection_type)
+              }}</strong>
+            </p>
+            <p class="_readonlyHint">{{ $t("sg_selection_type_readonly") }}</p>
+            <div class="_headerMetaRow">
               <button
                 type="button"
                 class="u-buttonLink u-buttonLink_red"
-                @click.stop="confirmRemoveGemRow(gem)"
+                :disabled="!connected_as"
+                :title="guest_action_hint"
+                @click="show_remove_modal = true"
               >
-                {{ $t("sg_selection_remove_gem") }}
+                {{ $t("sg_remove_selection") }}
               </button>
-            </template>
-          </SGGemsTable>
+            </div>
+            <RemoveMenu2
+              v-if="show_remove_modal"
+              :path="selection_folder_path"
+              :modal_title="
+                $t('sg_remove_selection_confirm', { name: page_title })
+              "
+              :success_notification="$t('removed_successfully')"
+              @removedSuccessfully="onRemovedSuccessfully"
+              @close="show_remove_modal = false"
+            />
+          </div>
         </div>
-      </section>
 
-      <section class="_formSection">
-        <SGSelectionFilesSection
-          :selection_path="selection_folder_path"
-          :selection_folder="selection"
-          :can_edit="can_edit"
-          @changed="fetchSelection"
-        />
-      </section>
-    </div>
+        <div v-if="is_loading">{{ $t("sg_loading_selection") }}</div>
+        <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
+        <div v-else-if="selection" class="_form">
+          <div class="_titleBlock">
+            <h1 class="_pageTitle">{{ page_title }}</h1>
+          </div>
 
-    <BaseModal2
-      v-if="pick_gems_open"
-      :title="$t('sg_selection_add_gems_title')"
-      size="x-large"
-      @close="onClosePickGemsModal"
-    >
-      <p class="_pickGemsHint">{{ $t("sg_selection_pick_gems_table_hint") }}</p>
-      <div v-if="is_loading_gems" class="_hint">
-        {{ $t("sg_loading_gems") }}
-      </div>
-      <template v-else>
-        <div class="_gemsSearchBar">
-          <SearchInput
-            v-model="gems_quick_search"
-            :search_placeholder="$t('sg_gems_search_placeholder')"
-            :name="'selection_pick_gems_search'"
-          />
+          <section class="_formSection">
+            <h2 class="_sectionTitle">
+              {{ $t("sg_section_contact_identity") }}
+            </h2>
+            <div>
+              <SGEditableMetaField
+                ref="internal_name_field"
+                :label="$t('sg_selection_internal_name')"
+                icon="pencil"
+                :value="edited_internal_name"
+                :modal_open="
+                  !!(
+                    selection_edit_modal &&
+                    selection_edit_modal.kind === 'internal_name'
+                  )
+                "
+                :modal_title="edit_modal_title"
+                :modal_is_loading="is_saving_internal_name"
+                :meta_text="internal_name_meta_text"
+                @presentClick="openInternalNameModal"
+                @close="closeEditModal"
+                @save="onEditModalSave"
+                @draftChange="onEditDraftChange"
+              />
+            </div>
+          </section>
+
+          <section class="_formSection">
+            <h2 class="_sectionTitle">{{ $t("sg_selection_notes") }}</h2>
+            <div>
+              <SGEditableMetaField
+                :label="$t('sg_selection_notes')"
+                icon="journal-text"
+                :value="edited_notes"
+                :modal_open="
+                  !!(
+                    selection_edit_modal &&
+                    selection_edit_modal.kind === 'notes'
+                  )
+                "
+                :modal_title="edit_modal_title"
+                :modal_is_loading="is_saving_notes"
+                :meta_text="notes_meta_text"
+                @presentClick="openNotesModal"
+                @close="closeEditModal"
+                @save="onEditModalSave"
+                @draftChange="onEditDraftChange"
+              />
+            </div>
+          </section>
+
+          <section class="_formSection">
+            <div class="_entriesHeader">
+              <h2 class="_sectionTitle">{{ $t("sg_selection_entries") }}</h2>
+              <button
+                v-if="can_edit"
+                type="button"
+                class="u-button u-button_verysmall u-button_bleuvert"
+                @click="openPickGems"
+              >
+                {{ $t("sg_selection_add_gems") }}
+              </button>
+            </div>
+            <p v-if="sorted_entries.length === 0" class="_hint">
+              {{ $t("sg_selection_entries_empty") }}
+            </p>
+            <p v-else-if="entry_gems_loading" class="_hint">
+              {{ $t("sg_loading_gems") }}
+            </p>
+            <div v-else class="_entriesTableShell">
+              <SGGemsTable
+                :gems="entry_gems_list"
+                :inventory_has_gems="entry_gems_list.length > 0"
+                :metadata_keys="pick_metadata_keys"
+                :metadata_labels="pick_metadata_labels"
+                :metadata_icons="pick_metadata_icons"
+                :field_editable_map="pick_field_editable_map"
+                :selected_gem_id="side_panel_gem_id"
+                :is_gem_open="is_gem_side_panel_open"
+                view_density="compact"
+                :cover_can_edit="false"
+                :gems_page_size="50"
+                :append_column="can_edit"
+                @rowClick="onSelectionEntriesRowClick"
+              >
+                <template #appendCell="{ gem }">
+                  <button
+                    type="button"
+                    class="u-buttonLink u-buttonLink_red"
+                    @click.stop="confirmRemoveGemRow(gem)"
+                  >
+                    {{ $t("sg_selection_remove_gem") }}
+                  </button>
+                </template>
+              </SGGemsTable>
+            </div>
+          </section>
+
+          <section class="_formSection">
+            <SGSelectionFilesSection
+              :selection_path="selection_folder_path"
+              :selection_folder="selection"
+              :can_edit="can_edit"
+              @changed="fetchSelection"
+            />
+          </section>
         </div>
-        <p
-          v-if="gems_quick_search_filter_caption"
-          class="_gemsActiveFilters"
-          role="status"
+
+        <BaseModal2
+          v-if="pick_gems_open"
+          :title="$t('sg_selection_add_gems_title')"
+          size="x-large"
+          @close="onClosePickGemsModal"
         >
-          {{ gems_quick_search_filter_caption }}
-        </p>
-        <div class="_pickerTableShell">
-          <SGGemsTable
-            :gems="filtered_gems"
-            :inventory_has_gems="pick_gems_inventory.length > 0"
-            :metadata_keys="pick_metadata_keys"
-            :metadata_labels="pick_metadata_labels"
-            :metadata_icons="pick_metadata_icons"
-            :field_editable_map="pick_field_editable_map"
-            selected_gem_id=""
-            :is_gem_open="false"
-            view_density="compact"
-            :cover_can_edit="false"
-            :disabled_row_paths="pick_disabled_row_paths"
-            :gems_page_size="50"
-            :selection_pick_column="true"
-            @rowClick="onPickGemsTableRowClick"
-          />
-        </div>
+          <p class="_pickGemsHint">
+            {{ $t("sg_selection_pick_gems_table_hint") }}
+          </p>
+          <div v-if="is_loading_gems" class="_hint">
+            {{ $t("sg_loading_gems") }}
+          </div>
+          <template v-else>
+            <div class="_gemsSearchBar">
+              <SearchInput
+                v-model="gems_quick_search"
+                :search_placeholder="$t('sg_gems_search_placeholder')"
+                :name="'selection_pick_gems_search'"
+              />
+            </div>
+            <p
+              v-if="gems_quick_search_filter_caption"
+              class="_gemsActiveFilters"
+              role="status"
+            >
+              {{ gems_quick_search_filter_caption }}
+            </p>
+            <div class="_pickerTableShell">
+              <SGGemsTable
+                :gems="filtered_gems"
+                :inventory_has_gems="pick_gems_inventory.length > 0"
+                :metadata_keys="pick_metadata_keys"
+                :metadata_labels="pick_metadata_labels"
+                :metadata_icons="pick_metadata_icons"
+                :field_editable_map="pick_field_editable_map"
+                selected_gem_id=""
+                :is_gem_open="false"
+                view_density="compact"
+                :cover_can_edit="false"
+                :disabled_row_paths="pick_disabled_row_paths"
+                :gems_page_size="50"
+                :selection_pick_column="true"
+                @rowClick="onPickGemsTableRowClick"
+              />
+            </div>
+          </template>
+        </BaseModal2>
+      </section>
+      <template #panel>
+        <SGGemOpenView
+          v-if="side_panel_gem_id"
+          :key="side_panel_gem_id"
+          :gem_id="side_panel_gem_id"
+          :panel_mode="true"
+          @closePanel="closeGemSidePanel"
+        />
       </template>
-    </BaseModal2>
-  </section>
+    </SGOverlaySidePanelLayout>
+  </div>
 </template>
 
 <script>
@@ -206,7 +229,9 @@ import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";
+import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
+import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import GemsQuickSearchMixin from "@/mixins/GemsQuickSearchMixin.js";
 import {
   GEMS_PICKER_METADATA_KEYS,
@@ -235,7 +260,9 @@ export default {
     SGEditableMetaField,
     SGSelectionFilesSection,
     SearchInput,
+    SGOverlaySidePanelLayout,
     SGGemsTable,
+    SGGemOpenView,
   },
   props: {
     selection_path: {
@@ -262,9 +289,13 @@ export default {
       picker_busy: false,
       entry_gems_list: [],
       entry_gems_loading: false,
+      side_panel_gem_id: "",
     };
   },
   computed: {
+    is_gem_side_panel_open() {
+      return Boolean(this.cleanString(this.side_panel_gem_id));
+    },
     gems() {
       return this.pick_gems_inventory;
     },
@@ -598,6 +629,7 @@ export default {
     },
     async confirmRemoveEntry(entry) {
       if (!this.can_edit || !entry?.gem_path) return;
+      const removed_slug = this.gem_slug_from_path(entry.gem_path);
       this.picker_busy = true;
       try {
         await removeGemFromSelection({
@@ -607,6 +639,9 @@ export default {
           gem_path: entry.gem_path,
         });
         await this.fetchSelection();
+        if (removed_slug && this.side_panel_gem_id === removed_slug) {
+          this.side_panel_gem_id = "";
+        }
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
       } finally {
@@ -622,15 +657,28 @@ export default {
     onSelectionEntriesRowClick(gem) {
       const slug = this.gem_slug_from_path(gem?.$path);
       if (!slug) return;
-      this.$router.push(`/gems/${encodeURIComponent(slug)}`);
+      this.side_panel_gem_id = slug;
+    },
+    closeGemSidePanel() {
+      this.side_panel_gem_id = "";
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
+._selectionOpenViewRoot {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
 ._selectionOpenView {
   position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
