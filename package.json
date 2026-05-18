@@ -55,6 +55,7 @@
     "md5-file": "^5.0.0",
     "node-fetch": "^2.7.0",
     "nodemailer": "^7.0.13",
+    "p-queue": "^7.4.1",
     "path": "^0.12.7",
     "platform-folders": "^0.6.1",
     "portscanner": "^2.2.0",

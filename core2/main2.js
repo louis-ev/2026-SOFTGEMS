@@ -5,6 +5,7 @@ const portscanner = require("portscanner");
 const server = require("./server"),
   dev = require("./dev-log"),
   cache = require("./cache"),
+  task_queues = require("./task_queues"),
   cacheManager = require("./cache-manager"),
   binCleanup = require("./bin-cleanup"),
   exitHandler = require("./exit-handler"),
@@ -137,6 +138,7 @@ async function setupApp() {
   ffmpegTracker.init();
 
   if (global.settings.cache_content === true) cache.init();
+  task_queues.init();
 
   let full_default_path = path.join(`${global.appRoot}`, `content`);
   if (global.is_electron)

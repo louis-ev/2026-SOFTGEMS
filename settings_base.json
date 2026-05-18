@@ -18,6 +18,12 @@
   "lruCacheMax": 10000,
   "lruCacheMaxSize": 25000000,
 
+  "taskQueues": {
+    "folderListing": 4,
+    "archive": 2,
+    "getFoldersChunkSize": 32
+  },
+
   "deletedFolderName": "_bin",
 
   "ffmpeg_options": {

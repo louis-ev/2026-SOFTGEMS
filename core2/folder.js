@@ -6,7 +6,8 @@ const utils = require("./utils"),
   thumbs = require("./thumbs"),
   file = require("./file"),
   cache = require("./cache"),
-  archives = require("./archives");
+  archives = require("./archives"),
+  task_queues = require("./task_queues");
 
 module.exports = (function () {
   const SEQUENTIAL_SLUG_STATE_FILENAME = ".slug-sequence.json";
@@ -24,29 +25,41 @@ module.exports = (function () {
         path_to_type,
       });
 
-      let all_folders_with_meta = [];
-      let lastYield = Date.now();
-      const YIELD_INTERVAL_MS = 50;
+      const slug_count = folders_slugs.length;
+      // Smaller listings get higher priority so they are not stuck behind a huge queue (p-queue: larger number = sooner).
+      const list_priority = Math.min(
+        2_000_000,
+        Math.floor(2_000_000 / (slug_count + 1))
+      );
+      const chunk_size = task_queues.getFoldersChunkSize();
 
-      for (let folder_slug of folders_slugs) {
-        const path_to_folder = path.join(path_to_type, folder_slug);
-        const folder_meta = await API.getFolder({
-          path_to_folder,
-          detailed,
-        }).catch((err) => {
-          dev.error(`Failed to get folder`, err.message);
-          return null;
-        });
-        if (folder_meta) all_folders_with_meta.push(folder_meta);
-
-        // Yield only if enough time has passed
-        if (Date.now() - lastYield >= YIELD_INTERVAL_MS) {
-          await new Promise(setImmediate);
-          lastYield = Date.now();
+      const folder_results = [];
+      for (let offset = 0; offset < slug_count; offset += chunk_size) {
+        const chunk = folders_slugs.slice(offset, offset + chunk_size);
+        const part = await Promise.all(
+          chunk.map((folder_slug) =>
+            task_queues.runFolderListing(
+              () => {
+                const path_to_folder = path.join(path_to_type, folder_slug);
+                return API.getFolder({
+                  path_to_folder,
+                  detailed,
+                }).catch((err) => {
+                  dev.error(`Failed to get folder`, err.message);
+                  return null;
+                });
+              },
+              { priority: list_priority }
+            )
+          )
+        );
+        folder_results.push(...part);
+        if (offset + chunk_size < slug_count) {
+          await task_queues.yieldEventLoop();
         }
       }
 
-      return all_folders_with_meta;
+      return folder_results.filter(Boolean);
     },
 
     getFolder: async ({ path_to_folder, detailed }) => {
