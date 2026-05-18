@@ -45,6 +45,7 @@ export default {
   sg_section_pricing: "Pricing",
   sg_section_certificates: "Certificates",
   sg_section_photos_videos: "Photos & videos",
+  sg_section_link_to_section: "Link to this section",
   sg_certificate_upload: "Upload (PDF)",
   sg_no_certificates_yet:
     "No certificates yet. Upload a PDF certificate to add one.",

@@ -46,8 +46,7 @@
     <div v-if="is_loading">{{ $t("sg_loading_contact") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="contact" class="_form">
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_contact_identity") }}</h2>
+      <SGSectionPanel section_id="contact_identity" :title="$t('sg_section_contact_identity')">
         <div>
           <SGEditableMetaField
             ref="contact_name_editable_field"
@@ -67,10 +66,13 @@
             @draftChange="contactEditModalDraftChange"
           />
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <section v-if="is_company" class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_company_details") }}</h2>
+      <SGSectionPanel
+        v-if="is_company"
+        section_id="company_details"
+        :title="$t('sg_section_company_details')"
+      >
         <div class="_fieldsGrid">
           <div class="_fullWidthField">
             <SGEditableMetaField
@@ -170,20 +172,25 @@
             />
           </div>
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <section v-if="is_company" class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_company_contacts") }}</h2>
-        <button
-          type="button"
-          class="u-button u-button_bleuvert _addPersonButton"
-          :disabled="!connected_as"
-          :title="contact_guest_action_hint"
-          @click="toggleNewPersonForm"
-        >
-          <b-icon icon="plus-lg" />
-          {{ $t("sg_add_company_contact") }}
-        </button>
+      <SGSectionPanel
+        v-if="is_company"
+        section_id="company_contacts"
+        :title="$t('sg_section_company_contacts')"
+      >
+        <template #actions>
+          <button
+            type="button"
+            class="u-button u-button_bleuvert"
+            :disabled="!connected_as"
+            :title="contact_guest_action_hint"
+            @click="toggleNewPersonForm"
+          >
+            <b-icon icon="plus-lg" />
+            {{ $t("sg_add_company_contact") }}
+          </button>
+        </template>
         <form
           v-if="show_new_person_form"
           class="_newPersonForm"
@@ -396,7 +403,7 @@
             </div>
           </article>
         </div>
-      </section>
+      </SGSectionPanel>
 
     </div>
   </section>
@@ -404,6 +411,7 @@
 
 <script>
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 
@@ -412,6 +420,7 @@ export default {
   mixins: [FieldFlashMixin],
   components: {
     SGEditableMetaField,
+    SGSectionPanel,
     RemoveMenu2,
   },
   props: {
@@ -1169,7 +1178,7 @@ export default {
 ._form {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) / 1.5);
+  gap: calc(var(--spacing) * 1.1);
   max-width: 640px;
 }
 
@@ -1181,18 +1190,6 @@ export default {
 
 ._fullWidthField {
   grid-column: 1 / -1;
-}
-
-._formSection {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 10px;
-  padding: calc(var(--spacing) * 0.9);
-  background: var(--c-blanc);
-}
-
-._sectionTitle {
-  margin: 0 0 calc(var(--spacing) * 0.75) 0;
-  font-size: 1rem;
 }
 
 ._saveRow {
@@ -1211,10 +1208,6 @@ export default {
   margin: calc(var(--spacing) / 6) 0 0;
   color: var(--c-rouge);
   font-size: var(--sl-font-size-x-small);
-}
-
-._addPersonButton {
-  margin-bottom: calc(var(--spacing) * 0.75);
 }
 
 ._newPersonForm {

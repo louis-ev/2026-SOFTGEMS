@@ -32,7 +32,7 @@
     <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="gem" class="_content">
-      <section class="_formSection _gemActionsSection">
+      <SGSectionPanel>
         <div class="_dangerZone">
         <button
           type="button"
@@ -52,10 +52,9 @@
             @close="show_remove_modal = false"
           />
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_selection_box") }}</h2>
+      <SGSectionPanel section_id="selection_box" :title="$t('sg_section_selection_box')">
         <p v-if="!gem_box_path_clean" class="_boxLine">
           {{ $t("sg_gem_no_box") }}
         </p>
@@ -83,11 +82,9 @@
             {{ $t("sg_gem_clear_box") }}
           </button>
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <!-- Section: Identification -->
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
+      <SGSectionPanel section_id="identification" :title="$t('sg_section_identification')">
         <div class="_fieldsGrid">
           <SGEditableMetaField
             :label="$t('sg_internal_name')"
@@ -149,13 +146,12 @@
             @saved="onFieldSaved"
           />
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <!-- Section: Stone characteristics -->
-      <section class="_formSection">
-        <h2 class="_sectionTitle">
-          {{ $t("sg_section_stone_characteristics") }}
-        </h2>
+      <SGSectionPanel
+        section_id="stone_characteristics"
+        :title="$t('sg_section_stone_characteristics')"
+      >
         <div class="_fieldsGrid">
           <SGEditableMetaField
             :label="$t('sg_number_of_pieces')"
@@ -254,11 +250,9 @@
             @saved="onFieldSaved"
           />
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <!-- Section: Pricing -->
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_pricing") }}</h2>
+      <SGSectionPanel section_id="pricing" :title="$t('sg_section_pricing')">
         <div class="_pricingGroups">
           <div class="_pricingPair">
             <p class="_pricingPairCaption">
@@ -488,35 +482,31 @@
             </div>
           </div>
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <section class="_formSection">
-        <SGGemMediaSection
-          :gem_path="gem_path"
-          :gem="gem"
-          :can_edit="can_edit"
-        />
-      </section>
+      <SGGemMediaSection
+        :gem_path="gem_path"
+        :gem="gem"
+        :can_edit="can_edit"
+      />
 
-      <section class="_formSection">
-        <SGGemCertificatesSection
-          :gem_path="gem_path"
-          :gem="gem"
-          :can_edit="can_edit"
-        />
-      </section>
+      <SGGemCertificatesSection
+        :gem_path="gem_path"
+        :gem="gem"
+        :can_edit="can_edit"
+      />
 
-      <section class="_formSection">
-        <div class="_debugActions">
+      <SGSectionPanel>
+        <template #actions>
           <button type="button" class="u-button" @click="toggleDebugMeta">
             debug
           </button>
-        </div>
+        </template>
         <div v-if="show_debug_meta" class="_debugPanel">
           <p class="_debugTitle">Current gem meta</p>
           <pre class="_debugPre">{{ debug_gem_meta_json }}</pre>
         </div>
-      </section>
+      </SGSectionPanel>
     </div>
 
     <BaseModal2
@@ -598,6 +588,7 @@ import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import { assignGemToBox } from "@/utils/assign_gem_to_box.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 
@@ -608,6 +599,7 @@ export default {
     RemoveMenu2,
     BaseModal2,
     SGEditableMetaField,
+    SGSectionPanel,
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
     SGGemCertificatesSection: () =>
       import("@/components/gems/SGGemCertificatesSection.vue"),
@@ -1061,19 +1053,7 @@ export default {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) / 1.5);
-}
-
-._formSection {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 10px;
-  padding: calc(var(--spacing) * 0.9);
-  background: var(--c-blanc);
-}
-
-._sectionTitle {
-  margin: 0 0 calc(var(--spacing) * 0.6) 0;
-  font-size: 1rem;
+  gap: calc(var(--spacing) * 1.1);
 }
 
 ._topOverview {
@@ -1103,15 +1083,6 @@ export default {
 ._dangerZone {
   display: flex;
   justify-content: flex-end;
-  padding-top: calc(var(--spacing) / 2);
-  margin-top: calc(var(--spacing) * 0.25);
-  border-top: 1px solid var(--c-gris_clair);
-}
-
-._gemActionsSection ._dangerZone {
-  border-top: none;
-  margin-top: 0;
-  padding-top: 0;
 }
 
 ._fieldsGrid {
@@ -1177,11 +1148,6 @@ export default {
 ._pricingGroups :deep(._value) {
   padding: calc(var(--spacing) * 0.32);
   font-size: var(--sl-font-size-x-small);
-}
-
-._debugActions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 ._debugPanel {

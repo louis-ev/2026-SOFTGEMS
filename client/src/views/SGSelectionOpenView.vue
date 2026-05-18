@@ -54,10 +54,10 @@
             <h1 class="_pageTitle">{{ page_title }}</h1>
           </div>
 
-          <section class="_formSection">
-            <h2 class="_sectionTitle">
-              {{ $t("sg_section_contact_identity") }}
-            </h2>
+          <SGSectionPanel
+            section_id="selection_identity"
+            :title="$t('sg_section_contact_identity')"
+          >
             <div>
               <SGEditableMetaField
                 ref="internal_name_field"
@@ -79,10 +79,9 @@
                 @draftChange="onEditDraftChange"
               />
             </div>
-          </section>
+          </SGSectionPanel>
 
-          <section class="_formSection">
-            <h2 class="_sectionTitle">{{ $t("sg_selection_notes") }}</h2>
+          <SGSectionPanel section_id="selection_notes" :title="$t('sg_selection_notes')">
             <div>
               <SGEditableMetaField
                 :label="$t('sg_selection_notes')"
@@ -103,11 +102,10 @@
                 @draftChange="onEditDraftChange"
               />
             </div>
-          </section>
+          </SGSectionPanel>
 
-          <section class="_formSection">
-            <div class="_entriesHeader">
-              <h2 class="_sectionTitle">{{ $t("sg_selection_entries") }}</h2>
+          <SGSectionPanel section_id="selection_entries" :title="$t('sg_selection_entries')">
+            <template #actions>
               <button
                 v-if="can_edit"
                 type="button"
@@ -116,7 +114,7 @@
               >
                 {{ $t("sg_selection_add_gems") }}
               </button>
-            </div>
+            </template>
             <p v-if="sorted_entries.length === 0" class="_hint">
               {{ $t("sg_selection_entries_empty") }}
             </p>
@@ -150,16 +148,14 @@
                 </template>
               </SGGemsTable>
             </div>
-          </section>
+          </SGSectionPanel>
 
-          <section class="_formSection">
-            <SGSelectionFilesSection
-              :selection_path="selection_folder_path"
-              :selection_folder="selection"
-              :can_edit="can_edit"
-              @changed="fetchSelection"
-            />
-          </section>
+          <SGSelectionFilesSection
+            :selection_path="selection_folder_path"
+            :selection_folder="selection"
+            :can_edit="can_edit"
+            @changed="fetchSelection"
+          />
         </div>
 
         <BaseModal2
@@ -227,6 +223,7 @@
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
@@ -258,6 +255,7 @@ export default {
     RemoveMenu2,
     BaseModal2,
     SGEditableMetaField,
+    SGSectionPanel,
     SGSelectionFilesSection,
     SearchInput,
     SGOverlaySidePanelLayout,
@@ -716,31 +714,7 @@ export default {
 ._form {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) * 1);
-}
-
-._formSection {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 10px;
-  padding: calc(var(--spacing) * 0.9);
-  background: var(--c-blanc);
-}
-
-._sectionTitle {
-  margin: 0 0 calc(var(--spacing) * 0.6) 0;
-  font-size: 1rem;
-}
-
-._entriesHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(var(--spacing) / 2);
-  margin-bottom: calc(var(--spacing) * 0.5);
-}
-
-._entriesHeader ._sectionTitle {
-  margin: 0;
+  gap: calc(var(--spacing) * 1.1);
 }
 
 ._entriesTableShell {

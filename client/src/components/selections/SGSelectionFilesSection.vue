@@ -1,8 +1,10 @@
 <template>
-  <section class="_selectionFiles">
-    <header class="_header">
-      <h2 class="_title">{{ $t("sg_selection_attachments") }}</h2>
-      <span class="_count">{{ attachment_files.length }}</span>
+  <SGSectionPanel
+    section_id="selection_attachments"
+    :title="$t('sg_selection_attachments')"
+    :count="attachment_files.length"
+  >
+    <template #actions>
       <div v-if="can_edit" class="_uploadRow">
         <input
           :id="upload_input_id"
@@ -28,7 +30,7 @@
           @close="onUploadClosed"
         />
       </div>
-    </header>
+    </template>
 
     <p v-if="attachment_files.length === 0" class="_empty">
       {{ $t("sg_selection_no_files") }}
@@ -89,10 +91,11 @@
       @removedSuccessfully="onRemovedSuccessfully"
       @close="closeRemoveModal"
     />
-  </section>
+  </SGSectionPanel>
 </template>
 
 <script>
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import Medias from "@/mixins/Medias.js";
 import SGGemMediaRemoveModal from "@/components/gems/SGGemMediaRemoveModal.vue";
 import MediaContent from "@/adc-core/fields/MediaContent.vue";
@@ -102,6 +105,7 @@ export default {
   name: "SGSelectionFilesSection",
   mixins: [Medias],
   components: {
+    SGSectionPanel,
     SGGemMediaRemoveModal,
     MediaContent,
     UploadFiles,
@@ -200,31 +204,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-._selectionFiles {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) * 0.75);
-}
-
-._header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: calc(var(--spacing) / 2);
-}
-
-._title {
-  margin: 0;
-  font-size: 1rem;
-}
-
-._count {
-  font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce);
-}
-
 ._uploadRow {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);

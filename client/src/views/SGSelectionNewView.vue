@@ -13,8 +13,7 @@
     </div>
 
     <form class="_form" @submit.prevent="createSelection">
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_contact_identity") }}</h2>
+      <SGSectionPanel section_id="selection_identity" :title="$t('sg_section_contact_identity')">
         <div class="_fieldsGrid">
           <div>
             <DLabel :str="$t('sg_selection_internal_name')" icon="pencil" />
@@ -36,7 +35,7 @@
             />
           </div>
         </div>
-      </section>
+      </SGSectionPanel>
 
       <div class="_actions">
         <button type="button" class="u-button" @click="goBack">
@@ -60,6 +59,7 @@
 
 <script>
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 import { selectionTypeSelectOptions } from "@/utils/selection_types.js";
 
@@ -67,6 +67,7 @@ export default {
   name: "SGSelectionNewView",
   components: {
     SGSelectField,
+    SGSectionPanel,
   },
   data() {
     return {
@@ -171,19 +172,7 @@ export default {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) / 1.5);
-}
-
-._formSection {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 10px;
-  padding: calc(var(--spacing) * 0.9);
-  background: var(--c-blanc);
-}
-
-._sectionTitle {
-  margin: 0 0 calc(var(--spacing) * 0.6) 0;
-  font-size: 1rem;
+  gap: calc(var(--spacing) * 1.1);
 }
 
 ._fieldsGrid {

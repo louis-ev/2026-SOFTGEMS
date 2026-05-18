@@ -1,8 +1,10 @@
 <template>
-  <section class="_gemCertificates">
-    <header class="_header">
-      <h2 class="_title">{{ $t("sg_section_certificates") }}</h2>
-      <span class="_count">{{ gem_certificate_files.length }}</span>
+  <SGSectionPanel
+    section_id="certificates"
+    :title="$t('sg_section_certificates')"
+    :count="gem_certificate_files.length"
+  >
+    <template #actions>
       <div v-if="can_edit" class="_uploadRow">
         <input
           :id="upload_input_id"
@@ -28,7 +30,7 @@
           @close="onCertificateUploadClosed"
         />
       </div>
-    </header>
+    </template>
 
     <p v-if="gem_certificate_files.length === 0" class="_empty">
       {{ $t("sg_no_certificates_yet") }}
@@ -177,10 +179,11 @@
       @saved="closeCertificateFieldModal"
       @close="closeCertificateFieldModal"
     />
-  </section>
+  </SGSectionPanel>
 </template>
 
 <script>
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemCertificateRemoveModal from "@/components/gems/SGGemCertificateRemoveModal.vue";
 import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
 import SGGemFieldCard from "@/components/gems/SGGemFieldCard.vue";
@@ -189,6 +192,7 @@ import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
 export default {
   name: "SGGemCertificatesSection",
   components: {
+    SGSectionPanel,
     SGGemCertificateRemoveModal,
     SGGemEditFieldModal,
     SGGemFieldCard,
@@ -436,39 +440,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-._header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--spacing) / 2);
-}
-
-._title {
-  margin: 0;
-}
-
-._count {
-  background: var(--c-gris_clair);
-  border-radius: 999px;
-  padding: 0 calc(var(--spacing) / 2);
-  font-size: var(--sl-font-size-small);
-}
-
 ._uploadRow {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
 }
 
 ._empty {
-  margin: calc(var(--spacing) / 2) 0 0;
+  margin: 0;
   color: var(--c-gris_fonce);
 }
 
 ._list {
   list-style: none;
-  margin: calc(var(--spacing) / 2) 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;

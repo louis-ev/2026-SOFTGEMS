@@ -13,12 +13,12 @@
     </div>
 
     <form class="_form" @submit.prevent="createGem">
-      <section
+      <SGSectionPanel
         v-for="form_section in form_sections"
         :key="form_section.key"
-        class="_formSection"
+        :section_id="form_section.key"
+        :title="form_section.title"
       >
-        <h2 class="_sectionTitle">{{ form_section.title }}</h2>
         <div class="_fieldsGrid">
           <div
             v-for="field_key in form_section.field_keys"
@@ -62,17 +62,16 @@
             </p>
           </div>
         </div>
-      </section>
+      </SGSectionPanel>
 
-      <section class="_formSection">
-        <h2 class="_sectionTitle">{{ $t("sg_section_creation") }}</h2>
+      <SGSectionPanel section_id="creation" :title="$t('sg_section_creation')">
         <div>
           <DLabel :str="$t('sg_internal_name_optional')" icon="pencil" />
           <TextInput :content.sync="new_gem_internal_name" :required="false" />
         </div>
         <p class="_creationNotice">{{ $t("sg_creation_notice_documents") }}</p>
         <p class="_creationNotice">{{ $t("sg_creation_notice_editable") }}</p>
-      </section>
+      </SGSectionPanel>
 
       <div class="_actions">
         <p v-if="invalid_field_keys.length > 0" class="_formError">
@@ -106,6 +105,7 @@
 <script>
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import GemPricing from "@/mixins/GemPricing";
 
 const creation_locked_field_keys = [
@@ -143,6 +143,7 @@ export default {
   mixins: [GemPricing],
   components: {
     SGSelectField,
+    SGSectionPanel,
   },
   props: {
     all_gems: {
@@ -510,19 +511,7 @@ export default {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) / 1.5);
-}
-
-._formSection {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 10px;
-  padding: calc(var(--spacing) * 0.9);
-  background: var(--c-blanc);
-}
-
-._sectionTitle {
-  margin: 0 0 calc(var(--spacing) * 0.6) 0;
-  font-size: 1rem;
+  gap: calc(var(--spacing) * 1.1);
 }
 
 ._fieldsGrid {

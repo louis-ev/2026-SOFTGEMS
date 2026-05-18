@@ -1,8 +1,10 @@
 <template>
-  <section class="_gemMedia">
-    <header class="_header">
-      <h2 class="_title">{{ $t("sg_section_photos_videos") }}</h2>
-      <span class="_count">{{ gallery_files.length }}</span>
+  <SGSectionPanel
+    section_id="photos_videos"
+    :title="$t('sg_section_photos_videos')"
+    :count="gallery_files.length"
+  >
+    <template #actions>
       <div v-if="can_edit" class="_uploadRow">
         <input
           :id="upload_input_id"
@@ -28,17 +30,25 @@
           @close="onMediaUploadClosed"
         />
       </div>
-    </header>
+    </template>
 
     <p v-if="gallery_files.length === 0" class="_empty">
       {{ $t("sg_no_media_yet") }}
     </p>
 
-    <div v-else class="_grid">
+    <div
+      v-else
+      class="_grid"
+      :class="{
+        '_grid--single': gallery_files.length === 1,
+        '_grid--featured': gallery_files.length > 1,
+      }"
+    >
       <article
-        v-for="media_file in gallery_files"
+        v-for="(media_file, index) in gallery_files"
         :key="media_file.$path"
         class="_item"
+        :class="{ '_itemFeatured': index === 0 && gallery_files.length > 1 }"
       >
         <a
           v-if="getMediaOpenUrl(media_file)"
@@ -92,16 +102,18 @@
       :can_delete="can_edit"
       @close="closeMediaRemoveModal"
     />
-  </section>
+  </SGSectionPanel>
 </template>
 
 <script>
+import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemMediaRemoveModal from "@/components/gems/SGGemMediaRemoveModal.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
 
 export default {
   name: "SGGemMediaSection",
   components: {
+    SGSectionPanel,
     SGGemMediaRemoveModal,
     UploadFiles,
   },
@@ -218,41 +230,61 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-._header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--spacing) / 2);
-}
-
-._title {
-  margin: 0;
-}
-
-._count {
-  background: var(--c-gris_clair);
-  border-radius: 999px;
-  padding: 0 calc(var(--spacing) / 2);
-  font-size: var(--sl-font-size-small);
-}
-
 ._uploadRow {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
 }
 
 ._empty {
-  margin: calc(var(--spacing) / 2) 0 0;
+  margin: 0;
   color: var(--c-gris_fonce);
 }
 
 ._grid {
-  margin-top: calc(var(--spacing) / 2);
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: calc(var(--spacing) / 2);
+}
+
+._grid--single {
+  grid-template-columns: 1fr;
+
+  ._preview {
+    aspect-ratio: 16 / 10;
+    max-height: min(480px, 56vw);
+  }
+}
+
+._grid--featured {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(120px, auto);
+
+  ._itemFeatured {
+    grid-column: span 2;
+    grid-row: span 2;
+
+    ._preview {
+      aspect-ratio: auto;
+      min-height: 100%;
+      height: 100%;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  ._grid--featured {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    ._itemFeatured {
+      grid-column: 1 / -1;
+      grid-row: auto;
+
+      ._preview {
+        aspect-ratio: 16 / 10;
+        max-height: min(360px, 70vw);
+      }
+    }
+  }
 }
 
 ._item {
