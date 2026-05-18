@@ -27,10 +27,11 @@
 
 <script>
 import GemPricing from "@/mixins/GemPricing";
+import GemDimensions from "@/mixins/GemDimensions";
 
 export default {
   name: "GemCsvExportButton",
-  mixins: [GemPricing],
+  mixins: [GemPricing, GemDimensions],
   props: {
     gems: { type: Array, default: () => [] },
     metadata_keys: { type: Array, default: () => [] },
@@ -94,6 +95,10 @@ export default {
         }
         const per = this.computeDisplayedPerCaratForGem(gem, metadata_key);
         return `${total_str} | ${per} /ct`;
+      }
+
+      if (this.isGemDimensionsMergedColumnKey(metadata_key)) {
+        return this.formatGemDimensionsInline(gem);
       }
 
       const raw_value = gem?.[metadata_key];

@@ -55,6 +55,51 @@
           />
         </div>
       </div>
+      <div v-else-if="active_dimensions_merged" class="_dimensionsMergedInputs">
+        <div class="_pricingPairRow">
+          <span class="_pricingPairLabel">{{
+            axis_mm_configs.length_mm.label
+          }}</span>
+          <TextInput
+            :content="dim_edit_length"
+            :input_type="axis_mm_configs.length_mm.input_type || 'number'"
+            :input_step="axis_mm_configs.length_mm.input_step"
+            :instructions="axis_mm_configs.length_mm.instructions"
+            :disabled="auxiliary_disable"
+            :autofocus="true"
+            @update:content="onDimLengthUpdate"
+            @onEnter="onEnterSubmitFromShell"
+          />
+        </div>
+        <div class="_pricingPairRow">
+          <span class="_pricingPairLabel">{{
+            axis_mm_configs.width_mm.label
+          }}</span>
+          <TextInput
+            :content="dim_edit_width"
+            :input_type="axis_mm_configs.width_mm.input_type || 'number'"
+            :input_step="axis_mm_configs.width_mm.input_step"
+            :instructions="axis_mm_configs.width_mm.instructions"
+            :disabled="auxiliary_disable"
+            @update:content="onDimWidthUpdate"
+            @onEnter="onEnterSubmitFromShell"
+          />
+        </div>
+        <div class="_pricingPairRow">
+          <span class="_pricingPairLabel">{{
+            axis_mm_configs.height_mm.label
+          }}</span>
+          <TextInput
+            :content="dim_edit_height"
+            :input_type="axis_mm_configs.height_mm.input_type || 'number'"
+            :input_step="axis_mm_configs.height_mm.input_step"
+            :instructions="axis_mm_configs.height_mm.instructions"
+            :disabled="auxiliary_disable"
+            @update:content="onDimHeightUpdate"
+            @onEnter="onEnterSubmitFromShell"
+          />
+        </div>
+      </div>
       <TextInput
         v-else
         :content.sync="edit_value"
@@ -72,14 +117,18 @@
       <SGGemFieldPricingExtras :notice_message="affected_fields_notice" />
     </div>
 
-    <p v-if="remote_update_notice" class="u-warning _remoteNotice" role="status">
+    <p
+      v-if="remote_update_notice"
+      class="u-warning _remoteNotice"
+      role="status"
+    >
       {{ remote_update_notice }}
     </p>
 
     <div v-if="!meta_target_path" class="u-spacingBottom"></div>
 
     <SGFieldHistoryPanel
-      v-if="!meta_target_path"
+      v-if="!meta_target_path && !active_dimensions_merged"
       :history_enabled="true"
       :show_history="show_history"
       :is_loading_history="is_loading_history"
@@ -96,12 +145,13 @@ import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGFieldHistoryPanel from "@/components/softgems/SGFieldHistoryPanel.vue";
 import SGGemFieldPricingExtras from "@/components/gems/SGGemFieldPricingExtras.vue";
 import GemPricing from "@/mixins/GemPricing";
+import GemDimensions from "@/mixins/GemDimensions";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { extract_field_entries } from "@/utils/field_history.js";
 
 export default {
   name: "SGGemFieldEditorBody",
-  mixins: [GemPricing],
+  mixins: [GemDimensions, GemPricing],
   components: {
     SGSelectField,
     SGFieldHistoryPanel,
@@ -137,6 +187,9 @@ export default {
       edit_value: "",
       pair_edit_total: "",
       pair_edit_per_carat: "",
+      dim_edit_length: "",
+      dim_edit_width: "",
+      dim_edit_height: "",
       server_edit_baseline: null,
       remote_update_notice: "",
       is_committing: false,
@@ -146,7 +199,10 @@ export default {
     };
   },
   created() {
-    if (this.active_pricing_pair) {
+    if (this.active_dimensions_merged) {
+      this.initializeDimensionsStateFromGem();
+      this.server_edit_baseline = this.serializeDimensionsBaselineFromGem();
+    } else if (this.active_pricing_pair) {
       this.initializePricingPairStateFromGem();
       const pair = this.active_pricing_pair;
       this.server_edit_baseline = this.normalizeFieldValueWithConfig(
@@ -164,6 +220,23 @@ export default {
     this.emitFooterState();
   },
   computed: {
+    active_dimensions_merged() {
+      if (
+        typeof this.meta_target_path === "string" &&
+        this.meta_target_path.trim() !== ""
+      ) {
+        return false;
+      }
+      return this.field?.type === "dimensions_merged";
+    },
+    axis_mm_configs() {
+      const cfgs = buildGemFieldConfigs(this.$t.bind(this), []);
+      return {
+        length_mm: cfgs.length_mm,
+        width_mm: cfgs.width_mm,
+        height_mm: cfgs.height_mm,
+      };
+    },
     active_pricing_pair() {
       if (
         typeof this.meta_target_path === "string" &&
@@ -211,6 +284,7 @@ export default {
       });
     },
     history_field_key() {
+      if (this.active_dimensions_merged) return "length_mm";
       return (
         (this.active_pricing_pair && this.active_pricing_pair.total_key) ||
         this.field.pricing_total_key ||
@@ -218,6 +292,22 @@ export default {
       );
     },
     field_validation() {
+      if (this.active_dimensions_merged) {
+        const cfgs = this.axis_mm_configs;
+        const checks = [
+          this.validateFieldValueWithConfig(
+            this.dim_edit_length,
+            cfgs.length_mm
+          ),
+          this.validateFieldValueWithConfig(this.dim_edit_width, cfgs.width_mm),
+          this.validateFieldValueWithConfig(
+            this.dim_edit_height,
+            cfgs.height_mm
+          ),
+        ];
+        const failed = checks.find((c) => !c.is_valid);
+        return failed || { is_valid: true, error_message: "" };
+      }
       if (this.active_pricing_pair) {
         const { total, per } = this.pair_field_configs;
         const total_check = this.validateFieldValueWithConfig(
@@ -243,6 +333,10 @@ export default {
     },
     affected_fields_notice() {
       if (this.meta_target_path) return "";
+      if (this.active_dimensions_merged) {
+        if (!this.field_validation.is_valid) return "";
+        return this.$t("sg_dimensions_merged_editor_hint");
+      }
       if (this.active_pricing_pair) {
         if (!this.field_validation.is_valid) return "";
         return this.$t("sg_pricing_pair_editor_save_hint");
@@ -307,9 +401,7 @@ export default {
           total_value: new_total,
           weight_ct,
         });
-        if (
-          this.storedNumericValuesEqual(from_per_carat, to_per_carat)
-        ) {
+        if (this.storedNumericValuesEqual(from_per_carat, to_per_carat)) {
           return "";
         }
         return this.$t("sg_pricing_impact_editing_total", {
@@ -331,37 +423,58 @@ export default {
   },
   watch: {
     current_value(nv) {
-      if (this.active_pricing_pair) return;
+      if (this.active_pricing_pair || this.active_dimensions_merged) return;
       this.on_server_value_changed(nv);
     },
     gem: {
       deep: true,
       handler() {
-        if (!this.active_pricing_pair || this.is_committing) return;
-        const pair = this.active_pricing_pair;
-        const { total: total_cfg } = this.pair_field_configs;
-        if (!pair || !total_cfg) return;
-        const new_snap = this.normalizeFieldValueWithConfig(
-          this.gem?.[pair.total_key] ?? "",
-          total_cfg
-        );
-        if (this.storedNumericValuesEqual(new_snap, this.server_edit_baseline))
-          return;
+        if (this.is_committing) return;
+        if (this.active_pricing_pair) {
+          const pair = this.active_pricing_pair;
+          const { total: total_cfg } = this.pair_field_configs;
+          if (!pair || !total_cfg) return;
+          const new_snap = this.normalizeFieldValueWithConfig(
+            this.gem?.[pair.total_key] ?? "",
+            total_cfg
+          );
+          if (
+            this.storedNumericValuesEqual(new_snap, this.server_edit_baseline)
+          )
+            return;
 
-        const had_unsaved_divergence = !this.pair_edit_matches_baseline();
+          const had_unsaved_divergence = !this.pair_edit_matches_baseline();
+
+          if (!had_unsaved_divergence) {
+            this.initializePricingPairStateFromGem();
+            this.remote_update_notice = "";
+          } else if (
+            !this.storedNumericValuesEqual(
+              new_snap,
+              this.normalizeFieldValueWithConfig(this.pair_edit_total, total_cfg)
+            )
+          ) {
+            const msg = this.$t("sg_gem_field_updated_remotely");
+            this.remote_update_notice =
+              msg && msg !== "sg_gem_field_updated_remotely" ? msg : "";
+          } else {
+            this.remote_update_notice = "";
+          }
+
+          this.server_edit_baseline = new_snap;
+          this.emitFooterState();
+          return;
+        }
+        if (!this.active_dimensions_merged) return;
+        const new_snap = this.serializeDimensionsBaselineFromGem();
+        if (new_snap === this.server_edit_baseline) return;
+
+        const had_unsaved_divergence = !this.dimensions_edit_matches_baseline();
 
         if (!had_unsaved_divergence) {
-          this.initializePricingPairStateFromGem();
+          this.initializeDimensionsStateFromGem();
           this.remote_update_notice = "";
-        } else if (
-          !this.storedNumericValuesEqual(
-            new_snap,
-            this.normalizeFieldValueWithConfig(
-              this.pair_edit_total,
-              total_cfg
-            )
-          )
-        ) {
+        } else if (new_snap !== this.serializeDimensionsEditState()) {
           const msg = this.$t("sg_gem_field_updated_remotely");
           this.remote_update_notice =
             msg && msg !== "sg_gem_field_updated_remotely" ? msg : "";
@@ -394,6 +507,85 @@ export default {
         this.pair_field_configs.total
       );
       return this.storedNumericValuesEqual(norm, this.server_edit_baseline);
+    },
+    dimensions_edit_matches_baseline() {
+      if (!this.active_dimensions_merged) return true;
+      return (
+        this.serializeDimensionsEditState() === this.server_edit_baseline
+      );
+    },
+    initializeDimensionsStateFromGem() {
+      const cfgs = this.axis_mm_configs;
+      this.dim_edit_length = this.formatNumberForPairField(
+        this.normalizeFieldValueWithConfig(
+          this.gem?.length_mm ?? "",
+          cfgs.length_mm
+        ),
+        cfgs.length_mm
+      );
+      this.dim_edit_width = this.formatNumberForPairField(
+        this.normalizeFieldValueWithConfig(
+          this.gem?.width_mm ?? "",
+          cfgs.width_mm
+        ),
+        cfgs.width_mm
+      );
+      this.dim_edit_height = this.formatNumberForPairField(
+        this.normalizeFieldValueWithConfig(
+          this.gem?.height_mm ?? "",
+          cfgs.height_mm
+        ),
+        cfgs.height_mm
+      );
+    },
+    serializeDimensionsBaselineFromGem() {
+      const cfgs = this.axis_mm_configs;
+      return [
+        this.normalizeFieldValueWithConfig(
+          this.gem?.length_mm ?? "",
+          cfgs.length_mm
+        ),
+        this.normalizeFieldValueWithConfig(
+          this.gem?.width_mm ?? "",
+          cfgs.width_mm
+        ),
+        this.normalizeFieldValueWithConfig(
+          this.gem?.height_mm ?? "",
+          cfgs.height_mm
+        ),
+      ].join("|");
+    },
+    serializeDimensionsEditState() {
+      const cfgs = this.axis_mm_configs;
+      return [
+        this.normalizeFieldValueWithConfig(
+          this.dim_edit_length,
+          cfgs.length_mm
+        ),
+        this.normalizeFieldValueWithConfig(
+          this.dim_edit_width,
+          cfgs.width_mm
+        ),
+        this.normalizeFieldValueWithConfig(
+          this.dim_edit_height,
+          cfgs.height_mm
+        ),
+      ].join("|");
+    },
+    onDimLengthUpdate(val) {
+      this.dim_edit_length = val;
+      this.onEditorInput();
+      this.emitFooterState();
+    },
+    onDimWidthUpdate(val) {
+      this.dim_edit_width = val;
+      this.onEditorInput();
+      this.emitFooterState();
+    },
+    onDimHeightUpdate(val) {
+      this.dim_edit_height = val;
+      this.onEditorInput();
+      this.emitFooterState();
     },
     initializePricingPairStateFromGem() {
       const pair = this.active_pricing_pair;
@@ -528,6 +720,9 @@ export default {
       return v;
     },
     edit_matches_baseline(baseline) {
+      if (this.active_dimensions_merged) {
+        return this.serializeDimensionsEditState() === baseline;
+      }
       if (this.active_pricing_pair) {
         const norm = this.normalizeFieldValueWithConfig(
           this.pair_edit_total,
@@ -541,7 +736,8 @@ export default {
           baseline
         );
       }
-      const b = baseline === null || baseline === undefined ? "" : String(baseline);
+      const b =
+        baseline === null || baseline === undefined ? "" : String(baseline);
       const e =
         this.edit_value === null || this.edit_value === undefined
           ? ""
@@ -549,7 +745,7 @@ export default {
       return e === b;
     },
     on_server_value_changed(nv) {
-      if (this.active_pricing_pair) return;
+      if (this.active_pricing_pair || this.active_dimensions_merged) return;
       const new_snap = this.normalize_snapshot_value(nv);
       if (this.field.type === "number") {
         if (this.storedNumericValuesEqual(new_snap, this.server_edit_baseline))
@@ -613,7 +809,24 @@ export default {
       let meta_patch;
       let field_key_saved;
 
-      if (this.active_pricing_pair && !targets_file_meta) {
+      if (this.active_dimensions_merged && !targets_file_meta) {
+        field_key_saved = "dimensions_lwh";
+        const cfgs = this.axis_mm_configs;
+        meta_patch = {
+          length_mm: this.normalizeFieldValueWithConfig(
+            this.dim_edit_length,
+            cfgs.length_mm
+          ),
+          width_mm: this.normalizeFieldValueWithConfig(
+            this.dim_edit_width,
+            cfgs.width_mm
+          ),
+          height_mm: this.normalizeFieldValueWithConfig(
+            this.dim_edit_height,
+            cfgs.height_mm
+          ),
+        };
+      } else if (this.active_pricing_pair && !targets_file_meta) {
         field_key_saved = this.active_pricing_pair.total_key;
         const norm = this.normalizeFieldValueWithConfig(
           this.pair_edit_total,
@@ -628,8 +841,7 @@ export default {
             this.field.persist_empty_number_as_null &&
             this.field.type === "number"
           ) {
-            const is_empty =
-              raw === "" || raw === null || raw === undefined;
+            const is_empty = raw === "" || raw === null || raw === undefined;
             meta_patch = {
               [field_key_saved]: is_empty
                 ? null
@@ -787,7 +999,7 @@ export default {
       return String(value);
     },
     copyHistoryValue(entry) {
-      if (this.field.readonly) return;
+      if (this.field.readonly || this.active_dimensions_merged) return;
       const raw =
         entry && Object.prototype.hasOwnProperty.call(entry, "value")
           ? entry.value

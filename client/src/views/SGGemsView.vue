@@ -137,6 +137,10 @@ import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing, {
   gem_virtual_per_carat_column_keys,
 } from "@/mixins/GemPricing";
+import GemDimensions, {
+  gem_linear_dimension_keys,
+  gem_dimensions_merged_column_key,
+} from "@/mixins/GemDimensions";
 import GemsQuickSearchMixin from "@/mixins/GemsQuickSearchMixin.js";
 
 const placeholder_gem_fields_defaults = {
@@ -167,7 +171,7 @@ const pinned_metadata_keys = ["id", "$cover"];
 
 export default {
   name: "SGGemsView",
-  mixins: [GemsQuickSearchMixin, GemPricing],
+  mixins: [GemsQuickSearchMixin, GemDimensions, GemPricing],
   components: {
     DropDown,
     SearchInput,
@@ -220,6 +224,7 @@ export default {
         "title",
         "price_per_carat_pa_pcb",
         ...gem_virtual_per_carat_column_keys,
+        ...gem_linear_dimension_keys,
       ]);
       const known_order = [
         "id",
@@ -237,9 +242,7 @@ export default {
         "shape",
         "origin_country",
         "treatment_type",
-        "length_mm",
-        "width_mm",
-        "height_mm",
+        "dimensions_lwh",
         "base_price_pcb",
         "purchased_price_pa",
         "pv_selling_price",
@@ -262,6 +265,14 @@ export default {
           metadata_key_set.add(key);
         });
       });
+      const gems_have_linear_dimensions = this.gems.some((gem) =>
+        gem_linear_dimension_keys.some((dk) =>
+          Object.prototype.hasOwnProperty.call(gem || {}, dk)
+        )
+      );
+      if (gems_have_linear_dimensions) {
+        metadata_key_set.add(gem_dimensions_merged_column_key);
+      }
       metadata_key_set.add("id");
       metadata_key_set.add("$cover");
       metadata_key_set.add("$date_modified");
@@ -280,9 +291,11 @@ export default {
       if (all_keys.length === 0) return [];
       if (!Array.isArray(this.selected_metadata_keys)) return all_keys;
 
-      const selected_in_order = this.stripVirtualPerCaratKeys(
-        this.selected_metadata_keys.filter((metadata_key) =>
-          all_keys.includes(metadata_key)
+      const selected_in_order = this.stripLinearDimensionKeys(
+        this.stripVirtualPerCaratKeys(
+          this.selected_metadata_keys.filter((metadata_key) =>
+            all_keys.includes(metadata_key)
+          )
         )
       );
       const selected_or_default =
@@ -332,6 +345,22 @@ export default {
     },
   },
   methods: {
+    stripLinearDimensionKeys(metadata_keys) {
+      if (!Array.isArray(metadata_keys)) return [];
+      let inserted = false;
+      const out = [];
+      for (const key of metadata_keys) {
+        if (gem_linear_dimension_keys.includes(key)) {
+          if (!inserted) {
+            out.push(gem_dimensions_merged_column_key);
+            inserted = true;
+          }
+          continue;
+        }
+        out.push(key);
+      }
+      return out;
+    },
     stripVirtualPerCaratKeys(metadata_keys) {
       if (!Array.isArray(metadata_keys)) return [];
       return metadata_keys.filter(
@@ -346,12 +375,14 @@ export default {
         if (!stored_keys_json) return;
         const stored_keys = JSON.parse(stored_keys_json);
         if (!Array.isArray(stored_keys)) return;
-        this.selected_metadata_keys = stored_keys
-          .filter((metadata_key) => typeof metadata_key === "string")
-          .filter(
-            (metadata_key) =>
-              !gem_virtual_per_carat_column_keys.includes(metadata_key)
-          );
+        this.selected_metadata_keys = this.stripLinearDimensionKeys(
+          stored_keys
+            .filter((metadata_key) => typeof metadata_key === "string")
+            .filter(
+              (metadata_key) =>
+                !gem_virtual_per_carat_column_keys.includes(metadata_key)
+            )
+        );
       } catch {
         // Keep defaults when storage is unavailable or invalid.
       }
@@ -376,7 +407,9 @@ export default {
       }
 
       const selected_keys = Array.isArray(this.selected_metadata_keys)
-        ? this.stripVirtualPerCaratKeys(this.selected_metadata_keys)
+        ? this.stripLinearDimensionKeys(
+            this.stripVirtualPerCaratKeys(this.selected_metadata_keys)
+          )
         : [];
       const selected_in_order = selected_keys.filter((metadata_key) =>
         all_keys.includes(metadata_key)
@@ -408,7 +441,9 @@ export default {
         return;
       }
       this.selected_metadata_keys = this.enforcePinnedColumns(
-        this.stripVirtualPerCaratKeys(next_selected_metadata_keys),
+        this.stripLinearDimensionKeys(
+          this.stripVirtualPerCaratKeys(next_selected_metadata_keys)
+        ),
         this.all_metadata_keys
       );
       this.persistMetadataKeysToStorage();
@@ -610,8 +645,11 @@ export default {
     onFieldSaved({ key, value, changes }) {
       if (!this.editing_gem) return;
       const gem_path = this.editing_gem.$path;
-      const scroll_metadata_key =
+      let scroll_metadata_key =
         key != null && String(key).trim() !== "" ? String(key) : "";
+      if (gem_linear_dimension_keys.includes(scroll_metadata_key)) {
+        scroll_metadata_key = gem_dimensions_merged_column_key;
+      }
       const index = this.gems.findIndex((g) => g.$path === gem_path);
       if (index !== -1) {
         const target_gem = this.gems[index];
@@ -679,6 +717,7 @@ export default {
         pf_invoiced_price: "file-earmark-text",
         price_per_carat_pf: "diagram2",
         price_per_carat_all: "arrow-up",
+        dimensions_lwh: "aspect-ratio",
       };
       return metadata_to_icon[metadata_key] || null;
     },
@@ -725,6 +764,7 @@ export default {
         pf_invoiced_price: "sg_pf_invoiced_price",
         price_per_carat_pf: "sg_price_per_carat_pf",
         price_per_carat_all: "sg_price_per_carat_all",
+        dimensions_lwh: "sg_dimensions_lwh",
         $path: "sg_path",
         $date_created: "sg_created",
       };

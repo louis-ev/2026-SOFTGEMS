@@ -70,6 +70,9 @@ export default {
     },
     gemFieldDisplayValue(gem, field_config) {
       if (!gem || !field_config) return "";
+      if (field_config.type === "dimensions_merged") {
+        return this.formatGemDimensionsInline(gem);
+      }
       if (field_config.pricing_total_key) {
         return this.computeDisplayedPerCaratForGem(
           gem,

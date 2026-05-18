@@ -169,6 +169,9 @@ export default {
   sg_length_mm: "Length (mm)",
   sg_width_mm: "Width (mm)",
   sg_height_mm: "Height (mm)",
+  sg_dimensions_lwh: "Dimensions L × W × H (mm)",
+  sg_dimensions_merged_editor_hint:
+    "Length, width, and height are saved together as three separate fields.",
   sg_dimensions_mm: "Dimensions (mm)",
   sg_weight_ct: "Weight (ct)",
   sg_base_price_pcb: "Base price (PCb)",

@@ -242,38 +242,14 @@
             @saved="onFieldSaved"
           />
           <SGEditableMetaField
-            :label="$t('sg_length_mm')"
-            icon="aspect-ratio"
-            :value="gem.length_mm"
-            :is_flashing="isFieldFlashing('length_mm')"
-            :modal_open="editing_field === field_configs.length_mm"
-            :modal_title="gemFieldModalTitle(field_configs.length_mm)"
-            :gem_edit="gemEditorProps(field_configs.length_mm)"
-            @presentClick="openEditModal(field_configs.length_mm)"
-            @close="editing_field = null"
-            @saved="onFieldSaved"
-          />
-          <SGEditableMetaField
-            :label="$t('sg_width_mm')"
-            icon="aspect-ratio"
-            :value="gem.width_mm"
-            :is_flashing="isFieldFlashing('width_mm')"
-            :modal_open="editing_field === field_configs.width_mm"
-            :modal_title="gemFieldModalTitle(field_configs.width_mm)"
-            :gem_edit="gemEditorProps(field_configs.width_mm)"
-            @presentClick="openEditModal(field_configs.width_mm)"
-            @close="editing_field = null"
-            @saved="onFieldSaved"
-          />
-          <SGEditableMetaField
-            :label="$t('sg_height_mm')"
-            icon="aspect-ratio"
-            :value="gem.height_mm"
-            :is_flashing="isFieldFlashing('height_mm')"
-            :modal_open="editing_field === field_configs.height_mm"
-            :modal_title="gemFieldModalTitle(field_configs.height_mm)"
-            :gem_edit="gemEditorProps(field_configs.height_mm)"
-            @presentClick="openEditModal(field_configs.height_mm)"
+            :label="field_configs.dimensions_lwh.label"
+            :icon="field_configs.dimensions_lwh.icon"
+            :value="formatGemDimensionsInline(gem)"
+            :is_flashing="isFieldFlashing('dimensions_lwh')"
+            :modal_open="editing_field === field_configs.dimensions_lwh"
+            :modal_title="gemFieldModalTitle(field_configs.dimensions_lwh)"
+            :gem_edit="gemEditorProps(field_configs.dimensions_lwh)"
+            @presentClick="openEditModal(field_configs.dimensions_lwh)"
             @close="editing_field = null"
             @saved="onFieldSaved"
           />
@@ -619,6 +595,7 @@ import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing from "@/mixins/GemPricing";
+import GemDimensions from "@/mixins/GemDimensions";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import { assignGemToBox } from "@/utils/assign_gem_to_box.js";
@@ -626,7 +603,7 @@ import { selectionDetailPath } from "@/utils/selection_urls.js";
 
 export default {
   name: "SGGemOpenView",
-  mixins: [GemPricing, FieldFlashMixin],
+  mixins: [GemPricing, GemDimensions, FieldFlashMixin],
   components: {
     RemoveMenu2,
     BaseModal2,
@@ -933,7 +910,9 @@ export default {
         : key
         ? { [key]: value }
         : {};
-      const flash_keys = this.expandPricingFlashKeys(Object.keys(next_changes));
+      const flash_keys = this.expandLinearDimensionFlashKeys(
+        this.expandPricingFlashKeys(Object.keys(next_changes))
+      );
       this.flashFields(flash_keys);
       Object.keys(next_changes).forEach((change_key) => {
         this.$set(this.gem, change_key, next_changes[change_key]);

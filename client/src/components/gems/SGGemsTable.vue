@@ -136,6 +136,14 @@
                 />
               </div>
               <div
+                v-else-if="isGemDimensionsMergedColumnKey(metadata_key)"
+                class="_dimensionsCell"
+              >
+                <span class="_dimensionsCellValue">{{
+                  formatGemDimensionsInline(gem)
+                }}</span>
+              </div>
+              <div
                 v-else-if="isGemPricingTotalColumnKey(metadata_key)"
                 class="_pricingCell"
               >
@@ -200,10 +208,14 @@
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
 import GemPricing from "@/mixins/GemPricing";
+import GemDimensions, {
+  gem_linear_dimension_keys,
+  gem_dimensions_merged_column_key,
+} from "@/mixins/GemDimensions";
 
 export default {
   name: "SGGemsTable",
-  mixins: [GemPricing],
+  mixins: [GemPricing, GemDimensions],
   components: { CoverField },
   props: {
     gems: { type: Array, default: () => [] },
@@ -426,6 +438,9 @@ export default {
         const time_value = raw ? new Date(raw).getTime() : 0;
         return Number.isFinite(time_value) ? time_value : 0;
       }
+      if (this.isGemDimensionsMergedColumnKey(metadata_key)) {
+        return this.resolveGemDimensionsSortValue(gem);
+      }
       const raw_value = this.resolveMetadataValue(gem, metadata_key);
       if (raw_value === null || raw_value === undefined) return "";
       if (typeof raw_value === "number") return raw_value;
@@ -531,6 +546,14 @@ export default {
             ].join("|");
             return;
           }
+          if (this.isGemDimensionsMergedColumnKey(metadata_key)) {
+            snapshot[cell_key] = [
+              this.serializeCellValue(gem?.length_mm),
+              this.serializeCellValue(gem?.width_mm),
+              this.serializeCellValue(gem?.height_mm),
+            ].join("|");
+            return;
+          }
           const cell_value = this.resolveMetadataValue(gem, metadata_key);
           snapshot[cell_key] = this.serializeCellValue(cell_value);
         });
@@ -606,6 +629,9 @@ export default {
     resolveScrollTargetMetadataKey(metadata_key) {
       const raw = metadata_key != null ? String(metadata_key).trim() : "";
       if (!raw) return "";
+      if (gem_linear_dimension_keys.includes(raw)) {
+        return gem_dimensions_merged_column_key;
+      }
       if (this.isVirtualPerCaratField(raw)) {
         const pair = this.getPricingPairByFieldKey(raw);
         return pair ? pair.total_key : "";
@@ -930,6 +956,14 @@ td[data-metadata-key="$cover"] {
   100% {
     background: var(--c-bodybg);
   }
+}
+
+._dimensionsCell {
+  line-height: 1.25;
+}
+
+._dimensionsCellValue {
+  font-family: var(--sl-font-mono);
 }
 
 ._pricingCell {

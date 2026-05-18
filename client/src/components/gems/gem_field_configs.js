@@ -256,5 +256,12 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
     },
+    dimensions_lwh: {
+      key: "dimensions_lwh",
+      label: t("sg_dimensions_lwh"),
+      icon: "aspect-ratio",
+      type: "dimensions_merged",
+      dimension_field_keys: ["length_mm", "width_mm", "height_mm"],
+    },
   };
 }
