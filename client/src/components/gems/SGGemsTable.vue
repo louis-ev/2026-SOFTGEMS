@@ -1,9 +1,21 @@
 <template>
   <div class="_gemsTableRoot">
-    <div class="_gemsTable" :class="density_class">
+    <div
+      class="_gemsTable"
+      :class="[density_class, { _hasPickColumn: selection_pick_column }]"
+    >
       <table class="_table">
         <thead>
           <tr>
+            <th
+              v-if="selection_pick_column"
+              scope="col"
+              class="_pickColTh"
+            >
+              <span class="_srOnly">{{
+                $t("sg_gems_table_pick_column_header_aria")
+              }}</span>
+            </th>
             <th
               v-for="metadata_key in metadata_keys"
               :key="metadata_key"
@@ -53,11 +65,16 @@
                 </span>
               </button>
             </th>
+            <th v-if="show_append_column" scope="col" class="_appendColTh">
+              <span v-if="append_column_label" class="_appendColThText">{{
+                append_column_label
+              }}</span>
+            </th>
           </tr>
         </thead>
         <transition-group name="row-sort" tag="tbody">
           <tr v-if="sorted_gems.length === 0" key="_empty">
-            <td :colspan="metadata_keys.length">
+            <td :colspan="gems_table_empty_colspan">
               {{
                 inventory_has_gems
                   ? $t("sg_no_gems_match_filters")
@@ -68,12 +85,32 @@
           <tr
             v-for="gem in paginated_gems"
             :key="gem.$path"
-            class="_clickableRow"
             :class="{
+              _clickableRow: !selection_pick_column,
               _selected: is_gem_open && getGemId(gem) === selected_gem_id,
+              _rowPickerDisabled: isRowPickerDisabled(gem),
             }"
-            @click="onRowClick(gem)"
+            @click="handleTableRowClick(gem)"
           >
+            <td v-if="selection_pick_column" class="_pickColTd" @click.stop>
+              <button
+                v-if="!isRowPickerDisabled(gem)"
+                type="button"
+                class="_pickColAddBtn"
+                :aria-label="$t('sg_gems_table_add_to_selection_aria')"
+                @click="onPickColumnAddClick(gem)"
+              >
+                <b-icon icon="plus-lg" />
+              </button>
+              <span
+                v-else
+                class="_pickColInSelection"
+                role="img"
+                :aria-label="$t('sg_gems_table_already_in_selection_aria')"
+              >
+                <b-icon icon="check-lg" />
+              </span>
+            </td>
             <td
               v-for="metadata_key in metadata_keys"
               :key="`${gem.$path}-${metadata_key}`"
@@ -98,7 +135,7 @@
                   :ratio="'1 / 1'"
                   :cover="gem.$cover"
                   :path="gem.$path"
-                  :can_edit="true"
+                  :can_edit="cover_can_edit"
                   :available_options="['import']"
                 />
               </div>
@@ -116,6 +153,13 @@
               <span v-else class="_gemMetadataValue">{{
                 formatValue(formatMetadataCellDisplay(gem, metadata_key))
               }}</span>
+            </td>
+            <td
+              v-if="show_append_column"
+              class="_appendColTd"
+              @click.stop
+            >
+              <slot name="appendCell" :gem="gem" />
             </td>
           </tr>
         </transition-group>
@@ -176,8 +220,15 @@ export default {
     selected_gem_id: { type: String, default: "" },
     is_gem_open: { type: Boolean, default: false },
     view_density: { type: String, default: "medium" },
-    inventory_has_gems: { type: Boolean, default: false },
-    gems_page_size: { type: Number, default: 100 },
+    cover_can_edit: { type: Boolean, default: true },
+    disabled_row_paths: { type: Array, default: () => [] },
+    /** When true, first column is add-to-selection (plus) / already added (check). */
+    selection_pick_column: { type: Boolean, default: false },
+    /** When true, adds a trailing column for slot appendCell (e.g. row actions). */
+    append_column: { type: Boolean, default: false },
+    append_column_label: { type: String, default: "" },
+    inventory_has_gems: { type: Boolean, default: true },
+    gems_page_size: { type: [Number, String], default: 100 },
   },
   data() {
     return {
@@ -192,6 +243,13 @@ export default {
     };
   },
   computed: {
+    disabled_row_path_set() {
+      return new Set(
+        (Array.isArray(this.disabled_row_paths) ? this.disabled_row_paths : [])
+          .map((p) => String(p || "").trim())
+          .filter(Boolean),
+      );
+    },
     density_class() {
       if (this.view_density === "compact") return "_densityCompact";
       if (this.view_density === "large") return "_densityLarge";
@@ -243,6 +301,21 @@ export default {
       if (total <= 0) return 0;
       const end = (this.gems_page_index + 1) * this.gems_effective_page_size;
       return Math.min(end, total);
+    },
+    gems_table_empty_colspan() {
+      let n = Array.isArray(this.metadata_keys)
+        ? this.metadata_keys.length
+        : 0;
+      if (this.selection_pick_column) n += 1;
+      if (this.show_append_column) n += 1;
+      return n;
+    },
+    show_append_column() {
+      if (!this.append_column) return false;
+      return (
+        typeof this.$scopedSlots.appendCell === "function" ||
+        typeof this.$slots.appendCell !== "undefined"
+      );
     },
   },
   watch: {
@@ -404,7 +477,21 @@ export default {
     isFieldEditable(metadata_key) {
       return Boolean(this.field_editable_map[metadata_key]);
     },
+    isRowPickerDisabled(gem) {
+      const p = gem?.$path;
+      if (!p) return false;
+      return this.disabled_row_path_set.has(String(p));
+    },
+    handleTableRowClick(gem) {
+      if (this.selection_pick_column) return;
+      this.onRowClick(gem);
+    },
+    onPickColumnAddClick(gem) {
+      if (this.isRowPickerDisabled(gem)) return;
+      this.$emit("rowClick", gem);
+    },
     onRowClick(gem) {
+      if (this.isRowPickerDisabled(gem)) return;
       this.$emit("rowClick", gem);
     },
     onCellClick(gem, metadata_key, event) {
@@ -566,6 +653,7 @@ export default {
 }
 
 ._gemsTable {
+  --pick-col-width: 0px;
   --sticky-id-col-width: 80px;
   --sticky-cover-col-width: 80px;
   --sticky-cover-col-height: 80px;
@@ -576,6 +664,10 @@ export default {
   flex: 1;
   min-height: 0;
   overflow: auto;
+
+  &._hasPickColumn {
+    --pick-col-width: 2.75rem;
+  }
 }
 
 ._gemsTable._densityCompact {
@@ -676,6 +768,29 @@ export default {
     z-index: 8;
   }
 
+  th._pickColTh,
+  td._pickColTd {
+    position: sticky;
+    left: 0;
+    width: var(--pick-col-width);
+    min-width: var(--pick-col-width);
+    max-width: var(--pick-col-width);
+    box-sizing: border-box;
+    text-align: center;
+    vertical-align: middle;
+    padding-left: calc(var(--sg-cell-padding) * 0.45);
+    padding-right: calc(var(--sg-cell-padding) * 0.45);
+    border-left: 1px solid var(--c-gris);
+  }
+
+  th._pickColTh {
+    z-index: 9;
+  }
+
+  td._pickColTd {
+    z-index: 6;
+  }
+
   td {
     font-size: var(--sg-metadata-font-size);
     font-family: var(--sl-font-mono);
@@ -733,6 +848,15 @@ export default {
 
   &._selected {
     background: var(--c-gris_clair);
+  }
+
+  &._rowPickerDisabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  &._rowPickerDisabled:hover {
+    background: inherit;
   }
 }
 
@@ -836,5 +960,84 @@ td[data-metadata-key="$cover"] {
 .row-sort-enter,
 .row-sort-leave-to {
   // opacity: 0;
+}
+
+._gemsTable._hasPickColumn ._table {
+  th._stickyIdCol,
+  td._stickyIdCol {
+    left: var(--pick-col-width);
+  }
+
+  th._stickyCoverCol,
+  td._stickyCoverCol {
+    left: calc(var(--sticky-id-col-width) + var(--pick-col-width));
+  }
+}
+
+._srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+._pickColAddBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 1.65rem;
+  height: 1.65rem;
+  flex-shrink: 0;
+  border: 1px solid
+    color-mix(in srgb, currentColor 38%, var(--c-gris_clair) 62%);
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 0.9em;
+
+  &:hover {
+    border-color: color-mix(in srgb, currentColor 55%, var(--c-gris_clair) 45%);
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--c-bleuvert);
+    outline-offset: 2px;
+  }
+}
+
+._pickColInSelection {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #219653;
+  line-height: 1;
+  pointer-events: none;
+}
+
+._appendColTh,
+._appendColTd {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  vertical-align: middle;
+}
+
+._appendColThText {
+  font-weight: 600;
 }
 </style>

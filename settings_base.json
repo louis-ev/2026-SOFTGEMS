@@ -205,6 +205,9 @@
           },
           "price_per_carat_all": {
             "type": "number"
+          },
+          "box_selection_path": {
+            "type": "string"
           }
         },
         "$files": {
@@ -290,6 +293,59 @@
               "phone": {
                 "type": "string"
               }
+            }
+          }
+        }
+      },
+      "selections": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [50, 320, 640, 2000]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_type": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "string"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [50, 320, 640, 2000]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
             }
           }
         }

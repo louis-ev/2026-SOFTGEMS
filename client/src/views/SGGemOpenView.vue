@@ -62,6 +62,37 @@
         </div>
       </section>
 
+      <section class="_formSection">
+        <h2 class="_sectionTitle">{{ $t("sg_section_selection_box") }}</h2>
+        <p v-if="!gem_box_path_clean" class="_boxLine">
+          {{ $t("sg_gem_no_box") }}
+        </p>
+        <p v-else class="_boxLine">
+          <span class="_boxLineLabel">{{ $t("sg_gem_current_box") }}:</span>
+          <router-link class="u-buttonLink" :to="gem_box_detail_path">
+            {{ gem_box_display_title }}
+          </router-link>
+        </p>
+        <div v-if="can_edit" class="_boxActions">
+          <button
+            type="button"
+            class="u-button u-button_verysmall u-button_bleuvert"
+            @click="openGemBoxPicker"
+          >
+            {{ $t("sg_gem_change_box") }}
+          </button>
+          <button
+            v-if="gem_box_path_clean"
+            type="button"
+            class="u-buttonLink u-buttonLink_red"
+            :disabled="box_pick_busy"
+            @click="clearGemBoxAssignment"
+          >
+            {{ $t("sg_gem_clear_box") }}
+          </button>
+        </div>
+      </section>
+
       <!-- Section: Identification -->
       <section class="_formSection">
         <h2 class="_sectionTitle">{{ $t("sg_section_identification") }}</h2>
@@ -521,6 +552,37 @@
     </div>
 
     <BaseModal2
+      v-if="gem_box_pick_open"
+      :title="$t('sg_gem_pick_box_title')"
+      size="large"
+      @close="gem_box_pick_open = false"
+    >
+      <p v-if="gem_box_pick_loading" class="_boxPickerHint">
+        {{ $t("sg_loading_selections") }}
+      </p>
+      <ul v-else class="_boxPickerList">
+        <li v-if="gem_box_options.length === 0" class="_boxPickerHint">
+          {{ $t("sg_selections_empty") }}
+        </li>
+        <li
+          v-for="row in gem_box_options"
+          :key="row.$path"
+          class="_boxPickerRow"
+        >
+          <span class="_boxPickerLabel">{{ gem_box_row_label(row) }}</span>
+          <button
+            type="button"
+            class="u-button u-button_verysmall u-button_bleuvert"
+            :disabled="box_pick_busy"
+            @click="assignGemToSelectedBox(row)"
+          >
+            {{ $t("add") }}
+          </button>
+        </li>
+      </ul>
+    </BaseModal2>
+
+    <BaseModal2
       v-if="show_history_modal"
       :title="$t('sg_modifications_history')"
       :size="'large'"
@@ -562,16 +624,20 @@
 
 <script>
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
+import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing from "@/mixins/GemPricing";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import { assignGemToBox } from "@/utils/assign_gem_to_box.js";
+import { selectionDetailPath } from "@/utils/selection_urls.js";
 
 export default {
   name: "SGGemOpenView",
   mixins: [GemPricing, FieldFlashMixin],
   components: {
     RemoveMenu2,
+    BaseModal2,
     SGEditableMetaField,
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
     SGGemCertificatesSection: () =>
@@ -582,6 +648,11 @@ export default {
     gem_id: {
       type: String,
       required: true,
+    },
+    /** When true, back/close and remove stay in context (emit closePanel instead of /gems). */
+    panel_mode: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -597,6 +668,12 @@ export default {
       is_loading_history: false,
       gem_history_entries: [],
       show_debug_meta: false,
+      selections_path: "selections",
+      box_folder_meta: null,
+      gem_box_pick_open: false,
+      gem_box_options: [],
+      gem_box_pick_loading: false,
+      box_pick_busy: false,
     };
   },
   computed: {
@@ -638,6 +715,25 @@ export default {
     debug_gem_meta_json() {
       return this.formatDebugMeta(this.gem || {});
     },
+    gem_box_path_clean() {
+      return this.cleanString(this.gem?.box_selection_path);
+    },
+    gem_box_display_title() {
+      const from_meta = this.cleanString(this.box_folder_meta?.internal_name);
+      if (from_meta) return from_meta;
+      if (this.gem_box_path_clean) return this.gem_box_path_clean;
+      return "—";
+    },
+    gem_box_detail_path() {
+      if (!this.gem_box_path_clean) return "/selections";
+      const parts = this.gem_box_path_clean.split("/").filter(Boolean);
+      const slug = parts[parts.length - 1] || "";
+      if (!slug) return "/selections";
+      return selectionDetailPath({
+        folder_slug: slug,
+        internal_name: this.box_folder_meta?.internal_name || "",
+      });
+    },
   },
   async created() {
     await this.fetchGem();
@@ -650,6 +746,10 @@ export default {
   },
   methods: {
     goBack() {
+      if (this.panel_mode) {
+        this.$emit("closePanel");
+        return;
+      }
       if (this.$route.path.startsWith("/gems/")) {
         this.$router.push("/gems");
         return;
@@ -664,10 +764,96 @@ export default {
       this.fetch_error = "";
       try {
         this.gem = await this.$api.getFolder({ path: this.gem_path });
+        await this.loadBoxFolderMeta();
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_gem");
       } finally {
         this.is_loading = false;
+      }
+    },
+    async loadBoxFolderMeta() {
+      const p = this.gem_box_path_clean;
+      if (!p) {
+        this.box_folder_meta = null;
+        return;
+      }
+      try {
+        this.box_folder_meta = await this.$api.getFolder({
+          path: p,
+          no_files: true,
+        });
+      } catch {
+        this.box_folder_meta = null;
+      }
+    },
+    gem_box_row_label(row) {
+      const name = this.cleanString(row?.internal_name);
+      const slug = String(row?.$path || "").split("/").filter(Boolean).pop();
+      return name || slug || row?.$path || "—";
+    },
+    async openGemBoxPicker() {
+      if (!this.can_edit) return;
+      this.gem_box_pick_open = true;
+      this.gem_box_pick_loading = true;
+      try {
+        const rows = await this.$api.getFolders({ path: this.selections_path });
+        const list = Array.isArray(rows) ? rows : [];
+        this.gem_box_options = list.filter(
+          (r) => String(r?.selection_type || "") === "boîte",
+        );
+        this.gem_box_options.sort((a, b) =>
+          this.gem_box_row_label(a).localeCompare(
+            this.gem_box_row_label(b),
+            undefined,
+            { sensitivity: "base" },
+          ),
+        );
+      } catch {
+        this.gem_box_options = [];
+      } finally {
+        this.gem_box_pick_loading = false;
+      }
+    },
+    async assignGemToSelectedBox(row) {
+      const target = row?.$path;
+      if (!target || this.box_pick_busy) return;
+      this.box_pick_busy = true;
+      try {
+        await assignGemToBox({
+          api: this.$api,
+          gem_path: this.gem_path,
+          new_box_folder_path: target,
+        });
+        await this.fetchGem();
+        this.gem_box_pick_open = false;
+        this.$alertify.delay(2500).success(this.$t("sg_gem_box_updated"));
+      } catch (err) {
+        const c = err && err.code;
+        this.$alertify
+          .delay(4000)
+          .error(c || this.$t("sg_could_not_save"));
+      } finally {
+        this.box_pick_busy = false;
+      }
+    },
+    async clearGemBoxAssignment() {
+      if (!this.can_edit || !this.gem_box_path_clean || this.box_pick_busy)
+        return;
+      this.box_pick_busy = true;
+      try {
+        await assignGemToBox({
+          api: this.$api,
+          gem_path: this.gem_path,
+          new_box_folder_path: "",
+        });
+        await this.fetchGem();
+        this.$alertify.delay(2500).success(this.$t("sg_gem_box_updated"));
+      } catch ({ code }) {
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_could_not_save"));
+      } finally {
+        this.box_pick_busy = false;
       }
     },
     async fetchPairableGems() {
@@ -789,9 +975,21 @@ export default {
           }
         }
       );
+      if (
+        Object.prototype.hasOwnProperty.call(
+          next_changes,
+          "box_selection_path",
+        )
+      ) {
+        this.loadBoxFolderMeta();
+      }
     },
     onGemRemoved() {
       this.show_remove_modal = false;
+      if (this.panel_mode) {
+        this.$emit("closePanel");
+        return;
+      }
       this.$router.push("/gems");
     },
     cleanString(value) {
@@ -810,6 +1008,51 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+._boxLine {
+  margin: 0 0 calc(var(--spacing) / 2);
+  font-size: var(--sl-font-size-small);
+}
+
+._boxLineLabel {
+  margin-right: calc(var(--spacing) / 2);
+}
+
+._boxActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) / 2);
+  margin-top: calc(var(--spacing) / 2);
+}
+
+._boxPickerHint {
+  margin: 0;
+  color: var(--c-gris_fonce);
+  font-size: var(--sl-font-size-small);
+}
+
+._boxPickerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+._boxPickerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 2);
+  padding: calc(var(--spacing) * 0.4) 0;
+  border-bottom: 1px solid var(--c-gris_clair);
+}
+
+._boxPickerLabel {
+  min-width: 0;
+  word-break: break-word;
+  font-size: var(--sl-font-size-small);
+}
+
 ._gemOpenView {
   position: relative;
   min-height: 100%;

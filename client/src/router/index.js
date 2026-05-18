@@ -57,6 +57,19 @@ const routes = [
     path: "/selections",
     name: "Selections",
     component: () => import("@/views/SGSelectionsView.vue"),
+    children: [
+      {
+        path: "new",
+        name: "Create selection",
+        component: () => import("@/views/SGSelectionNewView.vue"),
+      },
+      {
+        path: ":selection_path",
+        name: "Open selection",
+        component: () => import("@/views/SGSelectionOpenView.vue"),
+        props: true,
+      },
+    ],
   },
   // {
   //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
@@ -116,7 +129,15 @@ const router = new VueRouter({
     const navigating_within_address_book =
       to.path.startsWith("/address-book") &&
       from.path.startsWith("/address-book");
-    if (navigating_within_gems || navigating_within_address_book) return false;
+    const navigating_within_selections =
+      to.path.startsWith("/selections") &&
+      from.path.startsWith("/selections");
+    if (
+      navigating_within_gems ||
+      navigating_within_address_book ||
+      navigating_within_selections
+    )
+      return false;
 
     return new Promise((resolve, reject) => {
       // only if changing page and not just query or hash
