@@ -21,8 +21,7 @@ export default {
   sg_gems_page_previous: "Previous",
   sg_gems_page_next: "Next",
   sg_gems_page_nav_label: "Gems table pages",
-  sg_gems_page_status:
-    "{start}–{end} of {total} · Page {page} of {pages}",
+  sg_gems_page_status: "{start}–{end} of {total} · Page {page} of {pages}",
   sg_create_gem: "Add a gem",
   sg_export_gems_csv: "Export full database (CSV)",
   sg_download_all_gems_zip: "Download all gems (ZIP)",
@@ -289,6 +288,7 @@ export default {
   sg_remove_selection: "Remove selection",
   sg_remove_selection_confirm: 'Remove "{name}" permanently?',
   sg_selection_entries: "Gems in this selection",
+  sg_selection_gem_count: "Gems",
   sg_selection_entries_empty: "No gems linked yet.",
   sg_selection_add_gems: "Add gems",
   sg_selection_add_gems_title: "Add gems to selection",

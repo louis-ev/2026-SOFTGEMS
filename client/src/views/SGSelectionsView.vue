@@ -32,7 +32,7 @@
                     {{ $t("sg_selection_type_label") }}
                   </th>
                   <th scope="col" class="_colCount">
-                    {{ $t("sg_selection_entries") }}
+                    {{ $t("sg_selection_gem_count") }}
                   </th>
                 </tr>
               </thead>
@@ -58,9 +58,7 @@
                     @keydown.enter.prevent="openSelection(row)"
                   >
                     <td class="_colName">
-                      <span class="_nameText">{{
-                        selectionLabel(row)
-                      }}</span>
+                      <span class="_nameText">{{ selectionLabel(row) }}</span>
                     </td>
                     <td class="_colType">
                       <span v-if="row.selection_type" class="_typeBadge">
@@ -68,7 +66,7 @@
                       </span>
                     </td>
                     <td class="_colCount">
-                      {{ entryCount(row) }}
+                      <span class="_gemCount">{{ entryCount(row) }}</span>
                     </td>
                   </tr>
                 </template>
@@ -114,8 +112,8 @@ export default {
         this.selectionLabel(a).localeCompare(
           this.selectionLabel(b),
           undefined,
-          { sensitivity: "base" },
-        ),
+          { sensitivity: "base" }
+        )
       );
     },
     selected_folder_slug() {
@@ -268,6 +266,10 @@ export default {
     font-size: var(--sl-font-size-x-small);
     color: var(--c-gris_fonce);
     border-bottom: 1px solid var(--c-gris);
+
+    &._colCount {
+      text-align: right;
+    }
   }
 
   tr._dataRow:last-child td {
@@ -276,17 +278,25 @@ export default {
 }
 
 ._colName {
-  width: 44%;
+  width: 48%;
 }
 
 ._colType {
-  width: 36%;
+  width: 40%;
   white-space: nowrap;
 }
 
 ._colCount {
-  width: 20%;
+  width: 12%;
   white-space: nowrap;
+  text-align: right;
+}
+
+._gemCount {
+  display: inline-block;
+  min-width: 1.5em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 ._nameText {
