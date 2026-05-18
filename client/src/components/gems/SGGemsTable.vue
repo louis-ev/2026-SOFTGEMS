@@ -92,11 +92,11 @@
               <button
                 v-if="!isRowPickerDisabled(gem)"
                 type="button"
-                class="_pickColAddBtn"
+                class="u-button u-button_icon _pickColAddBtn"
                 :aria-label="$t('sg_gems_table_add_to_selection_aria')"
                 @click="onPickColumnAddClick(gem)"
               >
-                <b-icon icon="plus-lg" />
+                <b-icon icon="plus" scale="1.35" />
               </button>
               <span
                 v-else
@@ -148,9 +148,7 @@
                 class="_pricingCell"
               >
                 <span class="_pricingLine _pricingTotal">{{
-                  formatPriceCellNumber(
-                    resolveMetadataValue(gem, metadata_key)
-                  )
+                  formatPriceCellNumber(resolveMetadataValue(gem, metadata_key))
                 }}</span>
                 <span class="_pricingLine _pricingPerCt">{{
                   formatPricingPerCtLine(gem, metadata_key)
@@ -1059,10 +1057,8 @@ td[data-metadata-key="$cover"] {
   width: 1.65rem;
   height: 1.65rem;
   flex-shrink: 0;
-  border: 1px solid
-    color-mix(in srgb, currentColor 38%, var(--c-gris_clair) 62%);
-  border-radius: 50%;
-  background: color-mix(in srgb, currentColor 7%, transparent);
+  // border: 1px solid
+  //   color-mix(in srgb, currentColor 38%, var(--c-gris_clair) 62%);
   color: inherit;
   cursor: pointer;
   line-height: 1;
