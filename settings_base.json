@@ -338,7 +338,7 @@
         },
         "$files": {
           "thumbs": {
-            "resolutions": [50, 320, 640, 2000]
+            "resolutions": [50, 320, 640, 1600]
           },
           "fields": {
             "caption": {
