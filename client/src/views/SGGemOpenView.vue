@@ -587,6 +587,7 @@ import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
+import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import { assignGemToBox } from "@/utils/assign_gem_to_box.js";
@@ -594,7 +595,7 @@ import { selectionDetailPath } from "@/utils/selection_urls.js";
 
 export default {
   name: "SGGemOpenView",
-  mixins: [GemPricing, GemDimensions, FieldFlashMixin],
+  mixins: [GemPricing, GemDimensions, FieldFlashMixin, SectionAnchorScrollMixin],
   components: {
     RemoveMenu2,
     BaseModal2,
@@ -719,6 +720,9 @@ export default {
         this.fetch_error = code || this.$t("sg_could_not_load_gem");
       } finally {
         this.is_loading = false;
+        if (this.gem && !this.fetch_error) {
+          this.scrollToRouteSectionAnchorAfterLoad();
+        }
       }
     },
     async loadBoxFolderMeta() {

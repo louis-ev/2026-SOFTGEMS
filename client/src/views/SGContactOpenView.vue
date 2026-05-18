@@ -414,10 +414,11 @@ import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
+import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 
 export default {
   name: "SGContactOpenView",
-  mixins: [FieldFlashMixin],
+  mixins: [FieldFlashMixin, SectionAnchorScrollMixin],
   components: {
     SGEditableMetaField,
     SGSectionPanel,
@@ -809,6 +810,9 @@ export default {
         this.leaveCompanyContactsListRoomTracked();
       } finally {
         this.is_loading = false;
+        if (this.contact && !this.fetch_error) {
+          this.scrollToRouteSectionAnchorAfterLoad();
+        }
       }
     },
     async persistContactNameModal() {

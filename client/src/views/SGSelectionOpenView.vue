@@ -230,6 +230,7 @@ import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLa
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import GemsQuickSearchMixin from "@/mixins/GemsQuickSearchMixin.js";
+import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import {
   GEMS_PICKER_METADATA_KEYS,
   gemsPickerMetadataLabels,
@@ -250,7 +251,7 @@ import {
 
 export default {
   name: "SGSelectionOpenView",
-  mixins: [GemsQuickSearchMixin],
+  mixins: [GemsQuickSearchMixin, SectionAnchorScrollMixin],
   components: {
     RemoveMenu2,
     BaseModal2,
@@ -464,6 +465,9 @@ export default {
         this.selection = null;
       } finally {
         this.is_loading = false;
+        if (this.selection && !this.fetch_error) {
+          this.scrollToRouteSectionAnchorAfterLoad();
+        }
       }
     },
     openInternalNameModal() {

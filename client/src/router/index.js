@@ -124,6 +124,10 @@ const router = new VueRouter({
   base: "/",
   routes,
   scrollBehavior(to, from, savedPosition) {
+    if (to.hash) {
+      return false;
+    }
+
     const navigating_within_gems =
       to.path.startsWith("/gems") && from.path.startsWith("/gems");
     const navigating_within_address_book =
@@ -136,20 +140,22 @@ const router = new VueRouter({
       navigating_within_gems ||
       navigating_within_address_book ||
       navigating_within_selections
-    )
+    ) {
       return false;
+    }
 
-    return new Promise((resolve, reject) => {
-      // only if changing page and not just query or hash
-      if (to.path !== from.path) {
-        setTimeout(() => {
-          if (savedPosition) {
-            return resolve(savedPosition);
-          } else {
-            return resolve({ x: 0, y: 0 });
-          }
-        }, 150);
-      }
+    if (to.path === from.path) {
+      return false;
+    }
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (savedPosition) {
+          resolve(savedPosition);
+        } else {
+          resolve({ x: 0, y: 0 });
+        }
+      }, 150);
     });
   },
 });

@@ -34,6 +34,11 @@
 </template>
 
 <script>
+import {
+  getRouteSectionHash,
+  scheduleSectionAnchorScroll,
+} from "@/utils/section_anchor_scroll.js";
+
 export default {
   name: "SGSectionPanel",
   props: {
@@ -54,6 +59,11 @@ export default {
       default: null,
     },
   },
+  data() {
+    return {
+      _section_anchor_scroll_cancel: null,
+    };
+  },
   computed: {
     has_title() {
       return String(this.title || "").trim() !== "";
@@ -64,7 +74,9 @@ export default {
       return raw.replace(/[^a-zA-Z0-9_-]/g, "");
     },
     show_count() {
-      return this.count !== null && this.count !== undefined && this.count !== "";
+      return (
+        this.count !== null && this.count !== undefined && this.count !== ""
+      );
     },
     has_actions() {
       return Boolean(this.$slots.actions);
@@ -91,18 +103,40 @@ export default {
     },
   },
   mounted() {
-    this.$nextTick(() => {
-      this.scrollIfHashMatches({ smooth: false });
-    });
+    this.scheduleScrollIfHashMatches({ smooth: false });
+  },
+  beforeDestroy() {
+    this.cancelScheduledScroll();
   },
   watch: {
     "$route.hash"() {
-      this.$nextTick(() => {
-        this.scrollIfHashMatches({ smooth: true });
-      });
+      this.scheduleScrollIfHashMatches({ smooth: true });
     },
   },
   methods: {
+    cancelScheduledScroll() {
+      if (typeof this._section_anchor_scroll_cancel === "function") {
+        this._section_anchor_scroll_cancel();
+        this._section_anchor_scroll_cancel = null;
+      }
+    },
+    scheduleScrollIfHashMatches({ smooth = false } = {}) {
+      if (!this.resolved_section_id || !this.$el) return;
+      const hash = getRouteSectionHash(this.$route);
+      if (hash !== this.resolved_section_id) return;
+
+      this.cancelScheduledScroll();
+      this.$nextTick(() => {
+        this._section_anchor_scroll_cancel = scheduleSectionAnchorScroll(
+          this.$el,
+          {
+            route: this.$route,
+            section_id: this.resolved_section_id,
+            smooth,
+          }
+        );
+      });
+    },
     onAnchorClick(event) {
       if (!this.resolved_section_id) return;
       if (
@@ -122,20 +156,7 @@ export default {
           hash: `#${this.resolved_section_id}`,
         })
         .catch(() => {});
-      this.scrollSectionIntoView({ smooth: true });
-    },
-    scrollIfHashMatches({ smooth = false } = {}) {
-      if (!this.resolved_section_id || !this.$el) return;
-      const hash = String(this.$route?.hash || "").replace(/^#/, "");
-      if (hash !== this.resolved_section_id) return;
-      this.scrollSectionIntoView({ smooth });
-    },
-    scrollSectionIntoView({ smooth = true } = {}) {
-      if (!this.$el) return;
-      this.$el.scrollIntoView({
-        behavior: smooth ? "smooth" : "auto",
-        block: "start",
-      });
+      this.scheduleScrollIfHashMatches({ smooth: true });
     },
   },
 };
@@ -162,8 +183,7 @@ export default {
 ._title {
   margin: 0;
   font-size: clamp(1.25rem, 1rem + 0.45vw, 1.5rem);
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 400;
   letter-spacing: -0.01em;
 }
 
