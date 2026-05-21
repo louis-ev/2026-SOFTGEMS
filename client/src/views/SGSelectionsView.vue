@@ -123,14 +123,7 @@ export default {
       return parsed.folder_slug || "";
     },
   },
-  watch: {
-    "$route.name": {
-      immediate: true,
-      handler(route_name) {
-        if (route_name === "Selections") this.fetchSelections();
-      },
-    },
-  },
+  watch: {},
   mounted() {
     this.fetchSelections();
     this.$api.join({ room: this.selections_root_path });

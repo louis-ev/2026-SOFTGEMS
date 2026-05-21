@@ -34,13 +34,13 @@
     <div v-else-if="gem" class="_content">
       <SGSectionPanel>
         <div class="_dangerZone">
-        <button
-          type="button"
-          class="u-buttonLink u-buttonLink_red"
-          :disabled="!can_edit"
-          :title="gem_remove_guest_title_hint"
-          @click="show_remove_modal = true"
-        >
+          <button
+            type="button"
+            class="u-buttonLink u-buttonLink_red"
+            :disabled="!can_edit"
+            :title="gem_remove_guest_title_hint"
+            @click="show_remove_modal = true"
+          >
             {{ $t("sg_remove_gem") }}
           </button>
           <RemoveMenu2
@@ -54,7 +54,10 @@
         </div>
       </SGSectionPanel>
 
-      <SGSectionPanel section_id="selection_box" :title="$t('sg_section_selection_box')">
+      <SGSectionPanel
+        section_id="selection_box"
+        :title="$t('sg_section_selection_box')"
+      >
         <p v-if="!gem_box_path_clean" class="_boxLine">
           {{ $t("sg_gem_no_box") }}
         </p>
@@ -84,7 +87,10 @@
         </div>
       </SGSectionPanel>
 
-      <SGSectionPanel section_id="identification" :title="$t('sg_section_identification')">
+      <SGSectionPanel
+        section_id="identification"
+        :title="$t('sg_section_identification')"
+      >
         <div class="_fieldsGrid">
           <SGEditableMetaField
             :label="$t('sg_internal_name')"
@@ -484,11 +490,7 @@
         </div>
       </SGSectionPanel>
 
-      <SGGemMediaSection
-        :gem_path="gem_path"
-        :gem="gem"
-        :can_edit="can_edit"
-      />
+      <SGGemMediaSection :gem_path="gem_path" :gem="gem" :can_edit="can_edit" />
 
       <SGGemCertificatesSection
         :gem_path="gem_path"
@@ -586,7 +588,12 @@ import { selectionDetailPath } from "@/utils/selection_urls.js";
 
 export default {
   name: "SGGemOpenView",
-  mixins: [GemPricing, GemDimensions, FieldFlashMixin, SectionAnchorScrollMixin],
+  mixins: [
+    GemPricing,
+    GemDimensions,
+    FieldFlashMixin,
+    SectionAnchorScrollMixin,
+  ],
   components: {
     RemoveMenu2,
     BaseModal2,
@@ -727,7 +734,10 @@ export default {
     },
     gem_box_row_label(row) {
       const name = this.cleanString(row?.internal_name);
-      const slug = String(row?.$path || "").split("/").filter(Boolean).pop();
+      const slug = String(row?.$path || "")
+        .split("/")
+        .filter(Boolean)
+        .pop();
       return name || slug || row?.$path || "—";
     },
     async openGemBoxPicker() {
@@ -738,14 +748,14 @@ export default {
         const rows = await this.$api.getFolders({ path: this.selections_path });
         const list = Array.isArray(rows) ? rows : [];
         this.gem_box_options = list.filter(
-          (r) => String(r?.selection_type || "") === "boîte",
+          (r) => String(r?.selection_type || "") === "boîte"
         );
         this.gem_box_options.sort((a, b) =>
           this.gem_box_row_label(a).localeCompare(
             this.gem_box_row_label(b),
             undefined,
-            { sensitivity: "base" },
-          ),
+            { sensitivity: "base" }
+          )
         );
       } catch {
         this.gem_box_options = [];
@@ -768,9 +778,7 @@ export default {
         this.$alertify.delay(2500).success(this.$t("sg_gem_box_updated"));
       } catch (err) {
         const c = err && err.code;
-        this.$alertify
-          .delay(4000)
-          .error(c || this.$t("sg_could_not_save"));
+        this.$alertify.delay(4000).error(c || this.$t("sg_could_not_save"));
       } finally {
         this.box_pick_busy = false;
       }
@@ -788,9 +796,7 @@ export default {
         await this.fetchGem();
         this.$alertify.delay(2500).success(this.$t("sg_gem_box_updated"));
       } catch ({ code }) {
-        this.$alertify
-          .delay(4000)
-          .error(code || this.$t("sg_could_not_save"));
+        this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
       } finally {
         this.box_pick_busy = false;
       }
@@ -917,10 +923,7 @@ export default {
         }
       );
       if (
-        Object.prototype.hasOwnProperty.call(
-          next_changes,
-          "box_selection_path",
-        )
+        Object.prototype.hasOwnProperty.call(next_changes, "box_selection_path")
       ) {
         this.loadBoxFolderMeta();
       }
