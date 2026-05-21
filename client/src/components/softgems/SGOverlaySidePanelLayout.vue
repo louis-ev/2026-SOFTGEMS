@@ -101,9 +101,16 @@ export default {
 ._sgOverlaySidePanelLayout--backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(150, 150, 150, 0.15);
   cursor: pointer;
   pointer-events: auto;
+  backdrop-filter: blur(1px);
+  transition: background 0.2s ease, backdrop-filter 0.2s ease;
+
+  &:hover {
+    background: rgba(150, 150, 150, 0.05);
+    backdrop-filter: blur(0px);
+  }
 }
 
 ._sgOverlaySidePanelLayout--panelTrack {

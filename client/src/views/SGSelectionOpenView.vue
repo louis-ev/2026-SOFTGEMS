@@ -111,18 +111,19 @@
             section_id="selection_entries"
             :title="$t('sg_selection_entries')"
           >
-            <template #actions> </template>
-            <p v-if="selection_gem_paths.length === 0" class="_hint">
+            <p class="_entriesSortHint">
+              {{ $t("sg_selection_entries_sort_hint") }}
+            </p>
+            <p
+              v-if="selection_gem_paths.length === 0 && !entry_gems_loading"
+              class="_hint"
+            >
               {{ $t("sg_selection_entries_empty") }}
             </p>
             <p v-else-if="entry_gems_loading" class="_hint">
               {{ $t("sg_loading_gems") }}
             </p>
             <div v-else class="_entriesTableShell">
-              <input type="text" placeholder="Add gems by search" />
-              TODO afficher rÉsultats si recherche, sous forme de tableau.
-              <br />
-              <br />
               <SGGemsTable
                 :gems="entry_gems_list"
                 :inventory_has_gems="entry_gems_list.length > 0"
@@ -149,18 +150,55 @@
                   </button>
                 </template>
               </SGGemsTable>
-              <p class="_entriesSortHint">
-                {{ $t("sg_selection_entries_sort_hint") }}
+            </div>
+
+            <div v-if="can_edit" class="_addGemsBlock">
+              <div class="_gemsSearchBar">
+                <SearchInput
+                  v-model="gems_quick_search"
+                  :search_placeholder="
+                    $t('sg_selection_add_gems_from_database')
+                  "
+                  :name="'selection_add_gems_search'"
+                  :disabled="is_loading_gems_inventory || picker_busy"
+                />
+              </div>
+              <p v-if="is_loading_gems_inventory" class="_hint">
+                {{ $t("sg_loading_gems") }}
               </p>
-              <div class="u-spacingBottom"></div>
-              <!-- <button
-                v-if="can_edit"
-                type="button"
-                class="u-button u-button_bleuvert"
-                @click="openPickGems"
-              >
-                {{ $t("sg_selection_add_gems") }}
-              </button> -->
+              <template v-else-if="add_gems_search_active">
+                <p
+                  v-if="gems_quick_search_filter_caption"
+                  class="_gemsActiveFilters"
+                  role="status"
+                >
+                  {{ gems_quick_search_filter_caption }}
+                </p>
+                <p v-if="add_gems_search_limit_caption" class="_hint">
+                  {{ add_gems_search_limit_caption }}
+                </p>
+                <p v-if="add_gems_search_results.length === 0" class="_hint">
+                  {{ $t("sg_no_gems_match_filters") }}
+                </p>
+                <div v-else class="_addGemsResultsShell">
+                  <SGGemsTable
+                    :gems="add_gems_search_results"
+                    :inventory_has_gems="gems_inventory.length > 0"
+                    :metadata_keys="pick_metadata_keys"
+                    :metadata_labels="pick_metadata_labels"
+                    :metadata_icons="pick_metadata_icons"
+                    :field_editable_map="pick_field_editable_map"
+                    selected_gem_id=""
+                    :is_gem_open="false"
+                    view_density="compact"
+                    :cover_can_edit="false"
+                    :disabled_row_paths="pick_disabled_row_paths"
+                    :gems_page_size="5"
+                    :selection_pick_column="true"
+                    @rowClick="onPickGemsTableRowClick"
+                  />
+                </div>
+              </template>
             </div>
           </SGSectionPanel>
 
@@ -168,57 +206,10 @@
             :selection_path="selection_folder_path"
             :selection_folder="selection"
             :can_edit="can_edit"
-            @changed="fetchSelection"
           />
-        </div>
 
-        <BaseModal2
-          v-if="pick_gems_open"
-          :title="$t('sg_selection_add_gems_title')"
-          size="x-large"
-          @close="onClosePickGemsModal"
-        >
-          <p class="_pickGemsHint">
-            {{ $t("sg_selection_pick_gems_table_hint") }}
-          </p>
-          <div v-if="is_loading_gems" class="_hint">
-            {{ $t("sg_loading_gems") }}
-          </div>
-          <template v-else>
-            <div class="_gemsSearchBar">
-              <SearchInput
-                v-model="gems_quick_search"
-                :search_placeholder="$t('sg_gems_search_placeholder')"
-                :name="'selection_pick_gems_search'"
-              />
-            </div>
-            <p
-              v-if="gems_quick_search_filter_caption"
-              class="_gemsActiveFilters"
-              role="status"
-            >
-              {{ gems_quick_search_filter_caption }}
-            </p>
-            <div class="_pickerTableShell">
-              <SGGemsTable
-                :gems="filtered_gems"
-                :inventory_has_gems="pick_gems_inventory.length > 0"
-                :metadata_keys="pick_metadata_keys"
-                :metadata_labels="pick_metadata_labels"
-                :metadata_icons="pick_metadata_icons"
-                :field_editable_map="pick_field_editable_map"
-                selected_gem_id=""
-                :is_gem_open="false"
-                view_density="compact"
-                :cover_can_edit="false"
-                :disabled_row_paths="pick_disabled_row_paths"
-                :gems_page_size="50"
-                :selection_pick_column="true"
-                @rowClick="onPickGemsTableRowClick"
-              />
-            </div>
-          </template>
-        </BaseModal2>
+          <SGFolderMetaPeek :folder_meta="selection" />
+        </div>
       </section>
       <template #panel>
         <SGGemOpenView
@@ -235,8 +226,8 @@
 
 <script>
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
-import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";
@@ -271,8 +262,8 @@ export default {
   mixins: [GemsQuickSearchMixin, SectionAnchorScrollMixin],
   components: {
     RemoveMenu2,
-    BaseModal2,
     SGEditableMetaField,
+    SGFolderMetaPeek,
     SGSectionPanel,
     SGSelectionFilesSection,
     SearchInput,
@@ -290,18 +281,17 @@ export default {
     return {
       selections_root_path: "selections",
       gems_root_path: "gems",
-      selection: null,
       is_loading: false,
       fetch_error: "",
+      joined_selection_folder_path: "",
       edited_internal_name: "",
       edited_notes: "",
       selection_edit_modal: null,
       is_saving_internal_name: false,
       is_saving_notes: false,
       show_remove_modal: false,
-      pick_gems_open: false,
-      pick_gems_inventory: [],
-      is_loading_gems: false,
+      gems_inventory: [],
+      is_loading_gems_inventory: false,
       picker_busy: false,
       entry_gems_list: [],
       entry_gems_loading: false,
@@ -309,11 +299,30 @@ export default {
     };
   },
   computed: {
+    selection() {
+      const path = this.selection_folder_path;
+      if (!path) return null;
+      return this.$api.store[path] || null;
+    },
     is_gem_side_panel_open() {
       return Boolean(this.cleanString(this.side_panel_gem_id));
     },
     gems() {
-      return this.pick_gems_inventory;
+      return this.gems_inventory;
+    },
+    add_gems_search_active() {
+      return Boolean(this.cleanString(this.gems_quick_search_debounced));
+    },
+    add_gems_search_results() {
+      if (!this.add_gems_search_active) return [];
+      return this.filtered_gems.slice(0, 5);
+    },
+    add_gems_search_limit_caption() {
+      if (!this.add_gems_search_active) return "";
+      const total = this.filtered_gems.length;
+      const shown = this.add_gems_search_results.length;
+      if (total <= shown) return "";
+      return this.$t("sg_selection_add_gems_search_limit", { shown, total });
     },
     pick_metadata_keys() {
       return [...GEMS_PICKER_METADATA_KEYS];
@@ -402,10 +411,17 @@ export default {
     },
   },
   watch: {
-    selection_path: {
+    folder_slug: {
       immediate: false,
+      handler(new_slug, old_slug) {
+        if (new_slug === old_slug) return;
+        this.onSelectionFolderChanged(new_slug, old_slug);
+      },
+    },
+    selection_gem_paths: {
+      immediate: true,
       handler() {
-        this.load();
+        this.refreshEntryGems();
       },
     },
     selection: {
@@ -414,18 +430,20 @@ export default {
         this.edited_internal_name =
           typeof v.internal_name === "string" ? v.internal_name : "";
         this.edited_notes = typeof v.notes === "string" ? v.notes : "";
+        this.replaceDetailUrlIfStale();
       },
       immediate: true,
     },
   },
   async created() {
-    await this.load();
-    if (this.selection_folder_path)
-      this.$api.join({ room: this.selection_folder_path });
+    this.joinSelectionRoom(this.selection_folder_path);
+    await Promise.all([
+      this.ensureSelectionLoaded(),
+      this.fetchGemsInventory(),
+    ]);
   },
   beforeDestroy() {
-    if (this.selection_folder_path)
-      this.$api.leave({ room: this.selection_folder_path });
+    this.leaveSelectionRoom();
   },
   methods: {
     formatSelectionType(v) {
@@ -442,8 +460,51 @@ export default {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
-    async load() {
-      await this.fetchSelection();
+    joinSelectionRoom(path_raw) {
+      const path = this.cleanString(path_raw);
+      if (!path || this.joined_selection_folder_path === path) return;
+      this.leaveSelectionRoom();
+      this.$api.join({ room: path });
+      this.joined_selection_folder_path = path;
+    },
+    leaveSelectionRoom() {
+      if (!this.joined_selection_folder_path) return;
+      this.$api.leave({ room: this.joined_selection_folder_path });
+      this.joined_selection_folder_path = "";
+    },
+    async onSelectionFolderChanged() {
+      this.closeEditModal();
+      this.side_panel_gem_id = "";
+      this.fetch_error = "";
+      this.joinSelectionRoom(this.selection_folder_path);
+      await this.ensureSelectionLoaded();
+    },
+    async ensureSelectionLoaded() {
+      if (!this.folder_slug) {
+        this.fetch_error = this.$t("sg_selection_invalid_path");
+        return;
+      }
+
+      if (this.selection) {
+        this.fetch_error = "";
+        if (this.selection && !this.fetch_error) {
+          this.scrollToRouteSectionAnchorAfterLoad();
+        }
+        return;
+      }
+
+      this.is_loading = true;
+      this.fetch_error = "";
+      try {
+        await this.$api.getFolder({ path: this.selection_folder_path });
+      } catch ({ code }) {
+        this.fetch_error = code || this.$t("sg_could_not_load_selection");
+      } finally {
+        this.is_loading = false;
+        if (this.selection && !this.fetch_error) {
+          this.scrollToRouteSectionAnchorAfterLoad();
+        }
+      }
     },
     replaceDetailUrlIfStale() {
       if (!this.selection || !this.folder_slug) return;
@@ -455,30 +516,6 @@ export default {
         internal_name: name,
       });
       if (this.$route.path !== next_path) this.$router.replace(next_path);
-    },
-    async fetchSelection() {
-      if (!this.folder_slug) {
-        this.fetch_error = this.$t("sg_selection_invalid_path");
-        this.selection = null;
-        return;
-      }
-      this.is_loading = true;
-      this.fetch_error = "";
-      try {
-        this.selection = await this.$api.getFolder({
-          path: this.selection_folder_path,
-        });
-        this.replaceDetailUrlIfStale();
-        await this.refreshEntryGems();
-      } catch ({ code }) {
-        this.fetch_error = code || this.$t("sg_could_not_load_selection");
-        this.selection = null;
-      } finally {
-        this.is_loading = false;
-        if (this.selection && !this.fetch_error) {
-          this.scrollToRouteSectionAnchorAfterLoad();
-        }
-      }
     },
     openInternalNameModal() {
       if (!this.can_edit) return;
@@ -514,11 +551,7 @@ export default {
           path: this.selection_folder_path,
           new_meta: { internal_name: trimmed },
         });
-        this.selection = await this.$api.getFolder({
-          path: this.selection_folder_path,
-        });
         this.closeEditModal();
-        this.replaceDetailUrlIfStale();
         this.$alertify.delay(3000).success(this.$t("sg_internal_name_saved"));
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
@@ -533,9 +566,6 @@ export default {
         await this.$api.updateMeta({
           path: this.selection_folder_path,
           new_meta: { notes: this.edited_notes },
-        });
-        this.selection = await this.$api.getFolder({
-          path: this.selection_folder_path,
         });
         this.closeEditModal();
       } catch ({ code }) {
@@ -574,27 +604,16 @@ export default {
         this.entry_gems_loading = false;
       }
     },
-    async openPickGems() {
-      if (!this.can_edit) return;
-      this.gems_quick_search = "";
-      this.gems_quick_search_debounced = "";
-      if (this.gems_quick_search_debounce_timer_id !== null) {
-        clearTimeout(this.gems_quick_search_debounce_timer_id);
-        this.gems_quick_search_debounce_timer_id = null;
-      }
-      this.pick_gems_open = true;
-      this.is_loading_gems = true;
+    async fetchGemsInventory() {
+      this.is_loading_gems_inventory = true;
       try {
         const rows = await this.$api.getFolders({ path: this.gems_root_path });
-        this.pick_gems_inventory = Array.isArray(rows) ? rows : [];
+        this.gems_inventory = Array.isArray(rows) ? rows : [];
       } catch {
-        this.pick_gems_inventory = [];
+        this.gems_inventory = [];
       } finally {
-        this.is_loading_gems = false;
+        this.is_loading_gems_inventory = false;
       }
-    },
-    onClosePickGemsModal() {
-      this.pick_gems_open = false;
     },
     onPickGemsTableRowClick(gem) {
       if (this.picker_busy) return;
@@ -625,7 +644,6 @@ export default {
             gem_path: gp,
           });
         }
-        await this.fetchSelection();
         this.$alertify
           .delay(2500)
           .success(this.$t("sg_selection_gems_updated"));
@@ -651,7 +669,6 @@ export default {
           selection_folder: this.selection,
           gem_path: cleaned_path,
         });
-        await this.fetchSelection();
         if (removed_slug && this.side_panel_gem_id === removed_slug) {
           this.side_panel_gem_id = "";
         }
@@ -744,31 +761,30 @@ export default {
 }
 
 ._entriesSortHint {
-  margin: calc(var(--spacing) * 0.75) 0 0;
+  margin: 0 0 calc(var(--spacing) * 0.75);
   color: var(--c-gris_fonce);
   font-size: var(--sl-font-size-x-small);
 }
 
-._pickGemsHint {
-  margin: 0 0 calc(var(--spacing) * 0.75);
-  color: var(--c-gris_fonce);
-  font-size: var(--sl-font-size-small);
+._addGemsBlock {
+  margin-top: calc(var(--spacing) * 0.75);
+}
+
+._addGemsResultsShell {
+  margin-top: calc(var(--spacing) * 0.5);
 }
 
 ._gemsSearchBar {
   margin-bottom: calc(var(--spacing) * 0.75);
 }
 
+._gemsSearchBar ::v-deep ._searchInput {
+  max-width: 420px;
+}
+
 ._gemsActiveFilters {
   margin: 0 0 calc(var(--spacing) * 0.75);
   font-size: var(--sl-font-size-x-small);
   color: var(--c-gris_fonce);
-}
-
-._pickerTableShell {
-  max-height: min(70vh, 560px);
-  overflow: auto;
-  // border: 1px solid var(--c-gris_clair);
-  // border-radius: 8px;
 }
 </style>

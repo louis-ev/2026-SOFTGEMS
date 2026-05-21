@@ -496,17 +496,7 @@
         :can_edit="can_edit"
       />
 
-      <SGSectionPanel>
-        <template #actions>
-          <button type="button" class="u-button" @click="toggleDebugMeta">
-            debug
-          </button>
-        </template>
-        <div v-if="show_debug_meta" class="_debugPanel">
-          <p class="_debugTitle">Current gem meta</p>
-          <pre class="_debugPre">{{ debug_gem_meta_json }}</pre>
-        </div>
-      </SGSectionPanel>
+      <SGFolderMetaPeek :folder_meta="gem" />
     </div>
 
     <BaseModal2
@@ -589,6 +579,7 @@ import GemDimensions from "@/mixins/GemDimensions";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import { assignGemToBox } from "@/utils/assign_gem_to_box.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
@@ -600,6 +591,7 @@ export default {
     RemoveMenu2,
     BaseModal2,
     SGEditableMetaField,
+    SGFolderMetaPeek,
     SGSectionPanel,
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
     SGGemCertificatesSection: () =>
@@ -629,7 +621,6 @@ export default {
       show_history_modal: false,
       is_loading_history: false,
       gem_history_entries: [],
-      show_debug_meta: false,
       selections_path: "selections",
       box_folder_meta: null,
       gem_box_pick_open: false,
@@ -674,9 +665,6 @@ export default {
     field_configs() {
       return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
     },
-    debug_gem_meta_json() {
-      return this.formatDebugMeta(this.gem || {});
-    },
     gem_box_path_clean() {
       return this.cleanString(this.gem?.box_selection_path);
     },
@@ -707,9 +695,6 @@ export default {
     this.$api.leave({ room: this.gem_path });
   },
   methods: {
-    toggleDebugMeta() {
-      this.show_debug_meta = !this.show_debug_meta;
-    },
     async fetchGem() {
       this.is_loading = true;
       this.fetch_error = "";
@@ -952,13 +937,6 @@ export default {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
-    formatDebugMeta(meta) {
-      try {
-        return JSON.stringify(meta, null, 2);
-      } catch {
-        return "{}";
-      }
-    },
   },
 };
 </script>
@@ -1152,28 +1130,6 @@ export default {
 ._pricingGroups :deep(._value) {
   padding: calc(var(--spacing) * 0.32);
   font-size: var(--sl-font-size-x-small);
-}
-
-._debugPanel {
-  margin-top: calc(var(--spacing) / 2);
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 8px;
-  background: var(--c-bodybg);
-  padding: calc(var(--spacing) / 2);
-}
-
-._debugTitle {
-  margin: 0 0 calc(var(--spacing) / 4) 0;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
-}
-
-._debugPre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: var(--sl-font-size-x-small);
-  font-family: var(--sl-font-mono);
 }
 
 ._historyModalBody {

@@ -300,6 +300,9 @@ export default {
   sg_gems_table_add_to_selection_aria: "Add this gem to the selection",
   sg_gems_table_already_in_selection_aria: "Already in this selection",
   sg_selection_search_gems: "Search gems…",
+  sg_selection_add_gems_from_database: "Add gems from the database…",
+  sg_selection_add_gems_search_limit:
+    "Showing the first {shown} of {total} matches.",
   sg_selection_remove_gem: "Remove from selection",
   sg_selection_attachments: "Attachments",
   sg_selection_upload_files: "Upload (PDF / images)",
@@ -329,4 +332,7 @@ export default {
   sg_selection_gems_updated: "Selection gems updated.",
   sg_internal_name_saved: "Name saved.",
   sg_could_not_save: "Could not save.",
+  sg_show_folder_meta: "Show folder meta (pour Louis)",
+  sg_hide_folder_meta: "Hide folder meta",
+  sg_folder_meta_peek_title: "Folder meta",
 };

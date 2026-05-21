@@ -405,12 +405,14 @@
         </div>
       </SGSectionPanel>
 
+      <SGFolderMetaPeek :folder_meta="contact" />
     </div>
   </section>
 </template>
 
 <script>
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
+import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
@@ -421,6 +423,7 @@ export default {
   mixins: [FieldFlashMixin, SectionAnchorScrollMixin],
   components: {
     SGEditableMetaField,
+    SGFolderMetaPeek,
     SGSectionPanel,
     RemoveMenu2,
   },
