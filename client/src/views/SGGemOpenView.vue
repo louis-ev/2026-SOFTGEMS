@@ -518,6 +518,7 @@
           v-for="row in gem_box_options"
           :key="row.$path"
           class="_boxPickerRow"
+          :class="{ _boxPickerRowCurrent: isGemCurrentBoxRow(row) }"
         >
           <span class="_boxPickerLabel">{{ gem_box_row_label(row) }}</span>
           <button
@@ -740,6 +741,10 @@ export default {
         .pop();
       return name || slug || row?.$path || "—";
     },
+    isGemCurrentBoxRow(row) {
+      const path = row?.$path;
+      return Boolean(path && path === this.gem_box_path_clean);
+    },
     async openGemBoxPicker() {
       if (!this.can_edit) return;
       this.gem_box_pick_open = true;
@@ -747,21 +752,50 @@ export default {
       try {
         const rows = await this.$api.getFolders({ path: this.selections_path });
         const list = Array.isArray(rows) ? rows : [];
-        this.gem_box_options = list.filter(
-          (r) => String(r?.selection_type || "") === "boîte"
-        );
-        this.gem_box_options.sort((a, b) =>
-          this.gem_box_row_label(a).localeCompare(
-            this.gem_box_row_label(b),
-            undefined,
-            { sensitivity: "base" }
-          )
-        );
+        this.gem_box_options = await this.buildGemBoxPickerOptions(list);
       } catch {
-        this.gem_box_options = [];
+        this.gem_box_options = await this.buildGemBoxPickerOptions([]);
       } finally {
         this.gem_box_pick_loading = false;
       }
+    },
+    async buildGemBoxPickerOptions(list) {
+      const box_rows = (Array.isArray(list) ? list : []).filter(
+        (r) => String(r?.selection_type || "") === "boîte"
+      );
+      const current_path = this.gem_box_path_clean;
+      let current_row = null;
+
+      if (current_path) {
+        current_row = box_rows.find((r) => r?.$path === current_path) || null;
+        if (!current_row) {
+          if (this.box_folder_meta?.$path === current_path) {
+            current_row = this.box_folder_meta;
+          } else {
+            try {
+              current_row = await this.$api.getFolder({
+                path: current_path,
+                no_files: true,
+              });
+            } catch {
+              current_row = { $path: current_path };
+            }
+          }
+        }
+      }
+
+      const other_rows = current_path
+        ? box_rows.filter((r) => r?.$path !== current_path)
+        : box_rows;
+      other_rows.sort((a, b) =>
+        this.gem_box_row_label(a).localeCompare(
+          this.gem_box_row_label(b),
+          undefined,
+          { sensitivity: "base" }
+        )
+      );
+
+      return current_row ? [current_row, ...other_rows] : other_rows;
     },
     async assignGemToSelectedBox(row) {
       const target = row?.$path;
@@ -982,6 +1016,10 @@ export default {
   gap: calc(var(--spacing) / 2);
   padding: calc(var(--spacing) * 0.4) 0;
   border-bottom: 1px solid var(--c-gris_clair);
+}
+
+._boxPickerRowCurrent {
+  background: color-mix(in srgb, var(--c-bleuvert) 8%, transparent);
 }
 
 ._boxPickerLabel {

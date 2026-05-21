@@ -2,11 +2,22 @@
   <div class="_gemsTableRoot">
     <div
       class="_gemsTable"
-      :class="[density_class, { _hasPickColumn: selection_pick_column }]"
+      :class="[
+        density_class,
+        {
+          _hasPickColumn: selection_pick_column,
+          _hasRemoveColumn: selection_remove_column,
+        },
+      ]"
     >
       <table class="_table">
         <thead>
           <tr>
+            <th v-if="selection_remove_column" scope="col" class="_removeColTh">
+              <span class="_srOnly">{{
+                $t("sg_gems_table_remove_column_header_aria")
+              }}</span>
+            </th>
             <th v-if="selection_pick_column" scope="col" class="_pickColTh">
               <span class="_srOnly">{{
                 $t("sg_gems_table_pick_column_header_aria")
@@ -82,12 +93,22 @@
             v-for="gem in paginated_gems"
             :key="gem.$path"
             :class="{
-              _clickableRow: !selection_pick_column,
+              _clickableRow: !selection_pick_column && !selection_remove_column,
               _selected: is_gem_open && getGemId(gem) === selected_gem_id,
               _rowPickerDisabled: isRowPickerDisabled(gem),
             }"
             @click="handleTableRowClick(gem)"
           >
+            <td v-if="selection_remove_column" class="_removeColTd" @click.stop>
+              <button
+                type="button"
+                class="u-button u-button_icon _removeColBtn"
+                :aria-label="$t('sg_gems_table_remove_from_selection_aria')"
+                @click="onRemoveColumnClick(gem)"
+              >
+                <b-icon icon="dash-circle-dotted" scale="1" />
+              </button>
+            </td>
             <td v-if="selection_pick_column" class="_pickColTd" @click.stop>
               <button
                 v-if="!isRowPickerDisabled(gem)"
@@ -226,6 +247,8 @@ export default {
     view_density: { type: String, default: "medium" },
     cover_can_edit: { type: Boolean, default: true },
     disabled_row_paths: { type: Array, default: () => [] },
+    /** When true, first column is remove-from-selection (minus icon). */
+    selection_remove_column: { type: Boolean, default: false },
     /** When true, first column is add-to-selection (plus) / already added (check). */
     selection_pick_column: { type: Boolean, default: false },
     /** When true, adds a trailing column for slot appendCell (e.g. row actions). */
@@ -311,6 +334,7 @@ export default {
     },
     gems_table_empty_colspan() {
       let n = Array.isArray(this.metadata_keys) ? this.metadata_keys.length : 0;
+      if (this.selection_remove_column) n += 1;
       if (this.selection_pick_column) n += 1;
       if (this.show_append_column) n += 1;
       return n;
@@ -500,8 +524,11 @@ export default {
       return this.disabled_row_path_set.has(String(p));
     },
     handleTableRowClick(gem) {
-      if (this.selection_pick_column) return;
+      if (this.selection_pick_column || this.selection_remove_column) return;
       this.onRowClick(gem);
+    },
+    onRemoveColumnClick(gem) {
+      this.$emit("removeRowClick", gem);
     },
     onPickColumnAddClick(gem) {
       if (this.isRowPickerDisabled(gem)) return;
@@ -721,7 +748,8 @@ export default {
   min-height: 0;
   overflow: auto;
 
-  &._hasPickColumn {
+  &._hasPickColumn,
+  &._hasRemoveColumn {
     --pick-col-width: 2.75rem;
   }
 }
@@ -825,7 +853,9 @@ export default {
   }
 
   th._pickColTh,
-  td._pickColTd {
+  td._pickColTd,
+  th._removeColTh,
+  td._removeColTd {
     position: sticky;
     left: 0;
     width: var(--pick-col-width);
@@ -839,11 +869,13 @@ export default {
     border-left: 1px solid var(--c-gris);
   }
 
-  th._pickColTh {
+  th._pickColTh,
+  th._removeColTh {
     z-index: 9;
   }
 
-  td._pickColTd {
+  td._pickColTd,
+  td._removeColTd {
     z-index: 6;
   }
 
@@ -1027,7 +1059,8 @@ td[data-metadata-key="$cover"] {
   // opacity: 0;
 }
 
-._gemsTable._hasPickColumn ._table {
+._gemsTable._hasPickColumn ._table,
+._gemsTable._hasRemoveColumn ._table {
   th._stickyIdCol,
   td._stickyIdCol {
     left: var(--pick-col-width);
@@ -1051,27 +1084,20 @@ td[data-metadata-key="$cover"] {
   border: 0;
 }
 
-._pickColAddBtn {
+._pickColAddBtn,
+._removeColBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  width: 1.65rem;
-  height: 1.65rem;
+  // width: 1.65rem;
+  // height: 1.65rem;
   flex-shrink: 0;
-  // border: 1px solid
-  //   color-mix(in srgb, currentColor 38%, var(--c-gris_clair) 62%);
-  color: inherit;
   cursor: pointer;
-  line-height: 1;
+  // line-height: 1;
   font-size: 0.9em;
-
-  &:hover {
-    border-color: color-mix(in srgb, currentColor 55%, var(--c-gris_clair) 45%);
-    background: color-mix(in srgb, currentColor 12%, transparent);
-  }
 
   &:focus {
     outline: none;
@@ -1080,6 +1106,26 @@ td[data-metadata-key="$cover"] {
   &:focus-visible {
     outline: 2px solid var(--c-bleuvert);
     outline-offset: 2px;
+  }
+}
+
+._pickColAddBtn {
+  color: inherit;
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+}
+
+._removeColBtn {
+  color: var(--c-rouge);
+
+  &:hover {
+    background: color-mix(in srgb, var(--c-rouge) 12%, transparent);
+  }
+
+  &:focus-visible {
+    outline-color: var(--c-rouge);
   }
 }
 

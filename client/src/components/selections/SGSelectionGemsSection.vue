@@ -28,20 +28,11 @@
         view_density="compact"
         :cover_can_edit="false"
         :gems_page_size="50"
-        :append_column="can_edit"
+        :selection_remove_column="can_edit"
         :fixed_gem_order="true"
         @rowClick="onEntryRowClick"
-      >
-        <template #appendCell="{ gem }">
-          <button
-            type="button"
-            class="u-buttonLink u-buttonLink_red"
-            @click.stop="confirmRemoveGemRow(gem)"
-          >
-            {{ $t("sg_selection_remove_gem") }}
-          </button>
-        </template>
-      </SGGemsTable>
+        @removeRowClick="confirmRemoveGemRow"
+      />
     </div>
 
     <SGSelectionAddGemsPicker

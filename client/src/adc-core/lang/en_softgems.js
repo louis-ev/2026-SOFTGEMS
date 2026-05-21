@@ -299,6 +299,9 @@ export default {
   sg_selection_add_gems_title: "Add gems to selection",
   sg_selection_pick_gems_table_hint:
     "Use the same search as in inventory, then click the plus on a row to add that gem (gems already in this selection show a green check).",
+  sg_gems_table_remove_column_header_aria: "Remove from selection",
+  sg_gems_table_remove_from_selection_aria:
+    "Remove this gem from the selection",
   sg_gems_table_pick_column_header_aria: "Add to selection",
   sg_gems_table_add_to_selection_aria: "Add this gem to the selection",
   sg_gems_table_already_in_selection_aria: "Already in this selection",

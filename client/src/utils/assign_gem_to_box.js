@@ -24,7 +24,21 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
   const old_box = String(gem.box_selection_path || "").trim();
   const new_box = String(new_box_folder_path || "").trim();
 
-  if (old_box === new_box) return;
+  if (old_box === new_box) {
+    if (new_box) {
+      const box_folder = await api.getFolder({ path: new_box });
+      if (isBoxSelection(box_folder)) {
+        const paths = normalizeSelectionGemPaths(box_folder.selection_entries);
+        if (!paths.includes(gem_path)) {
+          await api.updateMeta({
+            path: new_box,
+            new_meta: { selection_entries: [...paths, gem_path] },
+          });
+        }
+      }
+    }
+    return;
+  }
 
   if (old_box) {
     const old_folder = await api.getFolder({ path: old_box });
