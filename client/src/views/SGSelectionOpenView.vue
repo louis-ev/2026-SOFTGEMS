@@ -14,45 +14,39 @@
           <b-icon icon="x-lg" />
         </button>
 
-        <div class="_pageHeader">
-          <div v-if="selection">
-            <p class="_typeLine">
-              {{ $t("sg_selection_type_label") }}:
-              <strong>{{
-                formatSelectionType(selection.selection_type)
-              }}</strong>
-            </p>
-            <p class="_readonlyHint">{{ $t("sg_selection_type_readonly") }}</p>
-            <div class="_headerMetaRow">
-              <button
-                type="button"
-                class="u-buttonLink u-buttonLink_red"
-                :disabled="!connected_as"
-                :title="guest_action_hint"
-                @click="show_remove_modal = true"
-              >
-                {{ $t("sg_remove_selection") }}
-              </button>
-            </div>
-            <RemoveMenu2
-              v-if="show_remove_modal"
-              :path="selection_folder_path"
-              :modal_title="
-                $t('sg_remove_selection_confirm', { name: page_title })
-              "
-              :success_notification="$t('removed_successfully')"
-              @removedSuccessfully="onRemovedSuccessfully"
-              @close="show_remove_modal = false"
-            />
-          </div>
-        </div>
-
         <div v-if="is_loading">{{ $t("sg_loading_selection") }}</div>
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
         <div v-else-if="selection" class="_form">
-          <div class="_titleBlock">
-            <h1 class="_pageTitle">{{ page_title }}</h1>
-          </div>
+          <header class="_pageHeading">
+            <div class="_titleRow">
+              <div class="_titleGroup">
+                <h1 class="_pageTitle">{{ page_title }}</h1>
+                <span class="_selectionType">{{
+                  formatSelectionType(selection.selection_type)
+                }}</span>
+              </div>
+              <DropDown v-if="can_edit" :show_label="false" :right="true">
+                <button
+                  type="button"
+                  class="u-buttonLink u-buttonLink_red"
+                  @click="show_remove_modal = true"
+                >
+                  <b-icon icon="trash" />
+                  {{ $t("sg_remove_selection") }}
+                </button>
+                <RemoveMenu2
+                  v-if="show_remove_modal"
+                  :path="selection_folder_path"
+                  :modal_title="
+                    $t('sg_remove_selection_confirm', { name: page_title })
+                  "
+                  :success_notification="$t('removed_successfully')"
+                  @removedSuccessfully="onRemovedSuccessfully"
+                  @close="show_remove_modal = false"
+                />
+              </DropDown>
+            </div>
+          </header>
 
           <SGSectionPanel
             section_id="selection_identity"
@@ -202,9 +196,6 @@ export default {
     },
     can_edit() {
       return !!this.connected_as;
-    },
-    guest_action_hint() {
-      return this.can_edit ? "" : this.$t("sg_action_requires_account");
     },
     folder_slug() {
       const parsed = parseSelectionPathParam(this.selection_path);
@@ -455,28 +446,35 @@ export default {
   z-index: 1000;
 }
 
-._pageHeader {
-  margin-bottom: calc(var(--spacing) * 0.75);
+._pageHeading {
+  margin-bottom: calc(var(--spacing) * 0.5);
 }
 
-._typeLine {
-  margin: 0 0 calc(var(--spacing) / 4);
-  font-size: var(--sl-font-size-small);
+._titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 0.75);
 }
 
-._readonlyHint {
-  margin: 0 0 calc(var(--spacing) / 2);
-  font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce);
-}
-
-._headerMetaRow {
-  margin-bottom: calc(var(--spacing) * 0.75);
+._titleGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(var(--spacing) * 0.65);
+  min-width: 0;
 }
 
 ._pageTitle {
-  margin: 0 0 calc(var(--spacing) * 1);
-  font-size: 1.35rem;
+  margin: 0;
+}
+
+._selectionType {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--c-gris_fonce);
+  line-height: 1.2;
 }
 
 ._form {
@@ -484,5 +482,4 @@ export default {
   flex-direction: column;
   gap: calc(var(--spacing) * 1.1);
 }
-
 </style>
