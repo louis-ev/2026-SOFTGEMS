@@ -81,7 +81,10 @@
             </div>
           </SGSectionPanel>
 
-          <SGSectionPanel section_id="selection_notes" :title="$t('sg_selection_notes')">
+          <SGSectionPanel
+            section_id="selection_notes"
+            :title="$t('sg_selection_notes')"
+          >
             <div>
               <SGEditableMetaField
                 :label="$t('sg_selection_notes')"
@@ -104,24 +107,22 @@
             </div>
           </SGSectionPanel>
 
-          <SGSectionPanel section_id="selection_entries" :title="$t('sg_selection_entries')">
-            <template #actions>
-              <button
-                v-if="can_edit"
-                type="button"
-                class="u-button u-button_verysmall u-button_bleuvert"
-                @click="openPickGems"
-              >
-                {{ $t("sg_selection_add_gems") }}
-              </button>
-            </template>
-            <p v-if="sorted_entries.length === 0" class="_hint">
+          <SGSectionPanel
+            section_id="selection_entries"
+            :title="$t('sg_selection_entries')"
+          >
+            <template #actions> </template>
+            <p v-if="selection_gem_paths.length === 0" class="_hint">
               {{ $t("sg_selection_entries_empty") }}
             </p>
             <p v-else-if="entry_gems_loading" class="_hint">
               {{ $t("sg_loading_gems") }}
             </p>
             <div v-else class="_entriesTableShell">
+              <input type="text" placeholder="Add gems by search" />
+              TODO afficher rÉsultats si recherche, sous forme de tableau.
+              <br />
+              <br />
               <SGGemsTable
                 :gems="entry_gems_list"
                 :inventory_has_gems="entry_gems_list.length > 0"
@@ -135,6 +136,7 @@
                 :cover_can_edit="false"
                 :gems_page_size="50"
                 :append_column="can_edit"
+                :fixed_gem_order="true"
                 @rowClick="onSelectionEntriesRowClick"
               >
                 <template #appendCell="{ gem }">
@@ -147,6 +149,18 @@
                   </button>
                 </template>
               </SGGemsTable>
+              <p class="_entriesSortHint">
+                {{ $t("sg_selection_entries_sort_hint") }}
+              </p>
+              <div class="u-spacingBottom"></div>
+              <!-- <button
+                v-if="can_edit"
+                type="button"
+                class="u-button u-button_bleuvert"
+                @click="openPickGems"
+              >
+                {{ $t("sg_selection_add_gems") }}
+              </button> -->
             </div>
           </SGSectionPanel>
 
@@ -242,7 +256,10 @@ import {
   selectionDetailPath,
   selectionTitleSlugMatches,
 } from "@/utils/selection_urls.js";
-import { normalizeSelectionEntries } from "@/utils/selection_entries.js";
+import {
+  normalizeSelectionGemPaths,
+  sortSelectionGems,
+} from "@/utils/selection_entries.js";
 import {
   assignGemToBox,
   addGemToSelectionEntries,
@@ -314,9 +331,7 @@ export default {
       }, {});
     },
     pick_disabled_row_paths() {
-      return this.sorted_entries
-        .map((e) => e.gem_path)
-        .filter((p) => this.cleanString(p));
+      return this.selection_gem_paths.filter((p) => this.cleanString(p));
     },
     can_edit() {
       return !!this.connected_as;
@@ -382,13 +397,8 @@ export default {
         external_warning: "",
       };
     },
-    sorted_entries() {
-      const raw = normalizeSelectionEntries(this.selection?.selection_entries);
-      return raw.slice().sort((a, b) => {
-        const ai = typeof a.sort_index === "number" ? a.sort_index : 0;
-        const bi = typeof b.sort_index === "number" ? b.sort_index : 0;
-        return ai - bi;
-      });
+    selection_gem_paths() {
+      return normalizeSelectionGemPaths(this.selection?.selection_entries);
     },
   },
   watch: {
@@ -541,25 +551,25 @@ export default {
       return parts[parts.length - 1] || "";
     },
     async refreshEntryGems() {
-      if (!this.sorted_entries.length) {
+      if (!this.selection_gem_paths.length) {
         this.entry_gems_list = [];
         return;
       }
       this.entry_gems_loading = true;
       try {
         const list = [];
-        for (const entry of this.sorted_entries) {
+        for (const gem_path of this.selection_gem_paths) {
           try {
             const meta = await this.$api.getFolder({
-              path: entry.gem_path,
+              path: gem_path,
               no_files: true,
             });
             list.push(meta);
           } catch {
-            list.push({ $path: entry.gem_path });
+            list.push({ $path: gem_path });
           }
         }
-        this.entry_gems_list = list;
+        this.entry_gems_list = sortSelectionGems(list);
       } finally {
         this.entry_gems_loading = false;
       }
@@ -593,7 +603,7 @@ export default {
     gem_is_already_in_selection(gem) {
       const gp = gem?.$path;
       if (!gp) return true;
-      return this.sorted_entries.some((e) => e.gem_path === gp);
+      return this.selection_gem_paths.includes(gp);
     },
     async pickGem(gem) {
       const gp = gem?.$path;
@@ -629,16 +639,17 @@ export default {
         this.picker_busy = false;
       }
     },
-    async confirmRemoveEntry(entry) {
-      if (!this.can_edit || !entry?.gem_path) return;
-      const removed_slug = this.gem_slug_from_path(entry.gem_path);
+    async confirmRemoveEntry(gem_path) {
+      const cleaned_path = this.cleanString(gem_path);
+      if (!this.can_edit || !cleaned_path) return;
+      const removed_slug = this.gem_slug_from_path(cleaned_path);
       this.picker_busy = true;
       try {
         await removeGemFromSelection({
           api: this.$api,
           selection_path: this.selection_folder_path,
           selection_folder: this.selection,
-          gem_path: entry.gem_path,
+          gem_path: cleaned_path,
         });
         await this.fetchSelection();
         if (removed_slug && this.side_panel_gem_id === removed_slug) {
@@ -653,8 +664,7 @@ export default {
     confirmRemoveGemRow(gem) {
       const p = gem?.$path;
       if (!p) return;
-      const entry = this.sorted_entries.find((e) => e.gem_path === p);
-      if (entry) this.confirmRemoveEntry(entry);
+      if (this.selection_gem_paths.includes(p)) this.confirmRemoveEntry(p);
     },
     onSelectionEntriesRowClick(gem) {
       const slug = this.gem_slug_from_path(gem?.$path);
@@ -731,6 +741,12 @@ export default {
   margin: 0;
   color: var(--c-gris_fonce);
   font-size: var(--sl-font-size-small);
+}
+
+._entriesSortHint {
+  margin: calc(var(--spacing) * 0.75) 0 0;
+  color: var(--c-gris_fonce);
+  font-size: var(--sl-font-size-x-small);
 }
 
 ._pickGemsHint {

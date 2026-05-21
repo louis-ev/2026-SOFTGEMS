@@ -290,6 +290,8 @@ export default {
   sg_selection_entries: "Gems in this selection",
   sg_selection_gem_count: "Gems",
   sg_selection_entries_empty: "No gems linked yet.",
+  sg_selection_entries_sort_hint:
+    "Gems are ordered by stone type (alphabetical), then by weight (lightest to heaviest) within each type. Order cannot be changed.",
   sg_selection_add_gems: "Add gems",
   sg_selection_add_gems_title: "Add gems to selection",
   sg_selection_pick_gems_table_hint:

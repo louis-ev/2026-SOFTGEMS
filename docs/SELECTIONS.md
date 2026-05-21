@@ -10,14 +10,11 @@ This document describes how **selections** are stored and exposed in Softgems, a
   - **`internal_name`** (string, required): display title.
   - **`selection_type`** (string, required): one of the CDC types (see below).
   - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (V1 uses a subset in the UI; extend per [FIELDS.md](FIELDS.md)).
-  - **`selection_entries`**: JSON **array** of line objects, e.g.
+  - **`selection_entries`**: JSON **array** of gem folder paths, e.g.
     ```json
-    [
-      { "gem_path": "gems/12", "sort_index": 0 }
-    ]
+    ["gems/12", "gems/45"]
     ```
-    - **`gem_path`**: stable folder path of the gem.
-    - **`sort_index`**: optional ordering key for tables / exports.
+    - **Display order** is computed client-side (not stored): stone type A→Z, then weight (ct) lightest→heaviest within each type. See `sortSelectionGems` in [client/src/utils/selection_entries.js](../client/src/utils/selection_entries.js).
 
 - **Files** on the selection folder: `$files` with thumbs, same pattern as other folder types. Uploads set `is_selection_attachment: true` in file meta so they are easy to filter in the UI.
 

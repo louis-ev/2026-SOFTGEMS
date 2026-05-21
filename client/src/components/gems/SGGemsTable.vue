@@ -231,6 +231,8 @@ export default {
     /** When true, adds a trailing column for slot appendCell (e.g. row actions). */
     append_column: { type: Boolean, default: false },
     append_column_label: { type: String, default: "" },
+    /** When true, keeps `gems` array order and disables column sorting. */
+    fixed_gem_order: { type: Boolean, default: false },
     inventory_has_gems: { type: Boolean, default: true },
     gems_page_size: { type: [Number, String], default: 100 },
   },
@@ -261,6 +263,7 @@ export default {
     },
     sorted_gems() {
       if (!Array.isArray(this.gems)) return [];
+      if (this.fixed_gem_order) return [...this.gems];
       const sorted_gems = [...this.gems];
       if (!this.sort_key) return sorted_gems;
 
@@ -460,10 +463,11 @@ export default {
       });
     },
     isSortableColumn(metadata_key) {
+      if (this.fixed_gem_order) return false;
       return metadata_key !== "$cover";
     },
     onHeaderClick(metadata_key) {
-      if (!this.isSortableColumn(metadata_key)) return;
+      if (this.fixed_gem_order || !this.isSortableColumn(metadata_key)) return;
 
       if (this.sort_key === metadata_key) {
         this.sort_direction = this.sort_direction === "asc" ? "desc" : "asc";
@@ -724,8 +728,8 @@ export default {
 
 ._gemsTable._densityCompact {
   --sticky-id-col-width: 72px;
-  --sticky-cover-col-width: 62px;
-  --sticky-cover-col-height: 62px;
+  --sticky-cover-col-width: 30px;
+  --sticky-cover-col-height: 30px;
   --sg-cell-padding: calc(var(--spacing) / 3);
   --sg-metadata-font-size: 0.68rem;
   --sg-id-font-size: 0.82rem;

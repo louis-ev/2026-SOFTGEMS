@@ -1,4 +1,4 @@
-import { normalizeSelectionEntries } from "@/utils/selection_entries.js";
+import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 
 const _BOX_TYPE = "boîte";
 
@@ -28,9 +28,9 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
 
   if (old_box) {
     const old_folder = await api.getFolder({ path: old_box });
-    const entries = normalizeSelectionEntries(old_folder.selection_entries);
-    const filtered = entries.filter((e) => e.gem_path !== gem_path);
-    if (filtered.length !== entries.length) {
+    const paths = normalizeSelectionGemPaths(old_folder.selection_entries);
+    const filtered = paths.filter((path) => path !== gem_path);
+    if (filtered.length !== paths.length) {
       await api.updateMeta({
         path: old_box,
         new_meta: { selection_entries: filtered },
@@ -45,15 +45,11 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
       err.code = "not_a_box_selection";
       throw err;
     }
-    let entries = normalizeSelectionEntries(box_folder.selection_entries);
-    if (!entries.some((e) => e.gem_path === gem_path)) {
-      entries = [
-        ...entries,
-        { gem_path, sort_index: entries.length },
-      ];
+    const paths = normalizeSelectionGemPaths(box_folder.selection_entries);
+    if (!paths.includes(gem_path)) {
       await api.updateMeta({
         path: new_box,
-        new_meta: { selection_entries: entries },
+        new_meta: { selection_entries: [...paths, gem_path] },
       });
     }
   }
@@ -77,9 +73,9 @@ export async function removeGemFromSelection({
   selection_folder,
   gem_path,
 }) {
-  const entries = normalizeSelectionEntries(selection_folder.selection_entries);
-  const filtered = entries.filter((e) => e.gem_path !== gem_path);
-  if (filtered.length === entries.length) return;
+  const paths = normalizeSelectionGemPaths(selection_folder.selection_entries);
+  const filtered = paths.filter((path) => path !== gem_path);
+  if (filtered.length === paths.length) return;
 
   await api.updateMeta({
     path: selection_path,
@@ -107,11 +103,10 @@ export async function addGemToSelectionEntries({
   selection_folder,
   gem_path,
 }) {
-  let entries = normalizeSelectionEntries(selection_folder.selection_entries);
-  if (entries.some((e) => e.gem_path === gem_path)) return;
-  entries = [...entries, { gem_path, sort_index: entries.length }];
+  const paths = normalizeSelectionGemPaths(selection_folder.selection_entries);
+  if (paths.includes(gem_path)) return;
   await api.updateMeta({
     path: selection_path,
-    new_meta: { selection_entries: entries },
+    new_meta: { selection_entries: [...paths, gem_path] },
   });
 }

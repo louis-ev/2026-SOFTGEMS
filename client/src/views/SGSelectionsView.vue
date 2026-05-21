@@ -86,7 +86,7 @@
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
-import { normalizeSelectionEntries } from "@/utils/selection_entries.js";
+import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 import { parseSelectionPathParam } from "@/utils/selection_urls.js";
 
 export default {
@@ -158,7 +158,7 @@ export default {
       );
     },
     entryCount(row) {
-      return normalizeSelectionEntries(row?.selection_entries).length;
+      return normalizeSelectionGemPaths(row?.selection_entries).length;
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";
