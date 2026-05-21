@@ -18,6 +18,18 @@ export function normalizeSelectionGemPaths(raw) {
   return out;
 }
 
+/**
+ * @param {string[]|undefined|null} left_paths
+ * @param {string[]|undefined|null} right_paths
+ * @returns {boolean}
+ */
+export function areSelectionGemPathsEqual(left_paths, right_paths) {
+  const left = normalizeSelectionGemPaths(left_paths);
+  const right = normalizeSelectionGemPaths(right_paths);
+  if (left.length !== right.length) return false;
+  return left.every((gem_path, index) => gem_path === right[index]);
+}
+
 function stoneTypeSortKey(gem) {
   const stone_type = gem?.stone_type;
   if (stone_type === null || stone_type === undefined) {

@@ -59,6 +59,7 @@ import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGSelectionAddGemsPicker from "@/components/selections/SGSelectionAddGemsPicker.vue";
 import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
 import {
+  areSelectionGemPathsEqual,
   normalizeSelectionGemPaths,
   sortSelectionGems,
 } from "@/utils/selection_entries.js";
@@ -104,6 +105,7 @@ export default {
       picker_busy: false,
       entry_gems_list: [],
       entry_gems_loading: false,
+      refresh_entry_gems_seq: 0,
     };
   },
   computed: {
@@ -128,7 +130,8 @@ export default {
   watch: {
     selection_gem_paths: {
       immediate: true,
-      handler() {
+      handler(new_paths, old_paths) {
+        if (areSelectionGemPathsEqual(new_paths, old_paths)) return;
         this.refreshEntryGems();
       },
     },
@@ -145,13 +148,16 @@ export default {
       return parts[parts.length - 1] || "";
     },
     async refreshEntryGems() {
-      if (!this.selection_gem_paths.length) {
+      const gem_paths = this.selection_gem_paths;
+      if (!gem_paths.length) {
         this.entry_gems_list = [];
         return;
       }
+
+      const request_seq = ++this.refresh_entry_gems_seq;
       this.entry_gems_loading = true;
       try {
-        const folder_slugs = this.selection_gem_paths.map((gem_path) =>
+        const folder_slugs = gem_paths.map((gem_path) =>
           this.gem_slug_from_path(gem_path)
         );
         const { folders } = await this.$api.getFoldersBySlugs({
@@ -159,20 +165,24 @@ export default {
           folder_slugs,
           no_files: true,
         });
+        if (request_seq !== this.refresh_entry_gems_seq) return;
         const folders_by_path = Object.fromEntries(
           folders.map((meta) => [meta.$path, meta])
         );
-        const list = this.selection_gem_paths.map(
+        const list = gem_paths.map(
           (gem_path) => folders_by_path[gem_path] || { $path: gem_path }
         );
         this.entry_gems_list = this.prepareEntryGemsList(list);
       } catch {
-        const list = this.selection_gem_paths.map((gem_path) => ({
+        if (request_seq !== this.refresh_entry_gems_seq) return;
+        const list = gem_paths.map((gem_path) => ({
           $path: gem_path,
         }));
         this.entry_gems_list = this.prepareEntryGemsList(list);
       } finally {
-        this.entry_gems_loading = false;
+        if (request_seq === this.refresh_entry_gems_seq) {
+          this.entry_gems_loading = false;
+        }
       }
     },
     prepareEntryGemsList(list) {
