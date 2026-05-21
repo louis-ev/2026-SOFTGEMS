@@ -293,6 +293,9 @@ export default {
   sg_selection_entries_sort_hint:
     "Gems are ordered by stone type (alphabetical), then by weight (lightest to heaviest) within each type. Order cannot be changed.",
   sg_selection_add_gems: "Add gems",
+  sg_selection_add_gems_to_selection_button: "Add gems to this selection",
+  sg_selection_add_gems_loading_background:
+    "Loading gem inventory in the background…",
   sg_selection_add_gems_title: "Add gems to selection",
   sg_selection_pick_gems_table_hint:
     "Use the same search as in inventory, then click the plus on a row to add that gem (gems already in this selection show a green check).",

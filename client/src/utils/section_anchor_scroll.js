@@ -22,6 +22,39 @@ export function findScrollParent(element) {
   return null;
 }
 
+/**
+ * Scroll so `element`'s top sits at a fraction of the viewport height from the top
+ * (e.g. 1/3 → panel top one-third down the screen).
+ */
+export function scrollElementToViewportFraction(
+  element,
+  { viewport_fraction_from_top = 1 / 3, smooth = false } = {}
+) {
+  if (!element || typeof element.getBoundingClientRect !== "function") {
+    return false;
+  }
+
+  if (typeof window === "undefined") return false;
+
+  const behavior = smooth ? "smooth" : "auto";
+  const target_viewport_top = window.innerHeight * viewport_fraction_from_top;
+  const element_rect = element.getBoundingClientRect();
+  const scroll_delta = element_rect.top - target_viewport_top;
+
+  if (Math.abs(scroll_delta) < 1) return true;
+
+  const scroll_parent = findScrollParent(element);
+  if (scroll_parent) {
+    scroll_parent.scrollTo({
+      top: scroll_parent.scrollTop + scroll_delta,
+      behavior,
+    });
+  } else {
+    window.scrollBy({ top: scroll_delta, behavior });
+  }
+  return true;
+}
+
 export function scrollElementToAnchor(element, { smooth = false } = {}) {
   if (!element || typeof element.getBoundingClientRect !== "function") {
     return false;

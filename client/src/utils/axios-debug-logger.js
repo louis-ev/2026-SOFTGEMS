@@ -18,8 +18,11 @@ function formatAxiosRequestLabel(request) {
 
 function notifyAxiosRequest(request) {
   const label = formatAxiosRequestLabel(request);
-  if (Vue.prototype.$alertify && typeof Vue.prototype.$alertify.log === "function") {
-    Vue.prototype.$alertify.delay(1800).log(label);
+  if (
+    Vue.prototype.$alertify &&
+    typeof Vue.prototype.$alertify.log === "function"
+  ) {
+    Vue.prototype.$alertify.delay(5800).log(label);
   }
 }
 

@@ -50,7 +50,7 @@ export default {
 
 <style lang="scss" scoped>
 ._folderMetaPeek {
-  margin-top: calc(var(--spacing) * 0.5);
+  margin-top: calc(var(--spacing) * 8);
 }
 
 ._folderMetaPeekPanel {
