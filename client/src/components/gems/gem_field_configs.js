@@ -33,12 +33,6 @@ const STATUS_OPTIONS = [
  */
 export function buildGemFieldConfigs(t, paired_gem_options = []) {
   return {
-    internal_name: {
-      key: "internal_name",
-      label: t("sg_internal_name"),
-      icon: "pencil",
-      type: "text",
-    },
     status: {
       key: "status",
       label: t("sg_status"),

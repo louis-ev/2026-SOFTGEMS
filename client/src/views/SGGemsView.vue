@@ -238,7 +238,6 @@ export default {
       try {
         for (let index = 1; index <= 10; index += 1) {
           const gem_number = String(index).padStart(2, "0");
-          const placeholder_name = `Placeholder Gem ${gem_number}`;
           const purchased_price_pa = Number(
             (Math.random() * 1200 + 100).toFixed(2)
           );
@@ -250,7 +249,6 @@ export default {
           await this.$api.createFolder({
             path: this.gems_path,
             additional_meta: {
-              internal_name: `${placeholder_name} ${batch_id}`,
               $status: "public",
               $admins: "everyone",
               $contributors: "everyone",
@@ -342,7 +340,6 @@ export default {
         .map((g) => {
           const gem_id = this.getGemId(g);
           const gem_label =
-            (g.internal_name && String(g.internal_name).trim()) ||
             (g.reference_supplier && String(g.reference_supplier).trim()) ||
             (g.reference_customer && String(g.reference_customer).trim()) ||
             gem_id;

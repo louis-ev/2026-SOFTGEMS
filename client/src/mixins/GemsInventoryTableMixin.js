@@ -8,6 +8,7 @@ import GemDimensions, {
 
 export const gems_metadata_keys_localstorage_key = "sg_gems_metadata_keys";
 export const gems_pinned_metadata_keys = ["id", "$cover"];
+export const gem_excluded_metadata_keys = ["internal_name"];
 
 /** Shared gems table columns (same rules as SGGemsView). Host must expose `gems` (array). */
 export default {
@@ -27,6 +28,7 @@ export default {
       const ignored_keys = new Set([
         "name",
         "title",
+        ...gem_excluded_metadata_keys,
         "price_per_carat_pa_pcb",
         ...gem_virtual_per_carat_column_keys,
         ...gem_linear_dimension_keys,
@@ -35,7 +37,6 @@ export default {
         "id",
         "$cover",
         "$date_modified",
-        "internal_name",
         "status",
         "reference_supplier",
         "reference_customer",
@@ -96,10 +97,12 @@ export default {
       if (all_keys.length === 0) return [];
       if (!Array.isArray(this.selected_metadata_keys)) return all_keys;
 
-      const selected_in_order = this.stripLinearDimensionKeys(
-        this.stripVirtualPerCaratKeys(
-          this.selected_metadata_keys.filter((metadata_key) =>
-            all_keys.includes(metadata_key)
+      const selected_in_order = this.stripExcludedGemMetadataKeys(
+        this.stripLinearDimensionKeys(
+          this.stripVirtualPerCaratKeys(
+            this.selected_metadata_keys.filter((metadata_key) =>
+              all_keys.includes(metadata_key)
+            )
           )
         )
       );
@@ -160,6 +163,12 @@ export default {
         (key) => !gem_virtual_per_carat_column_keys.includes(key)
       );
     },
+    stripExcludedGemMetadataKeys(metadata_keys) {
+      if (!Array.isArray(metadata_keys)) return [];
+      return metadata_keys.filter(
+        (key) => !gem_excluded_metadata_keys.includes(key)
+      );
+    },
     loadGemsMetadataKeysFromStorage() {
       try {
         const stored_keys_json = localStorage.getItem(
@@ -168,13 +177,15 @@ export default {
         if (!stored_keys_json) return;
         const stored_keys = JSON.parse(stored_keys_json);
         if (!Array.isArray(stored_keys)) return;
-        this.selected_metadata_keys = this.stripLinearDimensionKeys(
-          stored_keys
-            .filter((metadata_key) => typeof metadata_key === "string")
-            .filter(
-              (metadata_key) =>
-                !gem_virtual_per_carat_column_keys.includes(metadata_key)
-            )
+        this.selected_metadata_keys = this.stripExcludedGemMetadataKeys(
+          this.stripLinearDimensionKeys(
+            stored_keys
+              .filter((metadata_key) => typeof metadata_key === "string")
+              .filter(
+                (metadata_key) =>
+                  !gem_virtual_per_carat_column_keys.includes(metadata_key)
+              )
+          )
         );
       } catch {
         // Keep defaults when storage is unavailable or invalid.
@@ -190,8 +201,10 @@ export default {
       }
 
       const selected_keys = Array.isArray(this.selected_metadata_keys)
-        ? this.stripLinearDimensionKeys(
-            this.stripVirtualPerCaratKeys(this.selected_metadata_keys)
+        ? this.stripExcludedGemMetadataKeys(
+            this.stripLinearDimensionKeys(
+              this.stripVirtualPerCaratKeys(this.selected_metadata_keys)
+            )
           )
         : [];
       const selected_in_order = selected_keys.filter((metadata_key) =>
@@ -232,8 +245,10 @@ export default {
         return;
       }
       this.selected_metadata_keys = this.enforcePinnedGemsColumns(
-        this.stripLinearDimensionKeys(
-          this.stripVirtualPerCaratKeys(next_selected_metadata_keys)
+        this.stripExcludedGemMetadataKeys(
+          this.stripLinearDimensionKeys(
+            this.stripVirtualPerCaratKeys(next_selected_metadata_keys)
+          )
         ),
         this.all_metadata_keys
       );
@@ -284,7 +299,6 @@ export default {
         id: undefined,
         $cover: "images",
         $date_modified: "clock-history",
-        internal_name: "pencil",
         reference_supplier: "archive",
         reference_customer: "person-circle",
         paired_gem: "link",
@@ -332,7 +346,6 @@ export default {
         $date_modified: "sg_last_edited",
         status: "sg_status",
         $cover: "sg_cover",
-        internal_name: "sg_internal_name",
         reference_supplier: "sg_reference_supplier",
         reference_customer: "sg_reference_customer",
         paired_gem: "sg_paired_gem",

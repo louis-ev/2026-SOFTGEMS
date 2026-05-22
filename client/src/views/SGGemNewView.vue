@@ -65,10 +65,6 @@
       </SGSectionPanel>
 
       <SGSectionPanel section_id="creation" :title="$t('sg_section_creation')">
-        <div>
-          <DLabel :str="$t('sg_internal_name_optional')" icon="pencil" />
-          <TextInput :content.sync="new_gem_internal_name" :required="false" />
-        </div>
         <p class="_creationNotice">{{ $t("sg_creation_notice_documents") }}</p>
         <p class="_creationNotice">{{ $t("sg_creation_notice_editable") }}</p>
       </SGSectionPanel>
@@ -154,7 +150,6 @@ export default {
   data() {
     return {
       gems_path: "gems",
-      new_gem_internal_name: "",
       new_gem_fields: { ...v1_new_gem_fields_defaults },
       touched_field_keys: {},
       is_creating: false,
@@ -165,7 +160,10 @@ export default {
     paired_gem_options() {
       return (Array.isArray(this.all_gems) ? this.all_gems : []).map((gem) => {
         const gem_id = this.getGemIdFromPath(gem?.$path);
-        const gem_label = this.cleanString(gem?.internal_name) || gem_id;
+        const gem_label =
+          this.cleanString(gem?.reference_supplier) ||
+          this.cleanString(gem?.reference_customer) ||
+          gem_id;
         return {
           value: gem_id,
           label: gem_label,
@@ -246,7 +244,6 @@ export default {
         $admins: "everyone",
         $contributors: "everyone",
         ...this.getFilledGemFields(this.new_gem_fields),
-        ...this.getCreationMeta(),
       };
     },
     debug_creation_meta_json() {
@@ -279,7 +276,6 @@ export default {
 
       const filled_gem_fields = this.getFilledGemFields(this.new_gem_fields);
       const paired_gem_id = filled_gem_fields.paired_gem;
-      const creation_meta = this.getCreationMeta();
 
       this.is_creating = true;
       try {
@@ -290,7 +286,6 @@ export default {
             $admins: "everyone",
             $contributors: "everyone",
             ...filled_gem_fields,
-            ...creation_meta,
           },
         });
         if (new_gem_slug) {
@@ -324,15 +319,6 @@ export default {
       } catch {
         // Do not block creation if reciprocal link update fails.
       }
-    },
-    getCreationMeta() {
-      const cleaned_internal_name = this.cleanString(
-        this.new_gem_internal_name
-      );
-      if (!cleaned_internal_name) return {};
-      return {
-        internal_name: cleaned_internal_name,
-      };
     },
     normalizeGemFields(raw_fields) {
       const normalized_fields = {

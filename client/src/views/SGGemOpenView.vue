@@ -5,9 +5,6 @@
         <div class="_titleRow">
           <div class="_titleGroup">
             <h1 class="_pageTitle">{{ gem_title }}</h1>
-            <p v-if="gem_internal_name" class="_pageSubtitle">
-              {{ gem_internal_name }}
-            </p>
             <button
               v-if="gem_last_edited_date"
               type="button"
@@ -92,18 +89,6 @@
         :title="$t('sg_section_identification')"
       >
         <div class="_fieldsGrid">
-          <SGEditableMetaField
-            :label="$t('sg_internal_name')"
-            icon="pencil"
-            :value="gem.internal_name"
-            :is_flashing="isFieldFlashing('internal_name')"
-            :modal_open="editing_field === field_configs.internal_name"
-            :modal_title="gemFieldModalTitle(field_configs.internal_name)"
-            :gem_edit="gemEditorProps(field_configs.internal_name)"
-            @presentClick="openEditModal(field_configs.internal_name)"
-            @close="editing_field = null"
-            @saved="onFieldSaved"
-          />
           <SGEditableMetaField
             :label="$t('sg_status')"
             :value="gem.status"
@@ -647,9 +632,6 @@ export default {
     gem_title() {
       if (!this.gem) return this.$t("sg_open_gem_title");
       return this.$t("sg_gem_title", { id: this.gem_id });
-    },
-    gem_internal_name() {
-      return this.cleanString(this.gem?.internal_name);
     },
     gem_last_edited_date() {
       const raw_date = this.gem?.$date_modified || this.gem?.$date_created;

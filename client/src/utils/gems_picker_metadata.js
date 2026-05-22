@@ -3,7 +3,6 @@
 export const GEMS_PICKER_METADATA_KEYS = Object.freeze([
   "id",
   "$cover",
-  "internal_name",
   "status",
   "reference_supplier",
   "reference_customer",
@@ -15,7 +14,6 @@ export const GEMS_PICKER_METADATA_KEYS = Object.freeze([
 const _LABEL_KEY = Object.freeze({
   id: "sg_id",
   $cover: "sg_cover",
-  internal_name: "sg_internal_name",
   status: "sg_status",
   reference_supplier: "sg_reference_supplier",
   reference_customer: "sg_reference_customer",
@@ -27,7 +25,6 @@ const _LABEL_KEY = Object.freeze({
 const _ICON = Object.freeze({
   id: "card-list",
   $cover: "images",
-  internal_name: "pencil",
   status: "tag",
   reference_supplier: "archive",
   reference_customer: "person-circle",

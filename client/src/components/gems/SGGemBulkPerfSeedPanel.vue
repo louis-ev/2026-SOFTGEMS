@@ -250,7 +250,6 @@ export default {
 
       const seeds = this.prep_snapshot.seeds;
       const will_create = this.prep_snapshot.will_create;
-      const run_id = Date.now();
 
       this.is_running = true;
       this.cancel_requested = false;
@@ -263,10 +262,7 @@ export default {
           if (this.cancel_requested) break;
 
           const source = seeds[copy_index % seeds.length];
-          const slug = this.getGemSlug(source);
-          const base_name = source?.internal_name || slug;
           const new_meta = {
-            internal_name: `${String(base_name)} · perf ${run_id}-${copy_index + 1}`,
             paired_gem: "",
           };
 
