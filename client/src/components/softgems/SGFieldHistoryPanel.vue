@@ -48,6 +48,8 @@
 </template>
 
 <script>
+import { getDateFormatLocale } from "@/utils/format_locale.js";
+
 export default {
   name: "SGFieldHistoryPanel",
   props: {
@@ -88,10 +90,13 @@ export default {
     },
     formatDate(iso_string) {
       if (!iso_string) return "";
-      return new Date(iso_string).toLocaleString(this.$i18n.locale, {
-        dateStyle: "short",
-        timeStyle: "short",
-      });
+      return new Date(iso_string).toLocaleString(
+        getDateFormatLocale(this.$i18n?.locale),
+        {
+          dateStyle: "short",
+          timeStyle: "short",
+        }
+      );
     },
     formatAuthor(author_path) {
       if (!author_path) return "";

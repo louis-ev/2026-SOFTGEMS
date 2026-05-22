@@ -1,4 +1,6 @@
 /** Merged L × W × H column + helpers (stored fields remain length_mm, width_mm, height_mm). */
+import { getNumberFormatLocale } from "@/utils/format_locale.js";
+
 export const gem_linear_dimension_keys = Object.freeze([
   "length_mm",
   "width_mm",
@@ -16,7 +18,7 @@ export default {
       const fmt = (raw) => {
         const n = this.toNumberOrNull(raw);
         if (n === null || !Number.isFinite(n)) return "—";
-        return n.toLocaleString(this.$i18n.locale, {
+        return n.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         });

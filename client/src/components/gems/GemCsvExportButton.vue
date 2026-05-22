@@ -28,6 +28,7 @@
 <script>
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
+import { getFormatLocale } from "@/utils/format_locale.js";
 
 export default {
   name: "GemCsvExportButton",
@@ -77,7 +78,7 @@ export default {
         if (raw === null || raw === undefined || raw === "") return "";
         const time_value = new Date(raw).getTime();
         if (!Number.isFinite(time_value)) return String(raw);
-        return new Date(raw).toLocaleString(this.$i18n.locale, {
+        return new Date(raw).toLocaleString(getFormatLocale(this.$i18n?.locale), {
           dateStyle: "short",
           timeStyle: "short",
         });

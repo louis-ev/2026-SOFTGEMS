@@ -298,11 +298,11 @@ export default {
 <style lang="scss" scoped>
 ._entriesTableShell {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  height: min(70vh, 720px);
-  max-height: min(70vh, 720px);
+  // display: flex;
+  // flex-direction: column;
+  // min-height: 0;
+  // height: min(70vh, 720px);
+  // max-height: min(70vh, 720px);
   overflow: hidden;
 
   > *:not(._entriesReloadOverlay) {

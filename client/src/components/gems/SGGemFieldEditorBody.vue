@@ -152,6 +152,7 @@ import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { extract_field_entries } from "@/utils/field_history.js";
+import { getNumberFormatLocale } from "@/utils/format_locale.js";
 
 export default {
   name: "SGGemFieldEditorBody",
@@ -283,7 +284,7 @@ export default {
     pair_editor_weight_display() {
       const w = this.toNumberOrNull(this.gem?.weight_ct);
       if (w === null || !Number.isFinite(w)) return "—";
-      return w.toLocaleString(this.$i18n.locale, {
+      return w.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
         maximumFractionDigits: 3,
       });
     },
@@ -1058,7 +1059,7 @@ export default {
     formatAffectedFieldValue(value) {
       if (value === null || value === undefined || value === "") return "—";
       if (typeof value === "number" && Number.isFinite(value)) {
-        return value.toLocaleString(this.$i18n.locale, {
+        return value.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
           maximumFractionDigits: 3,
         });
       }

@@ -25,6 +25,8 @@
 </template>
 
 <script>
+import { getNumberFormatLocale } from "@/utils/format_locale.js";
+
 export default {
   name: "SGFieldValuePresent",
   props: {
@@ -65,7 +67,7 @@ export default {
       if (this.is_empty) return "—";
       if (typeof this.value === "number")
         return Number.isFinite(this.value)
-          ? this.value.toLocaleString(this.$i18n.locale, {
+          ? this.value.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
               maximumFractionDigits: 3,
             })
           : "—";

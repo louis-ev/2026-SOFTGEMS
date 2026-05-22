@@ -1,11 +1,16 @@
+import { getDateFormatLocale } from "@/utils/format_locale.js";
+
 export default {
   computed: {},
   methods: {
+    formatLocale() {
+      return getDateFormatLocale(this.$i18n?.locale);
+    },
     formatTime(date, options) {
-      return new Date(date).toLocaleTimeString(this.$i18n.locale, options);
+      return new Date(date).toLocaleTimeString(this.formatLocale(), options);
     },
     formatDate(date, options) {
-      return new Date(date).toLocaleDateString(this.$i18n.locale, options);
+      return new Date(date).toLocaleDateString(this.formatLocale(), options);
     },
     formatDateToHuman(date) {
       if (new Date(date).toDateString() === new Date().toDateString()) {
@@ -128,7 +133,7 @@ export default {
           (24 * 60 * 60 * 1000)
       );
 
-      const locale = this.$i18n?.locale || "en";
+      const locale = this.formatLocale();
 
       if (day_diff === 0) {
         const diff_seconds = Math.round(
@@ -155,15 +160,9 @@ export default {
       }
 
       if (day_diff === 1) {
-        if (locale.startsWith("fr")) {
-          const hours = String(parsed_date.getHours()).padStart(2, "0");
-          const minutes = String(parsed_date.getMinutes()).padStart(2, "0");
-          return `Hier, à ${hours}h${minutes}`;
-        }
-        return `Yesterday, at ${parsed_date.toLocaleTimeString(locale, {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}`;
+        const hours = String(parsed_date.getHours()).padStart(2, "0");
+        const minutes = String(parsed_date.getMinutes()).padStart(2, "0");
+        return `Hier, à ${hours}h${minutes}`;
       }
 
       return this.formatDateTimeToPrecise(parsed_date);

@@ -1,5 +1,7 @@
 /** Shared quick search for gems inventory (same rules as SGGemsView). Host must expose `gems` (array). */
 
+import { getNumberFormatLocale } from "@/utils/format_locale.js";
+
 const gems_quick_search_debounce_ms = 200;
 
 export default {
@@ -37,7 +39,7 @@ export default {
 
       const parsed = this.parseGemsQuickSearchInput(raw);
       const lines = [];
-      const locale = this.$i18n.locale;
+      const locale = getNumberFormatLocale(this.$i18n?.locale);
       const fmt_weight = (n) =>
         Number.isFinite(n)
           ? n.toLocaleString(locale, {

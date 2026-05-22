@@ -267,6 +267,7 @@
 
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
+import { getFormatLocale } from "@/utils/format_locale.js";
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions, {
   gem_linear_dimension_keys,
@@ -491,7 +492,7 @@ export default {
         if (raw === null || raw === undefined || raw === "") return "";
         const time_value = new Date(raw).getTime();
         if (!Number.isFinite(time_value)) return String(raw);
-        return new Date(raw).toLocaleString(this.$i18n.locale, {
+        return new Date(raw).toLocaleString(getFormatLocale(this.$i18n?.locale), {
           dateStyle: "short",
           timeStyle: "short",
         });
@@ -506,7 +507,7 @@ export default {
       if (value === null || value === undefined || value === "") return "-";
       if (typeof value === "number")
         return Number.isFinite(value)
-          ? value.toLocaleString(this.$i18n.locale, {
+          ? value.toLocaleString(getFormatLocale(this.$i18n?.locale), {
               maximumFractionDigits: 3,
             })
           : "-";
@@ -517,7 +518,7 @@ export default {
       if (value === null || value === undefined || value === "") return "-";
       const n = Number(value);
       if (!Number.isFinite(n)) return "-";
-      return n.toLocaleString(this.$i18n.locale, {
+      return n.toLocaleString(getFormatLocale(this.$i18n?.locale), {
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       });

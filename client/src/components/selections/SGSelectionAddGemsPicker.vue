@@ -130,7 +130,7 @@ export default {
 
 <style lang="scss" scoped>
 ._addGemsRoot {
-  margin-top: calc(var(--spacing) * 0.75);
+  margin-top: calc(var(--spacing) / 2);
 }
 
 ._openAddGemsBtnIcon {
