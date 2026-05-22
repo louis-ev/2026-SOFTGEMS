@@ -6,10 +6,10 @@
     >
       <div class="_selectionsView--content">
         <div class="_pageHeader">
-          <h1 class="_pageTitle">{{ $t("sg_selections") }}</h1>
+          <h1 class="_pageTitle">{{ page_title }}</h1>
           <div class="_headerActions">
             <router-link
-              to="/selections/new"
+              :to="create_path"
               class="u-button u-button_bleuvert"
             >
               <b-icon icon="plus-lg" />
@@ -22,14 +22,14 @@
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
         <div v-else class="_listSection">
           <div class="_tableWrap">
-            <table class="_table" :aria-label="$t('sg_selections')">
+            <table class="_table" :aria-label="page_title">
               <thead>
                 <tr>
                   <th scope="col" class="_colName">
                     {{ $t("sg_selection_internal_name") }}
                   </th>
-                  <th scope="col" class="_colType">
-                    {{ $t("sg_selection_type_label") }}
+                  <th scope="col" class="_colCreated">
+                    {{ $t("sg_created") }}
                   </th>
                   <th scope="col" class="_colCount">
                     {{ $t("sg_selection_gem_count") }}
@@ -60,10 +60,15 @@
                     <td class="_colName">
                       <span class="_nameText">{{ selectionLabel(row) }}</span>
                     </td>
-                    <td class="_colType">
-                      <span v-if="row.selection_type" class="_typeBadge">
-                        {{ formatSelectionType(row.selection_type) }}
-                      </span>
+                    <td class="_colCreated">
+                      <time
+                        v-if="row.$date_created"
+                        :datetime="row.$date_created"
+                        class="_createdText"
+                      >
+                        {{ formatCreatedDate(row.$date_created) }}
+                      </time>
+                      <span v-else class="_createdEmpty">—</span>
                     </td>
                     <td class="_colCount">
                       <span class="_gemCount">{{ entryCount(row) }}</span>
@@ -84,15 +89,30 @@
 
 <script>
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
-import { selectionDetailPath } from "@/utils/selection_urls.js";
+import FormatDates from "@/mixins/FormatDates.js";
+import {
+  selectionTypeFromSlug,
+} from "@/utils/selection_type_registry.js";
+import {
+  parseSelectionFolderParam,
+  selectionDetailPath,
+  selectionListPath,
+  selectionNewPath,
+} from "@/utils/selection_urls.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
-import { parseSelectionPathParam } from "@/utils/selection_urls.js";
 
 export default {
   name: "SGSelectionsView",
+  mixins: [FormatDates],
   components: {
     SGOverlaySidePanelLayout,
+  },
+  props: {
+    type_slug: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
@@ -103,27 +123,67 @@ export default {
     };
   },
   computed: {
+    active_selection_type() {
+      return selectionTypeFromSlug(this.type_slug);
+    },
+    page_title() {
+      if (!this.active_selection_type) return this.$t("sg_selections");
+      return selectionTypeLabelFn(
+        this.$t.bind(this),
+        this.active_selection_type
+      );
+    },
+    create_path() {
+      return selectionNewPath(this.type_slug);
+    },
     is_selections_panel_open() {
       return ["Create selection", "Open selection"].includes(this.$route.name);
     },
-    sorted_entries() {
+    filtered_entries() {
       if (!Array.isArray(this.selection_entries)) return [];
-      return [...this.selection_entries].sort((a, b) =>
-        this.selectionLabel(a).localeCompare(
-          this.selectionLabel(b),
-          undefined,
-          { sensitivity: "base" }
-        )
+      const active_type = this.active_selection_type;
+      if (!active_type) return [];
+      return this.selection_entries.filter(
+        (row) => String(row?.selection_type || "") === active_type
       );
+    },
+    sorted_entries() {
+      return [...this.filtered_entries].sort((a, b) => {
+        const time_a = a?.$date_created
+          ? new Date(a.$date_created).getTime()
+          : NaN;
+        const time_b = b?.$date_created
+          ? new Date(b.$date_created).getTime()
+          : NaN;
+        if (Number.isFinite(time_a) && Number.isFinite(time_b)) {
+          if (time_b !== time_a) return time_b - time_a;
+        } else if (Number.isFinite(time_b) && !Number.isFinite(time_a)) {
+          return 1;
+        } else if (Number.isFinite(time_a) && !Number.isFinite(time_b)) {
+          return -1;
+        }
+        const slug_a = this.selectionSlugFromPath(a?.$path);
+        const slug_b = this.selectionSlugFromPath(b?.$path);
+        return slug_b.localeCompare(slug_a, undefined, { numeric: true });
+      });
     },
     selected_folder_slug() {
       if (this.$route.name !== "Open selection") return "";
       const raw = this.cleanString(this.$route.params.selection_path);
-      const parsed = parseSelectionPathParam(raw);
+      const parsed = parseSelectionFolderParam(raw);
       return parsed.folder_slug || "";
     },
   },
-  watch: {},
+  watch: {
+    type_slug: {
+      immediate: true,
+      handler() {
+        if (!this.active_selection_type) {
+          this.$router.replace("/selections");
+        }
+      },
+    },
+  },
   mounted() {
     this.fetchSelections();
     this.$api.join({ room: this.selections_root_path });
@@ -132,8 +192,13 @@ export default {
     this.$api.leave({ room: this.selections_root_path });
   },
   methods: {
-    formatSelectionType(v) {
-      return selectionTypeLabelFn(this.$t.bind(this), v);
+    formatCreatedDate(raw) {
+      if (!raw) return "—";
+      return this.formatDate(raw, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
     },
     selectionSlugFromPath(folder_path) {
       const cleaned = this.cleanString(folder_path);
@@ -158,7 +223,7 @@ export default {
       return String(value).trim();
     },
     closePanel() {
-      this.$router.push("/selections");
+      this.$router.push(selectionListPath(this.type_slug));
     },
     openSelection(row) {
       const slug = this.selectionSlugFromPath(row?.$path);
@@ -166,8 +231,10 @@ export default {
       const label =
         typeof row?.internal_name === "string" ? row.internal_name : "";
       const path = selectionDetailPath({
+        type_slug: this.type_slug,
         folder_slug: slug,
         internal_name: label,
+        selection_type: row?.selection_type,
       });
       this.$router.push(path);
     },
@@ -271,18 +338,27 @@ export default {
 }
 
 ._colName {
-  width: 48%;
+  width: 46%;
 }
 
-._colType {
-  width: 40%;
+._colCreated {
+  width: 34%;
   white-space: nowrap;
 }
 
 ._colCount {
-  width: 12%;
+  width: 20%;
   white-space: nowrap;
   text-align: right;
+}
+
+._createdText {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-gris_fonce);
+}
+
+._createdEmpty {
+  color: var(--c-gris_fonce);
 }
 
 ._gemCount {
@@ -322,14 +398,5 @@ export default {
   text-align: center;
   color: var(--c-gris_fonce);
   padding: calc(var(--spacing) * 2);
-}
-
-._typeBadge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: var(--c-gris_clair);
-  white-space: nowrap;
 }
 </style>

@@ -1,1 +1,0 @@
-function i(n){if(!Array.isArray(n))return[];const o=[];for(const t of n){if(!t||typeof t!="object")continue;const e=String(t.gem_path||"").trim();if(!e)continue;const r={gem_path:e};typeof t.sort_index=="number"&&(r.sort_index=t.sort_index),o.push(r)}return o}export{i as n};

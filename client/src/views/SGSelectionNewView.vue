@@ -9,7 +9,11 @@
     </button>
 
     <div class="_pageHeader">
-      <h1 class="_pageTitle">{{ $t("sg_create_selection_title") }}</h1>
+      <h1 class="_pageTitle">{{ page_title }}</h1>
+      <p v-if="active_type_label" class="_typeReadonly">
+        {{ $t("sg_selection_type_label") }}:
+        <strong>{{ active_type_label }}</strong>
+      </p>
     </div>
 
     <form class="_form" @submit.prevent="createSelection">
@@ -24,15 +28,6 @@
               @update:content="onNameInput"
             />
             <p v-if="name_error" class="_fieldError">{{ name_error }}</p>
-          </div>
-          <div>
-            <DLabel :str="$t('sg_selection_type_label')" icon="tags" />
-            <SGSelectField
-              :value="new_selection_type"
-              :options="selection_type_options"
-              :allow_empty="false"
-              @input="new_selection_type = $event"
-            />
           </div>
         </div>
       </SGSectionPanel>
@@ -58,29 +53,46 @@
 </template>
 
 <script>
-import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
-import { selectionDetailPath } from "@/utils/selection_urls.js";
-import { selectionTypeSelectOptions } from "@/utils/selection_types.js";
+import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
+import {
+  selectionDetailPath,
+  selectionListPath,
+} from "@/utils/selection_urls.js";
+import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
 
 export default {
   name: "SGSelectionNewView",
   components: {
-    SGSelectField,
     SGSectionPanel,
+  },
+  props: {
+    type_slug: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
       selections_root_path: "selections",
       new_internal_name: "",
-      new_selection_type: "simple",
       name_touched: false,
       is_creating: false,
     };
   },
   computed: {
-    selection_type_options() {
-      return selectionTypeSelectOptions(this.$t.bind(this));
+    new_selection_type() {
+      return selectionTypeFromSlug(this.type_slug);
+    },
+    active_type_label() {
+      if (!this.new_selection_type) return "";
+      return selectionTypeLabelFn(this.$t.bind(this), this.new_selection_type);
+    },
+    page_title() {
+      if (!this.active_type_label) return this.$t("sg_create_selection_title");
+      return this.$t("sg_create_selection_of_type", {
+        type: this.active_type_label,
+      });
     },
     trimmed_name() {
       return this.cleanString(this.new_internal_name);
@@ -91,7 +103,9 @@ export default {
       return "";
     },
     is_create_disabled() {
-      return this.is_creating || !this.trimmed_name;
+      return (
+        this.is_creating || !this.trimmed_name || !this.new_selection_type
+      );
     },
   },
   methods: {
@@ -99,7 +113,7 @@ export default {
       this.name_touched = true;
     },
     goBack() {
-      this.$router.push("/selections");
+      this.$router.push(selectionListPath(this.type_slug));
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";
@@ -107,7 +121,9 @@ export default {
     },
     async createSelection() {
       this.name_touched = true;
-      if (!this.trimmed_name || this.is_creating) return;
+      if (!this.trimmed_name || this.is_creating || !this.new_selection_type) {
+        return;
+      }
 
       this.is_creating = true;
       try {
@@ -124,12 +140,14 @@ export default {
         });
         if (new_slug) {
           const path = selectionDetailPath({
+            type_slug: this.type_slug,
             folder_slug: new_slug,
             internal_name: this.trimmed_name,
+            selection_type: this.new_selection_type,
           });
           this.$router.push(path);
         } else {
-          this.$router.push("/selections");
+          this.$router.push(selectionListPath(this.type_slug));
         }
       } catch ({ code }) {
         this.$alertify
@@ -151,14 +169,20 @@ export default {
 
 ._pageHeader {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 0.35);
   margin-bottom: calc(var(--spacing) * 1);
 }
 
 ._pageTitle {
   margin: 0;
+}
+
+._typeReadonly {
+  margin: 0;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-gris_fonce);
 }
 
 ._closeButton {

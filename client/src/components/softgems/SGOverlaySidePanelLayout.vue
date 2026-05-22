@@ -93,7 +93,7 @@ export default {
   justify-content: flex-end;
   align-items: stretch;
   box-sizing: border-box;
-  padding-left: clamp(0px, 10vw, 320px);
+  padding-left: clamp(0px, 7vw, 320px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   pointer-events: none;
 }

@@ -247,8 +247,6 @@ export default {
   sg_contact_field_updated_remotely:
     "This field was updated elsewhere. Your draft was left unchanged.",
   sg_could_not_save_contact_name: "Could not save name.",
-  sg_contact_type_readonly:
-    "Type is set when the contact is created and cannot be changed.",
   sg_section_company_details: "Company details",
   sg_company_address: "Address",
   sg_company_phone: "Phone",
@@ -273,6 +271,17 @@ export default {
   sg_could_not_save_company_contact: "Could not update contact.",
 
   sg_selections: "Selections",
+  sg_selections_hub_title: "All selection types",
+  sg_create_selection_of_type: "Create {type}",
+  sg_section_selection_header: "Document details",
+  sg_selection_date: "Date",
+  sg_selection_counterparty: "Counterparty",
+  sg_selection_reference_number: "Reference",
+  sg_selection_currency: "Currency",
+  sg_selection_field_saved: "Field saved.",
+  sg_section_gem_selections: "Selections",
+  sg_gem_selections_empty: "This gem is not linked to any selection yet.",
+  sg_gem_selections_current_box: "Current box",
   sg_create_selection: "Add selection",
   sg_create_selection_title: "Create selection",
   sg_create_selection_in_progress: "Creating…",

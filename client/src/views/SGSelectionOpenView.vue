@@ -75,6 +75,14 @@
             </div>
           </SGSectionPanel>
 
+          <SGSelectionHeaderFieldsSection
+            v-if="selection_folder_path && selection"
+            :selection_folder_path="selection_folder_path"
+            :selection="selection"
+            :can_edit="can_edit"
+            :page_title="page_title"
+          />
+
           <SGSelectionGemsSection
             v-if="selection_folder_path"
             :key="selection_folder_path"
@@ -116,13 +124,16 @@ import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SGSelectionGemsSection from "@/components/selections/SGSelectionGemsSection.vue";
+import SGSelectionHeaderFieldsSection from "@/components/selections/SGSelectionHeaderFieldsSection.vue";
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
+import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
 import {
-  parseSelectionPathParam,
+  parseSelectionFolderParam,
   selectionDetailPath,
+  selectionListPath,
   selectionTitleSlugMatches,
 } from "@/utils/selection_urls.js";
 export default {
@@ -135,10 +146,15 @@ export default {
     SGSectionPanel,
     SGSelectionFilesSection,
     SGSelectionGemsSection,
+    SGSelectionHeaderFieldsSection,
     SGOverlaySidePanelLayout,
     SGGemOpenView,
   },
   props: {
+    type_slug: {
+      type: String,
+      required: true,
+    },
     selection_path: {
       type: String,
       required: true,
@@ -170,7 +186,7 @@ export default {
       return !!this.connected_as;
     },
     folder_slug() {
-      const parsed = parseSelectionPathParam(this.selection_path);
+      const parsed = parseSelectionFolderParam(this.selection_path);
       return parsed.folder_slug || "";
     },
     selection_folder_path() {
@@ -233,7 +249,7 @@ export default {
       return selectionTypeLabelFn(this.$t.bind(this), v);
     },
     goBack() {
-      this.$router.push("/selections");
+      this.$router.push(selectionListPath(this.type_slug));
     },
     onRemovedSuccessfully() {
       this.show_remove_modal = false;
@@ -292,11 +308,15 @@ export default {
     replaceDetailUrlIfStale() {
       if (!this.selection || !this.folder_slug) return;
       const name = this.cleanString(this.selection.internal_name);
-      const parsed = parseSelectionPathParam(this.selection_path);
+      const parsed = parseSelectionFolderParam(this.selection_path);
       if (selectionTitleSlugMatches(name, parsed.title_slug)) return;
+      const resolved_type_slug =
+        this.type_slug || selectionSlugFromType(this.selection.selection_type);
       const next_path = selectionDetailPath({
+        type_slug: resolved_type_slug,
         folder_slug: this.folder_slug,
         internal_name: name,
+        selection_type: this.selection.selection_type,
       });
       if (this.$route.path !== next_path) this.$router.replace(next_path);
     },

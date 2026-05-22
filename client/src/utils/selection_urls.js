@@ -1,9 +1,14 @@
-/** @typedef {{ folder_slug: string, title_slug: string }} ParsedSelectionPath */
+import {
+  isValidSelectionTypeSlug,
+  selectionSlugFromType,
+} from "@/utils/selection_type_registry.js";
+
+/** @typedef {{ folder_slug: string, title_slug: string, type_slug: string }} ParsedSelectionPath */
 
 const _NUMERIC_PREFIX_RE = /^(\d+)(?:-(.+))?$/;
 
 /**
- * ASCII slug from display title (Discourse-style suffix in `/selections/{id}-{slug}`).
+ * ASCII slug from display title (Discourse-style suffix in `/selections/{type}/{id}-{slug}`).
  * @param {string} str
  * @returns {string}
  */
@@ -20,10 +25,10 @@ export function slugifySelectionTitle(str) {
 }
 
 /**
- * @param {string} param – raw `selection_path` route param
- * @returns {ParsedSelectionPath}
+ * @param {string} param – folder segment (`42` or `42-acme`)
+ * @returns {{ folder_slug: string, title_slug: string }}
  */
-export function parseSelectionPathParam(param) {
+export function parseSelectionFolderParam(param) {
   const s = String(param || "").trim();
   const m = s.match(_NUMERIC_PREFIX_RE);
   if (!m) return { folder_slug: "", title_slug: "" };
@@ -34,14 +39,69 @@ export function parseSelectionPathParam(param) {
 }
 
 /**
- * @param {{ folder_slug: string, internal_name?: string }} args
- * @returns {string} path starting with `/selections/`
+ * Legacy alias.
+ * @param {string} param
  */
-export function selectionDetailPath({ folder_slug, internal_name }) {
+export function parseSelectionPathParam(param) {
+  return parseSelectionFolderParam(param);
+}
+
+/**
+ * @param {string} param
+ * @returns {boolean}
+ */
+export function isLegacySelectionFolderParam(param) {
+  return Boolean(parseSelectionFolderParam(param).folder_slug);
+}
+
+/**
+ * @returns {string}
+ */
+export function selectionHubPath() {
+  return "/selections";
+}
+
+/**
+ * @param {string} type_slug
+ * @returns {string}
+ */
+export function selectionListPath(type_slug) {
+  const slug = String(type_slug || "").trim();
+  if (!slug || !isValidSelectionTypeSlug(slug)) return selectionHubPath();
+  return `/selections/${encodeURIComponent(slug)}`;
+}
+
+/**
+ * @param {string} type_slug
+ * @returns {string}
+ */
+export function selectionNewPath(type_slug) {
+  return `${selectionListPath(type_slug)}/new`;
+}
+
+/**
+ * @param {{ type_slug?: string, folder_slug: string, internal_name?: string, selection_type?: string }} args
+ * @returns {string}
+ */
+export function selectionDetailPath({
+  type_slug,
+  folder_slug,
+  internal_name,
+  selection_type,
+}) {
   const id = String(folder_slug || "").trim();
-  if (!id) return "/selections";
+  if (!id) return selectionHubPath();
+
+  let resolved_type_slug = String(type_slug || "").trim();
+  if (!resolved_type_slug && selection_type) {
+    resolved_type_slug = selectionSlugFromType(selection_type);
+  }
+  if (!resolved_type_slug) {
+    resolved_type_slug = "simple";
+  }
+
   const title = slugifySelectionTitle(internal_name);
-  const base = `/selections/${encodeURIComponent(id)}`;
+  const base = `/selections/${encodeURIComponent(resolved_type_slug)}/${encodeURIComponent(id)}`;
   if (!title) return base;
   return `${base}-${encodeURIComponent(title)}`;
 }
@@ -55,4 +115,19 @@ export function selectionTitleSlugMatches(internal_name, title_slug) {
   const got = String(title_slug || "").trim();
   if (!expected && !got) return true;
   return got === expected;
+}
+
+/**
+ * Parse typed selection route params.
+ * @param {{ type_slug?: string, selection_path?: string }} params
+ * @returns {ParsedSelectionPath}
+ */
+export function parseTypedSelectionRouteParams(params) {
+  const type_slug = String(params?.type_slug || "").trim();
+  const folder_parsed = parseSelectionFolderParam(params?.selection_path);
+  return {
+    type_slug,
+    folder_slug: folder_parsed.folder_slug,
+    title_slug: folder_parsed.title_slug,
+  };
 }

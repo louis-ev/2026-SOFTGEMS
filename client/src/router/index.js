@@ -1,5 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
+import { isValidSelectionTypeSlug } from "@/utils/selection_type_registry.js";
+import { isLegacySelectionFolderParam } from "@/utils/selection_urls.js";
 
 Vue.use(VueRouter);
 
@@ -55,19 +57,60 @@ const routes = [
   },
   {
     path: "/selections",
-    name: "Selections",
-    component: () => import("@/views/SGSelectionsView.vue"),
+    component: () => import("@/layouts/SGSelectionsLayout.vue"),
     children: [
       {
-        path: "new",
-        name: "Create selection",
-        component: () => import("@/views/SGSelectionNewView.vue"),
+        path: "",
+        name: "Selections hub",
+        component: () => import("@/views/SGSelectionsHubView.vue"),
       },
       {
-        path: ":selection_path",
-        name: "Open selection",
-        component: () => import("@/views/SGSelectionOpenView.vue"),
+        path: "legacy/:selection_path",
+        name: "Selection legacy redirect",
+        component: () => import("@/views/SGSelectionLegacyRedirectView.vue"),
         props: true,
+      },
+      {
+        path: ":type_slug",
+        beforeEnter(to, _from, next) {
+          const type_slug = String(to.params.type_slug || "").trim();
+          if (isValidSelectionTypeSlug(type_slug)) {
+            next();
+            return;
+          }
+          if (isLegacySelectionFolderParam(type_slug)) {
+            next({
+              name: "Selection legacy redirect",
+              params: { selection_path: type_slug },
+              replace: true,
+            });
+            return;
+          }
+          next({ path: "/selections", replace: true });
+        },
+        component: () => import("@/views/SGSelectionsView.vue"),
+        props: (route) => ({
+          type_slug: route.params.type_slug,
+        }),
+        children: [
+          {
+            path: "new",
+            name: "Create selection",
+            component: () => import("@/views/SGSelectionNewView.vue"),
+            props: (route) => ({
+              type_slug: route.params.type_slug,
+            }),
+          },
+          {
+            path: ":selection_path",
+            name: "Open selection",
+            component: () => import("@/views/SGSelectionOpenView.vue"),
+            props: (route) => ({
+              type_slug: route.params.type_slug,
+              selection_path: route.params.selection_path,
+            }),
+          },
+        ],
       },
     ],
   },

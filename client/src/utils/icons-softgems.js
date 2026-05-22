@@ -1,8 +1,14 @@
 import Vue from "vue";
 import {
   BIconArchive,
+  BIconArrowDownLeft,
+  BIconArrowLeftRight,
+  BIconArrowReturnLeft,
+  BIconArrowReturnRight,
   BIconArrowUp,
+  BIconArrowUpRight,
   BIconAspectRatio,
+  BIconBag,
   BIconCalendar3,
   BIconCardList,
   BIconCaretDownFill,
@@ -13,10 +19,13 @@ import {
   BIconDiagram2,
   BIconDownload,
   BIconEnvelope,
+  BIconFileEarmarkMinus,
   BIconFileEarmarkText,
   BIconFileEarmarkZip,
   BIconGem,
   BIconGeoAlt,
+  BIconGlobe,
+  BIconGrid3x3Gap,
   BIconHash,
   BIconHouse,
   BIconImages,
@@ -32,6 +41,7 @@ import {
   BIconPersonCircle,
   BIconPinMap,
   BIconPlusLg,
+  BIconReceipt,
   BIconRulers,
   BIconTag,
   BIconTags,
@@ -44,8 +54,14 @@ import {
 } from "bootstrap-vue";
 
 Vue.component("BIconArchive", BIconArchive);
+Vue.component("BIconArrowDownLeft", BIconArrowDownLeft);
+Vue.component("BIconArrowLeftRight", BIconArrowLeftRight);
+Vue.component("BIconArrowReturnLeft", BIconArrowReturnLeft);
+Vue.component("BIconArrowReturnRight", BIconArrowReturnRight);
 Vue.component("BIconArrowUp", BIconArrowUp);
+Vue.component("BIconArrowUpRight", BIconArrowUpRight);
 Vue.component("BIconAspectRatio", BIconAspectRatio);
+Vue.component("BIconBag", BIconBag);
 Vue.component("BIconCalendar3", BIconCalendar3);
 Vue.component("BIconCardList", BIconCardList);
 Vue.component("BIconCaretDownFill", BIconCaretDownFill);
@@ -56,10 +72,13 @@ Vue.component("BIconClockHistory", BIconClockHistory);
 Vue.component("BIconDiagram2", BIconDiagram2);
 Vue.component("BIconDownload", BIconDownload);
 Vue.component("BIconEnvelope", BIconEnvelope);
+Vue.component("BIconFileEarmarkMinus", BIconFileEarmarkMinus);
 Vue.component("BIconFileEarmarkText", BIconFileEarmarkText);
 Vue.component("BIconFileEarmarkZip", BIconFileEarmarkZip);
 Vue.component("BIconGem", BIconGem);
 Vue.component("BIconGeoAlt", BIconGeoAlt);
+Vue.component("BIconGlobe", BIconGlobe);
+Vue.component("BIconGrid3x3Gap", BIconGrid3x3Gap);
 Vue.component("BIconHash", BIconHash);
 Vue.component("BIconHouse", BIconHouse);
 Vue.component("BIconImages", BIconImages);
@@ -75,6 +94,7 @@ Vue.component("BIconPersonBadge", BIconPersonBadge);
 Vue.component("BIconPersonCircle", BIconPersonCircle);
 Vue.component("BIconPinMap", BIconPinMap);
 Vue.component("BIconPlusLg", BIconPlusLg);
+Vue.component("BIconReceipt", BIconReceipt);
 Vue.component("BIconRulers", BIconRulers);
 Vue.component("BIconTag", BIconTag);
 Vue.component("BIconTags", BIconTags);

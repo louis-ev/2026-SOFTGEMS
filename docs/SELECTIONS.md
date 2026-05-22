@@ -9,7 +9,7 @@ This document describes how **selections** are stored and exposed in Softgems, a
 - **Folder meta** (in `meta.txt`):
   - **`internal_name`** (string, required): display title.
   - **`selection_type`** (string, required): one of the CDC types (see below).
-  - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (V1 uses a subset in the UI; extend per [FIELDS.md](FIELDS.md)).
+  - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, counterparty, reference, currency are editable on the open view).
   - **`selection_entries`**: JSON **array** of gem folder paths, e.g.
     ```json
     ["gems/12", "gems/45"]
@@ -24,6 +24,10 @@ This document describes how **selections** are stored and exposed in Softgems, a
 - **Rule:** a gem may belong to **at most one** selection whose `selection_type` is **`boîte`**. The canonical pointer is **`box_selection_path`** on the gem; the box folder’s **`selection_entries`** must stay **consistent** with that (V1: client orchestration via `assignGemToBox` in [client/src/utils/assign_gem_to_box.js](../client/src/utils/assign_gem_to_box.js)).
 
 Other selection types may include many gems in `selection_entries` without using `box_selection_path`.
+
+### Gem page — selection memberships
+
+The gem open view lists **all selections** that contain the gem (any type): folders whose `selection_entries` include the gem path, plus the current box via `box_selection_path` if not already listed. See [SGGemSelectionsSection.vue](../client/src/components/gems/SGGemSelectionsSection.vue) and [gem_selection_memberships.js](../client/src/utils/gem_selection_memberships.js).
 
 ## `selection_type` values (stored strings)
 
@@ -44,24 +48,35 @@ Stored values match the CDC list (literal strings, including spaces):
 | `importation` |
 | `importation return` |
 
-Labels in the UI are translated in [en_softgems.js](../client/src/adc-core/lang/en_softgems.js). The canonical list in code is `SELECTION_TYPE_VALUES` in [client/src/utils/selection_types.js](../client/src/utils/selection_types.js).
+Labels, URL slugs, and sidebar icons are defined in [selection_type_registry.js](../client/src/utils/selection_type_registry.js). Stored strings remain in [selection_types.js](../client/src/utils/selection_types.js).
+
+## Navigation
+
+- **Main sidebar:** top-level **Selections** item (`/selections`).
+- **Secondary sidebar (56px):** one icon per type + hub grid icon; visible on all `/selections/*` routes via [SGSelectionsLayout.vue](../client/src/layouts/SGSelectionsLayout.vue).
+- **Hub:** `/selections` — card grid (icon + label per type).
+- **Typed list:** `/selections/{type_slug}` — table filtered to that type, sorted by **`$date_created`** descending.
 
 ## URL convention (Discourse-style)
 
-Readable URLs keep a **stable numeric folder id** and append a **slug of `internal_name`**:
+Readable URLs keep a **stable numeric folder id**, a **type slug**, and append a **slug of `internal_name`**:
 
-- Pattern: **`/selections/{folder_slug}-{title_slug}`**
-- Example: `/selections/42-memo-in-acme`
-- Only the **`folder_slug`** prefix is authoritative for API calls (`getFolder` / `PATCH` on `selections/{folder_slug}`). The suffix is ignored by the server and can be corrected client-side with `router.replace` after rename.
+- Hub: **`/selections`**
+- List: **`/selections/{type_slug}`** (e.g. `/selections/memo-in`)
+- Create: **`/selections/{type_slug}/new`**
+- Detail: **`/selections/{type_slug}/{folder_slug}-{title_slug}`** (e.g. `/selections/memo-in/42-acme-memo`)
+- Only the **`folder_slug`** prefix is authoritative for API calls (`getFolder` / `PATCH` on `selections/{folder_slug}`). The type slug and title suffix are for navigation; legacy URLs without a type slug redirect after load.
 
-Helpers: [client/src/utils/selection_urls.js](../client/src/utils/selection_urls.js) (`parseSelectionPathParam`, `selectionDetailPath`, `slugifySelectionTitle`).
+Helpers: [selection_urls.js](../client/src/utils/selection_urls.js) (`selectionListPath`, `selectionDetailPath`, `parseSelectionFolderParam`, …).
 
 ## Related UI routes
 
+- Layout + type sidebar: [SGSelectionsLayout.vue](../client/src/layouts/SGSelectionsLayout.vue)
+- Hub: [SGSelectionsHubView.vue](../client/src/views/SGSelectionsHubView.vue)
 - List + panel: [SGSelectionsView.vue](../client/src/views/SGSelectionsView.vue)
 - Create: [SGSelectionNewView.vue](../client/src/views/SGSelectionNewView.vue)
 - Detail: [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
-- Gem “box” assignment: [SGGemOpenView.vue](../client/src/views/SGGemOpenView.vue)
+- Gem memberships: [SGGemSelectionsSection.vue](../client/src/components/gems/SGGemSelectionsSection.vue)
 
 ## Server validation
 
