@@ -1,7 +1,5 @@
 <template>
   <div v-if="history_enabled" class="sg-field-history-panel">
-    <div class="u-spacingBottom"></div>
-
     <button type="button" class="_historyToggle" @click="onToggle">
       <b-icon icon="clock-history" />
       <span>{{ $t("sg_field_history") }}</span>

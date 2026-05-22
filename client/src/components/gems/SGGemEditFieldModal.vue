@@ -82,12 +82,8 @@ export default {
     },
     modal_title() {
       const heading_line = String(this.context_heading || "").trim();
-      if (heading_line) {
-        return `${heading_line} — ${this.field.label}`;
-      }
-      return `${this.$t("sg_gem_title", { id: this.gem_id })} — ${
-        this.field.label
-      }`;
+      if (heading_line) return heading_line;
+      return this.$t("sg_gem_title", { id: this.gem_id });
     },
   },
   mounted() {

@@ -858,9 +858,8 @@ export default {
       if (!this.connected_as) return;
       this.editing_field = field_config;
     },
-    gemFieldModalTitle(field_config) {
-      if (!field_config) return this.gem_title;
-      return `${this.gem_title} — ${field_config.label}`;
+    gemFieldModalTitle() {
+      return this.gem_title;
     },
     gemEditorProps(field_config) {
       return {
