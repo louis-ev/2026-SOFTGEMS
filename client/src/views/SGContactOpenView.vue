@@ -16,20 +16,15 @@
           {{ $t("sg_contact_type") }}:
           {{ contact_type_label }}
         </p>
-        <div class="_headerMetaRow">
-          <p class="_readonlyHint _headerReadonlyHint">
-            {{ $t("sg_contact_type_readonly") }}
-          </p>
-          <button
-            type="button"
-            class="u-buttonLink u-buttonLink_red"
-            :disabled="!connected_as"
-            :title="contact_guest_action_hint"
-            @click="show_remove_contact_modal = true"
-          >
-            {{ $t("sg_remove_contact") }}
-          </button>
-        </div>
+        <button
+          type="button"
+          class="u-buttonLink u-buttonLink_red _removeContactButton"
+          :disabled="!connected_as"
+          :title="contact_guest_action_hint"
+          @click="show_remove_contact_modal = true"
+        >
+          {{ $t("sg_remove_contact") }}
+        </button>
         <RemoveMenu2
           v-if="show_remove_contact_modal"
           :path="contact_path"
@@ -1161,18 +1156,8 @@ export default {
   font-weight: 600;
 }
 
-._headerMetaRow {
+._removeContactButton {
   margin-top: calc(var(--spacing) * 0.45);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: calc(var(--spacing) / 2);
-}
-
-._headerReadonlyHint {
-  margin: 0;
-  flex: 1 1 200px;
 }
 
 ._closeButton {
@@ -1203,12 +1188,6 @@ export default {
   margin-top: calc(var(--spacing) * 0.75);
   display: flex;
   justify-content: flex-end;
-}
-
-._readonlyHint {
-  margin: calc(var(--spacing) * 0.5) 0 0;
-  color: var(--c-gris_fonce);
-  font-size: var(--sl-font-size-small);
 }
 
 ._fieldError {

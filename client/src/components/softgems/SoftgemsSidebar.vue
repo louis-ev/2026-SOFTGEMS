@@ -1,21 +1,19 @@
 <template>
-  <nav class="_softgemsSidebar" aria-label="Main navigation">
-    <router-link
-      v-for="nav_item in nav_items"
-      :key="nav_item.to"
-      :to="nav_item.to"
-      class="u-button u-button_icon _navItem"
-      :class="{ 'is--active': isNavItemActive(nav_item) }"
-      :title="nav_item.title"
-    >
-      <b-icon :icon="nav_item.icon" />
-    </router-link>
-  </nav>
+  <SGIconSidebarNav
+    aria_label="Main navigation"
+    variant="primary"
+    :items="sidebar_items"
+  />
 </template>
 
 <script>
+import SGIconSidebarNav from "@/components/softgems/SGIconSidebarNav.vue";
+
 export default {
   name: "SoftgemsSidebar",
+  components: {
+    SGIconSidebarNav,
+  },
   data() {
     return {
       nav_items: [
@@ -36,6 +34,17 @@ export default {
       ],
     };
   },
+  computed: {
+    sidebar_items() {
+      return this.nav_items.map((nav_item) => ({
+        key: nav_item.to,
+        to: nav_item.to,
+        title: nav_item.title,
+        icon: nav_item.icon,
+        active: this.isNavItemActive(nav_item),
+      }));
+    },
+  },
   methods: {
     isNavItemActive(nav_item) {
       if (nav_item.match_type === "exact")
@@ -45,36 +54,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-._softgemsSidebar {
-  width: 56px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--spacing) / 2);
-  padding: calc(var(--spacing) / 2);
-  background: var(--c-vert);
-  z-index: 3;
-}
-
-._navItem {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: background-color 150ms ease, color 150ms ease;
-}
-
-._navItem:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-._navItem.is--active {
-  background: #ffffff;
-  color: #111;
-}
-</style>

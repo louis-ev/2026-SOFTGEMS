@@ -272,6 +272,7 @@ export default {
 
   sg_selections: "Selections",
   sg_selections_hub_title: "All selection types",
+  sg_selections_type_sidebar_aria: "Selection types",
   sg_create_selection_of_type: "Create {type}",
   sg_section_selection_header: "Document details",
   sg_selection_date: "Date",
