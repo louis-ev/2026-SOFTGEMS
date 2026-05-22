@@ -4,6 +4,37 @@ const _MISSING_STONE_TYPE_SORT_KEY = "\uffff";
  * @param {*} raw
  * @returns {string[]}
  */
+/**
+ * @param {*} path_raw
+ * @returns {string}
+ */
+export function gemSlugFromPath(path_raw) {
+  if (path_raw === null || path_raw === undefined) return "";
+  const trimmed = String(path_raw).trim();
+  if (!trimmed) return "";
+  const parts = trimmed.split("/");
+  return parts[parts.length - 1] || "";
+}
+
+/**
+ * @param {*} raw
+ * @returns {string}
+ */
+export function formatSelectionEntriesHistoryValue(raw) {
+  const paths = normalizeSelectionGemPaths(raw);
+  if (paths.length === 0) return "—";
+
+  const slugs = paths.map(gemSlugFromPath).filter(Boolean);
+  if (slugs.length === 0) return "—";
+
+  const joined = slugs.join(", ");
+  if (joined.length > 140) {
+    return `${slugs.length} (${slugs.slice(0, 10).join(", ")}…)`;
+  }
+  if (slugs.length === 1) return slugs[0];
+  return `${slugs.length} gems: ${joined}`;
+}
+
 export function normalizeSelectionGemPaths(raw) {
   if (!Array.isArray(raw)) return [];
   const out = [];

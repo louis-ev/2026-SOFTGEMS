@@ -93,7 +93,7 @@
             v-for="gem in paginated_gems"
             :key="gem.$path"
             :class="{
-              _clickableRow: !selection_pick_column && !selection_remove_column,
+              _clickableRow: !selection_pick_column,
               _selected: is_gem_open && getGemId(gem) === selected_gem_id,
               _rowPickerDisabled: isRowPickerDisabled(gem),
             }"
@@ -524,7 +524,7 @@ export default {
       return this.disabled_row_path_set.has(String(p));
     },
     handleTableRowClick(gem) {
-      if (this.selection_pick_column || this.selection_remove_column) return;
+      if (this.selection_pick_column) return;
       this.onRowClick(gem);
     },
     onRemoveColumnClick(gem) {
@@ -737,7 +737,7 @@ export default {
 
 ._gemsTable {
   --pick-col-width: 0px;
-  --sticky-id-col-width: 80px;
+  --sticky-id-col-width: 70px;
   --sticky-cover-col-width: 80px;
   --sticky-cover-col-height: 80px;
   --sg-cell-padding: calc(var(--spacing) / 2);
@@ -755,9 +755,11 @@ export default {
 }
 
 ._gemsTable._densityCompact {
-  --sticky-id-col-width: 72px;
-  --sticky-cover-col-width: 30px;
-  --sticky-cover-col-height: 30px;
+  // 1px is border left or right
+  --cell-height: 38px;
+  --sticky-id-col-width: calc(var(--cell-height) + 1px);
+  --sticky-cover-col-width: calc(var(--cell-height) + 1px);
+  --sticky-cover-col-height: var(--cell-height);
   --sg-cell-padding: calc(var(--spacing) / 3);
   --sg-metadata-font-size: 0.68rem;
   --sg-id-font-size: 0.82rem;
@@ -1064,6 +1066,7 @@ td[data-metadata-key="$cover"] {
   th._stickyIdCol,
   td._stickyIdCol {
     left: var(--pick-col-width);
+    text-align: right;
   }
 
   th._stickyCoverCol,

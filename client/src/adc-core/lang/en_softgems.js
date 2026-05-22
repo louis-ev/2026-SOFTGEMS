@@ -288,6 +288,9 @@ export default {
   sg_remove_selection: "Remove selection",
   sg_remove_selection_confirm: 'Remove "{name}" permanently?',
   sg_selection_entries: "Gems in this selection",
+  sg_selection_gems_history: "History",
+  sg_selection_gems_history_title: "Gems selection history",
+  sg_selection_gems_history_initial: "initial",
   sg_selection_gem_count: "Gems",
   sg_selection_entries_empty: "No gems linked yet.",
   sg_selection_entries_sort_hint:

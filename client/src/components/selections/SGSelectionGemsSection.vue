@@ -3,6 +3,16 @@
     section_id="selection_entries"
     :title="$t('sg_selection_entries')"
   >
+    <template #actions>
+      <button
+        type="button"
+        class="u-button u-button_verysmall"
+        @click="show_history_modal = true"
+      >
+        <b-icon icon="clock-history" />
+        <span>{{ $t("sg_selection_gems_history") }}</span>
+      </button>
+    </template>
     <p class="_entriesSortHint">
       {{ $t("sg_selection_entries_sort_hint") }}
     </p>
@@ -41,6 +51,12 @@
       :busy="picker_busy"
       @pick="pickGem"
     />
+
+    <SGSelectionGemsHistoryModal
+      v-if="show_history_modal"
+      :selection_folder_path="selection_folder_path"
+      @close="show_history_modal = false"
+    />
   </SGSectionPanel>
 </template>
 
@@ -48,6 +64,7 @@
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGSelectionAddGemsPicker from "@/components/selections/SGSelectionAddGemsPicker.vue";
+import SGSelectionGemsHistoryModal from "@/components/selections/SGSelectionGemsHistoryModal.vue";
 import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
 import {
   areSelectionGemPathsEqual,
@@ -67,6 +84,7 @@ export default {
     SGSectionPanel,
     SGGemsTable,
     SGSelectionAddGemsPicker,
+    SGSelectionGemsHistoryModal,
   },
   props: {
     selection_folder_path: {
@@ -97,6 +115,7 @@ export default {
       entry_gems_list: [],
       entry_gems_loading: false,
       refresh_entry_gems_seq: 0,
+      show_history_modal: false,
     };
   },
   computed: {

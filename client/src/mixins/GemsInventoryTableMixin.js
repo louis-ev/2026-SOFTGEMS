@@ -281,7 +281,7 @@ export default {
     },
     getGemsMetadataIcon(metadata_key) {
       const metadata_to_icon = {
-        id: "card-list",
+        id: undefined,
         $cover: "images",
         $date_modified: "clock-history",
         internal_name: "pencil",

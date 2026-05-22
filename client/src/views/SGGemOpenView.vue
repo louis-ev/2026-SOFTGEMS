@@ -1,19 +1,41 @@
 <template>
   <section class="_gemOpenView">
     <div class="_pageHeader">
-      <div>
-        <h1 class="_pageTitle">{{ gem_title }}</h1>
-        <p v-if="gem_internal_name" class="_pageSubtitle">
-          {{ gem_internal_name }}
-        </p>
-        <button
-          v-if="gem_last_edited_date"
-          type="button"
-          class="_historyTrigger"
-          @click="openHistoryModal"
-        >
-          {{ $t("sg_last_modified") }}: {{ gem_last_edited_date }}
-        </button>
+      <div class="_headerMain">
+        <div class="_titleRow">
+          <div class="_titleGroup">
+            <h1 class="_pageTitle">{{ gem_title }}</h1>
+            <p v-if="gem_internal_name" class="_pageSubtitle">
+              {{ gem_internal_name }}
+            </p>
+            <button
+              v-if="gem_last_edited_date"
+              type="button"
+              class="_historyTrigger"
+              @click="openHistoryModal"
+            >
+              {{ $t("sg_last_modified") }}: {{ gem_last_edited_date }}
+            </button>
+          </div>
+          <DropDown v-if="can_edit" :show_label="false" :right="true">
+            <button
+              type="button"
+              class="u-buttonLink u-buttonLink_red"
+              @click="show_remove_modal = true"
+            >
+              <b-icon icon="trash" />
+              {{ $t("sg_remove_gem") }}
+            </button>
+            <RemoveMenu2
+              v-if="show_remove_modal"
+              :path="gem_path"
+              :modal_title="$t('sg_remove_gem_confirm', { name: gem_title })"
+              :success_notification="$t('removed_successfully')"
+              @removedSuccessfully="onGemRemoved"
+              @close="show_remove_modal = false"
+            />
+          </DropDown>
+        </div>
       </div>
       <div class="_coverColumn" v-if="gem">
         <div class="_coverFrame">
@@ -32,28 +54,6 @@
     <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="gem" class="_content">
-      <SGSectionPanel>
-        <div class="_dangerZone">
-          <button
-            type="button"
-            class="u-buttonLink u-buttonLink_red"
-            :disabled="!can_edit"
-            :title="gem_remove_guest_title_hint"
-            @click="show_remove_modal = true"
-          >
-            {{ $t("sg_remove_gem") }}
-          </button>
-          <RemoveMenu2
-            v-if="show_remove_modal"
-            :path="gem_path"
-            :modal_title="$t('sg_remove_gem_confirm', { name: gem_title })"
-            :success_notification="$t('removed_successfully')"
-            @removedSuccessfully="onGemRemoved"
-            @close="show_remove_modal = false"
-          />
-        </div>
-      </SGSectionPanel>
-
       <SGSectionPanel
         section_id="selection_box"
         :title="$t('sg_section_selection_box')"
@@ -641,9 +641,6 @@ export default {
     can_edit() {
       return !!this.connected_as;
     },
-    gem_remove_guest_title_hint() {
-      return this.can_edit ? "" : this.$t("sg_action_requires_account");
-    },
     gem_path() {
       return `${this.gems_path}/${this.gem_id}`;
     },
@@ -1043,6 +1040,23 @@ export default {
   margin-bottom: calc(var(--spacing) * 1);
 }
 
+._headerMain {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+._titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 0.75);
+}
+
+._titleGroup {
+  min-width: 0;
+}
+
 ._pageTitle {
   margin: 0;
 }
@@ -1101,11 +1115,6 @@ export default {
   border-radius: 8px;
   overflow: hidden;
   background: var(--c-bodybg);
-}
-
-._dangerZone {
-  display: flex;
-  justify-content: flex-end;
 }
 
 ._fieldsGrid {
