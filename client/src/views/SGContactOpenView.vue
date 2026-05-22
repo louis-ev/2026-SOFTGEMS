@@ -9,16 +9,14 @@
     </button>
 
     <div class="_pageHeader">
-      <h1 class="_pageTitle">{{ page_title }}</h1>
-
-      <div v-if="contact" class="_headerMeta">
-        <p class="_headerType">
-          {{ $t("sg_contact_type") }}:
-          {{ contact_type_label }}
-        </p>
+      <div v-if="contact" class="_titleRow">
+        <div class="_titleGroup">
+          <h1 class="_pageTitle">{{ page_title }}</h1>
+          <span class="_contactType">{{ contact_type_label }}</span>
+        </div>
         <button
           type="button"
-          class="u-buttonLink u-buttonLink_red _removeContactButton"
+          class="u-buttonLink u-buttonLink_red"
           :disabled="!connected_as"
           :title="contact_guest_action_hint"
           @click="show_remove_contact_modal = true"
@@ -36,6 +34,7 @@
           @close="show_remove_contact_modal = false"
         />
       </div>
+      <h1 v-else class="_pageTitle">{{ page_title }}</h1>
     </div>
 
     <div v-if="is_loading">{{ $t("sg_loading_contact") }}</div>
@@ -1142,22 +1141,31 @@ export default {
   margin-bottom: calc(var(--spacing) * 1);
 }
 
+._titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 0.75);
+}
+
+._titleGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(var(--spacing) * 0.65);
+  min-width: 0;
+}
+
 ._pageTitle {
   margin: 0;
 }
 
-._headerMeta {
-  margin-top: calc(var(--spacing) * 0.55);
-}
-
-._headerType {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-._removeContactButton {
-  margin-top: calc(var(--spacing) * 0.45);
+._contactType {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--c-gris_fonce);
+  line-height: 1.2;
 }
 
 ._closeButton {
