@@ -23,10 +23,10 @@
     >
       {{ $t("sg_selection_entries_empty") }}
     </p>
-    <p v-else-if="entry_gems_loading" class="_hint">
+    <p v-else-if="show_entries_initial_loading" class="_hint">
       {{ $t("sg_loading_gems") }}
     </p>
-    <div v-else class="_entriesTableShell">
+    <div v-else-if="show_entries_table_shell" class="_entriesTableShell">
       <SGGemsTable
         :gems="entry_gems_list"
         :inventory_has_gems="entry_gems_list.length > 0"
@@ -44,6 +44,17 @@
         @rowClick="onEntryRowClick"
         @removeRowClick="confirmRemoveGemRow"
       />
+      <div
+        v-if="show_entries_reload_overlay"
+        class="_entriesReloadOverlay"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <p class="_entriesReloadMessage">
+          {{ $t("sg_selection_entries_reloading") }}
+        </p>
+      </div>
     </div>
 
     <SGSelectionAddGemsPicker
@@ -137,6 +148,15 @@ export default {
         this.selection_folder?.selection_entries
       );
     },
+    show_entries_initial_loading() {
+      return this.entry_gems_loading && this.entry_gems_list.length === 0;
+    },
+    show_entries_table_shell() {
+      return this.entry_gems_list.length > 0;
+    },
+    show_entries_reload_overlay() {
+      return this.entry_gems_loading && this.entry_gems_list.length > 0;
+    },
   },
   watch: {
     selection_gem_paths: {
@@ -162,6 +182,7 @@ export default {
       const gem_paths = this.selection_gem_paths;
       if (!gem_paths.length) {
         this.entry_gems_list = [];
+        this.entry_gems_loading = false;
         return;
       }
 
@@ -276,6 +297,7 @@ export default {
 
 <style lang="scss" scoped>
 ._entriesTableShell {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -283,10 +305,32 @@ export default {
   max-height: min(70vh, 720px);
   overflow: hidden;
 
-  > * {
+  > *:not(._entriesReloadOverlay) {
     flex: 1;
     min-height: 0;
   }
+}
+
+._entriesReloadOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--c-bodybg) 70%, transparent);
+  pointer-events: all;
+}
+
+._entriesReloadMessage {
+  margin: 0;
+  padding: calc(var(--spacing) * 0.55) calc(var(--spacing) * 0.9);
+  border-radius: 8px;
+  background: var(--c-bodybg);
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--c-noir) 10%, transparent);
+  font-size: var(--sl-font-size-small);
+  font-weight: 600;
+  color: var(--c-gris_fonce);
 }
 
 ._hint {
