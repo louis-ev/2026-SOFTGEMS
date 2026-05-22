@@ -33,7 +33,9 @@ export default {
   sg_customize_columns: "Columns",
   sg_columns_modal_title: "Customize columns",
   sg_columns_modal_instructions:
-    "Enable or disable columns, then drag rows to reorder them.",
+    "Enable or disable columns, then drag rows to reorder them. Pricing columns (PCb, PA, PV, …) and dimensions are single columns in the table: each shows total + per carat (/ct) or L × W × H together.",
+  sg_column_picker_pricing_hint: "total + /ct",
+  sg_column_picker_dimensions_hint: "L × W × H",
   sg_fixed: "Fixed",
   sg_check_all_columns: "Check all",
   sg_uncheck_all_columns: "Uncheck all",
@@ -188,12 +190,10 @@ export default {
   sg_gems_table_col_pvd: "PVD",
   sg_gems_table_col_pc: "PC",
   sg_gems_table_col_pf: "PF",
-  sg_gems_table_col_ppc_all: "All",
   sg_pv_selling_price: "PV (selling price)",
   sg_pvd_asking_price: "PVD (asking price)",
   sg_pc_to: "PC to",
   sg_pf_invoiced_price: "PF (invoiced price)",
-  sg_price_per_carat_all: "Price per carat (all pricing)",
   sg_creation_notice_documents:
     "You can add a cover image and PDF certificates after creating the gem.",
   sg_creation_notice_editable: "All fields remain editable after creation.",
@@ -225,7 +225,6 @@ export default {
   sg_pricing_cell_per_carat: "Per carat",
   sg_pricing_pair_editor_save_hint:
     "Only the total amount is saved. Per carat updates automatically from total ÷ weight.",
-  sg_pricing_standalone_pricing: "Other (not paired above)",
   sg_address_book: "Address book",
   sg_create_contact: "Add a contact",
   sg_create_contact_title: "Create contact",

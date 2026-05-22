@@ -449,29 +449,6 @@
               />
             </div>
           </div>
-          <div class="_pricingPair _pricingPair_other">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_standalone_pricing") }}
-            </p>
-            <div class="_pricingPairGrid">
-              <SGEditableMetaField
-                :label="$t('sg_price_per_carat_all')"
-                icon="arrow-up"
-                :value="gem.price_per_carat_all"
-                :is_flashing="isFieldFlashing('price_per_carat_all')"
-                :modal_open="
-                  editing_field === field_configs.price_per_carat_all
-                "
-                :modal_title="
-                  gemFieldModalTitle(field_configs.price_per_carat_all)
-                "
-                :gem_edit="gemEditorProps(field_configs.price_per_carat_all)"
-                @presentClick="openEditModal(field_configs.price_per_carat_all)"
-                @close="editing_field = null"
-                @saved="onFieldSaved"
-              />
-            </div>
-          </div>
         </div>
       </SGSectionPanel>
 

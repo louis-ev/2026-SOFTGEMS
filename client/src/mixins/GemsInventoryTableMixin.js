@@ -1,14 +1,22 @@
-import GemPricing, {
-  gem_virtual_per_carat_column_keys,
-} from "@/mixins/GemPricing";
+import GemPricing from "@/mixins/GemPricing";
 import GemDimensions, {
   gem_linear_dimension_keys,
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
+import {
+  gems_table_column_picker_excluded_keys,
+  normalizeGemsTableSelectedMetadataKeys,
+  stripLinearDimensionKeys,
+  stripVirtualPerCaratKeys,
+} from "@/utils/gems_table_metadata.js";
 
 export const gems_metadata_keys_localstorage_key = "sg_gems_metadata_keys";
 export const gems_pinned_metadata_keys = ["id", "$cover"];
-export const gem_excluded_metadata_keys = ["internal_name"];
+export const gem_excluded_metadata_keys = [
+  "internal_name",
+  "price_per_carat_all",
+  "box_selection_path",
+];
 
 /** Shared gems table columns (same rules as SGGemsView). Host must expose `gems` (array). */
 export default {
@@ -29,9 +37,7 @@ export default {
         "name",
         "title",
         ...gem_excluded_metadata_keys,
-        "price_per_carat_pa_pcb",
-        ...gem_virtual_per_carat_column_keys,
-        ...gem_linear_dimension_keys,
+        ...gems_table_column_picker_excluded_keys,
       ]);
       const known_order = [
         "id",
@@ -55,7 +61,6 @@ export default {
         "pvd_asking_price",
         "pc_to",
         "pf_invoiced_price",
-        "price_per_carat_all",
       ];
       const metadata_key_set = new Set();
 
@@ -141,28 +146,8 @@ export default {
     },
   },
   methods: {
-    stripLinearDimensionKeys(metadata_keys) {
-      if (!Array.isArray(metadata_keys)) return [];
-      let inserted = false;
-      const out = [];
-      for (const key of metadata_keys) {
-        if (gem_linear_dimension_keys.includes(key)) {
-          if (!inserted) {
-            out.push(gem_dimensions_merged_column_key);
-            inserted = true;
-          }
-          continue;
-        }
-        out.push(key);
-      }
-      return out;
-    },
-    stripVirtualPerCaratKeys(metadata_keys) {
-      if (!Array.isArray(metadata_keys)) return [];
-      return metadata_keys.filter(
-        (key) => !gem_virtual_per_carat_column_keys.includes(key)
-      );
-    },
+    stripLinearDimensionKeys,
+    stripVirtualPerCaratKeys,
     stripExcludedGemMetadataKeys(metadata_keys) {
       if (!Array.isArray(metadata_keys)) return [];
       return metadata_keys.filter(
@@ -178,13 +163,8 @@ export default {
         const stored_keys = JSON.parse(stored_keys_json);
         if (!Array.isArray(stored_keys)) return;
         this.selected_metadata_keys = this.stripExcludedGemMetadataKeys(
-          this.stripLinearDimensionKeys(
-            stored_keys
-              .filter((metadata_key) => typeof metadata_key === "string")
-              .filter(
-                (metadata_key) =>
-                  !gem_virtual_per_carat_column_keys.includes(metadata_key)
-              )
+          normalizeGemsTableSelectedMetadataKeys(
+            stored_keys.filter((metadata_key) => typeof metadata_key === "string")
           )
         );
       } catch {
@@ -202,9 +182,7 @@ export default {
 
       const selected_keys = Array.isArray(this.selected_metadata_keys)
         ? this.stripExcludedGemMetadataKeys(
-            this.stripLinearDimensionKeys(
-              this.stripVirtualPerCaratKeys(this.selected_metadata_keys)
-            )
+            normalizeGemsTableSelectedMetadataKeys(this.selected_metadata_keys)
           )
         : [];
       const selected_in_order = selected_keys.filter((metadata_key) =>
@@ -246,9 +224,7 @@ export default {
       }
       this.selected_metadata_keys = this.enforcePinnedGemsColumns(
         this.stripExcludedGemMetadataKeys(
-          this.stripLinearDimensionKeys(
-            this.stripVirtualPerCaratKeys(next_selected_metadata_keys)
-          )
+          normalizeGemsTableSelectedMetadataKeys(next_selected_metadata_keys)
         ),
         this.all_metadata_keys
       );
@@ -314,16 +290,10 @@ export default {
         height_mm: "aspect-ratio",
         base_price_pcb: "tag",
         purchased_price_pa: "tag",
-        price_per_carat_pcb: "diagram2",
-        price_per_carat_pa: "diagram2",
         pv_selling_price: "tag",
-        price_per_carat_pv: "diagram2",
         pvd_asking_price: "diagram2",
         pc_to: "file-earmark-text",
-        price_per_carat_pc: "diagram2",
         pf_invoiced_price: "file-earmark-text",
-        price_per_carat_pf: "diagram2",
-        price_per_carat_all: "arrow-up",
         dimensions_lwh: "aspect-ratio",
       };
       return metadata_to_icon[metadata_key] || null;
@@ -336,7 +306,6 @@ export default {
         pvd_asking_price: "sg_gems_table_col_pvd",
         pc_to: "sg_gems_table_col_pc",
         pf_invoiced_price: "sg_gems_table_col_pf",
-        price_per_carat_all: "sg_gems_table_col_ppc_all",
       };
       const pricing_header = pricing_table_header_i18n[metadata_key];
       if (pricing_header) return this.$t(pricing_header);
@@ -359,18 +328,10 @@ export default {
         length_mm: "sg_length_mm",
         width_mm: "sg_width_mm",
         height_mm: "sg_height_mm",
-        base_price_pcb: "sg_base_price_pcb",
-        purchased_price_pa: "sg_purchased_price_pa",
-        price_per_carat_pcb: "sg_price_per_carat_pcb",
-        price_per_carat_pa: "sg_price_per_carat_pa",
         pv_selling_price: "sg_pv_selling_price",
-        price_per_carat_pv: "sg_price_per_carat_pv",
         pvd_asking_price: "sg_pvd_asking_price",
         pc_to: "sg_pc_to",
-        price_per_carat_pc: "sg_price_per_carat_pc",
         pf_invoiced_price: "sg_pf_invoiced_price",
-        price_per_carat_pf: "sg_price_per_carat_pf",
-        price_per_carat_all: "sg_price_per_carat_all",
         dimensions_lwh: "sg_dimensions_lwh",
         $path: "sg_path",
         $date_created: "sg_created",

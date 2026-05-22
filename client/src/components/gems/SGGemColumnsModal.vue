@@ -69,14 +69,25 @@
 
             <span class="_columnLabel">
               <b-icon
-                v-if="metadata_icons[column_item.metadata_key]"
+                v-if="
+                  metadata_icons[column_item.metadata_key] &&
+                  !isMergedPricingColumn(column_item.metadata_key)
+                "
                 :icon="metadata_icons[column_item.metadata_key]"
                 class="_columnIcon"
               />
-              {{
-                metadata_labels[column_item.metadata_key] ||
-                column_item.metadata_key
-              }}
+              <span class="_columnLabelText">
+                <span class="_columnLabelPrimary">{{
+                  metadata_labels[column_item.metadata_key] ||
+                  column_item.metadata_key
+                }}</span>
+                <span
+                  v-if="columnPickerMergedHint(column_item.metadata_key)"
+                  class="_columnLabelHint"
+                >
+                  {{ columnPickerMergedHint(column_item.metadata_key) }}
+                </span>
+              </span>
             </span>
           </div>
         </div>
@@ -114,6 +125,12 @@
 </template>
 
 <script>
+import {
+  isGemsTableMergedDimensionsColumnKey,
+  isGemsTableMergedPricingColumnKey,
+  normalizeGemsTableSelectedMetadataKeys,
+} from "@/utils/gems_table_metadata.js";
+
 const pinned_metadata_keys = ["id", "$cover"];
 
 export default {
@@ -168,9 +185,11 @@ export default {
       const all_keys = Array.isArray(this.all_metadata_keys)
         ? this.all_metadata_keys
         : [];
-      const selected_keys = Array.isArray(this.selected_metadata_keys)
-        ? this.selected_metadata_keys
-        : [];
+      const selected_keys = normalizeGemsTableSelectedMetadataKeys(
+        Array.isArray(this.selected_metadata_keys)
+          ? this.selected_metadata_keys
+          : []
+      );
       const selected_set = new Set(selected_keys);
 
       const columns = all_keys.map((metadata_key) => ({
@@ -214,10 +233,24 @@ export default {
       return [...pinned_columns, ...regular_columns];
     },
     save() {
-      const next_selected_metadata_keys = this.local_columns
-        .filter((column_item) => column_item.is_enabled)
-        .map((column_item) => column_item.metadata_key);
+      const next_selected_metadata_keys = normalizeGemsTableSelectedMetadataKeys(
+        this.local_columns
+          .filter((column_item) => column_item.is_enabled)
+          .map((column_item) => column_item.metadata_key)
+      );
       this.$emit("save", next_selected_metadata_keys);
+    },
+    isMergedPricingColumn(metadata_key) {
+      return isGemsTableMergedPricingColumnKey(metadata_key);
+    },
+    columnPickerMergedHint(metadata_key) {
+      if (isGemsTableMergedPricingColumnKey(metadata_key)) {
+        return this.$t("sg_column_picker_pricing_hint");
+      }
+      if (isGemsTableMergedDimensionsColumnKey(metadata_key)) {
+        return this.$t("sg_column_picker_dimensions_hint");
+      }
+      return "";
     },
     handleDragStartColumn(index, event) {
       const column_item = this.local_columns[index];
@@ -438,6 +471,24 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 4);
   flex: 1;
+  min-width: 0;
+}
+
+._columnLabelText {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 8);
+  min-width: 0;
+}
+
+._columnLabelPrimary {
+  line-height: 1.25;
+}
+
+._columnLabelHint {
+  font-size: var(--sl-font-size-x-small);
+  color: var(--c-gris_fonce);
+  line-height: 1.2;
 }
 
 ._columnIcon {

@@ -131,7 +131,6 @@ const v1_new_gem_fields_defaults = {
   pvd_asking_price: 0,
   pc_to: 0,
   pf_invoiced_price: 0,
-  price_per_carat_all: 0,
 };
 
 export default {

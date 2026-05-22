@@ -241,15 +241,6 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       instructions: t("sg_format_decimal_2"),
       pricing_total_key: "pf_invoiced_price",
     },
-    price_per_carat_all: {
-      key: "price_per_carat_all",
-      label: t("sg_price_per_carat_all"),
-      icon: "arrow-up",
-      type: "number",
-      input_type: "number",
-      input_step: 0.01,
-      instructions: t("sg_format_decimal_2"),
-    },
     dimensions_lwh: {
       key: "dimensions_lwh",
       label: t("sg_dimensions_lwh"),

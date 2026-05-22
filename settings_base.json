@@ -200,9 +200,6 @@
           "pf_invoiced_price": {
             "type": "number"
           },
-          "price_per_carat_all": {
-            "type": "number"
-          },
           "box_selection_path": {
             "type": "string"
           }
