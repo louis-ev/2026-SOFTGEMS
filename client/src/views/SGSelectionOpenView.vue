@@ -75,32 +75,6 @@
             </div>
           </SGSectionPanel>
 
-          <SGSectionPanel
-            section_id="selection_notes"
-            :title="$t('sg_selection_notes')"
-          >
-            <div>
-              <SGEditableMetaField
-                :label="$t('sg_selection_notes')"
-                icon="journal-text"
-                :value="edited_notes"
-                :modal_open="
-                  !!(
-                    selection_edit_modal &&
-                    selection_edit_modal.kind === 'notes'
-                  )
-                "
-                :modal_title="edit_modal_title"
-                :modal_is_loading="is_saving_notes"
-                :meta_text="notes_meta_text"
-                @presentClick="openNotesModal"
-                @close="closeEditModal"
-                @save="onEditModalSave"
-                @draftChange="onEditDraftChange"
-              />
-            </div>
-          </SGSectionPanel>
-
           <SGSelectionGemsSection
             v-if="selection_folder_path"
             :key="selection_folder_path"
@@ -177,10 +151,8 @@ export default {
       fetch_error: "",
       joined_selection_folder_path: "",
       edited_internal_name: "",
-      edited_notes: "",
       selection_edit_modal: null,
       is_saving_internal_name: false,
-      is_saving_notes: false,
       show_remove_modal: false,
       side_panel_gem_id: "",
     };
@@ -216,19 +188,8 @@ export default {
         ? this.selection.internal_name
         : "";
     },
-    stored_notes() {
-      return this.selection && typeof this.selection.notes === "string"
-        ? this.selection.notes
-        : "";
-    },
     edit_modal_title() {
-      const m = this.selection_edit_modal;
-      if (!m) return this.page_title;
-      if (m.kind === "internal_name")
-        return `${this.page_title} — ${this.$t("sg_selection_internal_name")}`;
-      if (m.kind === "notes")
-        return `${this.page_title} — ${this.$t("sg_selection_notes")}`;
-      return this.page_title;
+      return `${this.page_title} — ${this.$t("sg_selection_internal_name")}`;
     },
     internal_name_meta_text() {
       return {
@@ -238,17 +199,6 @@ export default {
         is_saving: this.is_saving_internal_name,
         required: true,
         required_empty_hint: this.$t("sg_selection_name_required"),
-        external_warning: "",
-      };
-    },
-    notes_meta_text() {
-      return {
-        meta_path: this.selection_folder_path,
-        field_key: "notes",
-        stored_value: this.stored_notes,
-        is_saving: this.is_saving_notes,
-        required: false,
-        required_empty_hint: "",
         external_warning: "",
       };
     },
@@ -266,7 +216,6 @@ export default {
         if (!v) return;
         this.edited_internal_name =
           typeof v.internal_name === "string" ? v.internal_name : "";
-        this.edited_notes = typeof v.notes === "string" ? v.notes : "";
         this.replaceDetailUrlIfStale();
       },
       immediate: true,
@@ -355,10 +304,6 @@ export default {
       if (!this.can_edit) return;
       this.selection_edit_modal = { kind: "internal_name" };
     },
-    openNotesModal() {
-      if (!this.can_edit) return;
-      this.selection_edit_modal = { kind: "notes" };
-    },
     closeEditModal() {
       this.selection_edit_modal = null;
     },
@@ -367,13 +312,8 @@ export default {
       const modal = this.selection_edit_modal;
       if (!modal) return;
       const raw = typeof value === "string" ? value : "";
-      if (modal.kind === "internal_name") {
-        this.edited_internal_name = raw;
-        await this.persistInternalName();
-      } else if (modal.kind === "notes") {
-        this.edited_notes = raw;
-        await this.persistNotes();
-      }
+      this.edited_internal_name = raw;
+      await this.persistInternalName();
     },
     async persistInternalName() {
       const trimmed = this.cleanString(this.edited_internal_name);
@@ -391,21 +331,6 @@ export default {
         this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
       } finally {
         this.is_saving_internal_name = false;
-      }
-    },
-    async persistNotes() {
-      if (this.is_saving_notes) return;
-      this.is_saving_notes = true;
-      try {
-        await this.$api.updateMeta({
-          path: this.selection_folder_path,
-          new_meta: { notes: this.edited_notes },
-        });
-        this.closeEditModal();
-      } catch ({ code }) {
-        this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
-      } finally {
-        this.is_saving_notes = false;
       }
     },
     onSelectionEntryRowClick(gem_id) {
