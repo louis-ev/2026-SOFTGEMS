@@ -1,6 +1,10 @@
 <template>
   <div class="_gemFieldEditorBody">
-    <DLabel :str="field.label" :icon="field.icon" />
+    <DLabel
+      v-if="!active_pricing_pair"
+      :str="field.label"
+      :icon="field.icon"
+    />
 
     <div class="_inputWrap">
       <template v-if="field.readonly">

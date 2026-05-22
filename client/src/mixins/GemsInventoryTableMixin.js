@@ -316,12 +316,13 @@ export default {
     },
     getGemsMetadataLabel(metadata_key) {
       const pricing_table_header_i18n = {
-        base_price_pcb: "sg_price_per_carat_pcb",
-        purchased_price_pa: "sg_price_per_carat_pa",
-        pv_selling_price: "sg_price_per_carat_pv",
-        pvd_asking_price: "sg_price_per_carat_pvd",
-        pc_to: "sg_price_per_carat_pc",
-        pf_invoiced_price: "sg_price_per_carat_pf",
+        base_price_pcb: "sg_gems_table_col_pcb",
+        purchased_price_pa: "sg_gems_table_col_pa",
+        pv_selling_price: "sg_gems_table_col_pv",
+        pvd_asking_price: "sg_gems_table_col_pvd",
+        pc_to: "sg_gems_table_col_pc",
+        pf_invoiced_price: "sg_gems_table_col_pf",
+        price_per_carat_all: "sg_gems_table_col_ppc_all",
       };
       const pricing_header = pricing_table_header_i18n[metadata_key];
       if (pricing_header) return this.$t(pricing_header);

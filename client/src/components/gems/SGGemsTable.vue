@@ -7,6 +7,7 @@
         {
           _hasPickColumn: selection_pick_column,
           _hasRemoveColumn: selection_remove_column,
+          _hasTotalsRow: show_gems_table_totals_row,
         },
       ]"
     >
@@ -28,7 +29,10 @@
               :key="metadata_key"
               :class="[
                 getStickyColumnClass(metadata_key),
-                { _sortableHeader: isSortableColumn(metadata_key) },
+                {
+                  _sortableHeader: isSortableColumn(metadata_key),
+                  _pricingCol: isGemPricingTotalColumnKey(metadata_key),
+                },
               ]"
               :aria-sort="getAriaSort(metadata_key)"
             >
@@ -40,7 +44,10 @@
               >
                 <span class="_thContent">
                   <b-icon
-                    v-if="metadata_icons[metadata_key]"
+                    v-if="
+                      metadata_icons[metadata_key] &&
+                      !isGemPricingTotalColumnKey(metadata_key)
+                    "
                     :icon="metadata_icons[metadata_key]"
                     class="_thIcon"
                   />
@@ -136,6 +143,7 @@
                 {
                   _editableCell: isMetadataCellEditable(metadata_key),
                   _flashCell: isCellFlashing(gem, metadata_key),
+                  _pricingCol: isGemPricingTotalColumnKey(metadata_key),
                 },
               ]"
               :data-cell-key="getCellFlashKey(gem, metadata_key)"
@@ -184,6 +192,39 @@
             </td>
           </tr>
         </transition-group>
+        <tfoot v-if="show_gems_table_totals_row">
+          <tr class="_totalsRow">
+            <td v-if="selection_remove_column" class="_removeColTd"></td>
+            <td v-if="selection_pick_column" class="_pickColTd"></td>
+            <td
+              v-for="metadata_key in metadata_keys"
+              :key="`total-${metadata_key}`"
+              :class="[
+                getStickyColumnClass(metadata_key),
+                {
+                  _pricingCol: isGemPricingTotalColumnKey(metadata_key),
+                },
+              ]"
+              :data-metadata-key="metadata_key"
+            >
+              <div
+                v-if="isGemPricingTotalColumnKey(metadata_key)"
+                class="_pricingCell"
+              >
+                <span class="_pricingLine _pricingTotal">{{
+                  formatTotalsPricingTotal(metadata_key)
+                }}</span>
+                <span class="_pricingLine _pricingPerCt">{{
+                  formatTotalsPricingPerCt(metadata_key)
+                }}</span>
+              </div>
+              <span v-else class="_gemMetadataValue _totalsCellValue">{{
+                formatTotalsCell(metadata_key)
+              }}</span>
+            </td>
+            <td v-if="show_append_column" class="_appendColTd"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
@@ -258,6 +299,8 @@ export default {
     fixed_gem_order: { type: Boolean, default: false },
     inventory_has_gems: { type: Boolean, default: true },
     gems_page_size: { type: [Number, String], default: 100 },
+    /** When true, shows a totals row for the current table rows (incl. search/filter). */
+    show_totals_row: { type: Boolean, default: true },
   },
   data() {
     return {
@@ -345,6 +388,34 @@ export default {
         typeof this.$scopedSlots.appendCell === "function" ||
         typeof this.$slots.appendCell !== "undefined"
       );
+    },
+    show_gems_table_totals_row() {
+      return this.show_totals_row && this.sorted_gems.length > 0;
+    },
+    gems_table_numeric_totals() {
+      const gems = this.sorted_gems;
+      const pricing_totals = {};
+
+      this.metadata_keys.forEach((metadata_key) => {
+        if (!this.isGemPricingTotalColumnKey(metadata_key)) return;
+        pricing_totals[metadata_key] = gems.reduce(
+          (sum, gem) => sum + this.toNumberOrDefault(gem?.[metadata_key], 0),
+          0
+        );
+      });
+
+      return {
+        count: gems.length,
+        weight_total: gems.reduce(
+          (sum, gem) => sum + this.toNumberOrDefault(gem?.weight_ct, 0),
+          0
+        ),
+        pieces_total: gems.reduce(
+          (sum, gem) => sum + this.toNumberOrDefault(gem?.number_of_pieces, 0),
+          0
+        ),
+        pricing_totals,
+      };
     },
   },
   watch: {
@@ -455,6 +526,43 @@ export default {
       const w = this.toNumberOrDefault(gem?.weight_ct);
       if (!Number.isFinite(w) || w <= 0) return "- /ct";
       const per = this.computeDisplayedPerCaratForGem(gem, total_key);
+      return `${this.formatPriceCellNumber(per)} /ct`;
+    },
+    formatTotalsCell(metadata_key) {
+      const totals = this.gems_table_numeric_totals;
+
+      if (metadata_key === "id") {
+        return this.$t("sg_gems_table_total_row_count", {
+          count: totals.count,
+        });
+      }
+      if (metadata_key === "$cover" || metadata_key === "$date_modified") {
+        return "";
+      }
+      if (metadata_key === "weight_ct") {
+        if (totals.weight_total <= 0) return "—";
+        return this.formatValue(totals.weight_total);
+      }
+      if (metadata_key === "number_of_pieces") {
+        if (totals.pieces_total <= 0) return "—";
+        return this.formatValue(totals.pieces_total);
+      }
+      return "";
+    },
+    formatTotalsPricingTotal(metadata_key) {
+      const total = this.gems_table_numeric_totals.pricing_totals[metadata_key];
+      if (!Number.isFinite(total) || total <= 0) return "—";
+      return this.formatPriceCellNumber(total);
+    },
+    formatTotalsPricingPerCt(metadata_key) {
+      const totals = this.gems_table_numeric_totals;
+      const total = totals.pricing_totals[metadata_key];
+      if (!Number.isFinite(total) || total <= 0) return "— /ct";
+      const per = this.computePerCarat({
+        total_value: total,
+        weight_ct: totals.weight_total,
+      });
+      if (!Number.isFinite(per) || per <= 0) return "— /ct";
       return `${this.formatPriceCellNumber(per)} /ct`;
     },
     resolveSortValue(gem, metadata_key) {
@@ -710,6 +818,7 @@ export default {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  height: 100%;
   gap: calc(var(--spacing) / 4);
 }
 
@@ -754,15 +863,29 @@ export default {
   }
 }
 
+._gemsTable._hasTotalsRow {
+  // Room for sticky footer when the table is shorter than the scrollport.
+  padding-bottom: 1px;
+}
+
 ._gemsTable._densityCompact {
-  // 1px is border left or right
   --cell-height: 38px;
-  --sticky-id-col-width: calc(var(--cell-height) + 1px);
+  // to get Total (n) cell to fit the width we add 8px
+  // 1px is border left or right
+  --sticky-id-col-width: calc(var(--cell-height) + 1px + 8px);
   --sticky-cover-col-width: calc(var(--cell-height) + 1px);
   --sticky-cover-col-height: var(--cell-height);
   --sg-cell-padding: calc(var(--spacing) / 3);
   --sg-metadata-font-size: 0.68rem;
   --sg-id-font-size: 0.82rem;
+
+  ._table th._pricingCol,
+  ._table td._pricingCol {
+    --pricing-col-width: 5.5rem;
+    width: var(--pricing-col-width);
+    min-width: var(--pricing-col-width);
+    max-width: var(--pricing-col-width);
+  }
 }
 
 ._gemsTable._densityMedium {
@@ -784,6 +907,12 @@ export default {
 }
 
 ._table {
+  --sg-table-header-bg: var(--c-bodybg);
+  --sg-table-footer-bg: color-mix(
+    in srgb,
+    var(--c-gris_clair) 55%,
+    var(--c-bodybg)
+  );
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--c-gris);
@@ -812,15 +941,45 @@ export default {
     border-bottom: 0;
   }
 
-  th {
+  thead th {
     position: sticky;
     top: 0;
+    z-index: 8;
     border-top: 1px solid var(--c-gris);
-    z-index: 5;
+    background: var(--sg-table-header-bg);
+    box-shadow: 0 1px 0 var(--c-gris);
+    vertical-align: middle;
 
     &:hover {
       background: var(--c-gris_clair);
     }
+  }
+
+  tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    border-top: 1px solid var(--c-gris);
+    background: var(--sg-table-footer-bg);
+    vertical-align: middle;
+    box-shadow: 0 -1px 0 var(--c-gris);
+  }
+
+  tfoot td._stickyIdCol {
+    z-index: 10;
+  }
+
+  tfoot td._stickyCoverCol {
+    z-index: 11;
+  }
+
+  tfoot td._pickColTd,
+  tfoot td._removeColTd {
+    z-index: 12;
+  }
+
+  tfoot tr:last-child td {
+    border-bottom: 0;
   }
 
   th._stickyIdCol,
@@ -829,9 +988,7 @@ export default {
     left: 0px;
     min-width: var(--sticky-id-col-width);
     max-width: var(--sticky-id-col-width);
-    z-index: 4;
     border-left: 1px solid var(--c-gris);
-    // box-shadow: inset -1px 0 0 var(--c-gris);
   }
 
   th._stickyCoverCol,
@@ -840,18 +997,27 @@ export default {
     left: var(--sticky-id-col-width);
     min-width: var(--sticky-cover-col-width);
     max-width: var(--sticky-cover-col-width);
-    z-index: 3;
     overflow: hidden;
-    // border-left: 1px solid var(--c-gris);
   }
 
-  th._stickyIdCol,
-  th._stickyCoverCol {
-    z-index: 7;
+  thead th._stickyIdCol {
+    top: 0;
+    z-index: 12;
+    background: var(--sg-table-header-bg);
   }
 
-  th._stickyCoverCol {
-    z-index: 8;
+  thead th._stickyCoverCol {
+    top: 0;
+    z-index: 13;
+    background: var(--sg-table-header-bg);
+  }
+
+  tbody td._stickyIdCol {
+    z-index: 4;
+  }
+
+  tbody td._stickyCoverCol {
+    z-index: 3;
   }
 
   th._pickColTh,
@@ -871,9 +1037,11 @@ export default {
     border-left: 1px solid var(--c-gris);
   }
 
-  th._pickColTh,
-  th._removeColTh {
-    z-index: 9;
+  thead th._pickColTh,
+  thead th._removeColTh {
+    top: 0;
+    z-index: 14;
+    background: var(--sg-table-header-bg);
   }
 
   td._pickColTd,
@@ -884,6 +1052,20 @@ export default {
   td {
     font-size: var(--sg-metadata-font-size);
     font-family: var(--sl-font-mono);
+  }
+
+  th._pricingCol,
+  td._pricingCol {
+    width: 5rem;
+    min-width: 5rem;
+    max-width: 5rem;
+    padding-left: calc(var(--sg-cell-padding) * 0.55);
+    padding-right: calc(var(--sg-cell-padding) * 0.55);
+    box-sizing: border-box;
+  }
+
+  th._pricingCol ._thContent {
+    gap: calc(var(--spacing) / 6);
   }
 }
 
@@ -961,6 +1143,26 @@ export default {
   background: var(--c-gris_clair);
 }
 
+thead th._stickyIdCol:hover,
+thead th._stickyCoverCol:hover,
+thead th._pickColTh:hover,
+thead th._removeColTh:hover {
+  background: var(--c-gris_clair);
+}
+
+._totalsRow td._stickyIdCol,
+._totalsRow td._stickyCoverCol {
+  background: var(--sg-table-footer-bg);
+}
+
+._totalsCellValue {
+  font-weight: 600;
+}
+
+._totalsRow ._pricingTotal {
+  font-weight: 600;
+}
+
 td[data-metadata-key="$cover"] {
   width: var(--sticky-cover-col-width);
 }
@@ -1007,10 +1209,14 @@ td[data-metadata-key="$cover"] {
   flex-direction: column;
   gap: 0.2em;
   line-height: 1.25;
+  overflow: hidden;
 }
 
 ._pricingLine {
   font-family: var(--sl-font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 ._pricingPerCt {

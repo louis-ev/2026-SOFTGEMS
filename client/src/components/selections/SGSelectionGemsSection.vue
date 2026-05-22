@@ -2,6 +2,7 @@
   <SGSectionPanel
     section_id="selection_entries"
     :title="$t('sg_selection_entries')"
+    :count="selection_gem_paths.length"
   >
     <template #actions>
       <button
@@ -275,9 +276,17 @@ export default {
 
 <style lang="scss" scoped>
 ._entriesTableShell {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  height: min(70vh, 720px);
   max-height: min(70vh, 720px);
-  overflow: auto;
+  overflow: hidden;
+
+  > * {
+    flex: 1;
+    min-height: 0;
+  }
 }
 
 ._hint {

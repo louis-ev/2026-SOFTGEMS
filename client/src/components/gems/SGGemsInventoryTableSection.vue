@@ -276,10 +276,18 @@ export default {
 ._tableShell {
   min-height: 0;
   flex: 1;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  > * {
+    flex: 1;
+    min-height: 0;
+  }
 }
 
 ._tableShell._tableShellBounded {
+  height: min(70vh, 720px);
   max-height: min(70vh, 720px);
 }
 </style>
