@@ -17,7 +17,10 @@
     </div>
 
     <form class="_form" @submit.prevent="createSelection">
-      <SGSectionPanel section_id="selection_identity" :title="$t('sg_section_contact_identity')">
+      <SGSectionPanel
+        section_id="selection_identity"
+        :title="$t('sg_section_contact_identity')"
+      >
         <div class="_fieldsGrid">
           <div>
             <DLabel :str="$t('sg_selection_internal_name')" icon="pencil" />
@@ -25,6 +28,7 @@
               ref="name_input"
               :content.sync="new_internal_name"
               :required="true"
+              autofocus="true"
               @update:content="onNameInput"
             />
             <p v-if="name_error" class="_fieldError">{{ name_error }}</p>
@@ -103,9 +107,7 @@ export default {
       return "";
     },
     is_create_disabled() {
-      return (
-        this.is_creating || !this.trimmed_name || !this.new_selection_type
-      );
+      return this.is_creating || !this.trimmed_name || !this.new_selection_type;
     },
   },
   methods: {
@@ -118,6 +120,13 @@ export default {
     cleanString(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
+    },
+    todaySelectionDate() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     },
     async createSelection() {
       this.name_touched = true;
@@ -135,6 +144,7 @@ export default {
             $contributors: "everyone",
             internal_name: this.trimmed_name,
             selection_type: this.new_selection_type,
+            selection_date: this.todaySelectionDate(),
             selection_entries: [],
           },
         });
