@@ -37,6 +37,15 @@ export function selectionTypeLabel(t, value) {
   return map[v] || v || "—";
 }
 
+/** Plural / collection label for typed list pages (hub cards, sidebar, table heading). */
+export function selectionTypeListLabel(t, value) {
+  const v = String(value || "").trim();
+  const list_map = {
+    "boîte": t("sg_selection_type_boxes"),
+  };
+  return list_map[v] || selectionTypeLabel(t, v);
+}
+
 /** @param {(key: string) => string} t */
 export function selectionTypeSelectOptions(t) {
   return SELECTION_TYPE_VALUES.map((value) => ({

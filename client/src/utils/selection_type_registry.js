@@ -4,8 +4,13 @@ import { SELECTION_TYPE_VALUES } from "@/utils/selection_types.js";
 
 /** @type {SelectionTypeDef[]} */
 export const SELECTION_TYPE_REGISTRY = Object.freeze([
-  { value: "simple", slug: "simple", icon: "layout-three-columns", sort_order: 1 },
-  { value: "boîte", slug: "boite", icon: "archive", sort_order: 2 },
+  {
+    value: "simple",
+    slug: "simple",
+    icon: "layout-three-columns",
+    sort_order: 1,
+  },
+  { value: "boîte", slug: "box", icon: "archive", sort_order: 2 },
   { value: "memo in", slug: "memo-in", icon: "arrow-down-left", sort_order: 3 },
   {
     value: "return memo in",
@@ -19,7 +24,12 @@ export const SELECTION_TYPE_REGISTRY = Object.freeze([
     icon: "bag",
     sort_order: 5,
   },
-  { value: "memo out", slug: "memo-out", icon: "arrow-up-right", sort_order: 6 },
+  {
+    value: "memo out",
+    slug: "memo-out",
+    icon: "arrow-up-right",
+    sort_order: 6,
+  },
   {
     value: "return memo out",
     slug: "return-memo-out",

@@ -99,7 +99,7 @@ import {
   selectionListPath,
   selectionNewPath,
 } from "@/utils/selection_urls.js";
-import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import { selectionTypeListLabel as selectionTypeListLabelFn } from "@/utils/selection_types.js";
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 
 export default {
@@ -128,7 +128,7 @@ export default {
     },
     page_title() {
       if (!this.active_selection_type) return this.$t("sg_selections");
-      return selectionTypeLabelFn(
+      return selectionTypeListLabelFn(
         this.$t.bind(this),
         this.active_selection_type
       );

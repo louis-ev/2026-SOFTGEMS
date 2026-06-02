@@ -349,6 +349,7 @@ export default {
   sg_gem_box_updated: "Box assignment updated.",
   sg_selection_type_simple: "Simple",
   sg_selection_type_box: "Box",
+  sg_selection_type_boxes: "Boxes",
   sg_selection_type_memo_in: "Memo in",
   sg_selection_type_return_memo_in: "Return memo in",
   sg_selection_type_buying_invoice: "Buying invoice",

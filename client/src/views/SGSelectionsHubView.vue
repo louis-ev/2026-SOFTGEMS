@@ -32,7 +32,7 @@
 <script>
 import { allSelectionTypes } from "@/utils/selection_type_registry.js";
 import { selectionListPath } from "@/utils/selection_urls.js";
-import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import { selectionTypeListLabel as selectionTypeListLabelFn } from "@/utils/selection_types.js";
 
 export default {
   name: "SGSelectionsHubView",
@@ -58,7 +58,7 @@ export default {
   },
   methods: {
     typeLabel(value) {
-      return selectionTypeLabelFn(this.$t.bind(this), value);
+      return selectionTypeListLabelFn(this.$t.bind(this), value);
     },
     countForType(selection_type) {
       if (!Array.isArray(this.selection_folders)) return 0;
