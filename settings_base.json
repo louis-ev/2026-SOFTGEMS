@@ -225,7 +225,7 @@
               "type": "string"
             },
             "certificate_date": {
-              "type": "string"
+              "type": "date"
             },
             "certificate_price": {
               "type": "any"
@@ -312,7 +312,7 @@
             "required": true
           },
           "selection_date": {
-            "type": "string"
+            "type": "date"
           },
           "counterparty_path": {
             "type": "string"

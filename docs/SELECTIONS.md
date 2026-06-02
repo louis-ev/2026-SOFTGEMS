@@ -9,7 +9,7 @@ This document describes how **selections** are stored and exposed in Softgems, a
 - **Folder meta** (in `meta.txt`):
   - **`internal_name`** (string, required): display title.
   - **`selection_type`** (string, required): one of the CDC types (see below).
-  - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, counterparty, reference, currency are editable on the open view). **`selection_date`** defaults to **today’s local date** (`YYYY-MM-DD`) when a selection is created.
+  - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, counterparty, reference, currency are editable on the open view). **`selection_date`** defaults to **today’s local date** when a selection is created and is stored as an **ISO 8601 calendar date** (`YYYY-MM-DD`, schema `type: "date"`) — not a full timestamp like `$date_created`.
   - **`selection_entries`**: JSON **array** of gem folder paths, e.g.
     ```json
     ["gems/12", "gems/45"]

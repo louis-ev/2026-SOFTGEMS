@@ -68,50 +68,10 @@
 <script>
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
+import SGDateFieldEditor from "@/components/softgems/SGDateFieldEditor.vue";
 import FormatDates from "@/mixins/FormatDates.js";
 import SGAddressBookFolderSelect from "@/components/softgems/SGAddressBookFolderSelect.vue";
-
-const SGSelectionDateEditor = {
-  name: "SGSelectionDateEditor",
-  props: {
-    initial_value: { type: String, default: "" },
-    label: { type: String, required: true },
-  },
-  data() {
-    return {
-      draft: this.toInputDate(this.initial_value),
-    };
-  },
-  computed: {
-    is_footer_save_disabled() {
-      return false;
-    },
-  },
-  watch: {
-    initial_value(next_value) {
-      this.draft = this.toInputDate(next_value);
-    },
-  },
-  methods: {
-    toInputDate(raw) {
-      const value = String(raw || "").trim();
-      if (!value) return "";
-      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-      const parsed = new Date(value);
-      if (Number.isNaN(parsed.getTime())) return "";
-      return parsed.toISOString().slice(0, 10);
-    },
-    tryShellSave() {
-      this.$emit("save", { value: this.draft || "" });
-    },
-  },
-  template: `
-    <div>
-      <DLabel :str="label" icon="calendar3" />
-      <input v-model="draft" type="date" class="u-input" />
-    </div>
-  `,
-};
+import { toDateInputValue, toStoredCalendarDate } from "@/utils/date_input.js";
 
 const SGSelectionCounterpartyEditor = {
   name: "SGSelectionCounterpartyEditor",
@@ -134,6 +94,9 @@ const SGSelectionCounterpartyEditor = {
     initial_value(next_value) {
       this.draft = String(next_value || "").trim();
     },
+  },
+  mounted() {
+    this.$emit("footerStateChange", { save_disabled: false });
   },
   methods: {
     tryShellSave() {
@@ -178,7 +141,7 @@ export default {
       active_field: "",
       is_saving_field: "",
       counterparty_label: "",
-      date_editor_component: SGSelectionDateEditor,
+      date_editor_component: SGDateFieldEditor,
       counterparty_editor_component: SGSelectionCounterpartyEditor,
     };
   },
@@ -199,10 +162,7 @@ export default {
     },
     date_editor_props() {
       return {
-        initial_value:
-          typeof this.selection?.selection_date === "string"
-            ? this.selection.selection_date
-            : "",
+        initial_value: toDateInputValue(this.selection?.selection_date),
         label: this.$t("sg_selection_date"),
       };
     },
@@ -263,7 +223,7 @@ export default {
       this.active_field = "";
     },
     async onDateSave({ value }) {
-      await this.persistField("selection_date", value);
+      await this.persistField("selection_date", toStoredCalendarDate(value));
     },
     async onCounterpartySave({ value }) {
       await this.persistField("counterparty_path", value);

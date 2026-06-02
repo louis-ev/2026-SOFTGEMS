@@ -16,7 +16,7 @@ Defined file-level fields relevant to certificates:
 | `is_gem_certificate` | `boolean` | Marks this file as a certificate for the Certificates section (set on upload via `additional_meta`). |
 | `provider_path` | `string` | Provider/contact; value is typically an **`authors`** folder path (address book convention in the client). |
 | `certificate_reference` | `string` | Report / reference number (free text). |
-| `certificate_date` | `string` | Date (stored as ISO `YYYY-MM-DD` from the `<input type="date">`; keep format stable for exports). |
+| `certificate_date` | `date` | Calendar date (stored as ISO 8601 `YYYY-MM-DD`; validated server-side via `normalizeCalendarDate`). |
 | `certificate_price` | `any` | Numeric price when set; **`null`/empty clears** in UI (needs `any` so the API can persist nullable values alongside strict number validation). |
 
 `caption` and other inherited `$files` fields remain valid for gems.

@@ -104,6 +104,12 @@
           />
         </div>
       </div>
+      <SGDateInput
+        v-else-if="is_date_field"
+        :value="edit_value"
+        :autofocus="true"
+        @input="onDateEditorInput"
+      />
       <TextInput
         v-else
         :content.sync="edit_value"
@@ -146,6 +152,7 @@
 
 <script>
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import SGDateInput from "@/components/softgems/SGDateInput.vue";
 import SGFieldHistoryPanel from "@/components/softgems/SGFieldHistoryPanel.vue";
 import SGGemFieldPricingExtras from "@/components/gems/SGGemFieldPricingExtras.vue";
 import GemPricing from "@/mixins/GemPricing";
@@ -153,12 +160,14 @@ import GemDimensions from "@/mixins/GemDimensions";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { extract_field_entries } from "@/utils/field_history.js";
 import { getNumberFormatLocale } from "@/utils/format_locale.js";
+import { is_date_input_field, toDateInputValue } from "@/utils/date_input.js";
 
 export default {
   name: "SGGemFieldEditorBody",
   mixins: [GemDimensions, GemPricing],
   components: {
     SGSelectField,
+    SGDateInput,
     SGFieldHistoryPanel,
     SGGemFieldPricingExtras,
   },
@@ -215,7 +224,7 @@ export default {
         this.pair_field_configs.total
       );
     } else {
-      this.edit_value = this.current_value;
+      this.edit_value = this.initialEditValue(this.current_value);
       this.server_edit_baseline = this.normalize_snapshot_value(
         this.current_value
       );
@@ -225,6 +234,9 @@ export default {
     this.emitFooterState();
   },
   computed: {
+    is_date_field() {
+      return is_date_input_field(this.field);
+    },
     active_dimensions_merged() {
       if (
         typeof this.meta_target_path === "string" &&
@@ -717,7 +729,16 @@ export default {
     onEditorInput() {
       this.remote_update_notice = "";
     },
+    initialEditValue(raw_value) {
+      if (this.is_date_field) return toDateInputValue(raw_value);
+      return raw_value;
+    },
+    onDateEditorInput(value) {
+      this.edit_value = value;
+      this.onEditorInput();
+    },
     normalize_snapshot_value(v) {
+      if (this.is_date_field) return toDateInputValue(v);
       if (this.field.type === "number") {
         return this.normalizeFieldValue(v);
       }
@@ -764,7 +785,7 @@ export default {
       );
 
       if (!had_unsaved_divergence) {
-        this.edit_value = nv;
+        this.edit_value = this.initialEditValue(nv);
         this.remote_update_notice = "";
       } else if (!this.edit_matches_baseline(new_snap)) {
         const msg = this.$t("sg_gem_field_updated_remotely");
@@ -929,6 +950,7 @@ export default {
       return next_meta;
     },
     normalizeFieldValue(raw_value) {
+      if (this.is_date_field) return toDateInputValue(raw_value);
       if (this.field.type !== "number") return raw_value;
       if (raw_value === "" || raw_value === null || raw_value === undefined)
         return 0;

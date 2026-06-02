@@ -64,6 +64,7 @@ import {
   selectionListPath,
 } from "@/utils/selection_urls.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import { todayDateInputValue } from "@/utils/date_input.js";
 
 export default {
   name: "SGSelectionNewView",
@@ -121,13 +122,6 @@ export default {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
-    todaySelectionDate() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    },
     async createSelection() {
       this.name_touched = true;
       if (!this.trimmed_name || this.is_creating || !this.new_selection_type) {
@@ -144,7 +138,7 @@ export default {
             $contributors: "everyone",
             internal_name: this.trimmed_name,
             selection_type: this.new_selection_type,
-            selection_date: this.todaySelectionDate(),
+            selection_date: todayDateInputValue(),
             selection_entries: [],
           },
         });

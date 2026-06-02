@@ -3,6 +3,7 @@
     :label="label"
     :icon="icon"
     :value="value"
+    :value_type="value_type"
     :readonly="readonly"
     :is_flashing="is_flashing"
     :pill_text="link_role"
@@ -39,6 +40,10 @@ export default {
       default: false,
     },
     link_role: {
+      type: String,
+      default: "",
+    },
+    value_type: {
       type: String,
       default: "",
     },

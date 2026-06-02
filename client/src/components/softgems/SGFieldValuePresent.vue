@@ -57,6 +57,11 @@ export default {
       type: String,
       default: "",
     },
+    /** When `"date"`, formats ISO / stored dates for display. */
+    value_type: {
+      type: String,
+      default: "",
+    },
   },
   computed: {
     is_empty() {
@@ -65,6 +70,14 @@ export default {
     },
     display_value() {
       if (this.is_empty) return "—";
+      if (this.value_type === "date") {
+        const formatted = this.formatDate(this.value, {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+        return formatted || String(this.value);
+      }
       if (typeof this.value === "number")
         return Number.isFinite(this.value)
           ? this.value.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {

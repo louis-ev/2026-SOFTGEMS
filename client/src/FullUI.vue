@@ -15,6 +15,11 @@
           v-if="show_general_password_modal"
           @close="show_general_password_modal = false"
         />
+        <AuthorList
+          v-else-if="must_show_login_gate"
+          :is_closable="false"
+          :force_identification="true"
+        />
         <template v-else>
           <SoftgemsTopbar />
           <div class="_mainContent">
@@ -33,6 +38,7 @@
 import SoftgemsTopbar from "@/components/softgems/SoftgemsTopbar.vue";
 import SoftgemsSidebar from "@/components/softgems/SoftgemsSidebar.vue";
 import GeneralPasswordModal from "@/adc-core/modals/GeneralPasswordModal.vue";
+import AuthorList from "@/adc-core/author/AuthorList.vue";
 import TrackAuthorChanges from "@/adc-core/author/TrackAuthorChanges.vue";
 import TaskTracker from "@/adc-core/tasks/TaskTracker.vue";
 import DisconnectModal from "@/adc-core/modals/DisconnectModal.vue";
@@ -44,6 +50,7 @@ export default {
     SoftgemsSidebar,
 
     GeneralPasswordModal,
+    AuthorList,
     TrackAuthorChanges,
     DisconnectModal,
   },
@@ -87,7 +94,15 @@ export default {
     this.$eventHub.$off("socketio.disconnect", this.showDisconnectModal);
   },
   watch: {},
-  computed: {},
+  computed: {
+    is_auth_exempt_route() {
+      return this.$route.meta?.auth_exempt === true;
+    },
+    must_show_login_gate() {
+      if (this.is_auth_exempt_route) return false;
+      return !this.connected_as;
+    },
+  },
   methods: {
     socketConnected() {
       // if (this.$root.debug_mode)

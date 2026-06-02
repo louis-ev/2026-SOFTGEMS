@@ -153,6 +153,9 @@ const routes = [
   {
     path: "/reset-password",
     name: "Reset Password",
+    meta: {
+      auth_exempt: true,
+    },
     component: () => import("@/views/ResetPasswordView.vue"),
   },
   {

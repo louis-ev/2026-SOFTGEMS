@@ -5,7 +5,9 @@
     @close="$emit('close')"
   >
     <div>
-      <!-- <div class="u-wips" /> -->
+      <p v-if="force_identification" class="u-instructions u-spacingBottom">
+        {{ $t("you_must_login_to_contribute") }}
+      </p>
 
       <template v-if="!connected_as || is_instance_admin">
         <RadioSwitch
@@ -58,6 +60,7 @@
         </small>
 
         <router-link
+          v-if="!force_identification"
           :to="'/@'"
           @click.native="$emit('close')"
           class="u-buttonLink"
@@ -85,6 +88,10 @@ export default {
     is_closable: {
       type: Boolean,
       default: true,
+    },
+    force_identification: {
+      type: Boolean,
+      default: false,
     },
   },
   components: {

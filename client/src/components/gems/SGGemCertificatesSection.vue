@@ -127,6 +127,7 @@
               <SGGemFieldCard
                 :label="$t('sg_certificate_date')"
                 icon="calendar3"
+                value_type="date"
                 :value="certificate_file.certificate_date || ''"
                 :readonly="!can_edit"
                 @click="
@@ -299,8 +300,7 @@ export default {
           key: "certificate_date",
           label: this.$t("sg_certificate_date"),
           icon: "calendar3",
-          type: "text",
-          input_type: "date",
+          type: "date",
         },
         certificate_price: {
           key: "certificate_price",
