@@ -85,7 +85,7 @@ export default {
 }
 
 .sg-icon-sidebar__item:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.54);
 }
 
 .sg-icon-sidebar--primary .sg-icon-sidebar__item.is--active {
