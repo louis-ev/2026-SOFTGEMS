@@ -7,6 +7,7 @@ This document describes how **selections** are stored and exposed in Softgems, a
 - Root folder type: **`selections`** (see [settings_base.json](../settings_base.json) → `schema.$folders.selections`).
 - Each selection is a folder: `selections/{slug}` with numeric `slug` when `slug_naming` is `sequence` (same idea as `gems`).
 - **Folder meta** (in `meta.txt`):
+
   - **`internal_name`** (string, required): display title.
   - **`selection_type`** (string, required): one of the CDC types (see below).
   - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, counterparty, reference, currency are editable on the open view). **`selection_date`** defaults to **today’s local date** when a selection is created and is stored as an **ISO 8601 calendar date** (`YYYY-MM-DD`, schema `type: "date"`) — not a full timestamp like `$date_created`.
@@ -16,7 +17,9 @@ This document describes how **selections** are stored and exposed in Softgems, a
     ```
     - **Display order** is computed client-side (not stored): stone type A→Z, then weight (ct) lightest→heaviest within each type. See `sortSelectionGems` in [client/src/utils/selection_entries.js](../client/src/utils/selection_entries.js).
 
-- **Files** on the selection folder: `$files` with thumbs, same pattern as other folder types. Uploads set `is_selection_attachment: true` in file meta so they are easy to filter in the UI.
+- **Files** on the selection folder: `$files` with thumbs, same pattern as other folder types.
+  - **Main document** (all types except **`simple`**): exactly one **PDF**, flagged with **`is_selection_main_document: true`** and **`is_selection_attachment: false`**. Shown in its own section directly under the selection title on the open view; replacing uploads a new PDF and removes the previous one.
+  - **Attachments** (all types, including **`simple`**): optional extra files (PDF or images), flagged with **`is_selection_attachment: true`**. Listed in the **Attachments** section; **`simple`** selections have attachments only (no main document).
 
 ### Gem ↔ box (type **boîte**)
 
@@ -33,19 +36,19 @@ The gem open view lists **all selections** that contain the gem (any type): fold
 
 Stored values match the CDC list (literal strings, including spaces):
 
-| Value |
-| --- |
-| `simple` |
-| `boîte` |
-| `memo in` |
-| `return memo in` |
-| `buying invoice` |
-| `memo out` |
-| `return memo out` |
-| `sale invoice` |
-| `partner invoice` |
-| `credit note` |
-| `importation` |
+| Value                |
+| -------------------- |
+| `simple`             |
+| `boîte`              |
+| `memo in`            |
+| `return memo in`     |
+| `buying invoice`     |
+| `memo out`           |
+| `return memo out`    |
+| `sale invoice`       |
+| `partner invoice`    |
+| `credit note`        |
+| `importation`        |
 | `importation return` |
 
 Labels, URL slugs, and sidebar icons are defined in [selection_type_registry.js](../client/src/utils/selection_type_registry.js). Stored strings remain in [selection_types.js](../client/src/utils/selection_types.js).
@@ -76,6 +79,10 @@ Helpers: [selection_urls.js](../client/src/utils/selection_urls.js) (`selectionL
 - List + panel: [SGSelectionsView.vue](../client/src/views/SGSelectionsView.vue)
 - Create: [SGSelectionNewView.vue](../client/src/views/SGSelectionNewView.vue)
 - Detail: [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
+- Selection title (click to edit **`internal_name`** when allowed): [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
+- Document details (date, counterparty, reference, currency): [SGSelectionHeaderFieldsSection.vue](../client/src/components/selections/SGSelectionHeaderFieldsSection.vue)
+- Main PDF: [SGSelectionMainDocumentSection.vue](../client/src/components/selections/SGSelectionMainDocumentSection.vue), [SGSelectionMainDocumentField.vue](../client/src/components/selections/SGSelectionMainDocumentField.vue)
+- Attachments: [SGSelectionFilesSection.vue](../client/src/components/selections/SGSelectionFilesSection.vue)
 - Gem memberships: [SGGemSelectionsSection.vue](../client/src/components/gems/SGGemSelectionsSection.vue)
 
 ## Server validation

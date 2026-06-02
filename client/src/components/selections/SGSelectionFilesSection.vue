@@ -100,6 +100,7 @@ import Medias from "@/mixins/Medias.js";
 import SGGemMediaRemoveModal from "@/components/gems/SGGemMediaRemoveModal.vue";
 import MediaContent from "@/adc-core/fields/MediaContent.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
+import { isSelectionAttachmentFile } from "@/utils/selection_documents.js";
 
 export default {
   name: "SGSelectionFilesSection",
@@ -127,7 +128,10 @@ export default {
   data() {
     return {
       files_queue: [],
-      upload_meta: { is_selection_attachment: true },
+      upload_meta: {
+        is_selection_attachment: true,
+        is_selection_main_document: false,
+      },
       remove_modal_open: false,
       remove_file_path: "",
       remove_display_name: "",
@@ -142,7 +146,7 @@ export default {
         ? this.selection_folder.$files
         : [];
       return files
-        .filter((f) => f && this.isAttachmentFile(f))
+        .filter((f) => f && isSelectionAttachmentFile(f))
         .slice()
         .sort(
           (a, b) =>
@@ -152,12 +156,6 @@ export default {
     },
   },
   methods: {
-    isAttachmentFile(f) {
-      if (f.is_selection_attachment === false) return false;
-      if (f.is_gem_media === true || f.is_gem_certificate === true)
-        return false;
-      return true;
-    },
     displayFilename(file) {
       return file?.$media_filename || file?.$path?.split("/").pop() || "";
     },

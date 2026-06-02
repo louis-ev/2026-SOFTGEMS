@@ -22,22 +22,32 @@
             v-for="(entry, index) in field_history"
             :key="index"
             class="_historyEntry"
-            @click="$emit('pickEntry', entry)"
           >
-            <span class="_historyValue">
-              {{ formatRowValue(entry.value) }}
-              <span v-if="entry.event === 'created'" class="_createdBadge">
-                initial
+            <div class="_historyEntryBody">
+              <span class="_historyValue">
+                {{ formatRowValue(entry.value) }}
+                <span v-if="entry.event === 'created'" class="_createdBadge">
+                  initial
+                </span>
               </span>
-            </span>
-            <span class="_historyMeta">
-              {{ $t("sg_history_changed_on") }}
-              <time :datetime="entry.ts">{{ formatDate(entry.ts) }}</time>
-              <template v-if="entry.author_path">
-                {{ $t("sg_history_by") }}
-                <strong>{{ formatAuthor(entry.author_path) }}</strong>
-              </template>
-            </span>
+              <span class="_historyMeta">
+                {{ $t("sg_history_changed_on") }}
+                <time :datetime="entry.ts">{{ formatDate(entry.ts) }}</time>
+                <template v-if="entry.author_path">
+                  {{ $t("sg_history_by") }}
+                  <strong>{{ formatAuthor(entry.author_path) }}</strong>
+                </template>
+              </span>
+            </div>
+            <button
+              type="button"
+              class="_restoreBtn"
+              :title="$t('restore')"
+              :aria-label="$t('restore')"
+              @click.stop="onRestore(entry)"
+            >
+              <b-icon icon="arrow-counterclockwise" />
+            </button>
           </li>
         </ul>
       </div>
@@ -78,6 +88,9 @@ export default {
   methods: {
     onToggle() {
       this.$emit("toggle");
+    },
+    onRestore(entry) {
+      this.$emit("pickEntry", entry);
     },
     formatRowValue(value) {
       if (typeof this.format_value === "function") {
@@ -161,18 +174,63 @@ export default {
 
 ._historyEntry {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: calc(var(--spacing) / 4);
   padding: calc(var(--spacing) / 4) calc(var(--spacing) / 3);
   background: var(--c-blanc);
   border-radius: 4px;
   border-left: 2px solid var(--c-gris);
-  cursor: pointer;
   transition: background-color 0.15s ease;
 
   &:hover {
     background: var(--c-gris_clair);
   }
+}
+
+._historyEntryBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+._restoreBtn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--c-gris_fonce);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: var(--c-gris_clair);
+    color: var(--c-noir);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--c-bleuvert);
+    outline-offset: 1px;
+  }
+}
+
+._historyEntry:hover ._restoreBtn,
+._historyEntry:focus-within ._restoreBtn {
+  opacity: 1;
 }
 
 ._historyValue {

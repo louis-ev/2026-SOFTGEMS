@@ -20,7 +20,17 @@
           <header class="_pageHeading">
             <div class="_titleRow">
               <div class="_titleGroup">
-                <h1 class="_pageTitle">{{ page_title }}</h1>
+                <h1
+                  class="_pageTitle"
+                  :class="{ '_pageTitle_editable': can_edit }"
+                  :title="can_edit ? $t('sg_selection_edit_name_hint') : undefined"
+                  :tabindex="can_edit ? 0 : undefined"
+                  @click="openInternalNameModal"
+                  @keydown.enter.prevent="openInternalNameModal"
+                  @keydown.space.prevent="openInternalNameModal"
+                >
+                  {{ page_title }}
+                </h1>
                 <span class="_selectionType">{{
                   formatSelectionType(selection.selection_type)
                 }}</span>
@@ -48,32 +58,34 @@
             </div>
           </header>
 
-          <SGSectionPanel
-            section_id="selection_identity"
-            :title="$t('sg_section_contact_identity')"
-          >
-            <div>
-              <SGEditableMetaField
-                ref="internal_name_field"
-                :label="$t('sg_selection_internal_name')"
-                icon="pencil"
-                :value="edited_internal_name"
-                :modal_open="
-                  !!(
-                    selection_edit_modal &&
-                    selection_edit_modal.kind === 'internal_name'
-                  )
-                "
-                :modal_title="edit_modal_title"
-                :modal_is_loading="is_saving_internal_name"
-                :meta_text="internal_name_meta_text"
-                @presentClick="openInternalNameModal"
-                @close="closeEditModal"
-                @save="onEditModalSave"
-                @draftChange="onEditDraftChange"
-              />
-            </div>
-          </SGSectionPanel>
+          <div class="_internalNameEditorHost" aria-hidden="true">
+            <SGEditableMetaField
+              ref="internal_name_field"
+              :label="$t('sg_selection_name')"
+              icon="pencil"
+              :value="edited_internal_name"
+              :modal_open="
+                !!(
+                  selection_edit_modal &&
+                  selection_edit_modal.kind === 'internal_name'
+                )
+              "
+              :modal_title="edit_modal_title"
+              :modal_is_loading="is_saving_internal_name"
+              :meta_text="internal_name_meta_text"
+              @presentClick="openInternalNameModal"
+              @close="closeEditModal"
+              @save="onEditModalSave"
+              @draftChange="onEditDraftChange"
+            />
+          </div>
+
+          <SGSelectionMainDocumentSection
+            v-if="show_main_document && selection_folder_path"
+            :selection_folder_path="selection_folder_path"
+            :selection="selection"
+            :can_edit="can_edit"
+          />
 
           <SGSelectionHeaderFieldsSection
             v-if="selection_folder_path && selection"
@@ -121,10 +133,11 @@
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
-import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SGSelectionGemsSection from "@/components/selections/SGSelectionGemsSection.vue";
 import SGSelectionHeaderFieldsSection from "@/components/selections/SGSelectionHeaderFieldsSection.vue";
+import SGSelectionMainDocumentSection from "@/components/selections/SGSelectionMainDocumentSection.vue";
+import { selectionTypeHasMainDocument } from "@/utils/selection_documents.js";
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
@@ -143,10 +156,10 @@ export default {
     RemoveMenu2,
     SGEditableMetaField,
     SGFolderMetaPeek,
-    SGSectionPanel,
     SGSelectionFilesSection,
     SGSelectionGemsSection,
     SGSelectionHeaderFieldsSection,
+    SGSelectionMainDocumentSection,
     SGOverlaySidePanelLayout,
     SGGemOpenView,
   },
@@ -204,8 +217,11 @@ export default {
         ? this.selection.internal_name
         : "";
     },
+    show_main_document() {
+      return selectionTypeHasMainDocument(this.selection?.selection_type);
+    },
     edit_modal_title() {
-      return `${this.page_title} — ${this.$t("sg_selection_internal_name")}`;
+      return `${this.page_title} — ${this.$t("sg_selection_name")}`;
     },
     internal_name_meta_text() {
       return {
@@ -413,6 +429,28 @@ export default {
 
 ._pageTitle {
   margin: 0;
+}
+
+._pageTitle_editable {
+  cursor: pointer;
+}
+
+._pageTitle_editable:hover,
+._pageTitle_editable:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+._internalNameEditorHost {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 ._selectionType {
