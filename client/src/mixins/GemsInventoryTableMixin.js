@@ -11,7 +11,7 @@ import {
 } from "@/utils/gems_table_metadata.js";
 
 export const gems_metadata_keys_localstorage_key = "sg_gems_metadata_keys";
-export const gems_pinned_metadata_keys = ["id", "$cover"];
+export const gems_pinned_metadata_keys = ["id", "status"];
 export const gem_excluded_metadata_keys = [
   "internal_name",
   "price_per_carat_all",
@@ -41,9 +41,9 @@ export default {
       ]);
       const known_order = [
         "id",
+        "status",
         "$cover",
         "$date_modified",
-        "status",
         "reference_supplier",
         "reference_customer",
         "paired_gem",
@@ -85,6 +85,7 @@ export default {
         metadata_key_set.add(gem_dimensions_merged_column_key);
       }
       metadata_key_set.add("id");
+      metadata_key_set.add("status");
       metadata_key_set.add("$cover");
       metadata_key_set.add("$date_modified");
 
@@ -275,6 +276,7 @@ export default {
         id: undefined,
         $cover: "images",
         $date_modified: "clock-history",
+        status: "tag",
         reference_supplier: "archive",
         reference_customer: "person-circle",
         paired_gem: "link",

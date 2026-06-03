@@ -130,8 +130,7 @@ import {
   isGemsTableMergedPricingColumnKey,
   normalizeGemsTableSelectedMetadataKeys,
 } from "@/utils/gems_table_metadata.js";
-
-const pinned_metadata_keys = ["id", "$cover"];
+import { gems_pinned_metadata_keys } from "@/mixins/GemsInventoryTableMixin.js";
 
 export default {
   name: "SGGemColumnsModal",
@@ -195,7 +194,7 @@ export default {
       const columns = all_keys.map((metadata_key) => ({
         metadata_key,
         is_enabled: selected_set.has(metadata_key),
-        is_locked: pinned_metadata_keys.includes(metadata_key),
+        is_locked: gems_pinned_metadata_keys.includes(metadata_key),
       }));
       this.local_columns = this.normalizeColumns(columns);
     },
@@ -215,7 +214,7 @@ export default {
     },
     normalizeColumns(columns) {
       const pinned_columns = [];
-      pinned_metadata_keys.forEach((metadata_key) => {
+      gems_pinned_metadata_keys.forEach((metadata_key) => {
         const matching_column = (columns || []).find(
           (column_item) => column_item.metadata_key === metadata_key
         );
@@ -228,7 +227,7 @@ export default {
       });
       const regular_columns = (columns || []).filter(
         (column_item) =>
-          !pinned_metadata_keys.includes(column_item.metadata_key)
+          !gems_pinned_metadata_keys.includes(column_item.metadata_key)
       );
       return [...pinned_columns, ...regular_columns];
     },
@@ -329,7 +328,7 @@ export default {
     },
     isDropZoneAvailable(index) {
       if (this.dragged_column_index === null) return false;
-      const pinned_count = pinned_metadata_keys.filter((metadata_key) =>
+      const pinned_count = gems_pinned_metadata_keys.filter((metadata_key) =>
         this.local_columns.some(
           (column_item) => column_item.metadata_key === metadata_key
         )
