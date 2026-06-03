@@ -963,7 +963,7 @@ export default {
     border-top: 1px solid var(--c-gris);
     background: var(--sg-table-footer-bg);
     vertical-align: middle;
-    box-shadow: 0 -1px 0 var(--c-gris);
+    box-shadow: 0 -1px 0 var(--c-gris), 0 1px 0 var(--c-gris);
   }
 
   tfoot td._stickyIdCol {
@@ -977,10 +977,6 @@ export default {
   tfoot td._pickColTd,
   tfoot td._removeColTd {
     z-index: 12;
-  }
-
-  tfoot tr:last-child td {
-    border-bottom: 0;
   }
 
   th._stickyIdCol,
