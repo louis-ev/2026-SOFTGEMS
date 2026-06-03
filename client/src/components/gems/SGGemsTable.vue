@@ -492,10 +492,13 @@ export default {
         if (raw === null || raw === undefined || raw === "") return "";
         const time_value = new Date(raw).getTime();
         if (!Number.isFinite(time_value)) return String(raw);
-        return new Date(raw).toLocaleString(getFormatLocale(this.$i18n?.locale), {
-          dateStyle: "short",
-          timeStyle: "short",
-        });
+        return new Date(raw).toLocaleString(
+          getFormatLocale(this.$i18n?.locale),
+          {
+            dateStyle: "short",
+            timeStyle: "short",
+          }
+        );
       }
       return this.resolveMetadataValue(gem, metadata_key);
     },
@@ -850,6 +853,9 @@ export default {
   --sticky-id-col-width: 70px;
   --sticky-cover-col-width: 80px;
   --sticky-cover-col-height: 80px;
+  --sg-table-border-width-thin: 1px;
+  --sg-table-border-width-thick: 1px;
+  --sg-table-border-color: var(--c-gris_clair);
   --sg-cell-padding: calc(var(--spacing) / 2);
   --sg-metadata-font-size: var(--sl-font-size-x-small);
   --sg-id-font-size: var(--sl-font-size-medium);
@@ -866,15 +872,19 @@ export default {
 
 ._gemsTable._hasTotalsRow {
   // Room for sticky footer when the table is shorter than the scrollport.
-  padding-bottom: 1px;
+  padding-bottom: var(--sg-table-border-width-thick);
 }
 
 ._gemsTable._densityCompact {
   --cell-height: 38px;
   // to get Total (n) cell to fit the width we add 8px
-  // 1px is border left or right
-  --sticky-id-col-width: calc(var(--cell-height) + 1px + 8px);
-  --sticky-cover-col-width: calc(var(--cell-height) + 1px);
+  // plus left/right sticky column border
+  --sticky-id-col-width: calc(
+    var(--cell-height) + var(--sg-table-border-width-thick) + 8px
+  );
+  --sticky-cover-col-width: calc(
+    var(--cell-height) + var(--sg-table-border-width-thick)
+  );
   --sticky-cover-col-height: var(--cell-height);
   --sg-cell-padding: calc(var(--spacing) / 3);
   --sg-metadata-font-size: 0.68rem;
@@ -916,7 +926,7 @@ export default {
   );
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid var(--c-gris);
+  border: var(--sg-table-border-width-thin) solid var(--sg-table-border-color);
   border-left: 0px;
   border-top: 0px;
   width: max-content;
@@ -926,8 +936,10 @@ export default {
   td {
     text-align: left;
     border: 0;
-    border-right: 1px solid var(--c-gris);
-    border-bottom: 1px solid var(--c-gris);
+    border-right: var(--sg-table-border-width-thin) solid
+      var(--sg-table-border-color);
+    border-bottom: var(--sg-table-border-width-thin) solid
+      var(--sg-table-border-color);
     padding: var(--sg-cell-padding);
     vertical-align: top;
     background: var(--c-bodybg);
@@ -946,9 +958,15 @@ export default {
     position: sticky;
     top: 0;
     z-index: 8;
-    border-top: 1px solid var(--c-gris);
+    border-top: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-right: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-bottom: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
     background: var(--sg-table-header-bg);
-    box-shadow: 0 1px 0 var(--c-gris);
+    box-shadow: 0 var(--sg-table-border-width-thick) 0
+      var(--sg-table-border-color);
     vertical-align: middle;
 
     &:hover {
@@ -960,10 +978,17 @@ export default {
     position: sticky;
     bottom: 0;
     z-index: 5;
-    border-top: 1px solid var(--c-gris);
+    border-top: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-right: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-bottom: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
     background: var(--sg-table-footer-bg);
     vertical-align: middle;
-    box-shadow: 0 -1px 0 var(--c-gris), 0 1px 0 var(--c-gris);
+    box-shadow: 0 calc(-1 * var(--sg-table-border-width-thick)) 0
+        var(--sg-table-border-color),
+      0 var(--sg-table-border-width-thick) 0 var(--sg-table-border-color);
   }
 
   tfoot td._stickyIdCol {
@@ -972,6 +997,10 @@ export default {
 
   tfoot td._stickyCoverCol {
     z-index: 11;
+    box-shadow: 0 calc(-1 * var(--sg-table-border-width-thick)) 0
+        var(--sg-table-border-color),
+      0 var(--sg-table-border-width-thick) 0 var(--sg-table-border-color),
+      var(--sg-table-border-width-thick) 0 0 var(--sg-table-border-color);
   }
 
   tfoot td._pickColTd,
@@ -985,7 +1014,8 @@ export default {
     left: 0px;
     min-width: var(--sticky-id-col-width);
     max-width: var(--sticky-id-col-width);
-    border-left: 1px solid var(--c-gris);
+    border-left: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
   }
 
   th._stickyCoverCol,
@@ -1007,6 +1037,9 @@ export default {
     top: 0;
     z-index: 13;
     background: var(--sg-table-header-bg);
+    box-shadow: 0 var(--sg-table-border-width-thick) 0
+        var(--sg-table-border-color),
+      var(--sg-table-border-width-thick) 0 0 var(--sg-table-border-color);
   }
 
   tbody td._stickyIdCol {
@@ -1015,6 +1048,8 @@ export default {
 
   tbody td._stickyCoverCol {
     z-index: 3;
+    box-shadow: var(--sg-table-border-width-thick) 0 0
+      var(--sg-table-border-color);
   }
 
   th._pickColTh,
@@ -1031,7 +1066,8 @@ export default {
     vertical-align: middle;
     padding-left: calc(var(--sg-cell-padding) * 0.45);
     padding-right: calc(var(--sg-cell-padding) * 0.45);
-    border-left: 1px solid var(--c-gris);
+    border-left: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
   }
 
   thead th._pickColTh,
