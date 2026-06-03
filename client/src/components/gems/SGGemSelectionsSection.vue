@@ -101,6 +101,7 @@ import {
 import { selectionTypeIconFromSlug } from "@/utils/selection_type_registry.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
 
 export default {
   name: "SGGemSelectionsSection",
@@ -248,31 +249,14 @@ export default {
       }
     },
     async resolveCounterpartyLabels(rows) {
-      const paths = [
-        ...new Set(
-          (Array.isArray(rows) ? rows : [])
-            .map((row) => String(row?.counterparty_path || "").trim())
-            .filter(Boolean)
-        ),
-      ];
-      const next_labels = { ...this.counterparty_labels };
-      await Promise.all(
-        paths.map(async (path) => {
-          const cached = this.$api.store?.[path];
-          if (cached?.name) {
-            next_labels[path] = String(cached.name).trim();
-            return;
-          }
-          try {
-            const folder = await this.$api.getFolder({ path });
-            next_labels[path] =
-              typeof folder?.name === "string" ? folder.name.trim() : path;
-          } catch {
-            next_labels[path] = path;
-          }
-        })
-      );
-      this.counterparty_labels = next_labels;
+      const paths = (Array.isArray(rows) ? rows : [])
+        .map((row) => String(row?.counterparty_path || "").trim())
+        .filter(Boolean);
+      const resolved = await resolveAddressBookPathLabels(this.$api, paths);
+      this.counterparty_labels = {
+        ...this.counterparty_labels,
+        ...resolved,
+      };
     },
   },
 };

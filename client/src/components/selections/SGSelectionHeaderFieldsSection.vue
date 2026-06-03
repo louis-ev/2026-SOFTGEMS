@@ -70,46 +70,9 @@ import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGDateFieldEditor from "@/components/softgems/SGDateFieldEditor.vue";
 import FormatDates from "@/mixins/FormatDates.js";
-import SGAddressBookFolderSelect from "@/components/softgems/SGAddressBookFolderSelect.vue";
+import SGSelectionCounterpartyEditor from "@/components/selections/SGSelectionCounterpartyEditor.vue";
+import { resolveAddressBookPathLabel } from "@/utils/address_book_paths.js";
 import { toDateInputValue, toStoredCalendarDate } from "@/utils/date_input.js";
-
-const SGSelectionCounterpartyEditor = {
-  name: "SGSelectionCounterpartyEditor",
-  components: { SGAddressBookFolderSelect },
-  props: {
-    initial_value: { type: String, default: "" },
-    label: { type: String, required: true },
-  },
-  data() {
-    return {
-      draft: String(this.initial_value || "").trim(),
-    };
-  },
-  computed: {
-    is_footer_save_disabled() {
-      return false;
-    },
-  },
-  watch: {
-    initial_value(next_value) {
-      this.draft = String(next_value || "").trim();
-    },
-  },
-  mounted() {
-    this.$emit("footerStateChange", { save_disabled: false });
-  },
-  methods: {
-    tryShellSave() {
-      this.$emit("save", { value: this.draft || "" });
-    },
-  },
-  template: `
-    <div>
-      <DLabel :str="label" icon="people" />
-      <SGAddressBookFolderSelect :value="draft" @input="draft = $event" />
-    </div>
-  `,
-};
 
 export default {
   name: "SGSelectionHeaderFieldsSection",
@@ -256,18 +219,10 @@ export default {
         this.counterparty_label = "";
         return;
       }
-      const cached = this.$api.store?.[path];
-      if (cached?.name) {
-        this.counterparty_label = String(cached.name).trim();
-        return;
-      }
-      try {
-        const folder = await this.$api.getFolder({ path });
-        this.counterparty_label =
-          typeof folder?.name === "string" ? folder.name.trim() : path;
-      } catch {
-        this.counterparty_label = path;
-      }
+      this.counterparty_label = await resolveAddressBookPathLabel(
+        this.$api,
+        path
+      );
     },
   },
 };

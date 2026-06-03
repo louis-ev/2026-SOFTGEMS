@@ -280,6 +280,11 @@ export default {
   sg_section_selection_header: "Document details",
   sg_selection_date: "Date",
   sg_selection_counterparty: "Counterparty",
+  sg_selection_counterparty_address_book_entry: "Company / individual",
+  sg_selection_counterparty_company_contact: "Contact",
+  sg_selection_counterparty_company_contact_optional:
+    "Optional — select a contact person at this company.",
+  sg_selection_counterparty_loading_contacts: "Loading contacts…",
   sg_selection_reference_number: "Reference",
   sg_selection_currency: "Currency",
   sg_selection_main_document: "Main document (PDF)",
