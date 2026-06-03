@@ -28,7 +28,7 @@
               ref="name_input"
               :content.sync="new_internal_name"
               :required="true"
-              autofocus="true"
+              :autofocus="true"
               @update:content="onNameInput"
             />
             <p v-if="name_error" class="_fieldError">{{ name_error }}</p>
