@@ -57,7 +57,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in filtered_membership_rows" :key="row.$path">
+            <tr
+              v-for="row in filtered_membership_rows"
+              :key="row.$path"
+              class="_dataRow"
+              tabindex="0"
+              role="button"
+              @click="openSelection(row)"
+              @keydown.enter.prevent="openSelection(row)"
+            >
               <td class="_addedAtCell">
                 {{ formatAddedAtCell(row.added_at) }}
               </td>
@@ -71,9 +79,7 @@
                 </span>
               </td>
               <td>
-                <router-link class="u-buttonLink" :to="detailPath(row)">
-                  {{ selectionLabel(row) }}
-                </router-link>
+                <span class="_nameText">{{ selectionLabel(row) }}</span>
               </td>
               <td>{{ formatDateCell(row.selection_date) }}</td>
               <td>{{ displayText(row.reference_number) }}</td>
@@ -194,6 +200,11 @@ export default {
         internal_name: row?.internal_name,
         selection_type: row?.selection_type,
       });
+    },
+    openSelection(row) {
+      const path = this.detailPath(row);
+      if (!path) return;
+      this.$router.push(path);
     },
     displayText(value) {
       const raw =
@@ -335,6 +346,28 @@ export default {
   tbody tr:last-child td {
     border-bottom-color: var(--c-gris);
   }
+}
+
+._dataRow {
+  cursor: pointer;
+  background: var(--c-blanc);
+
+  &:hover {
+    background: var(--c-gris_clair);
+  }
+
+  &:focus {
+    outline: 2px solid var(--c-orange);
+    outline-offset: -2px;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+._nameText {
+  font-size: var(--sl-font-size-small);
 }
 
 ._addedAtCell {
