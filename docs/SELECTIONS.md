@@ -10,8 +10,9 @@ This document describes how **selections** are stored and exposed in Softgems, a
 
   - **`internal_name`** (string, required): display title.
   - **`selection_type`** (string, required): one of the CDC types (see below).
-  - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, counterparty, reference, currency are editable on the open view). **`selection_date`** defaults to **today’s local date** when a selection is created and is stored as an **ISO 8601 calendar date** (`YYYY-MM-DD`, schema `type: "date"`) — not a full timestamp like `$date_created`.
+  - **`selection_date`**, **`document_number_name`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, document number / name, counterparty, reference, currency are editable on the open view). **`selection_date`** defaults to **today’s local date** when a selection is created and is stored as an **ISO 8601 calendar date** (`YYYY-MM-DD`, schema `type: "date"`) — not a full timestamp like `$date_created`.
   - **`counterparty_path`**: optional string pointing to either an address-book contact folder (`address_book/{slug}`) or a person within a company contact (`address_book/{slug}/contacts/{person_slug}`). UI: two-step picker in [SGSelectionCounterpartyEditor.vue](../client/src/components/selections/SGSelectionCounterpartyEditor.vue) (company/individual, then optional company contact); label helpers: [address_book_paths.js](../client/src/utils/address_book_paths.js).
+  - **`partnership_purchase`** / **`partnership_purchased_percentage`**: optional on **`buying invoice`** selections only — partnership purchase checkbox and purchased percentage (0–100). UI: [SGSelectionBuyingInvoiceFieldsSection.vue](../client/src/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue).
   - **`selection_entries`**: JSON **array** of gem folder paths, e.g.
     ```json
     ["gems/12", "gems/45"]
@@ -83,7 +84,7 @@ Helpers: [selection_urls.js](../client/src/utils/selection_urls.js) (`selectionL
 - Create: [SGSelectionNewView.vue](../client/src/views/SGSelectionNewView.vue)
 - Detail: [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
 - Selection title (click to edit **`internal_name`** when allowed): [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
-- Document details (date, counterparty, reference, currency): [SGSelectionHeaderFieldsSection.vue](../client/src/components/selections/SGSelectionHeaderFieldsSection.vue)
+- Document details (date, document number / name, counterparty, reference, currency): [SGSelectionHeaderFieldsSection.vue](../client/src/components/selections/SGSelectionHeaderFieldsSection.vue)
 - Main PDF: [SGSelectionMainDocumentSection.vue](../client/src/components/selections/SGSelectionMainDocumentSection.vue), [SGSelectionMainDocumentField.vue](../client/src/components/selections/SGSelectionMainDocumentField.vue)
 - Attachments: [SGSelectionFilesSection.vue](../client/src/components/selections/SGSelectionFilesSection.vue)
 - Gem memberships: [SGGemSelectionsSection.vue](../client/src/components/gems/SGGemSelectionsSection.vue)

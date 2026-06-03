@@ -317,6 +317,9 @@
           "selection_date": {
             "type": "date"
           },
+          "document_number_name": {
+            "type": "string"
+          },
           "counterparty_path": {
             "type": "string"
           },
@@ -325,6 +328,12 @@
           },
           "currency": {
             "type": "string"
+          },
+          "partnership_purchase": {
+            "type": "boolean"
+          },
+          "partnership_purchased_percentage": {
+            "type": "number"
           },
           "notes": {
             "type": "string"

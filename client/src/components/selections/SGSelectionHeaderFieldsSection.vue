@@ -5,6 +5,22 @@
   >
     <div class="_fieldsGrid">
       <SGEditableMetaField
+        :label="$t('sg_selection_document_number_name')"
+        icon="file-earmark-text"
+        :value="selection.document_number_name"
+        :readonly="!can_edit"
+        :modal_open="active_field === 'document_number_name'"
+        :modal_title="
+          field_modal_title($t('sg_selection_document_number_name'))
+        "
+        :modal_is_loading="is_saving_field === 'document_number_name'"
+        :meta_text="document_number_name_meta_text"
+        @presentClick="openField('document_number_name')"
+        @close="closeField"
+        @save="onMetaTextSave"
+      />
+
+      <SGEditableMetaField
         :label="$t('sg_selection_date')"
         icon="calendar3"
         :value="display_selection_date"
@@ -137,6 +153,9 @@ export default {
             : "",
         label: this.$t("sg_selection_counterparty"),
       };
+    },
+    document_number_name_meta_text() {
+      return this.buildMetaText("document_number_name");
     },
     reference_meta_text() {
       return this.buildMetaText("reference_number");

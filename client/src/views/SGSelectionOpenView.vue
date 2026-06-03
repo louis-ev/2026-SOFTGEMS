@@ -95,6 +95,14 @@
             :page_title="page_title"
           />
 
+          <SGSelectionBuyingInvoiceFieldsSection
+            v-if="selection_folder_path && selection"
+            :selection_folder_path="selection_folder_path"
+            :selection="selection"
+            :can_edit="can_edit"
+            :page_title="page_title"
+          />
+
           <SGSelectionGemsSection
             v-if="selection_folder_path"
             :key="selection_folder_path"
@@ -136,6 +144,7 @@ import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SGSelectionGemsSection from "@/components/selections/SGSelectionGemsSection.vue";
 import SGSelectionHeaderFieldsSection from "@/components/selections/SGSelectionHeaderFieldsSection.vue";
+import SGSelectionBuyingInvoiceFieldsSection from "@/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue";
 import SGSelectionMainDocumentSection from "@/components/selections/SGSelectionMainDocumentSection.vue";
 import { selectionTypeHasMainDocument } from "@/utils/selection_documents.js";
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
@@ -159,6 +168,7 @@ export default {
     SGSelectionFilesSection,
     SGSelectionGemsSection,
     SGSelectionHeaderFieldsSection,
+    SGSelectionBuyingInvoiceFieldsSection,
     SGSelectionMainDocumentSection,
     SGOverlaySidePanelLayout,
     SGGemOpenView,

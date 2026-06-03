@@ -9,6 +9,7 @@ import {
   BIconArrowUpRight,
   BIconAspectRatio,
   BIconBag,
+  BIconBuilding,
   BIconCalendar3,
   BIconCardList,
   BIconCaretDownFill,
@@ -36,6 +37,7 @@ import {
   BIconPencil,
   BIconPentagon,
   BIconPeople,
+  BIconPercent,
   BIconPerson,
   BIconPersonBadge,
   BIconPersonCircle,
@@ -62,6 +64,7 @@ Vue.component("BIconArrowUp", BIconArrowUp);
 Vue.component("BIconArrowUpRight", BIconArrowUpRight);
 Vue.component("BIconAspectRatio", BIconAspectRatio);
 Vue.component("BIconBag", BIconBag);
+Vue.component("BIconBuilding", BIconBuilding);
 Vue.component("BIconCalendar3", BIconCalendar3);
 Vue.component("BIconCardList", BIconCardList);
 Vue.component("BIconCaretDownFill", BIconCaretDownFill);
@@ -89,6 +92,7 @@ Vue.component("BIconPaletteFill", BIconPaletteFill);
 Vue.component("BIconPencil", BIconPencil);
 Vue.component("BIconPentagon", BIconPentagon);
 Vue.component("BIconPeople", BIconPeople);
+Vue.component("BIconPercent", BIconPercent);
 Vue.component("BIconPerson", BIconPerson);
 Vue.component("BIconPersonBadge", BIconPersonBadge);
 Vue.component("BIconPersonCircle", BIconPersonCircle);

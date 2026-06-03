@@ -296,6 +296,13 @@ Multiplicity rule: only one.
 | `pdf`              | link                     |                          |
 | `link_to_purchase` | link                     |                          |
 
+On the **selection folder** (`selection_type` = `buying invoice`), optional header fields (see [SGSelectionBuyingInvoiceFieldsSection.vue](../client/src/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue)):
+
+| Field                             | Fill Method | Notes                                              |
+| --------------------------------- | ----------- | -------------------------------------------------- |
+| `partnership_purchase`            | manual      | Checkbox — partnership purchase (`achat en partenariat`). |
+| `partnership_purchased_percentage`| manual      | Shown when checkbox is checked; integer **0–100** (`Pourcentage acheté`). |
+
 ### Sale
 
 Multiplicity rule: only one.
