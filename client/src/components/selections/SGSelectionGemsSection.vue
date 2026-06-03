@@ -129,6 +129,7 @@ export default {
       entry_gems_list: [],
       entry_gems_loading: false,
       refresh_entry_gems_seq: 0,
+      pending_entry_gems_refresh: false,
       show_history_modal: false,
     };
   },
@@ -165,6 +166,10 @@ export default {
       immediate: true,
       handler(new_paths, old_paths) {
         if (areSelectionGemPathsEqual(new_paths, old_paths)) return;
+        if (this.picker_busy) {
+          this.pending_entry_gems_refresh = true;
+          return;
+        }
         this.refreshEntryGems();
       },
     },
@@ -204,7 +209,12 @@ export default {
       const parts = s.split("/");
       return parts[parts.length - 1] || "";
     },
-    async refreshEntryGems() {
+    async flushPendingEntryGemsRefresh() {
+      if (!this.pending_entry_gems_refresh) return;
+      this.pending_entry_gems_refresh = false;
+      await this.refreshEntryGems({ force_fresh: true });
+    },
+    async refreshEntryGems({ force_fresh = false } = {}) {
       const gem_paths = this.selection_gem_paths;
       if (!gem_paths.length) {
         this.entry_gems_list = [];
@@ -222,6 +232,7 @@ export default {
           path: this.gems_root_path,
           folder_slugs,
           no_files: true,
+          detailed_infos: force_fresh,
         });
         if (request_seq !== this.refresh_entry_gems_seq) return;
         const folders_by_path = Object.fromEntries(
@@ -281,8 +292,10 @@ export default {
           this.$alertify.delay(4000).error(this.$t("sg_error_not_a_box"));
         else
           this.$alertify.delay(4000).error(c || this.$t("sg_could_not_save"));
+        this.pending_entry_gems_refresh = false;
       } finally {
         this.picker_busy = false;
+        await this.flushPendingEntryGemsRefresh();
       }
     },
     async confirmRemoveEntry(gem_path) {
@@ -305,8 +318,10 @@ export default {
         const code = err && err.code;
         console.error("confirmRemoveEntry", err);
         this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
+        this.pending_entry_gems_refresh = false;
       } finally {
         this.picker_busy = false;
+        await this.flushPendingEntryGemsRefresh();
       }
     },
     confirmRemoveGemRow(gem) {

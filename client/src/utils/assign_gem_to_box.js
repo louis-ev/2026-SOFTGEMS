@@ -1,10 +1,10 @@
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 import {
-  recordGemSelectionMembership,
   clearGemSelectionMembership,
+  normalizeMembershipPathsMap,
 } from "@/utils/gem_selection_membership_paths.js";
 import {
-  applyGemStatusWhenAddedToSelection,
+  applyGemMetaWhenAddedToSelection,
   restoreGemStatusWhenRemovedFromSelection,
 } from "@/utils/gem_selection_status.js";
 
@@ -16,6 +16,23 @@ const _BOX_TYPE = "boîte";
  */
 function isBoxSelection(folder_meta) {
   return folder_meta && String(folder_meta.selection_type || "") === _BOX_TYPE;
+}
+
+/**
+ * @param {object} gem
+ * @param {string} selection_path
+ * @returns {Record<string, string>|null}
+ */
+function membershipPathsWithAddedAt(gem, selection_path) {
+  const cleaned_path = String(selection_path || "").trim();
+  if (!cleaned_path) return null;
+  const map = normalizeMembershipPathsMap(
+    gem.selection_membership_paths,
+    gem.selection_gem_added_at
+  );
+  if (map[cleaned_path]) return null;
+  map[cleaned_path] = new Date().toISOString();
+  return map;
 }
 
 /**
@@ -34,6 +51,13 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
 
   if (old_box === new_box) {
     if (new_box) {
+      const membership_paths_map = membershipPathsWithAddedAt(gem, new_box);
+      if (membership_paths_map) {
+        await api.updateMeta({
+          path: gem_path,
+          new_meta: { selection_membership_paths: membership_paths_map },
+        });
+      }
       const box_folder = await api.getFolder({ path: new_box });
       if (isBoxSelection(box_folder)) {
         const paths = normalizeSelectionGemPaths(box_folder.selection_entries);
@@ -44,12 +68,6 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
           });
         }
       }
-      await recordGemSelectionMembership({
-        api,
-        gem_path,
-        selection_path: new_box,
-        gem,
-      });
     }
     return;
   }
@@ -72,6 +90,18 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
     });
   }
 
+  const gem_meta_patch = { box_selection_path: new_box };
+  if (new_box) {
+    const membership_paths_map = membershipPathsWithAddedAt(gem, new_box);
+    if (membership_paths_map) {
+      gem_meta_patch.selection_membership_paths = membership_paths_map;
+    }
+  }
+  await api.updateMeta({
+    path: gem_path,
+    new_meta: gem_meta_patch,
+  });
+
   if (new_box) {
     const box_folder = await api.getFolder({ path: new_box });
     if (!isBoxSelection(box_folder)) {
@@ -86,20 +116,6 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
         new_meta: { selection_entries: [...paths, gem_path] },
       });
     }
-  }
-
-  await api.updateMeta({
-    path: gem_path,
-    new_meta: { box_selection_path: new_box },
-  });
-
-  if (new_box) {
-    await recordGemSelectionMembership({
-      api,
-      gem_path,
-      selection_path: new_box,
-      gem: await api.getFolder({ path: gem_path }),
-    });
   }
 }
 
@@ -120,9 +136,12 @@ export async function removeGemFromSelection({
   const filtered = paths.filter((path) => path !== gem_path);
   if (filtered.length === paths.length) return;
 
-  await api.updateMeta({
-    path: selection_path,
-    new_meta: { selection_entries: filtered },
+  const status_result = await restoreGemStatusWhenRemovedFromSelection({
+    api,
+    gem_path,
+    selection_path,
+    selection_type: selection_folder?.selection_type,
+    selection_folders: [selection_folder],
   });
 
   if (isBoxSelection(selection_folder)) {
@@ -136,13 +155,12 @@ export async function removeGemFromSelection({
     }
   }
 
-  return restoreGemStatusWhenRemovedFromSelection({
-    api,
-    gem_path,
-    selection_path,
-    selection_type: selection_folder?.selection_type,
-    selection_folders: [selection_folder],
+  await api.updateMeta({
+    path: selection_path,
+    new_meta: { selection_entries: filtered },
   });
+
+  return status_result;
 }
 
 /**
@@ -157,21 +175,17 @@ export async function addGemToSelectionEntries({
   const paths = normalizeSelectionGemPaths(selection_folder.selection_entries);
   if (paths.includes(gem_path)) return;
 
-  await api.updateMeta({
-    path: selection_path,
-    new_meta: { selection_entries: [...paths, gem_path] },
-  });
-
-  await recordGemSelectionMembership({
-    api,
-    gem_path,
-    selection_path,
-  });
-
-  return applyGemStatusWhenAddedToSelection({
+  const status_result = await applyGemMetaWhenAddedToSelection({
     api,
     gem_path,
     selection_path,
     selection_type: selection_folder?.selection_type,
   });
+
+  await api.updateMeta({
+    path: selection_path,
+    new_meta: { selection_entries: [...paths, gem_path] },
+  });
+
+  return status_result;
 }

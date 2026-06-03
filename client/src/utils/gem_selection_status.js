@@ -1,9 +1,6 @@
 import { extract_field_entries } from "@/utils/field_history.js";
 import { findGemSelectionMemberships } from "@/utils/gem_selection_memberships.js";
-import {
-  clearGemSelectionMembership,
-  normalizeMembershipPathsMap,
-} from "@/utils/gem_selection_membership_paths.js";
+import { normalizeMembershipPathsMap } from "@/utils/gem_selection_membership_paths.js";
 import {
   GEM_STATUS_REFERENCE,
   normalizeGemStatusSlug,
@@ -116,6 +113,8 @@ export function resolveGemStatusFromHistoryBeforeRemoval(
 }
 
 /**
+ * One `updateMeta` on the gem when linking to a selection: membership date + optional status.
+ *
  * @param {object} args
  * @param {object} args.api
  * @param {string} args.gem_path
@@ -123,35 +122,45 @@ export function resolveGemStatusFromHistoryBeforeRemoval(
  * @param {string} args.selection_type
  * @returns {Promise<{ status_changed: boolean, previous_status: string, new_status: string }>}
  */
-export async function applyGemStatusWhenAddedToSelection({
+export async function applyGemMetaWhenAddedToSelection({
   api,
   gem_path,
   selection_path,
   selection_type,
 }) {
-  const mapped_status = gemStatusSlugForSelectionType(selection_type);
   const cleaned_selection_path = String(selection_path || "").trim();
-  if (!mapped_status || !cleaned_selection_path) {
-    return {
-      status_changed: false,
-      previous_status: "",
-      new_status: "",
-    };
-  }
-
   const gem = await api.getFolder({ path: gem_path });
   const previous_status = normalizeGemStatusSlug(gem?.status);
+  const mapped_status = gemStatusSlugForSelectionType(selection_type);
 
-  await api.updateMeta({
-    path: gem_path,
-    new_meta: { status: mapped_status },
-  });
+  const membership_paths_map = normalizeMembershipPathsMap(
+    gem.selection_membership_paths,
+    gem.selection_gem_added_at
+  );
+  if (cleaned_selection_path && !membership_paths_map[cleaned_selection_path]) {
+    membership_paths_map[cleaned_selection_path] = new Date().toISOString();
+  }
 
+  const new_meta = { selection_membership_paths: membership_paths_map };
+  if (mapped_status) {
+    new_meta.status = mapped_status;
+  }
+
+  await api.updateMeta({ path: gem_path, new_meta });
+
+  const new_status = mapped_status || previous_status;
   return {
-    status_changed: previous_status !== mapped_status,
+    status_changed: Boolean(
+      mapped_status && previous_status !== mapped_status
+    ),
     previous_status,
-    new_status: mapped_status,
+    new_status,
   };
+}
+
+/** @deprecated Use `applyGemMetaWhenAddedToSelection`. */
+export async function applyGemStatusWhenAddedToSelection(args) {
+  return applyGemMetaWhenAddedToSelection(args);
 }
 
 /**
@@ -175,12 +184,11 @@ export async function restoreGemStatusWhenRemovedFromSelection({
   const previous_status = normalizeGemStatusSlug(gem?.status);
   const mapped_removed = gemStatusSlugForSelectionType(selection_type);
 
-  const membership_paths_map = await clearGemSelectionMembership({
-    api,
-    gem_path,
-    selection_path: cleaned_selection_path,
-    gem,
-  });
+  const membership_paths_map = normalizeMembershipPathsMap(
+    gem.selection_membership_paths,
+    gem.selection_gem_added_at
+  );
+  delete membership_paths_map[cleaned_selection_path];
 
   let folders = Array.isArray(selection_folders) ? selection_folders : [];
   if (!folders.length) {
@@ -232,12 +240,14 @@ export async function restoreGemStatusWhenRemovedFromSelection({
     restored_from = history_status ? "history" : "default";
   }
 
+  const gem_meta_patch = { selection_membership_paths: membership_paths_map };
   if (new_status !== previous_status) {
-    await api.updateMeta({
-      path: gem_path,
-      new_meta: { status: new_status },
-    });
+    gem_meta_patch.status = new_status;
   }
+  await api.updateMeta({
+    path: gem_path,
+    new_meta: gem_meta_patch,
+  });
 
   return {
     status_changed: previous_status !== new_status,
