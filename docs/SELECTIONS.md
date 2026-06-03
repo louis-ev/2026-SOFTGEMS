@@ -32,6 +32,8 @@ Other selection types may include many gems in `selection_entries` without using
 
 The gem open view lists **all selections** that contain the gem (any type): folders whose `selection_entries` include the gem path, plus the current box via `box_selection_path` if not already listed. See [SGGemSelectionsSection.vue](../client/src/components/gems/SGGemSelectionsSection.vue) and [gem_selection_memberships.js](../client/src/utils/gem_selection_memberships.js).
 
+**Add dates (denormalized on the gem):** `selection_membership_paths` maps `selections/{slug}` → ISO timestamp when the gem was added to that selection. Membership **presence** is always derived from selection `selection_entries` (source of truth); the gem field is only a date cache, written on add and cleared on remove via [gem_selection_membership_paths.js](../client/src/utils/gem_selection_membership_paths.js).
+
 ## `selection_type` values (stored strings)
 
 Stored values match the CDC list (literal strings, including spaces):

@@ -8,39 +8,80 @@
     <div v-else-if="membership_rows.length === 0" class="_empty">
       {{ $t("sg_gem_selections_empty") }}
     </div>
-    <div v-else class="_tableWrap">
-      <table class="_table" :aria-label="$t('sg_section_gem_selections')">
-        <thead>
-          <tr>
-            <th scope="col">{{ $t("sg_selection_type_label") }}</th>
-            <th scope="col">{{ $t("sg_selection_internal_name") }}</th>
-            <th scope="col">{{ $t("sg_selection_date") }}</th>
-            <th scope="col">{{ $t("sg_selection_reference_number") }}</th>
-            <th scope="col">{{ $t("sg_selection_counterparty") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in membership_rows" :key="row.$path">
-            <td>
-              <span class="_typeCell">
-                <b-icon :icon="typeIcon(row)" class="_typeIcon" />
-                <span>{{ formatSelectionType(row.selection_type) }}</span>
-                <span v-if="isCurrentBoxRow(row)" class="_boxBadge">
-                  {{ $t("sg_gem_selections_current_box") }}
+    <div v-else class="_membershipsRoot">
+      <div
+        v-if="type_filter_options.length > 1"
+        class="_typeFilters"
+        role="toolbar"
+        :aria-label="$t('sg_gem_selections_filter_toolbar')"
+      >
+        <button
+          type="button"
+          class="u-button u-button_verysmall _typeFilterBtn"
+          :class="{ 'is--active': !active_type_filter }"
+          @click="setTypeFilter('')"
+        >
+          {{ $t("sg_gem_selections_filter_all") }}
+          <span class="_typeFilterCount">{{ membership_rows.length }}</span>
+        </button>
+        <button
+          v-for="type_def in type_filter_options"
+          :key="type_def.value"
+          type="button"
+          class="u-button u-button_verysmall _typeFilterBtn"
+          :class="{ 'is--active': active_type_filter === type_def.value }"
+          @click="setTypeFilter(type_def.value)"
+        >
+          <b-icon :icon="type_def.icon" class="_typeFilterIcon" />
+          {{ formatSelectionType(type_def.value) }}
+          <span class="_typeFilterCount">{{
+            typeFilterCount(type_def.value)
+          }}</span>
+        </button>
+      </div>
+
+      <p v-if="filtered_membership_rows.length === 0" class="_empty">
+        {{ $t("sg_gem_selections_filter_empty") }}
+      </p>
+
+      <div v-else class="_tableWrap">
+        <table class="_table" :aria-label="$t('sg_section_gem_selections')">
+          <thead>
+            <tr>
+              <th scope="col">{{ $t("sg_gem_selection_added_at") }}</th>
+              <th scope="col">{{ $t("sg_selection_type_label") }}</th>
+              <th scope="col">{{ $t("sg_selection_internal_name") }}</th>
+              <th scope="col">{{ $t("sg_selection_date") }}</th>
+              <th scope="col">{{ $t("sg_selection_reference_number") }}</th>
+              <th scope="col">{{ $t("sg_selection_counterparty") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in filtered_membership_rows" :key="row.$path">
+              <td class="_addedAtCell">
+                {{ formatAddedAtCell(row.added_at) }}
+              </td>
+              <td>
+                <span class="_typeCell">
+                  <b-icon :icon="typeIcon(row)" class="_typeIcon" />
+                  <span>{{ formatSelectionType(row.selection_type) }}</span>
+                  <span v-if="isCurrentBoxRow(row)" class="_boxBadge">
+                    {{ $t("sg_gem_selections_current_box") }}
+                  </span>
                 </span>
-              </span>
-            </td>
-            <td>
-              <router-link class="u-buttonLink" :to="detailPath(row)">
-                {{ selectionLabel(row) }}
-              </router-link>
-            </td>
-            <td>{{ formatDateCell(row.selection_date) }}</td>
-            <td>{{ displayText(row.reference_number) }}</td>
-            <td>{{ counterpartyLabel(row.counterparty_path) }}</td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+              <td>
+                <router-link class="u-buttonLink" :to="detailPath(row)">
+                  {{ selectionLabel(row) }}
+                </router-link>
+              </td>
+              <td>{{ formatDateCell(row.selection_date) }}</td>
+              <td>{{ displayText(row.reference_number) }}</td>
+              <td>{{ counterpartyLabel(row.counterparty_path) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </SGSectionPanel>
 </template>
@@ -49,7 +90,11 @@
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import FormatDates from "@/mixins/FormatDates.js";
 import {
-  findGemSelectionMemberships,
+  buildGemSelectionMembershipRows,
+  filterMembershipRowsByType,
+  membershipTypeFilterOptions,
+} from "@/utils/gem_selection_membership_rows.js";
+import {
   selectionFolderSlugFromPath,
   selectionMembershipTypeSlug,
 } from "@/utils/gem_selection_memberships.js";
@@ -77,18 +122,22 @@ export default {
     return {
       selections_root_path: "selections",
       selection_folders: [],
+      membership_rows: [],
       counterparty_labels: {},
+      active_type_filter: "",
       is_loading: false,
       fetch_error: "",
     };
   },
   computed: {
-    membership_rows() {
-      return findGemSelectionMemberships({
-        gem_path: this.gem_path,
-        gem: this.gem,
-        selection_folders: this.selection_folders,
-      });
+    type_filter_options() {
+      return membershipTypeFilterOptions(this.membership_rows);
+    },
+    filtered_membership_rows() {
+      return filterMembershipRowsByType(
+        this.membership_rows,
+        this.active_type_filter
+      );
     },
   },
   watch: {
@@ -106,6 +155,15 @@ export default {
     },
   },
   methods: {
+    setTypeFilter(selection_type_value) {
+      this.active_type_filter = String(selection_type_value || "").trim();
+    },
+    typeFilterCount(selection_type_value) {
+      const value = String(selection_type_value || "").trim();
+      return this.membership_rows.filter(
+        (row) => String(row?.selection_type || "").trim() === value
+      ).length;
+    },
     formatSelectionType(value) {
       return selectionTypeLabelFn(this.$t.bind(this), value);
     },
@@ -149,6 +207,10 @@ export default {
         day: "2-digit",
       });
     },
+    formatAddedAtCell(raw) {
+      if (!raw) return "—";
+      return this.formatRecentDateTime(raw);
+    },
     counterpartyLabel(path_raw) {
       const path = String(path_raw || "").trim();
       if (!path) return "—";
@@ -163,10 +225,24 @@ export default {
           path: this.selections_root_path,
         });
         this.selection_folders = Array.isArray(fetched) ? fetched : [];
+        this.membership_rows = buildGemSelectionMembershipRows({
+          gem_path: this.gem_path,
+          gem: this.gem,
+          selection_folders: this.selection_folders,
+        });
+        if (
+          this.active_type_filter &&
+          !this.type_filter_options.some(
+            (def) => def.value === this.active_type_filter
+          )
+        ) {
+          this.active_type_filter = "";
+        }
         await this.resolveCounterpartyLabels(this.membership_rows);
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_selections");
         this.selection_folders = [];
+        this.membership_rows = [];
       } finally {
         this.is_loading = false;
       }
@@ -207,6 +283,47 @@ export default {
   color: var(--c-gris_fonce);
 }
 
+._membershipsRoot {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 0.85);
+}
+
+._typeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing) * 0.4);
+}
+
+._typeFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 0.3);
+
+  &.is--active {
+    background: var(--c-bleuvert);
+    color: var(--c-blanc);
+    border-color: var(--c-bleuvert);
+  }
+}
+
+._typeFilterIcon {
+  flex-shrink: 0;
+}
+
+._typeFilterCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
 ._tableWrap {
   overflow-x: auto;
 }
@@ -234,6 +351,11 @@ export default {
   tbody tr:last-child td {
     border-bottom-color: var(--c-gris);
   }
+}
+
+._addedAtCell {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 ._typeCell {

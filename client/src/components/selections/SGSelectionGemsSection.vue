@@ -89,7 +89,6 @@ import {
   addGemToSelectionEntries,
   removeGemFromSelection,
 } from "@/utils/assign_gem_to_box.js";
-import { selectionTypeAffectsGemStatus } from "@/utils/gem_selection_status.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 
 export default {
@@ -171,26 +170,21 @@ export default {
     },
   },
   methods: {
-    selectionTypeAffectsGemStatus() {
-      return selectionTypeAffectsGemStatus(
-        this.selection_folder?.selection_type
-      );
-    },
     formatGemStatusLabel(status_value) {
       return gemStatusLabel(this.$t.bind(this), status_value);
     },
-    notifyGemStatusOnAdd(status_result) {
-      if (!status_result?.status_changed) {
-        this.$alertify
-          .delay(2500)
-          .success(this.$t("sg_selection_gems_updated"));
+    notifyGemAdded(status_result) {
+      if (status_result?.status_changed) {
+        this.$alertify.delay(5000).success(
+          this.$t("sg_selection_gem_status_set_on_add", {
+            status: this.formatGemStatusLabel(status_result.new_status),
+          })
+        );
         return;
       }
-      this.$alertify.delay(5000).success(
-        this.$t("sg_selection_gem_status_set_on_add", {
-          status: this.formatGemStatusLabel(status_result.new_status),
-        })
-      );
+      this.$alertify
+        .delay(2500)
+        .success(this.$t("sg_selection_gems_updated"));
     },
     notifyGemStatusOnRemove(status_result) {
       if (!status_result?.status_changed) return;
@@ -271,6 +265,7 @@ export default {
             gem_path: gp,
             new_box_folder_path: this.selection_folder_path,
           });
+          this.notifyGemAdded();
         } else {
           const status_result = await addGemToSelectionEntries({
             api: this.$api,
@@ -278,16 +273,7 @@ export default {
             selection_folder: this.selection_folder,
             gem_path: gp,
           });
-          this.notifyGemStatusOnAdd(status_result);
-        }
-        if (this.is_box_type) {
-          this.$alertify
-            .delay(2500)
-            .success(this.$t("sg_selection_gems_updated"));
-        } else if (!this.selectionTypeAffectsGemStatus()) {
-          this.$alertify
-            .delay(2500)
-            .success(this.$t("sg_selection_gems_updated"));
+          this.notifyGemAdded(status_result);
         }
       } catch (err) {
         const c = err && err.code;

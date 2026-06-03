@@ -203,10 +203,7 @@
           "box_selection_path": {
             "type": "string"
           },
-          "selection_status_before": {
-            "type": "object"
-          },
-          "selection_gem_added_at": {
+          "selection_membership_paths": {
             "type": "object"
           }
         },

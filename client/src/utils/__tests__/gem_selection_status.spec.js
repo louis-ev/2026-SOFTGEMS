@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   gemStatusForSelectionType,
   gemStatusSlugForSelectionType,
+  resolveGemStatusFromHistoryBeforeRemoval,
   resolveGemStatusFromMemberships,
   selectionTypeAffectsGemStatus,
 } from "@/utils/gem_selection_status.js";
@@ -35,6 +36,56 @@ describe("selectionTypeAffectsGemStatus", () => {
   it("is true only when a mapped status exists", () => {
     expect(selectionTypeAffectsGemStatus("memo in")).toBe(true);
     expect(selectionTypeAffectsGemStatus("simple")).toBe(false);
+  });
+});
+
+describe("resolveGemStatusFromHistoryBeforeRemoval", () => {
+  it("returns the status before the removed selection’s imposed slug", () => {
+    const history = [
+      {
+        event: "updated",
+        ts: "2026-06-02T12:00:00.000Z",
+        field: "status",
+        value: "memo-in",
+      },
+      {
+        event: "updated",
+        ts: "2026-05-01T10:00:00.000Z",
+        field: "status",
+        value: "reference",
+      },
+    ];
+    expect(
+      resolveGemStatusFromHistoryBeforeRemoval(
+        history,
+        "memo-in",
+        "memo in"
+      )
+    ).toBe("reference");
+  });
+
+  it("does not restore when current status was edited away from the selection slug", () => {
+    const history = [
+      {
+        event: "updated",
+        ts: "2026-06-03T00:00:00.000Z",
+        field: "status",
+        value: "sale-invoice",
+      },
+      {
+        event: "updated",
+        ts: "2026-06-02T00:00:00.000Z",
+        field: "status",
+        value: "memo-in",
+      },
+    ];
+    expect(
+      resolveGemStatusFromHistoryBeforeRemoval(
+        history,
+        "sale-invoice",
+        "memo in"
+      )
+    ).toBe("");
   });
 });
 

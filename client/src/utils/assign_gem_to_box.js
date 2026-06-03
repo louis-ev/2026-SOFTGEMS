@@ -1,5 +1,9 @@
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 import {
+  recordGemSelectionMembership,
+  clearGemSelectionMembership,
+} from "@/utils/gem_selection_membership_paths.js";
+import {
   applyGemStatusWhenAddedToSelection,
   restoreGemStatusWhenRemovedFromSelection,
 } from "@/utils/gem_selection_status.js";
@@ -40,6 +44,12 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
           });
         }
       }
+      await recordGemSelectionMembership({
+        api,
+        gem_path,
+        selection_path: new_box,
+        gem,
+      });
     }
     return;
   }
@@ -54,6 +64,12 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
         new_meta: { selection_entries: filtered },
       });
     }
+    await clearGemSelectionMembership({
+      api,
+      gem_path,
+      selection_path: old_box,
+      gem,
+    });
   }
 
   if (new_box) {
@@ -76,6 +92,15 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
     path: gem_path,
     new_meta: { box_selection_path: new_box },
   });
+
+  if (new_box) {
+    await recordGemSelectionMembership({
+      api,
+      gem_path,
+      selection_path: new_box,
+      gem: await api.getFolder({ path: gem_path }),
+    });
+  }
 }
 
 /**
@@ -115,6 +140,8 @@ export async function removeGemFromSelection({
     api,
     gem_path,
     selection_path,
+    selection_type: selection_folder?.selection_type,
+    selection_folders: [selection_folder],
   });
 }
 
@@ -130,17 +157,21 @@ export async function addGemToSelectionEntries({
   const paths = normalizeSelectionGemPaths(selection_folder.selection_entries);
   if (paths.includes(gem_path)) return;
 
-  const status_result = await applyGemStatusWhenAddedToSelection({
-    api,
-    gem_path,
-    selection_path,
-    selection_type: selection_folder?.selection_type,
-  });
-
   await api.updateMeta({
     path: selection_path,
     new_meta: { selection_entries: [...paths, gem_path] },
   });
 
-  return status_result;
+  await recordGemSelectionMembership({
+    api,
+    gem_path,
+    selection_path,
+  });
+
+  return applyGemStatusWhenAddedToSelection({
+    api,
+    gem_path,
+    selection_path,
+    selection_type: selection_folder?.selection_type,
+  });
 }

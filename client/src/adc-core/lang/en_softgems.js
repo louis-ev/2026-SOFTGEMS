@@ -291,6 +291,10 @@ export default {
   sg_section_gem_selections: "Selections",
   sg_gem_selections_empty: "This gem is not linked to any selection yet.",
   sg_gem_selections_current_box: "Current box",
+  sg_gem_selection_added_at: "Added to selection",
+  sg_gem_selections_filter_toolbar: "Filter by selection type",
+  sg_gem_selections_filter_all: "All",
+  sg_gem_selections_filter_empty: "No selections match this filter.",
   sg_create_selection: "Add selection",
   sg_create_selection_title: "Create selection",
   sg_create_selection_in_progress: "Creating…",
@@ -333,7 +337,7 @@ export default {
   sg_selection_gem_status_set_on_add:
     "Gem added. Status set to {status}.",
   sg_selection_gem_status_restored_on_remove:
-    "Gem removed from selection. Status restored to {status} (based on the most recently added selection still linked, or its previous status).",
+    "Gem removed from selection. Status restored to {status} (from another linked selection or from status history).",
   sg_gems_table_remove_column_header_aria: "Remove from selection",
   sg_gems_table_remove_from_selection_aria:
     "Remove this gem from the selection",
