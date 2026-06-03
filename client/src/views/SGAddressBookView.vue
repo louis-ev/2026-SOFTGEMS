@@ -68,6 +68,11 @@
                         v-if="contactTypeLabel(contact.contact_type)"
                         class="_typeBadge"
                       >
+                        <b-icon
+                          v-if="contactTypeIcon(contact.contact_type)"
+                          :icon="contactTypeIcon(contact.contact_type)"
+                          class="_typeIcon"
+                        />
                         {{ contactTypeLabel(contact.contact_type) }}
                       </span>
                     </td>
@@ -168,6 +173,11 @@ export default {
       if (contact_type === "company") return this.$t("sg_contact_type_company");
       if (contact_type === "individual")
         return this.$t("sg_contact_type_individual");
+      return "";
+    },
+    contactTypeIcon(contact_type) {
+      if (contact_type === "company") return "building";
+      if (contact_type === "individual") return "person";
       return "";
     },
     contactFieldDisplay(contact, field_key) {
@@ -343,11 +353,17 @@ export default {
 }
 
 ._typeBadge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.75rem;
   background: var(--c-gris_clair);
   white-space: nowrap;
+}
+
+._typeIcon {
+  flex-shrink: 0;
 }
 </style>

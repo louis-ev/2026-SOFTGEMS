@@ -3,7 +3,7 @@
     <div class="_fieldBlock">
       <DLabel
         :str="$t('sg_selection_counterparty_address_book_entry')"
-        icon="tags"
+        icon="building"
       />
       <SGSelectField
         :value="draft_contact_path"
