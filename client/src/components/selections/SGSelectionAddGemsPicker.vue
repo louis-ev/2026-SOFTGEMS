@@ -25,7 +25,9 @@
         </button>
       </header>
 
-      <p class="_pickHowTo">{{ $t("sg_selection_pick_gems_table_hint") }}</p>
+      <p v-if="selection_status_hint" class="_pickStatusHint">
+        {{ selection_status_hint }}
+      </p>
 
       <p v-if="is_loading_gems_inventory" class="_hint">
         {{ $t("sg_selection_add_gems_loading_background") }}
@@ -55,6 +57,11 @@
 <script>
 import SGGemsInventoryTableSection from "@/components/gems/SGGemsInventoryTableSection.vue";
 import { scrollElementToViewportFraction } from "@/utils/section_anchor_scroll.js";
+import { gemStatusLabel } from "@/utils/gem_status.js";
+import {
+  gemStatusSlugForSelectionType,
+  selectionTypeAffectsGemStatus,
+} from "@/utils/gem_selection_status.js";
 
 export default {
   name: "SGSelectionAddGemsPicker",
@@ -62,6 +69,10 @@ export default {
     SGGemsInventoryTableSection,
   },
   props: {
+    selection_type: {
+      type: String,
+      default: "",
+    },
     disabled_row_paths: {
       type: Array,
       default: () => [],
@@ -69,6 +80,22 @@ export default {
     busy: {
       type: Boolean,
       default: false,
+    },
+  },
+  computed: {
+    selection_status_hint() {
+      if (!selectionTypeAffectsGemStatus(this.selection_type)) return "";
+      const mapped_status = gemStatusSlugForSelectionType(this.selection_type);
+      if (!mapped_status) return "";
+      const status_label = gemStatusLabel(this.$t.bind(this), mapped_status);
+      if (this.selection_type === "memo in") {
+        return this.$t("sg_selection_add_gems_status_memo_in_hint", {
+          status: status_label,
+        });
+      }
+      return this.$t("sg_selection_add_gems_status_hint", {
+        status: status_label,
+      });
     },
   },
   data() {
@@ -165,9 +192,20 @@ export default {
 
 ._pickHowTo {
   margin: 0 0 calc(var(--spacing) * 0.85);
-  font-size: var(--sl-font-size-x-small);
+  font-size: var(--sl-font-size-small);
   color: var(--c-gris_fonce);
   line-height: 1.4;
+}
+
+._pickStatusHint {
+  margin: 0 0 calc(var(--spacing) * 0.85);
+  padding: calc(var(--spacing) * 0.55) calc(var(--spacing) * 0.75);
+  border-radius: 6px;
+  font-size: var(--sl-font-size-small);
+  line-height: 1.4;
+  color: var(--c-gris_fonce);
+  background: color-mix(in srgb, var(--c-bleuvert) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-bleuvert) 35%, transparent);
 }
 
 ._hint {

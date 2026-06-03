@@ -135,6 +135,7 @@ export default {
   sg_value: "Value",
   sg_id: "ID",
   sg_status: "Status",
+  sg_status_value_reference: "Reference",
   sg_type: "Type",
   sg_files: "Files",
   sg_no_files_for_gem: "No files added to this gem yet.",
@@ -197,6 +198,8 @@ export default {
   sg_creation_notice_documents:
     "You can add a cover image and PDF certificates after creating the gem.",
   sg_creation_notice_editable: "All fields remain editable after creation.",
+  sg_creation_notice_status_default:
+    "Default status is Reference; you can change it before creating the gem.",
   sg_field_history: "History",
   sg_modifications_history: "Modifications history",
   sg_no_history: "No history yet.",
@@ -323,6 +326,14 @@ export default {
   sg_selection_add_gems_title: "Add gems to selection",
   sg_selection_pick_gems_table_hint:
     "Use the same search as in inventory, then click the plus on a row to add that gem (gems already in this selection show a green check).",
+  sg_selection_add_gems_status_memo_in_hint:
+    "Adding a gem to this memo in selection sets its status to {status}.",
+  sg_selection_add_gems_status_hint:
+    "Adding a gem to this selection sets its status to {status}.",
+  sg_selection_gem_status_set_on_add:
+    "Gem added. Status set to {status}.",
+  sg_selection_gem_status_restored_on_remove:
+    "Gem removed from selection. Status restored to {status} (based on the most recently added selection still linked, or its previous status).",
   sg_gems_table_remove_column_header_aria: "Remove from selection",
   sg_gems_table_remove_from_selection_aria:
     "Remove this gem from the selection",

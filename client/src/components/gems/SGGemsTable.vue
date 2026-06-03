@@ -110,6 +110,7 @@
               <button
                 type="button"
                 class="u-button u-button_icon _removeColBtn"
+                :title="$t('sg_gems_table_remove_from_selection_aria')"
                 :aria-label="$t('sg_gems_table_remove_from_selection_aria')"
                 @click="onRemoveColumnClick(gem)"
               >
@@ -121,6 +122,7 @@
                 v-if="!isRowPickerDisabled(gem)"
                 type="button"
                 class="u-button u-button_icon _pickColAddBtn"
+                :title="$t('sg_gems_table_add_to_selection_aria')"
                 :aria-label="$t('sg_gems_table_add_to_selection_aria')"
                 @click="onPickColumnAddClick(gem)"
               >
@@ -130,6 +132,7 @@
                 v-else
                 class="_pickColInSelection"
                 role="img"
+                :title="$t('sg_gems_table_already_in_selection_aria')"
                 :aria-label="$t('sg_gems_table_already_in_selection_aria')"
               >
                 <b-icon icon="check-lg" />
@@ -268,6 +271,7 @@
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
 import { getFormatLocale } from "@/utils/format_locale.js";
+import { gemStatusLabel } from "@/utils/gem_status.js";
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions, {
   gem_linear_dimension_keys,
@@ -487,6 +491,9 @@ export default {
       return path_parts[path_parts.length - 1] || "";
     },
     formatMetadataCellDisplay(gem, metadata_key) {
+      if (metadata_key === "status") {
+        return gemStatusLabel(this.$t.bind(this), gem?.status);
+      }
       if (metadata_key === "$date_modified") {
         const raw = gem?.$date_modified;
         if (raw === null || raw === undefined || raw === "") return "";

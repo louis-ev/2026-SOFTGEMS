@@ -23,7 +23,7 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 
 | Field    | Fill Method | Rule                                                                                                                                                |
 | -------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `status` | automatic   | Default `reference` when stone is created. If linked to memo in => `memo in`; purchase invoice => `purchase`; sale => `sold`; return => `returned`. |
+| `status` | automatic (editable on create) | Default `reference` when stone is created (field editable on the new-gem form). Stored values are **selection-type slugs** where applicable (`memo-in`, `buying-invoice`, `sale-invoice`, `return-memo-in`, `return-memo-out`). Adding a gem to a selection sets `status` to the slug for that selection type. Removing a gem restores status from the most recently added linked selection that still applies, else the status saved before that selection link. Display: [gem_status.js](../client/src/utils/gem_status.js) (labels via selection-type i18n). Logic: [gem_selection_status.js](../client/src/utils/gem_selection_status.js). |
 
 ## Identification
 

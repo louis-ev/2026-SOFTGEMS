@@ -26,6 +26,7 @@
 
 <script>
 import { getNumberFormatLocale } from "@/utils/format_locale.js";
+import { gemStatusLabel } from "@/utils/gem_status.js";
 
 export default {
   name: "SGFieldValuePresent",
@@ -70,6 +71,9 @@ export default {
     },
     display_value() {
       if (this.is_empty) return "—";
+      if (this.value_type === "gem_status") {
+        return gemStatusLabel(this.$t.bind(this), this.value);
+      }
       if (this.value_type === "date") {
         const formatted = this.formatDate(this.value, {
           year: "numeric",

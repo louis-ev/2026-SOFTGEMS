@@ -4,6 +4,7 @@
       :label="label"
       :icon="icon"
       :value="value"
+      :value_type="value_type"
       :readonly="effective_readonly"
       :is_flashing="is_flashing"
       :pill_text="pill_text"
@@ -67,6 +68,10 @@ export default {
       default: "",
     },
     value: {
+      default: "",
+    },
+    value_type: {
+      type: String,
       default: "",
     },
     readonly: {

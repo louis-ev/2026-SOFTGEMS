@@ -14,7 +14,7 @@
         <span>{{ $t("sg_selection_gems_history") }}</span>
       </button>
     </template>
-    <p class="_entriesSortHint">
+    <p v-if="selection_gem_paths.length > 0" class="_entriesSortHint">
       {{ $t("sg_selection_entries_sort_hint") }}
     </p>
     <p
@@ -59,6 +59,7 @@
 
     <SGSelectionAddGemsPicker
       v-if="can_edit"
+      :selection_type="selection_folder?.selection_type"
       :disabled_row_paths="selection_gem_paths"
       :busy="picker_busy"
       @pick="pickGem"
@@ -88,6 +89,8 @@ import {
   addGemToSelectionEntries,
   removeGemFromSelection,
 } from "@/utils/assign_gem_to_box.js";
+import { selectionTypeAffectsGemStatus } from "@/utils/gem_selection_status.js";
+import { gemStatusLabel } from "@/utils/gem_status.js";
 
 export default {
   name: "SGSelectionGemsSection",
@@ -168,6 +171,35 @@ export default {
     },
   },
   methods: {
+    selectionTypeAffectsGemStatus() {
+      return selectionTypeAffectsGemStatus(
+        this.selection_folder?.selection_type
+      );
+    },
+    formatGemStatusLabel(status_value) {
+      return gemStatusLabel(this.$t.bind(this), status_value);
+    },
+    notifyGemStatusOnAdd(status_result) {
+      if (!status_result?.status_changed) {
+        this.$alertify
+          .delay(2500)
+          .success(this.$t("sg_selection_gems_updated"));
+        return;
+      }
+      this.$alertify.delay(5000).success(
+        this.$t("sg_selection_gem_status_set_on_add", {
+          status: this.formatGemStatusLabel(status_result.new_status),
+        })
+      );
+    },
+    notifyGemStatusOnRemove(status_result) {
+      if (!status_result?.status_changed) return;
+      this.$alertify.delay(5000).alert(
+        this.$t("sg_selection_gem_status_restored_on_remove", {
+          status: this.formatGemStatusLabel(status_result.new_status),
+        })
+      );
+    },
     cleanString(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
@@ -240,16 +272,23 @@ export default {
             new_box_folder_path: this.selection_folder_path,
           });
         } else {
-          await addGemToSelectionEntries({
+          const status_result = await addGemToSelectionEntries({
             api: this.$api,
             selection_path: this.selection_folder_path,
             selection_folder: this.selection_folder,
             gem_path: gp,
           });
+          this.notifyGemStatusOnAdd(status_result);
         }
-        this.$alertify
-          .delay(2500)
-          .success(this.$t("sg_selection_gems_updated"));
+        if (this.is_box_type) {
+          this.$alertify
+            .delay(2500)
+            .success(this.$t("sg_selection_gems_updated"));
+        } else if (!this.selectionTypeAffectsGemStatus()) {
+          this.$alertify
+            .delay(2500)
+            .success(this.$t("sg_selection_gems_updated"));
+        }
       } catch (err) {
         const c = err && err.code;
         if (c === "not_a_box_selection")
@@ -266,16 +305,19 @@ export default {
       const removed_slug = this.gem_slug_from_path(cleaned_path);
       this.picker_busy = true;
       try {
-        await removeGemFromSelection({
+        const status_result = await removeGemFromSelection({
           api: this.$api,
           selection_path: this.selection_folder_path,
           selection_folder: this.selection_folder,
           gem_path: cleaned_path,
         });
+        this.notifyGemStatusOnRemove(status_result);
         if (removed_slug) {
           this.$emit("gemRemovedFromSelection", removed_slug);
         }
-      } catch ({ code }) {
+      } catch (err) {
+        const code = err && err.code;
+        console.error("confirmRemoveEntry", err);
         this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
       } finally {
         this.picker_busy = false;

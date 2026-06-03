@@ -1,4 +1,8 @@
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
+import {
+  applyGemStatusWhenAddedToSelection,
+  restoreGemStatusWhenRemovedFromSelection,
+} from "@/utils/gem_selection_status.js";
 
 const _BOX_TYPE = "boîte";
 
@@ -106,6 +110,12 @@ export async function removeGemFromSelection({
       });
     }
   }
+
+  return restoreGemStatusWhenRemovedFromSelection({
+    api,
+    gem_path,
+    selection_path,
+  });
 }
 
 /**
@@ -119,8 +129,18 @@ export async function addGemToSelectionEntries({
 }) {
   const paths = normalizeSelectionGemPaths(selection_folder.selection_entries);
   if (paths.includes(gem_path)) return;
+
+  const status_result = await applyGemStatusWhenAddedToSelection({
+    api,
+    gem_path,
+    selection_path,
+    selection_type: selection_folder?.selection_type,
+  });
+
   await api.updateMeta({
     path: selection_path,
     new_meta: { selection_entries: [...paths, gem_path] },
   });
+
+  return status_result;
 }

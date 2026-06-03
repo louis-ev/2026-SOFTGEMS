@@ -61,6 +61,7 @@
           <SGEditableMetaField
             :label="$t('sg_status')"
             :value="gem.status"
+            value_type="gem_status"
             :is_flashing="isFieldFlashing('status')"
             :modal_open="editing_field === field_configs.status"
             :modal_title="gemFieldModalTitle(field_configs.status)"

@@ -67,6 +67,7 @@
       <SGSectionPanel section_id="creation" :title="$t('sg_section_creation')">
         <p class="_creationNotice">{{ $t("sg_creation_notice_documents") }}</p>
         <p class="_creationNotice">{{ $t("sg_creation_notice_editable") }}</p>
+        <p class="_creationNotice">{{ $t("sg_creation_notice_status_default") }}</p>
       </SGSectionPanel>
 
       <div class="_actions">
@@ -174,15 +175,11 @@ export default {
     },
     form_sections() {
       return [
-        // {
-        //   key: "identification",
-        //   title: this.$t("sg_section_identification"),
-        //   field_keys: [
-        //     "reference_supplier",
-        //     "reference_customer",
-        //     "paired_gem",
-        //   ],
-        // },
+        {
+          key: "status",
+          title: this.$t("sg_section_status"),
+          field_keys: ["status"],
+        },
         {
           key: "stone_characteristics",
           title: this.$t("sg_section_stone_characteristics"),
@@ -274,6 +271,8 @@ export default {
       if (this.is_creating || this.invalid_field_keys.length > 0) return;
 
       const filled_gem_fields = this.getFilledGemFields(this.new_gem_fields);
+      const normalized_fields = this.normalizeGemFields(this.new_gem_fields);
+      filled_gem_fields.status = normalized_fields.status || "reference";
       const paired_gem_id = filled_gem_fields.paired_gem;
 
       this.is_creating = true;
@@ -331,8 +330,8 @@ export default {
         );
       });
 
-      // Status is automatic and not editable in this form.
-      normalized_fields.status = "reference";
+      normalized_fields.status =
+        this.cleanString(normalized_fields.status) || "reference";
 
       const number_field_keys = this.getFieldKeysByType("number");
       number_field_keys.forEach((field_key) => {

@@ -25,10 +25,7 @@
               <span class="_typeCell">
                 <b-icon :icon="typeIcon(row)" class="_typeIcon" />
                 <span>{{ formatSelectionType(row.selection_type) }}</span>
-                <span
-                  v-if="isCurrentBoxRow(row)"
-                  class="_boxBadge"
-                >
+                <span v-if="isCurrentBoxRow(row)" class="_boxBadge">
                   {{ $t("sg_gem_selections_current_box") }}
                 </span>
               </span>
@@ -140,7 +137,8 @@ export default {
       });
     },
     displayText(value) {
-      const raw = value === null || value === undefined ? "" : String(value).trim();
+      const raw =
+        value === null || value === undefined ? "" : String(value).trim();
       return raw || "—";
     },
     formatDateCell(raw) {
@@ -192,9 +190,7 @@ export default {
           try {
             const folder = await this.$api.getFolder({ path });
             next_labels[path] =
-              typeof folder?.name === "string"
-                ? folder.name.trim()
-                : path;
+              typeof folder?.name === "string" ? folder.name.trim() : path;
           } catch {
             next_labels[path] = path;
           }
@@ -233,6 +229,10 @@ export default {
     font-size: var(--sl-font-size-x-small);
     color: var(--c-gris_fonce);
     border-bottom: 1px solid var(--c-gris);
+  }
+
+  tbody tr:last-child td {
+    border-bottom-color: var(--c-gris);
   }
 }
 

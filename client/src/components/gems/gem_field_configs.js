@@ -5,6 +5,10 @@ import {
   stone_type_suggestions,
   treatment_type_suggestions,
 } from "@/suggestions/softgems";
+import {
+  GEM_STATUS_MANUAL_SLUGS,
+  gemStatusLabel,
+} from "@/utils/gem_status.js";
 
 const sortSuggestions = (suggestions) =>
   [...suggestions].sort((a, b) => a.localeCompare(b));
@@ -19,26 +23,24 @@ const sorted_treatment_type_suggestions = sortSuggestions(
   treatment_type_suggestions
 );
 
-const STATUS_OPTIONS = [
-  { value: "reference", label: "reference" },
-  { value: "available", label: "available" },
-  { value: "reserved", label: "reserved" },
-  { value: "sold", label: "sold" },
-];
-
 /**
  * Returns the full field config map for all gem fields.
  * @param {Function} t - Vue $t translation function
  * @param {Array} paired_gem_options - select options for the paired_gem field
  */
 export function buildGemFieldConfigs(t, paired_gem_options = []) {
+  const status_options = GEM_STATUS_MANUAL_SLUGS.map((value) => ({
+    value,
+    label: gemStatusLabel(t, value),
+  }));
+
   return {
     status: {
       key: "status",
       label: t("sg_status"),
       icon: null,
       type: "select",
-      options: STATUS_OPTIONS,
+      options: status_options,
     },
     reference_supplier: {
       key: "reference_supplier",
