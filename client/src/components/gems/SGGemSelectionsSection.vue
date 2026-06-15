@@ -274,6 +274,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "@/utils/sg_data_table.scss";
+
 ._empty {
   color: var(--c-gris_fonce);
 }
@@ -324,35 +326,14 @@ export default {
 }
 
 ._table {
+  @include sg-data-table;
   width: 100%;
-  border-collapse: collapse;
-  font-size: var(--sl-font-size-small);
-
-  th,
-  td {
-    text-align: left;
-    padding: calc(var(--spacing) * 0.65) calc(var(--spacing) * 0.85);
-    border-bottom: 1px solid var(--c-gris_clair);
-    vertical-align: middle;
-  }
-
-  thead th {
-    font-weight: 600;
-    font-size: var(--sl-font-size-x-small);
-    color: var(--c-gris_fonce);
-    border-bottom: 1px solid var(--c-gris);
-  }
-
-  tbody tr:last-child td {
-    border-bottom-color: var(--c-gris);
-  }
 }
 
 ._dataRow {
   cursor: pointer;
-  background: var(--c-blanc);
 
-  &:hover {
+  &:hover td {
     background: var(--c-gris_clair);
   }
 

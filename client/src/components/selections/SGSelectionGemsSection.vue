@@ -28,6 +28,7 @@
     </p>
     <div v-else-if="show_entries_table_shell" class="_entriesTableShell">
       <SGGemsTable
+        ref="entries_gems_table"
         :gems="entry_gems_list"
         :inventory_has_gems="entry_gems_list.length > 0"
         :metadata_keys="metadata_keys"
@@ -42,6 +43,7 @@
         :selection_remove_column="can_edit"
         :fixed_gem_order="true"
         @rowClick="onEntryRowClick"
+        @editCell="onTableEditCell"
         @removeRowClick="confirmRemoveGemRow"
       />
       <div
@@ -70,6 +72,19 @@
       :selection_folder_path="selection_folder_path"
       @close="show_history_modal = false"
     />
+
+    <SGGemEditFieldModal
+      v-if="editing_field && editing_gem"
+      :field="editing_field"
+      :current_value="editing_current_value"
+      :gem_path="editing_gem.$path"
+      :gem="editing_gem"
+      @saved="onFieldSaved"
+      @close="
+        editing_field = null;
+        editing_gem = null;
+      "
+    />
   </SGSectionPanel>
 </template>
 
@@ -78,6 +93,12 @@ import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGSelectionAddGemsPicker from "@/components/selections/SGSelectionAddGemsPicker.vue";
 import SGSelectionGemsHistoryModal from "@/components/selections/SGSelectionGemsHistoryModal.vue";
+import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
+import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
+import {
+  gem_linear_dimension_keys,
+  gem_dimensions_merged_column_key,
+} from "@/mixins/GemDimensions";
 import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
 import {
   areSelectionGemPathsEqual,
@@ -99,6 +120,7 @@ export default {
     SGGemsTable,
     SGSelectionAddGemsPicker,
     SGSelectionGemsHistoryModal,
+    SGGemEditFieldModal,
   },
   props: {
     selection_folder_path: {
@@ -131,6 +153,9 @@ export default {
       refresh_entry_gems_seq: 0,
       pending_entry_gems_refresh: false,
       show_history_modal: false,
+      editing_gem: null,
+      editing_field: null,
+      editing_current_value: "",
     };
   },
   computed: {
@@ -138,10 +163,16 @@ export default {
       return this.entry_gems_list;
     },
     entries_field_editable_map() {
-      return this.metadata_keys.reduce((acc, key) => {
-        acc[key] = false;
+      const accumulator = this.metadata_keys.reduce((acc, metadata_key) => {
+        acc[metadata_key] = this.isFieldEditable(metadata_key);
         return acc;
       }, {});
+      this.getPriceFieldPairs().forEach(({ virtual_per_carat_key }) => {
+        accumulator[virtual_per_carat_key] = this.isFieldEditable(
+          virtual_per_carat_key
+        );
+      });
+      return accumulator;
     },
     is_box_type() {
       return String(this.selection_folder?.selection_type || "") === "boîte";
@@ -333,6 +364,78 @@ export default {
       const slug = this.gem_slug_from_path(gem?.$path);
       if (!slug) return;
       this.$emit("entryRowClick", slug);
+    },
+    getPairedGemOptions(excluded_gem_id) {
+      return (Array.isArray(this.entry_gems_list) ? this.entry_gems_list : [])
+        .filter((g) => g?.$path && !g.$path.endsWith(`/${excluded_gem_id}`))
+        .map((g) => {
+          const gem_id = this.gem_slug_from_path(g?.$path);
+          const gem_label =
+            (g.reference_supplier && String(g.reference_supplier).trim()) ||
+            (g.reference_customer && String(g.reference_customer).trim()) ||
+            gem_id;
+          return { value: gem_id, label: gem_label };
+        });
+    },
+    getFieldConfig(metadata_key, gem) {
+      const gem_id = this.gem_slug_from_path(gem?.$path);
+      const configs = buildGemFieldConfigs(
+        this.$t.bind(this),
+        this.getPairedGemOptions(gem_id)
+      );
+      return configs[metadata_key] || null;
+    },
+    isFieldEditable(metadata_key) {
+      if (!this.can_edit) return false;
+      if (metadata_key === "id" || metadata_key === "$cover") return false;
+      const config = this.getFieldConfig(metadata_key, {});
+      return config !== null && !config.readonly;
+    },
+    onTableEditCell({ gem, metadata_key }) {
+      this.openCellEditModal(gem, metadata_key);
+    },
+    openCellEditModal(gem, metadata_key) {
+      if (!this.can_edit) return;
+      const field_config = this.getFieldConfig(metadata_key, gem);
+      if (!field_config || field_config.readonly) return;
+      const raw_value = this.gemFieldDisplayValue(gem, field_config);
+      this.editing_current_value =
+        raw_value !== undefined && raw_value !== null && raw_value !== ""
+          ? raw_value
+          : raw_value === 0
+          ? 0
+          : "";
+      this.editing_gem = gem;
+      this.editing_field = field_config;
+    },
+    onFieldSaved({ key, value, changes }) {
+      if (!this.editing_gem) return;
+      const gem_path = this.editing_gem.$path;
+      let scroll_metadata_key =
+        key != null && String(key).trim() !== "" ? String(key) : "";
+      if (gem_linear_dimension_keys.includes(scroll_metadata_key)) {
+        scroll_metadata_key = gem_dimensions_merged_column_key;
+      }
+      const index = this.entry_gems_list.findIndex((g) => g.$path === gem_path);
+      if (index !== -1) {
+        const target_gem = this.entry_gems_list[index];
+        const next_changes =
+          changes && typeof changes === "object" ? changes : { [key]: value };
+        Object.keys(next_changes).forEach((change_key) => {
+          this.$set(target_gem, change_key, next_changes[change_key]);
+        });
+        this.ensureGemPricingFields(target_gem);
+      }
+      this.editing_gem = null;
+      this.editing_field = null;
+      if (gem_path && scroll_metadata_key) {
+        this.$nextTick(() => {
+          this.$refs.entries_gems_table?.scrollGemCellIntoView({
+            gem_path,
+            metadata_key: scroll_metadata_key,
+          });
+        });
+      }
     },
   },
 };

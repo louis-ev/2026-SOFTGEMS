@@ -824,6 +824,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "@/utils/sg_data_table.scss";
+
 ._gemsTableRoot {
   display: flex;
   flex-direction: column;
@@ -862,7 +864,11 @@ export default {
   --sticky-cover-col-height: 80px;
   --sg-table-border-width-thin: 1px;
   --sg-table-border-width-thick: 1px;
-  --sg-table-border-color: var(--c-gris_clair);
+  --sg-table-border-color: color-mix(
+    in srgb,
+    var(--c-gris_clair),
+    var(--c-noir) 15%
+  );
   --sg-cell-padding: calc(var(--spacing) / 2);
   --sg-metadata-font-size: var(--sl-font-size-x-small);
   --sg-id-font-size: var(--sl-font-size-medium);
@@ -925,61 +931,13 @@ export default {
 }
 
 ._table {
-  --sg-table-header-bg: var(--c-bodybg);
   --sg-table-footer-bg: color-mix(
     in srgb,
     var(--c-gris_clair) 55%,
     var(--c-bodybg)
   );
-  border-collapse: separate;
-  border-spacing: 0;
-  border: var(--sg-table-border-width-thin) solid var(--sg-table-border-color);
-  border-left: 0px;
-  border-top: 0px;
+  @include sg-data-table;
   width: max-content;
-  min-width: 100%;
-
-  th,
-  td {
-    text-align: left;
-    border: 0;
-    border-right: var(--sg-table-border-width-thin) solid
-      var(--sg-table-border-color);
-    border-bottom: var(--sg-table-border-width-thin) solid
-      var(--sg-table-border-color);
-    padding: var(--sg-cell-padding);
-    vertical-align: top;
-    background: var(--c-bodybg);
-    font-size: var(--sg-metadata-font-size);
-  }
-
-  tr > :last-child {
-    border-right: 0;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
-
-  thead th {
-    position: sticky;
-    top: 0;
-    z-index: 8;
-    border-top: var(--sg-table-border-width-thick) solid
-      var(--sg-table-border-color);
-    border-right: var(--sg-table-border-width-thick) solid
-      var(--sg-table-border-color);
-    border-bottom: var(--sg-table-border-width-thick) solid
-      var(--sg-table-border-color);
-    background: var(--sg-table-header-bg);
-    box-shadow: 0 var(--sg-table-border-width-thick) 0
-      var(--sg-table-border-color);
-    vertical-align: middle;
-
-    &:hover {
-      background: var(--c-gris_clair);
-    }
-  }
 
   tfoot td {
     position: sticky;

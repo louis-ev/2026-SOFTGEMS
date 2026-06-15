@@ -9,6 +9,7 @@
           v-if="panel_open"
           key="backdrop"
           class="_sgOverlaySidePanelLayout--backdrop"
+          :style="backdrop_style"
           @click="onBackdropClick"
         />
       </transition>
@@ -39,8 +40,33 @@
 </template>
 
 <script>
+const BACKDROP_LIGHT_OPACITY = 0.12;
+const BACKDROP_DARK_OPACITY = 0.32;
+const BACKDROP_HOVER_DELTA = 0.08;
+
 export default {
   name: "SGOverlaySidePanelLayout",
+  inject: {
+    parent_overlay_depth: {
+      from: "overlay_panel_depth",
+      default: 0,
+    },
+    parent_overlay_registry: {
+      from: "overlay_panel_registry",
+      default: null,
+    },
+  },
+  data() {
+    return {
+      overlay_registry_ref: this.parent_overlay_registry || { layouts: [] },
+    };
+  },
+  provide() {
+    return {
+      overlay_panel_depth: this.overlay_depth,
+      overlay_panel_registry: this.overlay_registry_ref,
+    };
+  },
   props: {
     panel_open: {
       type: Boolean,
@@ -51,6 +77,40 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+  computed: {
+    overlay_depth() {
+      return this.parent_overlay_depth + 1;
+    },
+    topmost_open_depth() {
+      return this.overlay_registry_ref.layouts.reduce((max_depth, layout) => {
+        void layout.panel_open;
+        return layout.panel_open
+          ? Math.max(max_depth, layout.overlay_depth)
+          : max_depth;
+      }, 0);
+    },
+    backdrop_style() {
+      const steps_behind = this.topmost_open_depth - this.overlay_depth + 1;
+      const opacity =
+        steps_behind >= 2 ? BACKDROP_DARK_OPACITY : BACKDROP_LIGHT_OPACITY;
+      const hover_opacity = Math.max(opacity - BACKDROP_HOVER_DELTA, 0.04);
+
+      return {
+        "--backdrop-bg": `rgba(150, 150, 150, ${opacity})`,
+        "--backdrop-bg-hover": `rgba(150, 150, 150, ${hover_opacity})`,
+      };
+    },
+  },
+  created() {
+    this.overlay_registry_ref.layouts.push(this);
+  },
+  beforeDestroy() {
+    const layouts = this.overlay_registry_ref.layouts;
+    const index = layouts.indexOf(this);
+    if (index !== -1) {
+      layouts.splice(index, 1);
+    }
   },
   methods: {
     onBackdropClick() {
@@ -101,14 +161,15 @@ export default {
 ._sgOverlaySidePanelLayout--backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(150, 150, 150, 0.15);
+  background: var(--backdrop-bg, rgba(150, 150, 150, 0.15));
   cursor: pointer;
   pointer-events: auto;
   backdrop-filter: blur(1px);
+
   transition: background 0.2s ease, backdrop-filter 0.2s ease;
 
   &:hover {
-    background: rgba(150, 150, 150, 0.05);
+    // background: var(--backdrop-bg-hover, rgba(150, 150, 150, 0.05));
     backdrop-filter: blur(0px);
   }
 }

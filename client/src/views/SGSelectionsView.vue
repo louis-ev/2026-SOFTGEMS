@@ -258,6 +258,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "@/utils/sg_data_table.scss";
+
 ._selectionsView {
   position: relative;
   height: 100%;
@@ -305,35 +307,11 @@ export default {
 }
 
 ._table {
+  @include sg-data-table;
   width: 100%;
-  border-collapse: collapse;
-  font-size: var(--sl-font-size-small);
 
-  th,
-  td {
-    text-align: left;
-    padding: calc(var(--spacing) * 0.75) calc(var(--spacing) * 1);
-    border-bottom: 1px solid var(--c-gris_clair);
-    vertical-align: middle;
-  }
-
-  thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: var(--c-bodybg);
-    font-weight: 600;
-    font-size: var(--sl-font-size-x-small);
-    color: var(--c-gris_fonce);
-    border-bottom: 1px solid var(--c-gris);
-
-    &._colCount {
-      text-align: right;
-    }
-  }
-
-  tr._dataRow:last-child td {
-    border-bottom-color: var(--c-gris);
+  thead th._colCount {
+    text-align: right;
   }
 }
 
@@ -374,13 +352,12 @@ export default {
 
 ._dataRow {
   cursor: pointer;
-  background: var(--c-blanc);
 
-  &._selected {
+  &._selected td {
     background: var(--c-gris_clair);
   }
 
-  &:hover {
+  &:hover td {
     background: var(--c-gris_clair);
   }
 

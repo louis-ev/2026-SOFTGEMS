@@ -1,0 +1,62 @@
+@mixin sg-data-table {
+  --sg-table-border-width-thin: 1px;
+  --sg-table-border-width-thick: 1px;
+  --sg-table-border-color: color-mix(
+    in srgb,
+    var(--c-gris_clair),
+    var(--c-noir) 10%
+  );
+  --sg-cell-padding: calc(var(--spacing) / 2);
+  --sg-metadata-font-size: var(--sl-font-size-x-small);
+  --sg-table-header-bg: var(--c-bodybg);
+
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+
+  th,
+  td {
+    text-align: left;
+    border: 0;
+    border-right: var(--sg-table-border-width-thin) solid
+      var(--sg-table-border-color);
+    border-bottom: var(--sg-table-border-width-thin) solid
+      var(--sg-table-border-color);
+    padding: var(--sg-cell-padding);
+    vertical-align: top;
+    background: var(--c-bodybg);
+    font-size: var(--sg-metadata-font-size);
+  }
+
+  tr > :first-child {
+    border-left: var(--sg-table-border-width-thin) solid
+      var(--sg-table-border-color);
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 8;
+    border-top: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-right: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-bottom: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    background: var(--sg-table-header-bg);
+    box-shadow: 0 var(--sg-table-border-width-thick) 0
+      var(--sg-table-border-color);
+    vertical-align: middle;
+    font-weight: 600;
+    color: var(--c-gris_fonce);
+
+    &:hover {
+      background: var(--c-gris_clair);
+    }
+  }
+
+  thead tr > :first-child {
+    border-left: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+  }
+}
