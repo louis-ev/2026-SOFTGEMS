@@ -1,17 +1,27 @@
 <template>
-  <input
-    ref="date_input"
-    type="date"
-    class="u-input"
-    :value="input_value"
-    :disabled="disabled"
-    :required="required"
-    @input="onInput"
-  />
+  <div class="_dateInput">
+    <input
+      ref="date_input"
+      type="date"
+      class="u-input"
+      :value="input_value"
+      :disabled="disabled"
+      :required="required"
+      @input="onInput"
+    />
+    <button
+      type="button"
+      class="u-buttonLink _todayBtn"
+      :disabled="disabled"
+      @click="setToday"
+    >
+      {{ $t("sg_set_date_to_today") }}
+    </button>
+  </div>
 </template>
 
 <script>
-import { toDateInputValue } from "@/utils/date_input.js";
+import { toDateInputValue, todayDateInputValue } from "@/utils/date_input.js";
 
 export default {
   name: "SGDateInput",
@@ -49,6 +59,19 @@ export default {
         event && event.target ? String(event.target.value || "") : "";
       this.$emit("input", next_value);
     },
+    setToday() {
+      if (this.disabled) return;
+      this.$emit("input", todayDateInputValue());
+    },
   },
 };
 </script>
+
+<style lang="scss" scoped>
+._dateInput {
+}
+
+._todayBtn {
+  margin-top: 0.35rem;
+}
+</style>
