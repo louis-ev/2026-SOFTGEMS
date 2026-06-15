@@ -1,13 +1,5 @@
 <template>
   <section class="_contactNewView">
-    <button
-      type="button"
-      class="u-button u-button_icon _closeButton"
-      @click="goBack"
-    >
-      <b-icon icon="x-lg" />
-    </button>
-
     <div class="_pageHeader">
       <h1 class="_pageTitle">{{ $t("sg_create_contact_title") }}</h1>
     </div>
@@ -193,13 +185,6 @@ export default {
 
 ._pageTitle {
   margin: 0;
-}
-
-._closeButton {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1000;
 }
 
 ._form {

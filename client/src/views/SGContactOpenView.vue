@@ -1,13 +1,5 @@
 <template>
   <section class="_contactOpenView">
-    <button
-      type="button"
-      class="u-button u-button_icon _closeButton"
-      @click="goBack"
-    >
-      <b-icon icon="x-lg" />
-    </button>
-
     <div class="_pageHeader">
       <div v-if="contact" class="_titleRow">
         <div class="_titleGroup">
@@ -1166,13 +1158,6 @@ export default {
   font-weight: 400;
   color: var(--c-gris_fonce);
   line-height: 1.2;
-}
-
-._closeButton {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1000;
 }
 
 ._form {

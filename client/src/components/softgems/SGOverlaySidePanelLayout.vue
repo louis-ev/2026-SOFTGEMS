@@ -21,7 +21,7 @@
             class="_sgOverlaySidePanelLayout--panel"
           >
             <button
-              v-if="panel_show_close_button"
+              v-if="shows_panel_close_button"
               type="button"
               class="u-button u-button_icon _sgOverlaySidePanelLayout--panelClose"
               :aria-label="$t('close')"
@@ -72,11 +72,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    /** When the panel is open, shows an overlay close control (same effect as backdrop click). */
-    panel_show_close_button: {
-      type: Boolean,
-      default: false,
-    },
   },
   computed: {
     overlay_depth() {
@@ -89,6 +84,9 @@ export default {
           ? Math.max(max_depth, layout.overlay_depth)
           : max_depth;
       }, 0);
+    },
+    shows_panel_close_button() {
+      return this.panel_open && this.overlay_depth === this.topmost_open_depth;
     },
     backdrop_style() {
       const steps_behind = this.topmost_open_depth - this.overlay_depth + 1;
@@ -137,6 +135,7 @@ export default {
 
 ._sgOverlaySidePanelLayout--main {
   position: relative;
+  z-index: 0;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -250,7 +249,8 @@ export default {
   }
 
   ._sgOverlaySidePanelLayout--panelClose {
-    right: calc(var(--spacing) * 1.35 + env(safe-area-inset-right, 0px));
+    top: env(safe-area-inset-top, 0px);
+    right: env(safe-area-inset-right, 0px);
   }
 
   ._sgOverlaySidePanelLayout--panelTop {

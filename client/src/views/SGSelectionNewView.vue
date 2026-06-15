@@ -1,13 +1,5 @@
 <template>
   <section class="_selectionNewView">
-    <button
-      type="button"
-      class="u-button u-button_icon _closeButton"
-      @click="goBack"
-    >
-      <b-icon icon="x-lg" />
-    </button>
-
     <div class="_pageHeader">
       <h1 class="_pageTitle">{{ page_title }}</h1>
       <p v-if="active_type_label" class="_typeReadonly">
@@ -187,13 +179,6 @@ export default {
   margin: 0;
   font-size: var(--sl-font-size-small);
   color: var(--c-gris_fonce);
-}
-
-._closeButton {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1000;
 }
 
 ._form {

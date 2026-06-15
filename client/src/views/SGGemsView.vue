@@ -2,7 +2,6 @@
   <div class="_gemsView">
     <SGOverlaySidePanelLayout
       :panel_open="is_gem_open"
-      :panel_show_close_button="$route.name === 'Open gem'"
       @close="closeGemPanel"
     >
       <div class="_gemsView--content">

@@ -2,17 +2,9 @@
   <div class="_selectionOpenViewRoot">
     <SGOverlaySidePanelLayout
       :panel_open="is_gem_side_panel_open"
-      :panel_show_close_button="is_gem_side_panel_open"
       @close="closeGemSidePanel"
     >
       <section class="_selectionOpenView">
-        <button
-          type="button"
-          class="u-button u-button_icon _closeButton"
-          @click="goBack"
-        >
-          <b-icon icon="x-lg" />
-        </button>
 
         <div v-if="is_loading">{{ $t("sg_loading_selection") }}</div>
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
@@ -417,13 +409,6 @@ export default {
   overflow-y: auto;
   box-sizing: border-box;
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
-}
-
-._closeButton {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1000;
 }
 
 ._pageHeading {
