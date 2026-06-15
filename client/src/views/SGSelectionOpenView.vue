@@ -20,20 +20,27 @@
           <header class="_pageHeading">
             <div class="_titleRow">
               <div class="_titleGroup">
-                <h1
-                  class="_pageTitle"
-                  :class="{ '_pageTitle_editable': can_edit }"
-                  :title="can_edit ? $t('sg_selection_edit_name_hint') : undefined"
-                  :tabindex="can_edit ? 0 : undefined"
-                  @click="openInternalNameModal"
-                  @keydown.enter.prevent="openInternalNameModal"
-                  @keydown.space.prevent="openInternalNameModal"
-                >
-                  {{ page_title }}
-                </h1>
-                <span class="_selectionType">{{
-                  formatSelectionType(selection.selection_type)
-                }}</span>
+                <div class="_titleLine">
+                  <h1
+                    class="_pageTitle"
+                    :class="{ '_pageTitle_editable': can_edit }"
+                    :title="can_edit ? $t('sg_selection_edit_name_hint') : undefined"
+                    :tabindex="can_edit ? 0 : undefined"
+                    @click="openInternalNameModal"
+                    @keydown.enter.prevent="openInternalNameModal"
+                    @keydown.space.prevent="openInternalNameModal"
+                  >
+                    {{ page_title }}
+                  </h1>
+                  <span class="_selectionType">{{
+                    formatSelectionType(selection.selection_type)
+                  }}</span>
+                </div>
+                <SGFolderModificationsHistory
+                  :folder_path="selection_folder_path"
+                  :folder_meta="selection"
+                  history_kind="selection"
+                />
               </div>
               <DropDown v-if="can_edit" :show_label="false" :right="true">
                 <button
@@ -141,6 +148,7 @@
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
+import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
 import SGSelectionGemsSection from "@/components/selections/SGSelectionGemsSection.vue";
 import SGSelectionHeaderFieldsSection from "@/components/selections/SGSelectionHeaderFieldsSection.vue";
@@ -165,6 +173,7 @@ export default {
     RemoveMenu2,
     SGEditableMetaField,
     SGFolderMetaPeek,
+    SGFolderModificationsHistory,
     SGSelectionFilesSection,
     SGSelectionGemsSection,
     SGSelectionHeaderFieldsSection,
@@ -430,6 +439,14 @@ export default {
 }
 
 ._titleGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 0.35);
+  min-width: 0;
+}
+
+._titleLine {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;

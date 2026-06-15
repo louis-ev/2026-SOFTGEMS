@@ -279,6 +279,7 @@ export default {
   sg_create_selection_of_type: "Create {type}",
   sg_section_selection_header: "Document details",
   sg_selection_date: "Date",
+  sg_set_date_to_today: "Set to today",
   sg_selection_document_number_name: "Document Number / Name",
   sg_selection_counterparty: "Counterparty",
   sg_selection_counterparty_address_book_entry: "Company / individual",

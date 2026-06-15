@@ -5,14 +5,11 @@
         <div class="_titleRow">
           <div class="_titleGroup">
             <h1 class="_pageTitle">{{ gem_title }}</h1>
-            <button
-              v-if="gem_last_edited_date"
-              type="button"
-              class="_historyTrigger"
-              @click="openHistoryModal"
-            >
-              {{ $t("sg_last_modified") }}: {{ gem_last_edited_date }}
-            </button>
+            <SGFolderModificationsHistory
+              :folder_path="gem_path"
+              :folder_meta="gem"
+              history_kind="gem"
+            />
           </div>
           <DropDown v-if="can_edit" :show_label="false" :right="true">
             <button
@@ -432,50 +429,11 @@
 
       <SGFolderMetaPeek :folder_meta="gem" />
     </div>
-
-    <BaseModal2
-      v-if="show_history_modal"
-      :title="$t('sg_modifications_history')"
-      :size="'large'"
-      @close="show_history_modal = false"
-    >
-      <div class="_historyModalBody">
-        <div v-if="is_loading_history" class="_historyLoading">
-          <LoaderSpinner />
-        </div>
-        <p v-else-if="gem_history_entries.length === 0" class="_historyEmpty">
-          {{ $t("sg_no_history") }}
-        </p>
-        <ul v-else class="_historyList">
-          <li
-            v-for="(entry, index) in gem_history_entries"
-            :key="`${entry.ts}-${entry.event}-${
-              entry.field || 'created'
-            }-${index}`"
-            class="_historyEntry"
-          >
-            <p class="_historyEntryTitle">
-              {{ formatHistoryEntryTitle(entry) }}
-            </p>
-            <p class="_historyEntryMeta">
-              <time :datetime="entry.ts">{{
-                formatRecentDateTime(entry.ts)
-              }}</time>
-              <template v-if="entry.author">
-                • {{ $t("sg_history_by") }}
-                <strong>{{ formatAuthor(entry.author) }}</strong>
-              </template>
-            </p>
-          </li>
-        </ul>
-      </div>
-    </BaseModal2>
   </section>
 </template>
 
 <script>
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
-import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
@@ -483,6 +441,7 @@ import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
+import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemSelectionsSection from "@/components/gems/SGGemSelectionsSection.vue";
 
@@ -496,9 +455,9 @@ export default {
   ],
   components: {
     RemoveMenu2,
-    BaseModal2,
     SGEditableMetaField,
     SGFolderMetaPeek,
+    SGFolderModificationsHistory,
     SGSectionPanel,
     SGGemSelectionsSection,
     SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
@@ -526,9 +485,6 @@ export default {
       fetch_error: "",
       paired_gem_options: [],
       editing_field: null,
-      show_history_modal: false,
-      is_loading_history: false,
-      gem_history_entries: [],
     };
   },
   computed: {
@@ -541,11 +497,6 @@ export default {
     gem_title() {
       if (!this.gem) return this.$t("sg_open_gem_title");
       return this.$t("sg_gem_title", { id: this.gem_id });
-    },
-    gem_last_edited_date() {
-      const raw_date = this.gem?.$date_modified || this.gem?.$date_created;
-      if (!raw_date) return "";
-      return this.formatRecentDateTime(raw_date);
     },
     pvd_asking_price_computed() {
       const pv = Number(this.gem?.pv_selling_price);
@@ -603,51 +554,6 @@ export default {
       } catch {
         this.paired_gem_options = [];
       }
-    },
-    async openHistoryModal() {
-      this.show_history_modal = true;
-      if (this.gem_history_entries.length > 0) return;
-
-      this.is_loading_history = true;
-      try {
-        const entries = await this.$api.getFieldHistory({
-          path: this.gem_path,
-        });
-        this.gem_history_entries = (Array.isArray(entries) ? entries : [])
-          .slice()
-          .reverse();
-      } catch {
-        this.gem_history_entries = [];
-      } finally {
-        this.is_loading_history = false;
-      }
-    },
-    formatHistoryEntryTitle(entry) {
-      if (entry?.event === "created") {
-        const fields_count = Object.keys(entry?.fields || {}).length;
-        return `${this.$t("sg_created")} (${fields_count} fields)`;
-      }
-
-      if (entry?.event === "updated") {
-        const field_name =
-          this.field_configs?.[entry.field]?.label || entry.field;
-        const value_text =
-          entry.value === null ||
-          entry.value === undefined ||
-          entry.value === ""
-            ? "—"
-            : String(entry.value);
-        return `${field_name}: ${value_text}`;
-      }
-
-      return this.$t("sg_field_history");
-    },
-    formatAuthor(author_path) {
-      if (!author_path) return "";
-      const author = this.getAuthor(author_path);
-      if (author) return author.name;
-      const parts = String(author_path).split("/");
-      return parts[parts.length - 1] || author_path;
     },
     openEditModal(field_config) {
       if (!this.connected_as) return;
@@ -770,20 +676,6 @@ export default {
   font-size: 0.85rem;
 }
 
-._historyTrigger {
-  all: unset;
-  cursor: pointer;
-  margin: calc(var(--spacing) / 6) 0 0;
-  color: var(--c-gris_fonce);
-  font-size: 0.85rem;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-
-  &:hover {
-    color: var(--c-noir);
-  }
-}
-
 ._content {
   // max-width: 720px;
   margin: 0 auto;
@@ -879,53 +771,6 @@ export default {
 ._pricingGroups :deep(._value) {
   padding: calc(var(--spacing) * 0.32);
   font-size: var(--sl-font-size-x-small);
-}
-
-._historyModalBody {
-  min-height: 120px;
-}
-
-._historyLoading {
-  display: flex;
-  justify-content: center;
-  padding: calc(var(--spacing) / 2);
-}
-
-._historyEmpty {
-  margin: 0;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
-}
-
-._historyList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) / 3);
-}
-
-._historyEntry {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: calc(var(--spacing) / 3) calc(var(--spacing) / 2);
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 6px;
-  background: var(--c-bodybg);
-}
-
-._historyEntryTitle {
-  margin: 0;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-noir);
-}
-
-._historyEntryMeta {
-  margin: 0;
-  font-size: var(--sl-font-size-x-small);
-  color: var(--c-gris_fonce);
 }
 
 @media (max-width: 920px) {
