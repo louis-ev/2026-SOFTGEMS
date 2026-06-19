@@ -274,7 +274,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "@/utils/sg_data_table.scss";
+@use "@/utils/sg_data_table.scss" as sg_data_table;
 
 ._empty {
   color: var(--c-gris_fonce);
@@ -326,7 +326,7 @@ export default {
 }
 
 ._table {
-  @include sg-data-table;
+  @include sg_data_table.sg-data-table;
   width: 100%;
 }
 
