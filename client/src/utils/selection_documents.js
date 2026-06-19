@@ -34,6 +34,23 @@ export function findSelectionMainDocumentFile(selection_folder) {
   );
 }
 
+export function isSelectionGeneratedPdfFile(file) {
+  return file?.is_selection_generated_pdf === true;
+}
+
+export function findSelectionGeneratedPdfFiles(selection_folder) {
+  const files = Array.isArray(selection_folder?.$files)
+    ? selection_folder.$files
+    : [];
+  return files
+    .filter((file) => file && isSelectionGeneratedPdfFile(file))
+    .slice()
+    .sort(
+      (a, b) =>
+        +new Date(b?.$date_uploaded || 0) - +new Date(a?.$date_uploaded || 0)
+    );
+}
+
 export function isPdfFile(file) {
   if (!file) return false;
   const name = String(file.name || "").toLowerCase();

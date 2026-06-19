@@ -89,6 +89,16 @@ Helpers: [selection_urls.js](../client/src/utils/selection_urls.js) (`selectionL
 - Attachments: [SGSelectionFilesSection.vue](../client/src/components/selections/SGSelectionFilesSection.vue)
 - Gem memberships: [SGGemSelectionsSection.vue](../client/src/components/gems/SGGemSelectionsSection.vue)
 
+## PDF export (V1)
+
+Enabled for: **box**, **return memo in**, **buying invoice**, **memo out**, **return memo out**, **sale invoice**, **partner invoice**, **credit note**, **importation return** (not `simple`, `memo in`, `importation`).
+
+- **UI:** **Exporter en PDF** on [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue) opens [SGSelectionPdfExportModal.vue](../client/src/components/selections/SGSelectionPdfExportModal.vue) — column picker (max 7 A4 units, photo = 2), pricing line selector, optional main-document attach.
+- **Print view:** canonical folder URL `/selections/{folder_slug}?cols=…&details=1` (same path as `_createURLFromPath`, plus query) → static [SGSelectionExportView.vue](../client/src/views/SGSelectionExportView.vue) + [SGSelectionPdfDocument.vue](../client/src/components/selections/SGSelectionPdfDocument.vue); Puppeteer via `exportFolder` — `_export` in [api2.js](../core2/api2.js) sets `export_query` from `selection_pdf_export`; [Exporter.js](../core2/Exporter.js) merges `export_query` like publication export params.
+- **Storage:** every export is saved on the selection folder with `is_selection_generated_pdf: true` and `$date_uploaded` as generation date; listed in [SGSelectionGeneratedPdfsSection.vue](../client/src/components/selections/SGSelectionGeneratedPdfsSection.vue).
+- **Registry / columns:** [selection_pdf_export_registry.js](../client/src/utils/selection_pdf_export_registry.js), [selection_pdf_columns.js](../client/src/utils/selection_pdf_columns.js).
+- **PDF language:** French only (titles, legal text, footer).
+
 ## Server validation
 
 `selection_entries` is typed as an **`array`** in the schema; updates go through the same meta validation as other fields ([`validateMeta` in core2/utils.js](../core2/utils.js)).

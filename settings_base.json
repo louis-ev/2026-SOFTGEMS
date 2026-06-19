@@ -355,6 +355,9 @@
             },
             "is_selection_main_document": {
               "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
             }
           }
         }

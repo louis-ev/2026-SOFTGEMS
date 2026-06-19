@@ -346,11 +346,24 @@ class Exporter {
       if (this.instructions.style) query.style = this.instructions.style;
       if (this.instructions.make_preview === true) query.make_preview = true;
 
+      if (
+        this.instructions.export_query &&
+        typeof this.instructions.export_query === "object"
+      ) {
+        Object.entries(this.instructions.export_query).forEach(
+          ([key, value]) => {
+            if (value === undefined || value === null) return;
+            query[key] = String(value);
+          }
+        );
+      }
+
       const superadmintoken = auth.getSuperadminToken();
       query.superadmintoken = superadmintoken;
 
       const searchParams = new URLSearchParams(query);
-      url += "?" + searchParams.toString();
+      const separator = url.includes("?") ? "&" : "?";
+      url += separator + searchParams.toString();
 
       const layout_mode = this.instructions.layout_mode || "print";
       const document_width = this.instructions.page_width || 210;

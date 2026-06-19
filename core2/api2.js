@@ -1466,11 +1466,47 @@ module.exports = (function () {
     }
   }
 
+  function _applySelectionPdfExportQuery(path_to_folder, data) {
+    if (data?.additional_meta?.is_selection_generated_pdf !== true) return;
+
+    const slash_path = utils.convertToSlashPath(path_to_folder);
+    const segments = slash_path.split("/").filter(Boolean);
+    if (
+      segments.length !== 2 ||
+      segments[0] !== "selections" ||
+      !/^\d+$/.test(segments[1])
+    ) {
+      throw new Error("selection_pdf_export_invalid_folder");
+    }
+
+    const opts =
+      data.selection_pdf_export && typeof data.selection_pdf_export === "object"
+        ? data.selection_pdf_export
+        : {};
+    const metadata_keys = Array.isArray(opts.metadata_keys)
+      ? opts.metadata_keys
+          .map((key) => String(key || "").trim())
+          .filter((key) => /^[\$a-zA-Z][\w$]*$/.test(key))
+      : [];
+
+    data.export_query = {
+      cols: metadata_keys.join(","),
+      details: opts.show_details_block === false ? "0" : "1",
+    };
+    delete data.selection_pdf_export;
+  }
+
   async function _export(req, res, next) {
     const { path_to_folder, path_to_parent_folder, meta_filename, data } =
       utils.makePathFromReq(req);
     const { token_path } = JSON.parse(req.headers.authorization || "{}");
     dev.logapi({ path_to_folder, path_to_parent_folder, data });
+
+    try {
+      _applySelectionPdfExportQuery(path_to_folder, data);
+    } catch (err) {
+      return res.status(400).send({ code: err.message });
+    }
 
     const folder_to_export_to =
       data.export_to_parent_folder === true && path_to_parent_folder !== "."

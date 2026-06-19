@@ -56,6 +56,30 @@ const routes = [
     ],
   },
   {
+    path: "/selections/:folder_slug(\\d+)",
+    name: "Selection PDF export",
+    meta: {
+      static: true,
+    },
+    component: () => import("@/views/SGSelectionExportView.vue"),
+    props: (route) => ({
+      folder_slug: route.params.folder_slug,
+    }),
+    beforeEnter(to, _from, next) {
+      const has_export_query =
+        to.query.cols != null || to.query.superadmintoken != null;
+      if (has_export_query) {
+        next();
+        return;
+      }
+      next({
+        name: "Selection legacy redirect",
+        params: { selection_path: to.params.folder_slug },
+        replace: true,
+      });
+    },
+  },
+  {
     path: "/selections",
     component: () => import("@/layouts/SGSelectionsLayout.vue"),
     children: [

@@ -34,26 +34,37 @@
                   history_kind="selection"
                 />
               </div>
-              <DropDown v-if="can_edit" :show_label="false" :right="true">
+              <div class="_headingActions">
                 <button
+                  v-if="show_pdf_export"
                   type="button"
-                  class="u-buttonLink u-buttonLink_red"
-                  @click="show_remove_modal = true"
+                  class="u-button u-button_verysmall"
+                  @click="show_pdf_export_modal = true"
                 >
-                  <b-icon icon="trash" />
-                  {{ $t("sg_remove_selection") }}
+                  <b-icon icon="file-earmark-pdf" />
+                  {{ $t("sg_pdf_export_button") }}
                 </button>
-                <RemoveMenu2
-                  v-if="show_remove_modal"
-                  :path="selection_folder_path"
-                  :modal_title="
-                    $t('sg_remove_selection_confirm', { name: page_title })
-                  "
-                  :success_notification="$t('removed_successfully')"
-                  @removedSuccessfully="onRemovedSuccessfully"
-                  @close="show_remove_modal = false"
-                />
-              </DropDown>
+                <DropDown v-if="can_edit" :show_label="false" :right="true">
+                  <button
+                    type="button"
+                    class="u-buttonLink u-buttonLink_red"
+                    @click="show_remove_modal = true"
+                  >
+                    <b-icon icon="trash" />
+                    {{ $t("sg_remove_selection") }}
+                  </button>
+                  <RemoveMenu2
+                    v-if="show_remove_modal"
+                    :path="selection_folder_path"
+                    :modal_title="
+                      $t('sg_remove_selection_confirm', { name: page_title })
+                    "
+                    :success_notification="$t('removed_successfully')"
+                    @removedSuccessfully="onRemovedSuccessfully"
+                    @close="show_remove_modal = false"
+                  />
+                </DropDown>
+              </div>
             </div>
           </header>
 
@@ -114,6 +125,11 @@
             @gemRemovedFromSelection="onGemRemovedFromSelection"
           />
 
+          <SGSelectionGeneratedPdfsSection
+            v-if="show_pdf_export && selection"
+            :selection_folder="selection"
+          />
+
           <SGSelectionFilesSection
             :selection_path="selection_folder_path"
             :selection_folder="selection"
@@ -122,6 +138,17 @@
 
           <SGFolderMetaPeek :folder_meta="selection" />
         </div>
+
+        <SGSelectionPdfExportModal
+          v-if="show_pdf_export_modal && selection_folder_path && selection"
+          :selection_folder_path="selection_folder_path"
+          :selection="selection"
+          :can_edit="can_edit"
+          :type_slug="type_slug"
+          :selection_path="selection_path"
+          @close="show_pdf_export_modal = false"
+          @exported="onPdfExported"
+        />
       </section>
       <template #panel>
         <SGGemOpenView
@@ -142,6 +169,8 @@ import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
 import SGSelectionFilesSection from "@/components/selections/SGSelectionFilesSection.vue";
+import SGSelectionGeneratedPdfsSection from "@/components/selections/SGSelectionGeneratedPdfsSection.vue";
+import SGSelectionPdfExportModal from "@/components/selections/SGSelectionPdfExportModal.vue";
 import SGSelectionGemsSection from "@/components/selections/SGSelectionGemsSection.vue";
 import SGSelectionHeaderFieldsSection from "@/components/selections/SGSelectionHeaderFieldsSection.vue";
 import SGSelectionBuyingInvoiceFieldsSection from "@/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue";
@@ -152,6 +181,7 @@ import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import { selectionPdfExportEnabled } from "@/utils/selection_pdf_export_registry.js";
 import {
   parseSelectionFolderParam,
   selectionDetailPath,
@@ -167,6 +197,8 @@ export default {
     SGFolderMetaPeek,
     SGFolderModificationsHistory,
     SGSelectionFilesSection,
+    SGSelectionGeneratedPdfsSection,
+    SGSelectionPdfExportModal,
     SGSelectionGemsSection,
     SGSelectionHeaderFieldsSection,
     SGSelectionBuyingInvoiceFieldsSection,
@@ -194,6 +226,7 @@ export default {
       selection_edit_modal: null,
       is_saving_internal_name: false,
       show_remove_modal: false,
+      show_pdf_export_modal: false,
       side_panel_gem_id: "",
     };
   },
@@ -230,6 +263,12 @@ export default {
     },
     show_main_document() {
       return selectionTypeHasMainDocument(this.selection?.selection_type);
+    },
+    show_pdf_export() {
+      return (
+        this.connected_as &&
+        selectionPdfExportEnabled(this.selection?.selection_type)
+      );
     },
     edit_modal_title() {
       return `${this.page_title} — ${this.$t("sg_selection_name")}`;
@@ -391,6 +430,13 @@ export default {
     closeGemSidePanel() {
       this.side_panel_gem_id = "";
     },
+    async onPdfExported() {
+      try {
+        await this.$api.getFolder({ path: this.selection_folder_path });
+      } catch {
+        /* folder refresh is best-effort */
+      }
+    },
   },
 };
 </script>
@@ -421,6 +467,13 @@ export default {
   align-items: flex-start;
   justify-content: space-between;
   gap: calc(var(--spacing) * 0.75);
+}
+
+._headingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
 }
 
 ._titleGroup {
