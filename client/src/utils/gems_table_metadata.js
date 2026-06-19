@@ -14,6 +14,53 @@ export const gems_table_column_picker_excluded_keys = Object.freeze([
   "price_per_carat_pa_pcb",
 ]);
 
+/** Standard gem table columns always offered in the picker (independent of loaded gems). */
+export const gems_table_catalog_column_keys = Object.freeze([
+  "id",
+  "status",
+  "$cover",
+  "$date_modified",
+  "reference_supplier",
+  "reference_customer",
+  "paired_gem",
+  "number_of_pieces",
+  "stone_type",
+  "weight_ct",
+  "color",
+  "shape",
+  "origin_country",
+  "treatment_type",
+  "dimensions_lwh",
+  "base_price_pcb",
+  "purchased_price_pa",
+  "pv_selling_price",
+  "pvd_asking_price",
+  "pc_to",
+  "pf_invoiced_price",
+]);
+
+export const gems_table_gem_excluded_metadata_keys = Object.freeze([
+  "internal_name",
+  "price_per_carat_all",
+  "box_selection_path",
+]);
+
+export const gems_table_discovery_ignored_keys = Object.freeze([
+  "name",
+  "title",
+  ...gems_table_gem_excluded_metadata_keys,
+  ...gems_table_column_picker_excluded_keys,
+]);
+
+const gems_table_catalog_rank = Object.freeze(
+  Object.fromEntries(
+    gems_table_catalog_column_keys.map((metadata_key, index) => [
+      metadata_key,
+      index,
+    ])
+  )
+);
+
 export function isGemsTableMergedPricingColumnKey(metadata_key) {
   return gem_pricing_total_column_keys.includes(metadata_key);
 }
@@ -56,4 +103,52 @@ export function stripLinearDimensionKeys(metadata_keys) {
 /** Normalize saved / picker selection to persisted table column keys. */
 export function normalizeGemsTableSelectedMetadataKeys(metadata_keys) {
   return stripLinearDimensionKeys(stripVirtualPerCaratKeys(metadata_keys));
+}
+
+export function sortGemsTableMetadataKeys(metadata_keys) {
+  if (!Array.isArray(metadata_keys)) return [];
+  return [...new Set(metadata_keys)].sort((first_key, second_key) => {
+    const first_rank =
+      gems_table_catalog_rank[first_key] ?? Number.MAX_SAFE_INTEGER;
+    const second_rank =
+      gems_table_catalog_rank[second_key] ?? Number.MAX_SAFE_INTEGER;
+    if (first_rank !== second_rank) return first_rank - second_rank;
+    return first_key.localeCompare(second_key);
+  });
+}
+
+export function collectGemsTableMetadataKeysFromGems(
+  gems,
+  ignored_keys = gems_table_discovery_ignored_keys
+) {
+  const ignored_key_set =
+    ignored_keys instanceof Set ? ignored_keys : new Set(ignored_keys);
+  const metadata_key_set = new Set();
+
+  if (!Array.isArray(gems)) return metadata_key_set;
+
+  gems.forEach((gem) => {
+    Object.keys(gem || {}).forEach((key) => {
+      if (ignored_key_set.has(key)) return;
+      if (
+        key.startsWith("$") &&
+        key !== "$date_modified" &&
+        key !== "$cover"
+      ) {
+        return;
+      }
+      metadata_key_set.add(key);
+    });
+  });
+
+  return metadata_key_set;
+}
+
+/** Catalog + any extra keys present on loaded gems (for picker and display). */
+export function buildGemsTableAllMetadataKeys(gems) {
+  const metadata_key_set = new Set(gems_table_catalog_column_keys);
+  collectGemsTableMetadataKeysFromGems(gems).forEach((metadata_key) => {
+    metadata_key_set.add(metadata_key);
+  });
+  return sortGemsTableMetadataKeys(Array.from(metadata_key_set));
 }
