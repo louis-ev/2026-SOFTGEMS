@@ -1,6 +1,6 @@
 <template>
   <div class="_sgOverlaySidePanelLayout">
-    <div class="_sgOverlaySidePanelLayout--main">
+    <div class="_sgOverlaySidePanelLayout--main" :style="main_style">
       <slot />
     </div>
     <div class="_sgOverlaySidePanelLayout--shell">
@@ -9,7 +9,6 @@
           v-if="panel_open"
           key="backdrop"
           class="_sgOverlaySidePanelLayout--backdrop"
-          :style="backdrop_style"
           @click="onBackdropClick"
         />
       </transition>
@@ -40,9 +39,7 @@
 </template>
 
 <script>
-const BACKDROP_LIGHT_OPACITY = 0.12;
-const BACKDROP_DARK_OPACITY = 0.32;
-const BACKDROP_HOVER_DELTA = 0.08;
+const PANE_MIN_OPACITY = 0.2;
 
 export default {
   name: "SGOverlaySidePanelLayout",
@@ -88,15 +85,18 @@ export default {
     shows_panel_close_button() {
       return this.panel_open && this.overlay_depth === this.topmost_open_depth;
     },
-    backdrop_style() {
+    main_style() {
+      if (!this.panel_open) {
+        return {};
+      }
+
       const steps_behind = this.topmost_open_depth - this.overlay_depth + 1;
-      const opacity =
-        steps_behind >= 2 ? BACKDROP_DARK_OPACITY : BACKDROP_LIGHT_OPACITY;
-      const hover_opacity = Math.max(opacity - BACKDROP_HOVER_DELTA, 0.04);
+      if (steps_behind <= 0) {
+        return {};
+      }
 
       return {
-        "--backdrop-bg": `rgba(150, 150, 150, ${opacity})`,
-        "--backdrop-bg-hover": `rgba(150, 150, 150, ${hover_opacity})`,
+        opacity: this.paneOpacity(steps_behind),
       };
     },
   },
@@ -120,6 +120,16 @@ export default {
     emitClose() {
       this.$emit("close");
     },
+    paneOpacity(steps_behind) {
+      if (steps_behind <= 0) {
+        return 1;
+      }
+
+      const max_steps = this.topmost_open_depth + 1;
+      const opacity =
+        1 - (steps_behind / max_steps) * (1 - PANE_MIN_OPACITY);
+      return Math.max(PANE_MIN_OPACITY, opacity);
+    },
   },
 };
 </script>
@@ -141,6 +151,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: opacity 0.22s ease;
 }
 
 ._sgOverlaySidePanelLayout--shell {
@@ -160,17 +171,9 @@ export default {
 ._sgOverlaySidePanelLayout--backdrop {
   position: absolute;
   inset: 0;
-  background: var(--backdrop-bg, rgba(150, 150, 150, 0.15));
+  background: transparent;
   cursor: pointer;
   pointer-events: auto;
-  backdrop-filter: blur(1px);
-
-  transition: background 0.2s ease, backdrop-filter 0.2s ease;
-
-  &:hover {
-    // background: var(--backdrop-bg-hover, rgba(150, 150, 150, 0.05));
-    backdrop-filter: blur(0px);
-  }
 }
 
 ._sgOverlaySidePanelLayout--panelTrack {
