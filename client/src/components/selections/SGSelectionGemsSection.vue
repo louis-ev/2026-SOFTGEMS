@@ -8,7 +8,7 @@
       <button
         v-if="show_entries_table_shell || entry_gems_loading"
         type="button"
-        class="u-button u-button_verysmall"
+        class="u-button u-button_small"
         @click="openColumnsModal"
       >
         <b-icon icon="layout-three-columns" />
@@ -16,7 +16,7 @@
       </button>
       <button
         type="button"
-        class="u-button u-button_verysmall"
+        class="u-button u-button_small"
         @click="show_history_modal = true"
       >
         <b-icon icon="clock-history" />
@@ -248,9 +248,7 @@ export default {
         );
         return;
       }
-      this.$alertify
-        .delay(2500)
-        .success(this.$t("sg_selection_gems_updated"));
+      this.$alertify.delay(2500).success(this.$t("sg_selection_gems_updated"));
     },
     notifyGemStatusOnRemove(status_result) {
       if (!status_result?.status_changed) return;

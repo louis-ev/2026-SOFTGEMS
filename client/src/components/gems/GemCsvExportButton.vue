@@ -78,10 +78,13 @@ export default {
         if (raw === null || raw === undefined || raw === "") return "";
         const time_value = new Date(raw).getTime();
         if (!Number.isFinite(time_value)) return String(raw);
-        return new Date(raw).toLocaleString(getFormatLocale(this.$i18n?.locale), {
-          dateStyle: "short",
-          timeStyle: "short",
-        });
+        return new Date(raw).toLocaleString(
+          getFormatLocale(this.$i18n?.locale),
+          {
+            dateStyle: "short",
+            timeStyle: "short",
+          }
+        );
       }
 
       if (this.isGemPricingTotalColumnKey(metadata_key)) {
@@ -163,17 +166,5 @@ export default {
   align-items: stretch;
   gap: 0;
   justify-content: flex-start;
-
-  .u-buttonLink {
-    justify-content: flex-start;
-    width: 100%;
-    box-sizing: border-box;
-    text-decoration: none;
-    white-space: normal;
-    text-align: left;
-    line-height: 1.35;
-    padding-top: calc(var(--spacing) / 2);
-    padding-bottom: calc(var(--spacing) / 2);
-  }
 }
 </style>
