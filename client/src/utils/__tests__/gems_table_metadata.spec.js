@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildGemsTableAllMetadataKeys,
+  countGemsWithFilledTableColumnValue,
+  gemHasFilledTableColumnValue,
   gems_table_catalog_column_keys,
 } from "@/utils/gems_table_metadata.js";
 
@@ -26,5 +28,22 @@ describe("buildGemsTableAllMetadataKeys", () => {
     ]);
     expect(keys).toContain("description");
     expect(keys).toContain("stone_type");
+  });
+});
+
+describe("gemHasFilledTableColumnValue", () => {
+  it("detects filled and empty column values", () => {
+    const gem = {
+      $path: "gems/12",
+      stone_type: "Ruby",
+      pf_invoiced_price: "",
+      length_mm: 5,
+    };
+
+    expect(gemHasFilledTableColumnValue(gem, "id")).toBe(true);
+    expect(gemHasFilledTableColumnValue(gem, "stone_type")).toBe(true);
+    expect(gemHasFilledTableColumnValue(gem, "pf_invoiced_price")).toBe(false);
+    expect(gemHasFilledTableColumnValue(gem, "dimensions_lwh")).toBe(true);
+    expect(countGemsWithFilledTableColumnValue([gem], "color")).toBe(0);
   });
 });

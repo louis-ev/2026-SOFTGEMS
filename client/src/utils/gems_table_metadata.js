@@ -152,3 +152,46 @@ export function buildGemsTableAllMetadataKeys(gems) {
   });
   return sortGemsTableMetadataKeys(Array.from(metadata_key_set));
 }
+
+function is_filled_meta_value(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "boolean") return true;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return Boolean(value);
+}
+
+/**
+ * @param {object|null|undefined} gem
+ * @param {string} metadata_key
+ * @returns {boolean}
+ */
+export function gemHasFilledTableColumnValue(gem, metadata_key) {
+  if (!gem) return false;
+  if (metadata_key === "id") {
+    return Boolean(String(gem.$path || "").trim());
+  }
+  if (metadata_key === "$cover") {
+    return Boolean(gem.$cover);
+  }
+  if (metadata_key === gem_dimensions_merged_column_key) {
+    return gem_linear_dimension_keys.some((key) =>
+      is_filled_meta_value(gem[key])
+    );
+  }
+  return is_filled_meta_value(gem[metadata_key]);
+}
+
+/**
+ * @param {object[]} gems
+ * @param {string} metadata_key
+ * @returns {number}
+ */
+export function countGemsWithFilledTableColumnValue(gems, metadata_key) {
+  if (!Array.isArray(gems) || gems.length === 0) return 0;
+  return gems.filter((gem) =>
+    gemHasFilledTableColumnValue(gem, metadata_key)
+  ).length;
+}

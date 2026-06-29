@@ -1,4 +1,8 @@
-import { normalizeGemsTableSelectedMetadataKeys } from "@/utils/gems_table_metadata.js";
+import {
+  buildGemsTableAllMetadataKeys,
+  gems_table_column_picker_excluded_keys,
+  normalizeGemsTableSelectedMetadataKeys,
+} from "@/utils/gems_table_metadata.js";
 import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
 import { selectionPdfExportDefaults } from "@/utils/selection_pdf_export_registry.js";
 
@@ -62,6 +66,27 @@ export function normalizeSelectionPdfColumnKeys(metadata_keys) {
   const normalized = normalizeGemsTableSelectedMetadataKeys(metadata_keys);
   return normalized.filter(
     (key) => !selection_pdf_column_picker_excluded_keys.includes(key)
+  );
+}
+
+/**
+ * Full table column catalog for the PDF export picker (independent of loaded gem fields).
+ * @param {object[]} gems
+ * @returns {string[]}
+ */
+export function buildSelectionPdfPickerMetadataKeys(gems) {
+  const excluded = new Set([
+    ...selection_pdf_column_picker_excluded_keys,
+    ...gems_table_column_picker_excluded_keys,
+  ]);
+  return buildGemsTableAllMetadataKeys(Array.isArray(gems) ? gems : []).filter(
+    (key) => {
+      if (excluded.has(key)) return false;
+      if (key.startsWith("$") && key !== selection_pdf_photo_column_key) {
+        return false;
+      }
+      return true;
+    }
   );
 }
 

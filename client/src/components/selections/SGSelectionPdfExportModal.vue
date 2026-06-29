@@ -27,44 +27,45 @@
     <div v-else class="_body">
       <p class="_instructions">{{ $t("sg_pdf_export_modal_instructions") }}</p>
 
-      <div class="_pricingRow">
-        <label class="_pricingLabel" for="pdf_pricing_select">
-          {{ $t("sg_pdf_export_pricing_line") }}
-        </label>
-        <select
-          id="pdf_pricing_select"
-          v-model="selected_pricing_key"
-          class="_pricingSelect"
-          @change="onPricingChange"
-        >
-          <option value="">{{ $t("sg_pdf_export_no_pricing") }}</option>
-          <option
-            v-for="pricing_key in pricing_options"
-            :key="pricing_key"
-            :value="pricing_key"
-          >
-            {{ pricingLabel(pricing_key) }}
-          </option>
-        </select>
-      </div>
-
       <label class="_toggleRow">
         <input v-model="show_details_block" type="checkbox" />
         <span>{{ $t("sg_pdf_export_show_details") }}</span>
       </label>
 
       <div class="_columnsHeader">
-        <span>{{ $t("sg_pdf_export_columns_title") }}</span>
-        <span class="_columnCounter">
-          {{ column_units_used }} / {{ selection_pdf_max_column_units }}
+        <div class="_columnsHeaderMain">
+          <span>{{ $t("sg_pdf_export_columns_title") }}</span>
+          <span class="_columnLimitHint">
+            {{
+              $t("sg_pdf_export_columns_limit_hint", {
+                max: selection_pdf_max_column_units,
+                photo_units: selection_pdf_photo_column_units,
+              })
+            }}
+          </span>
+        </div>
+        <span
+          class="_columnCounter"
+          :class="{ _columnCounter_limit: is_column_limit_reached }"
+        >
+          {{
+            $t("sg_pdf_export_columns_counter", {
+              used: column_units_used,
+              max: selection_pdf_max_column_units,
+            })
+          }}
         </span>
       </div>
+      <p v-if="is_column_limit_reached" class="_columnLimitNotice">
+        {{ $t("sg_pdf_export_columns_limit_reached") }}
+      </p>
 
       <div class="_columnsList">
         <label
           v-for="metadata_key in all_metadata_keys"
           :key="metadata_key"
           class="_columnItem"
+          :class="{ _columnItem_disabled: isColumnToggleDisabled(metadata_key) }"
         >
           <input
             type="checkbox"
@@ -74,6 +75,11 @@
           />
           <span>{{ columnLabel(metadata_key) }}</span>
           <span
+            v-if="isColumnEmpty(metadata_key)"
+            class="_columnEmptyMark"
+            :title="column_empty_legend_text"
+          >*</span>
+          <span
             v-if="metadata_key === selection_pdf_photo_column_key"
             class="_photoHint"
           >
@@ -81,11 +87,29 @@
           </span>
         </label>
       </div>
+      <p v-if="show_column_empty_legend" class="_columnEmptyLegend">
+        <span class="_columnEmptyMark">*</span>
+        {{ column_empty_legend_text }}
+      </p>
     </div>
 
     <template slot="footer">
-      <button type="button" class="u-button" @click="onClose">
-        {{ export_done || is_exporting ? $t("close") : $t("cancel") }}
+      <button
+        v-if="export_done && !is_exporting"
+        type="button"
+        class="u-button"
+        @click="backToSettings"
+      >
+        <b-icon icon="arrow-left-short" />
+        {{ $t("back") }}
+      </button>
+      <button
+        v-else
+        type="button"
+        class="u-button"
+        @click="onClose"
+      >
+        {{ is_exporting ? $t("close") : $t("cancel") }}
       </button>
       <a
         v-if="export_done && created_doc && export_href"
@@ -129,19 +153,16 @@ import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
 import {
   applySelectionPdfPricingKey,
   activeSelectionPdfPricingKey,
+  buildSelectionPdfPickerMetadataKeys,
   canAddSelectionPdfColumn,
   countSelectionPdfColumnUnits,
   normalizeSelectionPdfColumnKeys,
-  selection_pdf_column_picker_excluded_keys,
   selection_pdf_max_column_units,
   selection_pdf_photo_column_key,
   selection_pdf_photo_column_units,
   selection_pdf_prefs_localstorage_key,
   resolveSelectionPdfExportPrefs,
 } from "@/utils/selection_pdf_columns.js";
-import {
-  selectionPdfExportDefaults,
-} from "@/utils/selection_pdf_export_registry.js";
 import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
@@ -151,11 +172,7 @@ import {
   sortSelectionGems,
 } from "@/utils/selection_entries.js";
 import { parseSelectionFolderParam } from "@/utils/selection_urls.js";
-import { gems_table_column_picker_excluded_keys } from "@/utils/gems_table_metadata.js";
-import {
-  gem_dimensions_merged_column_key,
-  gem_linear_dimension_keys,
-} from "@/mixins/GemDimensions";
+import { countGemsWithFilledTableColumnValue } from "@/utils/gems_table_metadata.js";
 
 export default {
   name: "SGSelectionPdfExportModal",
@@ -195,11 +212,6 @@ export default {
       gems_loading: false,
       enabled_metadata_keys: resolved.metadata_keys,
       show_details_block: resolved.show_details_block,
-      selected_pricing_key:
-        activeSelectionPdfPricingKey(resolved.metadata_keys) ||
-        selectionPdfExportDefaults(this.selection?.selection_type)
-          .default_pricing_key ||
-        "",
       is_exporting: false,
       export_done: false,
       task_progress: 0,
@@ -211,9 +223,6 @@ export default {
       selection_pdf_max_column_units,
       selection_pdf_photo_column_key,
       selection_pdf_photo_column_units,
-      pricing_options: gem_pricing_total_column_keys.filter(
-        (key) => key !== "pvd_asking_price"
-      ),
     };
   },
   computed: {
@@ -222,55 +231,30 @@ export default {
       return parsed.folder_slug || "";
     },
     all_metadata_keys() {
-      const ignored = new Set([
-        ...gems_table_column_picker_excluded_keys,
-        ...selection_pdf_column_picker_excluded_keys,
-        "status",
-      ]);
-      const known_order = [
-        "id",
-        "$cover",
-        "reference_supplier",
-        "reference_customer",
-        "number_of_pieces",
-        "stone_type",
-        "weight_ct",
-        "color",
-        "shape",
-        "origin_country",
-        "treatment_type",
-        "dimensions_lwh",
-        "base_price_pcb",
-        "purchased_price_pa",
-        "pv_selling_price",
-        "pc_to",
-        "pf_invoiced_price",
-      ];
-      const key_set = new Set(["id", "$cover"]);
-      this.entry_gems_list.forEach((gem) => {
-        Object.keys(gem || {}).forEach((key) => {
-          if (ignored.has(key)) return;
-          if (key.startsWith("$") && key !== "$cover") return;
-          key_set.add(key);
-        });
-      });
-      const has_dims = this.entry_gems_list.some((gem) =>
-        gem_linear_dimension_keys.some((dk) =>
-          Object.prototype.hasOwnProperty.call(gem || {}, dk)
-        )
+      return buildSelectionPdfPickerMetadataKeys(this.entry_gems_list).filter(
+        (metadata_key) => metadata_key !== "pvd_asking_price"
       );
-      if (has_dims) key_set.add(gem_dimensions_merged_column_key);
-      return Array.from(key_set).sort((a, b) => {
-        const ai = known_order.indexOf(a);
-        const bi = known_order.indexOf(b);
-        const ar = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
-        const br = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
-        if (ar !== br) return ar - br;
-        return a.localeCompare(b);
-      });
     },
     column_units_used() {
       return countSelectionPdfColumnUnits(this.enabled_metadata_keys);
+    },
+    is_column_limit_reached() {
+      return (
+        this.column_units_used >= this.selection_pdf_max_column_units
+      );
+    },
+    show_column_empty_legend() {
+      if (this.gems_loading) return false;
+      if (this.entry_gems_list.length === 0) return true;
+      return this.all_metadata_keys.some((metadata_key) =>
+        this.isColumnEmpty(metadata_key)
+      );
+    },
+    column_empty_legend_text() {
+      if (this.entry_gems_list.length === 0) {
+        return this.$t("sg_pdf_export_column_no_stones");
+      }
+      return this.$t("sg_pdf_export_column_empty");
     },
     show_main_document_option() {
       return (
@@ -369,11 +353,27 @@ export default {
       if (metadata_key === "$cover") return this.$t("sg_pdf_col_photo");
       return configs[metadata_key]?.label || metadata_key;
     },
-    pricingLabel(pricing_key) {
-      return this.columnLabel(pricing_key);
+    isPricingColumn(metadata_key) {
+      return gem_pricing_total_column_keys.includes(metadata_key);
+    },
+    isColumnEmpty(metadata_key) {
+      if (this.gems_loading) return false;
+      if (this.entry_gems_list.length === 0) return true;
+      return (
+        countGemsWithFilledTableColumnValue(
+          this.entry_gems_list,
+          metadata_key
+        ) === 0
+      );
     },
     isColumnToggleDisabled(metadata_key) {
       if (this.enabled_metadata_keys.includes(metadata_key)) return false;
+      if (
+        this.isPricingColumn(metadata_key) &&
+        activeSelectionPdfPricingKey(this.enabled_metadata_keys)
+      ) {
+        return false;
+      }
       return !canAddSelectionPdfColumn(
         this.enabled_metadata_keys,
         metadata_key
@@ -383,27 +383,17 @@ export default {
       const checked = event?.target?.checked === true;
       let keys = [...this.enabled_metadata_keys];
       if (checked) {
-        if (!canAddSelectionPdfColumn(keys, metadata_key)) return;
-        keys.push(metadata_key);
+        if (this.isPricingColumn(metadata_key)) {
+          keys = applySelectionPdfPricingKey(keys, metadata_key);
+        } else if (!canAddSelectionPdfColumn(keys, metadata_key)) {
+          return;
+        } else {
+          keys.push(metadata_key);
+        }
       } else {
         keys = keys.filter((key) => key !== metadata_key);
       }
       this.enabled_metadata_keys = normalizeSelectionPdfColumnKeys(keys);
-      this.selected_pricing_key =
-        activeSelectionPdfPricingKey(this.enabled_metadata_keys) || "";
-    },
-    onPricingChange() {
-      const pricing_key = String(this.selected_pricing_key || "").trim();
-      if (!pricing_key) {
-        this.enabled_metadata_keys = this.enabled_metadata_keys.filter(
-          (key) => !gem_pricing_total_column_keys.includes(key)
-        );
-        return;
-      }
-      this.enabled_metadata_keys = applySelectionPdfPricingKey(
-        this.enabled_metadata_keys,
-        pricing_key
-      );
     },
     buildSuggestedFilename() {
       const slug = this.folder_slug || "selection";
@@ -529,6 +519,16 @@ export default {
         this.is_setting_main_document = false;
       }
     },
+    backToSettings() {
+      const had_created_doc = Boolean(this.created_doc);
+      this.export_done = false;
+      this.fail_message = "";
+      this.task_progress = 0;
+      this.created_doc = null;
+      if (had_created_doc) {
+        this.$emit("exported");
+      }
+    },
     onClose() {
       this.$emit("close");
       if (this.export_done && this.created_doc) {
@@ -551,21 +551,6 @@ export default {
   color: var(--c-gris_fonce);
 }
 
-._pricingRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--spacing) / 2);
-}
-
-._pricingLabel {
-  font-weight: 600;
-}
-
-._pricingSelect {
-  min-width: 220px;
-}
-
 ._toggleRow {
   display: flex;
   align-items: flex-start;
@@ -576,14 +561,40 @@ export default {
 ._columnsHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: calc(var(--spacing) / 2);
   font-weight: 600;
   margin-top: calc(var(--spacing) / 2);
 }
 
-._columnCounter {
+._columnsHeaderMain {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 4);
+  min-width: 0;
+}
+
+._columnLimitHint {
   font-weight: 400;
+  font-size: 0.85rem;
   color: var(--c-gris_fonce);
+}
+
+._columnCounter {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--c-gris_fonce);
+}
+
+._columnCounter_limit {
+  color: var(--c-rouge, #c00);
+}
+
+._columnLimitNotice {
+  margin: calc(var(--spacing) / 4) 0 0;
+  font-size: 0.85rem;
+  color: var(--c-rouge, #c00);
+  line-height: 1.3;
 }
 
 ._columnsList {
@@ -602,6 +613,25 @@ export default {
   align-items: center;
   gap: calc(var(--spacing) / 4);
   cursor: pointer;
+}
+
+._columnItem_disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+._columnEmptyMark {
+  color: var(--c-gris_fonce);
+  font-weight: 600;
+  line-height: 1;
+}
+
+._columnEmptyLegend {
+  margin: calc(var(--spacing) / 3) 0 0;
+  font-size: 0.8rem;
+  color: var(--c-gris_fonce);
+  font-style: italic;
+  line-height: 1.3;
 }
 
 ._photoHint {

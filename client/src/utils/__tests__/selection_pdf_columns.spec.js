@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   applySelectionPdfPricingKey,
+  buildSelectionPdfPickerMetadataKeys,
   canAddSelectionPdfColumn,
   countSelectionPdfColumnUnits,
   selection_pdf_max_column_units,
@@ -34,5 +35,14 @@ describe("selection pdf column units", () => {
       "pc_to"
     );
     expect(next).toContain("pc_to");
+  });
+
+  it("offers the full table catalog in the PDF picker", () => {
+    const keys = buildSelectionPdfPickerMetadataKeys([
+      { $path: "gems/1", stone_type: "Ruby" },
+    ]);
+    expect(keys).toContain("pf_invoiced_price");
+    expect(keys).toContain("dimensions_lwh");
+    expect(keys).not.toContain("status");
   });
 });

@@ -396,7 +396,7 @@ export default {
   sg_pdf_export_button: "Export PDF",
   sg_pdf_export_modal_title: "Export selection to PDF",
   sg_pdf_export_modal_instructions:
-    "Choose the columns for the A4 layout and the price line to display.",
+    "Choose the columns for the A4 layout.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_no_pricing: "No price column",
   sg_pdf_export_show_details:
@@ -407,6 +407,13 @@ export default {
   sg_pdf_export_replace_main_document_warning:
     "The current main document will be replaced.",
   sg_pdf_export_columns_title: "Table columns",
+  sg_pdf_export_columns_limit_hint:
+    "Max {max} column units on A4 (photo = {photo_units})",
+  sg_pdf_export_columns_counter: "{used} / {max} units",
+  sg_pdf_export_columns_limit_reached:
+    "Maximum reached — uncheck a column to add another.",
+  sg_pdf_export_column_empty: "No stones have this filled in",
+  sg_pdf_export_column_no_stones: "No stones in this selection",
   sg_pdf_export_generate: "Generate PDF",
   sg_pdf_export_in_progress: "Generating PDF…",
   sg_pdf_export_success: "PDF generated and saved to this selection.",
