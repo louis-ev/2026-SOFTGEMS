@@ -5,23 +5,26 @@
     </p>
 
     <div v-else class="_fileRow">
-      <p class="_fileName">{{ displayFilename(main_document_file) }}</p>
-      <div v-if="downloadUrl(main_document_file)" class="_fileActions">
-        <a
-          class="u-buttonLink"
-          :href="downloadUrl(main_document_file)"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {{ $t("sg_certificate_open_pdf") }}
-        </a>
-        <a
-          class="u-buttonLink"
-          :href="downloadUrl(main_document_file)"
-          :download="displayFilename(main_document_file)"
-        >
-          {{ $t("sg_certificate_download_pdf") }}
-        </a>
+      <SGSelectionFileThumb :file="main_document_file" />
+      <div class="_fileMain">
+        <p class="_fileName">{{ displayFilename(main_document_file) }}</p>
+        <div v-if="downloadUrl(main_document_file)" class="_fileActions">
+          <a
+            class="u-buttonLink"
+            :href="downloadUrl(main_document_file)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ $t("sg_certificate_open_pdf") }}
+          </a>
+          <a
+            class="u-buttonLink"
+            :href="downloadUrl(main_document_file)"
+            :download="displayFilename(main_document_file)"
+          >
+            {{ $t("sg_certificate_download_pdf") }}
+          </a>
+        </div>
       </div>
     </div>
 
@@ -76,6 +79,7 @@
 
 <script>
 import Medias from "@/mixins/Medias.js";
+import SGSelectionFileThumb from "@/components/selections/SGSelectionFileThumb.vue";
 import SGGemMediaRemoveModal from "@/components/gems/SGGemMediaRemoveModal.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
 import {
@@ -87,6 +91,7 @@ export default {
   name: "SGSelectionMainDocumentField",
   mixins: [Medias],
   components: {
+    SGSelectionFileThumb,
     SGGemMediaRemoveModal,
     UploadFiles,
   },
@@ -212,12 +217,16 @@ export default {
 
 ._fileRow {
   display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) / 4);
+  gap: calc(var(--spacing) * 0.75);
+  align-items: flex-start;
   padding: calc(var(--spacing) * 0.75);
   border: 1px solid var(--c-gris_clair);
   border-radius: 8px;
   background: var(--c-blanc);
+}
+
+._fileMain {
+  min-width: 0;
 }
 
 ._fileName {

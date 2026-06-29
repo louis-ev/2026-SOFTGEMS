@@ -68,7 +68,7 @@ export function normalizeSelectionPdfColumnKeys(metadata_keys) {
 /**
  * @param {string} selection_type
  * @param {object|null} stored_prefs
- * @returns {{ metadata_keys: string[], show_details_block: boolean, save_as_main_document: boolean }}
+ * @returns {{ metadata_keys: string[], show_details_block: boolean }}
  */
 export function resolveSelectionPdfExportPrefs(selection_type, stored_prefs) {
   const defaults = selectionPdfExportDefaults(selection_type);
@@ -92,7 +92,6 @@ export function resolveSelectionPdfExportPrefs(selection_type, stored_prefs) {
   return {
     metadata_keys,
     show_details_block: stored.show_details_block !== false,
-    save_as_main_document: stored.save_as_main_document === true,
   };
 }
 

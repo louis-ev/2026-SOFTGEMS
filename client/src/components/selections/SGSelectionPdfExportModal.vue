@@ -1,7 +1,7 @@
 <template>
   <BaseModal2
     :title="$t('sg_pdf_export_modal_title')"
-    size="large"
+    :size="modal_size"
     @close="onClose"
   >
     <div v-if="is_exporting" class="_exporting">
@@ -11,8 +11,17 @@
     <div v-else-if="export_done" class="_done">
       <p v-if="fail_message" class="_fail">{{ fail_message }}</p>
       <template v-else-if="created_doc">
-        <p class="_success">{{ $t("sg_pdf_export_success") }}</p>
-        <ShowExportedFileInfos :file="created_doc" />
+        <p class="_success">{{ success_message }}</p>
+        <div v-if="export_href" class="_pdfPreview">
+          <iframe
+            :src="export_href"
+            :title="created_doc.$media_filename"
+            frameborder="0"
+            type="application/pdf"
+          >
+            {{ $t("pdf_preview_not_supported") }}
+          </iframe>
+        </div>
       </template>
     </div>
     <div v-else class="_body">
@@ -43,20 +52,6 @@
         <input v-model="show_details_block" type="checkbox" />
         <span>{{ $t("sg_pdf_export_show_details") }}</span>
       </label>
-
-      <label
-        v-if="show_main_document_option"
-        class="_toggleRow"
-      >
-        <input v-model="save_as_main_document" type="checkbox" />
-        <span>{{ $t("sg_pdf_export_save_as_main_document") }}</span>
-      </label>
-      <p
-        v-if="show_main_document_option && save_as_main_document && has_main_document"
-        class="_warning"
-      >
-        {{ $t("sg_pdf_export_replace_main_document_warning") }}
-      </p>
 
       <div class="_columnsHeader">
         <span>{{ $t("sg_pdf_export_columns_title") }}</span>
@@ -103,6 +98,16 @@
         {{ $t("download") }}
       </a>
       <button
+        v-if="show_set_main_document_button"
+        type="button"
+        class="u-button u-button_bleuvert"
+        :disabled="is_setting_main_document"
+        @click="setAsMainDocument"
+      >
+        <b-icon icon="file-earmark-pdf" />
+        {{ $t("sg_pdf_export_set_as_main_document") }}
+      </button>
+      <button
         v-if="!is_exporting && !export_done"
         type="button"
         class="u-button u-button_bleuvert"
@@ -117,7 +122,6 @@
 </template>
 
 <script>
-import ShowExportedFileInfos from "@/components/fields/ShowExportedFileInfos.vue";
 import Medias from "@/mixins/Medias.js";
 import GemPricing from "@/mixins/GemPricing";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
@@ -156,9 +160,7 @@ import {
 export default {
   name: "SGSelectionPdfExportModal",
   mixins: [Medias, GemPricing],
-  components: {
-    ShowExportedFileInfos,
-  },
+  components: {},
   props: {
     selection_folder_path: {
       type: String,
@@ -193,7 +195,6 @@ export default {
       gems_loading: false,
       enabled_metadata_keys: resolved.metadata_keys,
       show_details_block: resolved.show_details_block,
-      save_as_main_document: resolved.save_as_main_document,
       selected_pricing_key:
         activeSelectionPdfPricingKey(resolved.metadata_keys) ||
         selectionPdfExportDefaults(this.selection?.selection_type)
@@ -205,6 +206,8 @@ export default {
       created_doc: null,
       fail_message: "",
       previous_main_document_path: "",
+      is_setting_main_document: false,
+      is_main_document_set: false,
       selection_pdf_max_column_units,
       selection_pdf_photo_column_key,
       selection_pdf_photo_column_units,
@@ -278,12 +281,31 @@ export default {
     has_main_document() {
       return Boolean(findSelectionMainDocumentFile(this.selection));
     },
+    show_set_main_document_button() {
+      return (
+        this.export_done &&
+        this.created_doc &&
+        this.show_main_document_option &&
+        !this.is_main_document_set
+      );
+    },
+    success_message() {
+      if (this.is_main_document_set) {
+        return this.$t("sg_pdf_export_main_document_set");
+      }
+      return this.$t("sg_pdf_export_success");
+    },
     export_href() {
       if (!this.created_doc) return "";
       return this.makeMediaFileURL({
         $path: this.created_doc.$path,
         $media_filename: this.created_doc.$media_filename,
       });
+    },
+    modal_size() {
+      return this.export_done && this.created_doc && this.export_href
+        ? "x-large"
+        : "large";
     },
   },
   async created() {
@@ -307,7 +329,6 @@ export default {
           JSON.stringify({
             metadata_keys: this.enabled_metadata_keys,
             show_details_block: this.show_details_block,
-            save_as_main_document: this.save_as_main_document,
           })
         );
       } catch {
@@ -394,7 +415,6 @@ export default {
       if (!this.folder_slug || this.is_exporting) return;
       this.persistPrefs();
 
-      const save_as_main = this.save_as_main_document === true;
       const instructions = {
         recipe: "pdf",
         page_width: 210,
@@ -407,8 +427,8 @@ export default {
         },
         additional_meta: {
           is_selection_generated_pdf: true,
-          is_selection_attachment: !save_as_main,
-          is_selection_main_document: save_as_main,
+          is_selection_attachment: false,
+          is_selection_main_document: false,
         },
       };
 
@@ -437,20 +457,6 @@ export default {
 
             if (event === "completed") {
               this.created_doc = message.file;
-              if (
-                save_as_main &&
-                this.previous_main_document_path &&
-                message.file?.$path &&
-                this.previous_main_document_path !== message.file.$path
-              ) {
-                try {
-                  await this.$api.deleteItem({
-                    path: this.previous_main_document_path,
-                  });
-                } catch {
-                  /* previous main doc may already be gone */
-                }
-              }
             } else {
               this.fail_message =
                 event === "failed"
@@ -466,6 +472,61 @@ export default {
       } finally {
         this.is_exporting = false;
         this.export_done = true;
+      }
+    },
+    async setAsMainDocument() {
+      if (
+        !this.created_doc?.$path ||
+        this.is_setting_main_document ||
+        this.is_main_document_set
+      ) {
+        return;
+      }
+
+      if (
+        this.has_main_document &&
+        this.previous_main_document_path &&
+        this.previous_main_document_path !== this.created_doc.$path &&
+        !window.confirm(this.$t("sg_pdf_export_replace_main_document_warning"))
+      ) {
+        return;
+      }
+
+      this.is_setting_main_document = true;
+      try {
+        await this.$api.updateMeta({
+          path: this.created_doc.$path,
+          new_meta: {
+            is_selection_main_document: true,
+            is_selection_attachment: false,
+          },
+        });
+
+        if (
+          this.previous_main_document_path &&
+          this.previous_main_document_path !== this.created_doc.$path
+        ) {
+          try {
+            await this.$api.deleteItem({
+              path: this.previous_main_document_path,
+            });
+          } catch {
+            /* previous main doc may already be gone */
+          }
+        }
+
+        this.is_main_document_set = true;
+        this.previous_main_document_path = this.created_doc.$path;
+        this.created_doc = {
+          ...this.created_doc,
+          is_selection_main_document: true,
+          is_selection_attachment: false,
+        };
+        this.$emit("exported");
+      } catch ({ code }) {
+        this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
+      } finally {
+        this.is_setting_main_document = false;
       }
     },
     onClose() {
@@ -510,12 +571,6 @@ export default {
   align-items: flex-start;
   gap: calc(var(--spacing) / 3);
   cursor: pointer;
-}
-
-._warning {
-  margin: 0;
-  color: var(--c-orange, #b45309);
-  font-size: 0.9rem;
 }
 
 ._columnsHeader {
@@ -565,5 +620,22 @@ export default {
 
 ._success {
   margin: 0 0 calc(var(--spacing) / 2);
+}
+
+._pdfPreview {
+  width: 100%;
+  height: min(72vh, 820px);
+  min-height: 360px;
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
 }
 </style>

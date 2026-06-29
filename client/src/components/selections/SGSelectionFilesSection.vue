@@ -43,13 +43,7 @@
         class="_row"
       >
         <div class="_rowBody">
-          <div v-if="previewUrl(file)" class="_preview">
-            <MediaContent
-              :file="file"
-              context="preview"
-              :resolution="640"
-            />
-          </div>
+          <SGSelectionFileThumb :file="file" />
           <div class="_main">
             <p class="_fileName">{{ displayFilename(file) }}</p>
             <div v-if="openUrl(file)" class="_actions">
@@ -96,9 +90,9 @@
 
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
+import SGSelectionFileThumb from "@/components/selections/SGSelectionFileThumb.vue";
 import Medias from "@/mixins/Medias.js";
 import SGGemMediaRemoveModal from "@/components/gems/SGGemMediaRemoveModal.vue";
-import MediaContent from "@/adc-core/fields/MediaContent.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
 import { isSelectionAttachmentFile } from "@/utils/selection_documents.js";
 
@@ -107,8 +101,8 @@ export default {
   mixins: [Medias],
   components: {
     SGSectionPanel,
+    SGSelectionFileThumb,
     SGGemMediaRemoveModal,
-    MediaContent,
     UploadFiles,
   },
   props: {
@@ -165,11 +159,6 @@ export default {
         $path: file.$path,
         $media_filename: file.$media_filename,
       });
-    },
-    previewUrl(file) {
-      if (file?.$type === "image" || file?.$type === "video")
-        return this.openUrl(file);
-      return "";
     },
     onPickFiles(ev) {
       const input = ev?.target;
@@ -238,14 +227,7 @@ export default {
   display: flex;
   gap: calc(var(--spacing) * 0.75);
   min-width: 0;
-}
-
-._preview {
-  width: 120px;
-  flex-shrink: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--c-gris_clair);
+  flex: 1;
 }
 
 ._main {

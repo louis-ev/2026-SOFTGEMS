@@ -1469,6 +1469,9 @@ module.exports = (function () {
   function _applySelectionPdfExportQuery(path_to_folder, data) {
     if (data?.additional_meta?.is_selection_generated_pdf !== true) return;
 
+    data.additional_meta.is_selection_generated_pdf = true;
+    data.additional_meta.is_selection_attachment = false;
+
     const slash_path = utils.convertToSlashPath(path_to_folder);
     const segments = slash_path.split("/").filter(Boolean);
     if (

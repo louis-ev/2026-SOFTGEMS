@@ -401,7 +401,9 @@ export default {
   sg_pdf_export_no_pricing: "No price column",
   sg_pdf_export_show_details:
     "Show details under each stone (dimensions, origin, treatment, certificates)",
-  sg_pdf_export_save_as_main_document: "Also save as main document",
+  sg_pdf_export_set_as_main_document: "Set as main document",
+  sg_pdf_export_main_document_set:
+    "PDF generated and set as the main document.",
   sg_pdf_export_replace_main_document_warning:
     "The current main document will be replaced.",
   sg_pdf_export_columns_title: "Table columns",

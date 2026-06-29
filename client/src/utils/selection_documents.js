@@ -14,6 +14,7 @@ export function isSelectionMainDocumentFile(file) {
 export function isSelectionAttachmentFile(file) {
   if (!file) return false;
   if (isSelectionMainDocumentFile(file)) return false;
+  if (isSelectionGeneratedPdfFile(file)) return false;
   if (file.is_selection_attachment === false) return false;
   if (file.is_gem_media === true || file.is_gem_certificate === true) return false;
   return true;

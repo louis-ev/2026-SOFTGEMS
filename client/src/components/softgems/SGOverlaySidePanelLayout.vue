@@ -126,8 +126,7 @@ export default {
       }
 
       const max_steps = this.topmost_open_depth + 1;
-      const opacity =
-        1 - (steps_behind / max_steps) * (1 - PANE_MIN_OPACITY);
+      const opacity = 1 - (steps_behind / max_steps) * (1 - PANE_MIN_OPACITY);
       return Math.max(PANE_MIN_OPACITY, opacity);
     },
   },
@@ -195,6 +194,7 @@ export default {
   width: 100%;
   max-width: 100%;
   background: var(--c-bodybg);
+  border-left: 2px solid var(--c-gris_clair);
   height: 100%;
   display: flex;
   flex-direction: column;

@@ -21,6 +21,7 @@ import {
   BIconDownload,
   BIconEnvelope,
   BIconFileEarmarkMinus,
+  BIconFileEarmarkPdf,
   BIconFileEarmarkText,
   BIconFileEarmarkZip,
   BIconGem,
@@ -76,6 +77,7 @@ Vue.component("BIconDiagram2", BIconDiagram2);
 Vue.component("BIconDownload", BIconDownload);
 Vue.component("BIconEnvelope", BIconEnvelope);
 Vue.component("BIconFileEarmarkMinus", BIconFileEarmarkMinus);
+Vue.component("BIconFileEarmarkPdf", BIconFileEarmarkPdf);
 Vue.component("BIconFileEarmarkText", BIconFileEarmarkText);
 Vue.component("BIconFileEarmarkZip", BIconFileEarmarkZip);
 Vue.component("BIconGem", BIconGem);

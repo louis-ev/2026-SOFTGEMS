@@ -28,4 +28,13 @@ describe("selection file flags", () => {
     expect(isSelectionAttachmentFile(main)).toBe(false);
     expect(isSelectionAttachmentFile(attachment)).toBe(true);
   });
+
+  it("excludes generated PDFs from attachments", () => {
+    const generated = {
+      is_selection_generated_pdf: true,
+      is_selection_attachment: true,
+    };
+
+    expect(isSelectionAttachmentFile(generated)).toBe(false);
+  });
 });

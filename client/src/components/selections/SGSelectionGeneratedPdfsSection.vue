@@ -13,27 +13,30 @@
         :key="file.$path"
         class="_row"
       >
-        <div class="_main">
-          <p class="_fileName">{{ displayFilename(file) }}</p>
-          <p class="_generatedAt">
-            {{ $t("sg_pdf_generated_on", { date: formatGeneratedDate(file) }) }}
-          </p>
-          <div v-if="openUrl(file)" class="_actions">
-            <a
-              class="u-buttonLink"
-              :href="openUrl(file)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {{ $t("open") }}
-            </a>
-            <a
-              class="u-buttonLink"
-              :href="openUrl(file)"
-              :download="displayFilename(file)"
-            >
-              {{ $t("download") }}
-            </a>
+        <div class="_rowBody">
+          <SGSelectionFileThumb :file="file" />
+          <div class="_main">
+            <p class="_fileName">{{ displayFilename(file) }}</p>
+            <p class="_generatedAt">
+              {{ $t("sg_pdf_generated_on", { date: formatGeneratedDate(file) }) }}
+            </p>
+            <div v-if="openUrl(file)" class="_actions">
+              <a
+                class="u-buttonLink"
+                :href="openUrl(file)"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ $t("open") }}
+              </a>
+              <a
+                class="u-buttonLink"
+                :href="openUrl(file)"
+                :download="displayFilename(file)"
+              >
+                {{ $t("download") }}
+              </a>
+            </div>
           </div>
         </div>
       </li>
@@ -43,6 +46,7 @@
 
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
+import SGSelectionFileThumb from "@/components/selections/SGSelectionFileThumb.vue";
 import Medias from "@/mixins/Medias.js";
 import FormatDates from "@/mixins/FormatDates.js";
 import { findSelectionGeneratedPdfFiles } from "@/utils/selection_documents.js";
@@ -52,6 +56,7 @@ export default {
   mixins: [Medias, FormatDates],
   components: {
     SGSectionPanel,
+    SGSelectionFileThumb,
   },
   props: {
     selection_folder: {
@@ -109,6 +114,16 @@ export default {
   border: 1px solid var(--c-gris_clair);
   border-radius: 4px;
   padding: calc(var(--spacing) / 2);
+}
+
+._rowBody {
+  display: flex;
+  gap: calc(var(--spacing) * 0.75);
+  min-width: 0;
+}
+
+._main {
+  min-width: 0;
 }
 
 ._fileName {

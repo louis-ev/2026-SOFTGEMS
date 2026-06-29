@@ -5,7 +5,6 @@
       @close="closeGemSidePanel"
     >
       <section class="_selectionOpenView">
-
         <div v-if="is_loading">{{ $t("sg_loading_selection") }}</div>
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
         <div v-else-if="selection" class="_form">
@@ -15,8 +14,10 @@
                 <div class="_titleLine">
                   <h1
                     class="_pageTitle"
-                    :class="{ '_pageTitle_editable': can_edit }"
-                    :title="can_edit ? $t('sg_selection_edit_name_hint') : undefined"
+                    :class="{ _pageTitle_editable: can_edit }"
+                    :title="
+                      can_edit ? $t('sg_selection_edit_name_hint') : undefined
+                    "
                     :tabindex="can_edit ? 0 : undefined"
                     @click="openInternalNameModal"
                     @keydown.enter.prevent="openInternalNameModal"
@@ -38,7 +39,7 @@
                 <button
                   v-if="show_pdf_export"
                   type="button"
-                  class="u-button u-button_verysmall"
+                  class="u-button u-button_black"
                   @click="show_pdf_export_modal = true"
                 >
                   <b-icon icon="file-earmark-pdf" />
@@ -126,7 +127,7 @@
           />
 
           <SGSelectionGeneratedPdfsSection
-            v-if="show_pdf_export && selection"
+            v-if="selection"
             :selection_folder="selection"
           />
 
