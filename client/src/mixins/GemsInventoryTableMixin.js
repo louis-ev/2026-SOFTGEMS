@@ -1,22 +1,18 @@
 import GemPricing from "@/mixins/GemPricing";
-import GemDimensions, {
-  gem_linear_dimension_keys,
-  gem_dimensions_merged_column_key,
-} from "@/mixins/GemDimensions";
+import GemDimensions from "@/mixins/GemDimensions";
 import {
-  gems_table_column_picker_excluded_keys,
+  buildGemsTableAllMetadataKeys,
+  gems_table_gem_excluded_metadata_keys,
   normalizeGemsTableSelectedMetadataKeys,
   stripLinearDimensionKeys,
   stripVirtualPerCaratKeys,
 } from "@/utils/gems_table_metadata.js";
 
 export const gems_metadata_keys_localstorage_key = "sg_gems_metadata_keys";
+export const selections_gems_metadata_keys_localstorage_key =
+  "sg_selections_gems_metadata_keys";
 export const gems_pinned_metadata_keys = ["id", "status"];
-export const gem_excluded_metadata_keys = [
-  "internal_name",
-  "price_per_carat_all",
-  "box_selection_path",
-];
+export const gem_excluded_metadata_keys = [...gems_table_gem_excluded_metadata_keys];
 
 /** Shared gems table columns (same rules as SGGemsView). Host must expose `gems` (array). */
 export default {
@@ -31,72 +27,8 @@ export default {
   },
   computed: {
     all_metadata_keys() {
-      if (!Array.isArray(this.gems) || this.gems.length === 0) return [];
-
-      const ignored_keys = new Set([
-        "name",
-        "title",
-        ...gem_excluded_metadata_keys,
-        ...gems_table_column_picker_excluded_keys,
-      ]);
-      const known_order = [
-        "id",
-        "status",
-        "$cover",
-        "$date_modified",
-        "reference_supplier",
-        "reference_customer",
-        "paired_gem",
-        "number_of_pieces",
-        "stone_type",
-        "weight_ct",
-        "color",
-        "shape",
-        "origin_country",
-        "treatment_type",
-        "dimensions_lwh",
-        "base_price_pcb",
-        "purchased_price_pa",
-        "pv_selling_price",
-        "pvd_asking_price",
-        "pc_to",
-        "pf_invoiced_price",
-      ];
-      const metadata_key_set = new Set();
-
-      this.gems.forEach((gem) => {
-        Object.keys(gem || {}).forEach((key) => {
-          if (ignored_keys.has(key)) return;
-          if (
-            key.startsWith("$") &&
-            key !== "$date_modified" &&
-            key !== "$cover"
-          )
-            return;
-          metadata_key_set.add(key);
-        });
-      });
-      const gems_have_linear_dimensions = this.gems.some((gem) =>
-        gem_linear_dimension_keys.some((dk) =>
-          Object.prototype.hasOwnProperty.call(gem || {}, dk)
-        )
-      );
-      if (gems_have_linear_dimensions) {
-        metadata_key_set.add(gem_dimensions_merged_column_key);
-      }
-      metadata_key_set.add("id");
-      metadata_key_set.add("status");
-      metadata_key_set.add("$cover");
-      metadata_key_set.add("$date_modified");
-
-      return Array.from(metadata_key_set).sort((a, b) => {
-        const a_index = known_order.indexOf(a);
-        const b_index = known_order.indexOf(b);
-        const a_rank = a_index === -1 ? Number.MAX_SAFE_INTEGER : a_index;
-        const b_rank = b_index === -1 ? Number.MAX_SAFE_INTEGER : b_index;
-        if (a_rank !== b_rank) return a_rank - b_rank;
-        return a.localeCompare(b);
-      });
+      const gems = Array.isArray(this.gems) ? this.gems : [];
+      return buildGemsTableAllMetadataKeys(gems);
     },
     metadata_keys() {
       const all_keys = this.all_metadata_keys;
@@ -147,6 +79,9 @@ export default {
     },
   },
   methods: {
+    getGemsMetadataKeysStorageKey() {
+      return gems_metadata_keys_localstorage_key;
+    },
     stripLinearDimensionKeys,
     stripVirtualPerCaratKeys,
     stripExcludedGemMetadataKeys(metadata_keys) {
@@ -158,7 +93,7 @@ export default {
     loadGemsMetadataKeysFromStorage() {
       try {
         const stored_keys_json = localStorage.getItem(
-          gems_metadata_keys_localstorage_key
+          this.getGemsMetadataKeysStorageKey()
         );
         if (!stored_keys_json) return;
         const stored_keys = JSON.parse(stored_keys_json);
@@ -209,7 +144,7 @@ export default {
     persistGemsMetadataKeysToStorage() {
       try {
         localStorage.setItem(
-          gems_metadata_keys_localstorage_key,
+          this.getGemsMetadataKeysStorageKey(),
           JSON.stringify(this.selected_metadata_keys)
         );
       } catch {

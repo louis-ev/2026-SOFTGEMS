@@ -824,7 +824,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "@/utils/sg_data_table.scss";
+@use "@/utils/sg_data_table.scss" as sg_data_table;
 
 ._gemsTableRoot {
   display: flex;
@@ -936,7 +936,7 @@ export default {
     var(--c-gris_clair) 55%,
     var(--c-bodybg)
   );
-  @include sg-data-table;
+  @include sg_data_table.sg-data-table;
   width: max-content;
 
   tfoot td {

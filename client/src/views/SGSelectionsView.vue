@@ -10,7 +10,7 @@
           <div class="_headerActions">
             <router-link
               :to="create_path"
-              class="u-button u-button_bleuvert"
+              class="u-button u-button_small u-button_bleuvert"
             >
               <b-icon icon="plus-lg" />
               {{ $t("sg_create_selection") }}
@@ -90,9 +90,7 @@
 <script>
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import FormatDates from "@/mixins/FormatDates.js";
-import {
-  selectionTypeFromSlug,
-} from "@/utils/selection_type_registry.js";
+import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
 import {
   parseSelectionFolderParam,
   selectionDetailPath,
@@ -258,7 +256,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "@/utils/sg_data_table.scss";
+@use "@/utils/sg_data_table.scss" as sg_data_table;
 
 ._selectionsView {
   position: relative;
@@ -307,7 +305,7 @@ export default {
 }
 
 ._table {
-  @include sg-data-table;
+  @include sg_data_table.sg-data-table;
   width: 100%;
 
   thead th._colCount {

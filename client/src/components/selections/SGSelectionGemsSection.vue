@@ -6,8 +6,17 @@
   >
     <template #actions>
       <button
+        v-if="show_entries_table_shell || entry_gems_loading"
         type="button"
-        class="u-button u-button_verysmall"
+        class="u-button u-button_small"
+        @click="openColumnsModal"
+      >
+        <b-icon icon="layout-three-columns" />
+        <span>{{ $t("sg_customize_columns") }}</span>
+      </button>
+      <button
+        type="button"
+        class="u-button u-button_small"
         @click="show_history_modal = true"
       >
         <b-icon icon="clock-history" />
@@ -85,6 +94,16 @@
         editing_gem = null;
       "
     />
+
+    <SGGemColumnsModal
+      v-if="show_columns_modal"
+      :all_metadata_keys="all_metadata_keys"
+      :selected_metadata_keys="selected_metadata_keys"
+      :metadata_labels="metadata_labels"
+      :metadata_icons="metadata_icons"
+      @save="onSaveGemsColumnsSelection"
+      @close="show_columns_modal = false"
+    />
   </SGSectionPanel>
 </template>
 
@@ -94,12 +113,15 @@ import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGSelectionAddGemsPicker from "@/components/selections/SGSelectionAddGemsPicker.vue";
 import SGSelectionGemsHistoryModal from "@/components/selections/SGSelectionGemsHistoryModal.vue";
 import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
+import SGGemColumnsModal from "@/components/gems/SGGemColumnsModal.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import {
   gem_linear_dimension_keys,
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
-import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
+import GemsInventoryTableMixin, {
+  selections_gems_metadata_keys_localstorage_key,
+} from "@/mixins/GemsInventoryTableMixin.js";
 import {
   areSelectionGemPathsEqual,
   normalizeSelectionGemPaths,
@@ -121,6 +143,7 @@ export default {
     SGSelectionAddGemsPicker,
     SGSelectionGemsHistoryModal,
     SGGemEditFieldModal,
+    SGGemColumnsModal,
   },
   props: {
     selection_folder_path: {
@@ -153,6 +176,7 @@ export default {
       refresh_entry_gems_seq: 0,
       pending_entry_gems_refresh: false,
       show_history_modal: false,
+      show_columns_modal: false,
       editing_gem: null,
       editing_field: null,
       editing_current_value: "",
@@ -206,6 +230,12 @@ export default {
     },
   },
   methods: {
+    getGemsMetadataKeysStorageKey() {
+      return selections_gems_metadata_keys_localstorage_key;
+    },
+    openColumnsModal() {
+      this.show_columns_modal = true;
+    },
     formatGemStatusLabel(status_value) {
       return gemStatusLabel(this.$t.bind(this), status_value);
     },
@@ -218,9 +248,7 @@ export default {
         );
         return;
       }
-      this.$alertify
-        .delay(2500)
-        .success(this.$t("sg_selection_gems_updated"));
+      this.$alertify.delay(2500).success(this.$t("sg_selection_gems_updated"));
     },
     notifyGemStatusOnRemove(status_result) {
       if (!status_result?.status_changed) return;

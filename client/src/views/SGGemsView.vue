@@ -1,22 +1,22 @@
 <template>
   <div class="_gemsView">
-    <SGOverlaySidePanelLayout
-      :panel_open="is_gem_open"
-      @close="closeGemPanel"
-    >
+    <SGOverlaySidePanelLayout :panel_open="is_gem_open" @close="closeGemPanel">
       <div class="_gemsView--content">
         <div class="_pageHeader">
           <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
           <div class="_headerActions">
             <button
               type="button"
-              class="u-button"
+              class="u-button u-button_small"
               @click="openColumnsModal"
             >
               <b-icon icon="layout-three-columns" />
               {{ $t("sg_customize_columns") }}
             </button>
-            <router-link to="/gems/new" class="u-button u-button_bleuvert">
+            <router-link
+              to="/gems/new"
+              class="u-button u-button_small u-button_bleuvert"
+            >
               <b-icon icon="plus-lg" />
               {{ $t("sg_create_gem") }}
             </router-link>
@@ -101,7 +101,6 @@
         editing_gem = null;
       "
     />
-
   </div>
 </template>
 <script>
@@ -182,10 +181,13 @@ export default {
       return ["Open gem", "Create gem"].includes(this.$route.name);
     },
     field_editable_map() {
-      const accumulator = this.gems_metadata_keys.reduce((acc, metadata_key) => {
-        acc[metadata_key] = this.isFieldEditable(metadata_key);
-        return acc;
-      }, {});
+      const accumulator = this.gems_metadata_keys.reduce(
+        (acc, metadata_key) => {
+          acc[metadata_key] = this.isFieldEditable(metadata_key);
+          return acc;
+        },
+        {}
+      );
       this.getPriceFieldPairs().forEach(({ virtual_per_carat_key }) => {
         accumulator[virtual_per_carat_key] = this.isFieldEditable(
           virtual_per_carat_key
@@ -467,5 +469,4 @@ export default {
   flex-direction: column;
   gap: var(--spacing);
 }
-
 </style>
