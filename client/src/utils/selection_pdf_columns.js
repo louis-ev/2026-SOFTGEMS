@@ -93,7 +93,7 @@ export function buildSelectionPdfPickerMetadataKeys(gems) {
 /**
  * @param {string} selection_type
  * @param {object|null} stored_prefs
- * @returns {{ metadata_keys: string[], show_details_block: boolean }}
+ * @returns {{ metadata_keys: string[] }}
  */
 export function resolveSelectionPdfExportPrefs(selection_type, stored_prefs) {
   const defaults = selectionPdfExportDefaults(selection_type);
@@ -116,25 +116,23 @@ export function resolveSelectionPdfExportPrefs(selection_type, stored_prefs) {
 
   return {
     metadata_keys,
-    show_details_block: stored.show_details_block !== false,
   };
 }
 
 /**
- * @param {{ metadata_keys?: string[], show_details_block?: boolean }} options
+ * @param {{ metadata_keys?: string[] }} options
  * @returns {string}
  */
 export function encodeSelectionPdfExportQuery(options) {
   const params = new URLSearchParams();
   const keys = normalizeSelectionPdfColumnKeys(options.metadata_keys);
   params.set("cols", keys.join(","));
-  params.set("details", options.show_details_block === false ? "0" : "1");
   return params.toString();
 }
 
 /**
  * @param {import('vue-router').Route} route
- * @returns {{ metadata_keys: string[], show_details_block: boolean }}
+ * @returns {{ metadata_keys: string[] }}
  */
 export function decodeSelectionPdfExportQuery(route) {
   const raw_cols = String(route?.query?.cols || "").trim();
@@ -143,8 +141,7 @@ export function decodeSelectionPdfExportQuery(route) {
         raw_cols.split(",").map((segment) => segment.trim())
       )
     : [];
-  const show_details_block = String(route?.query?.details || "1") !== "0";
-  return { metadata_keys, show_details_block };
+  return { metadata_keys };
 }
 
 /**

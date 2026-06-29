@@ -11,7 +11,6 @@
       :gems="entry_gems_list"
       :metadata_keys="metadata_keys"
       :metadata_labels="metadata_labels"
-      :show_details_block="show_details_block"
       :document_title="document_title"
       :date_line="date_line"
       :counterparty_block="counterparty_block"
@@ -78,10 +77,11 @@ export default {
       return decodeSelectionPdfExportQuery(this.$route);
     },
     metadata_keys() {
-      return this.export_query.metadata_keys;
-    },
-    show_details_block() {
-      return this.export_query.show_details_block;
+      const keys = this.export_query.metadata_keys;
+      if (keys.length > 0) return keys;
+      if (!this.selection) return [];
+      return selectionPdfExportDefaults(this.selection.selection_type)
+        .default_column_keys;
     },
     pricing_total_key() {
       return activeSelectionPdfPricingKey(this.metadata_keys) || "";

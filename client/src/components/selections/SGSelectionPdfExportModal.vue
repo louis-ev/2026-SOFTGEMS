@@ -27,11 +27,6 @@
     <div v-else class="_body">
       <p class="_instructions">{{ $t("sg_pdf_export_modal_instructions") }}</p>
 
-      <label class="_toggleRow">
-        <input v-model="show_details_block" type="checkbox" />
-        <span>{{ $t("sg_pdf_export_show_details") }}</span>
-      </label>
-
       <div class="_columnsHeader">
         <div class="_columnsHeaderMain">
           <span>{{ $t("sg_pdf_export_columns_title") }}</span>
@@ -211,7 +206,6 @@ export default {
       entry_gems_list: [],
       gems_loading: false,
       enabled_metadata_keys: resolved.metadata_keys,
-      show_details_block: resolved.show_details_block,
       is_exporting: false,
       export_done: false,
       task_progress: 0,
@@ -312,7 +306,6 @@ export default {
           selection_pdf_prefs_localstorage_key,
           JSON.stringify({
             metadata_keys: this.enabled_metadata_keys,
-            show_details_block: this.show_details_block,
           })
         );
       } catch {
@@ -413,7 +406,6 @@ export default {
         suggested_file_name: this.buildSuggestedFilename(),
         selection_pdf_export: {
           metadata_keys: this.enabled_metadata_keys,
-          show_details_block: this.show_details_block,
         },
         additional_meta: {
           is_selection_generated_pdf: true,
@@ -549,13 +541,6 @@ export default {
 ._instructions {
   margin: 0;
   color: var(--c-gris_fonce);
-}
-
-._toggleRow {
-  display: flex;
-  align-items: flex-start;
-  gap: calc(var(--spacing) / 3);
-  cursor: pointer;
 }
 
 ._columnsHeader {

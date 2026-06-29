@@ -27,49 +27,36 @@
         </tr>
       </thead>
       <tbody>
-        <template v-for="(gem, index) in gems">
-          <tr :key="`row-${gem.$path || index}`">
-            <td class="_colNo">{{ index + 1 }}</td>
-            <td
-              v-for="metadata_key in metadata_keys"
-              :key="`${gem.$path}-${metadata_key}`"
-              :class="columnClass(metadata_key)"
-            >
-              <img
-                v-if="metadata_key === '$cover' && coverUrl(gem)"
-                class="_coverImg"
-                :src="coverUrl(gem)"
-                alt=""
-              />
-              <span v-else class="_cellText">{{
-                formatCell(gem, metadata_key)
-              }}</span>
-            </td>
-          </tr>
-          <tr
-            v-if="show_details_block"
-            :key="`details-${gem.$path || index}`"
-            class="_detailsRow"
+        <tr v-for="(gem, index) in gems" :key="gem.$path || index">
+          <td class="_colNo">{{ index + 1 }}</td>
+          <td
+            v-for="metadata_key in metadata_keys"
+            :key="`${gem.$path}-${metadata_key}`"
+            :class="columnClass(metadata_key)"
           >
-            <td class="_colNo" />
-            <td :colspan="metadata_keys.length" class="_detailsCell">
-              <div class="_gemDetails">
-                <span
-                  v-for="(line, line_index) in detailLines(gem)"
-                  :key="line_index"
-                  class="_gemDetailsLine"
-                >
-                  {{ line }}
-                </span>
-              </div>
-            </td>
-          </tr>
-        </template>
-        <tr v-if="pricing_total_key" class="_totalRow">
+            <img
+              v-if="metadata_key === '$cover' && coverUrl(gem)"
+              class="_coverImg"
+              :src="coverUrl(gem)"
+              alt=""
+            />
+            <span v-else class="_cellText">{{
+              formatCell(gem, metadata_key)
+            }}</span>
+          </td>
+        </tr>
+        <tr
+          v-if="pricing_total_key && pricing_total_column_index >= 0"
+          class="_totalRow"
+        >
           <td :colspan="total_label_colspan" class="_totalLabel">
             {{ $t("sg_pdf_total") }}
           </td>
           <td class="_totalValue">{{ formatted_total }}</td>
+          <td
+            v-if="total_trailing_colspan > 0"
+            :colspan="total_trailing_colspan"
+          />
         </tr>
       </tbody>
     </table>
@@ -85,19 +72,19 @@
 <script>
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
-import Medias from "@/mixins/Medias.js";
 import { SELECTION_PDF_ACF_FOOTER_LINES } from "@/utils/selection_pdf_export_registry.js";
 import {
-  formatGemPdfDetailLines,
   formatPdfCurrencyTotal,
   gemIdFromPath,
+  resolveGemCoverThumbRelative,
   sumGemPricingTotals,
+  toAbsoluteAppUrl,
 } from "@/utils/selection_pdf_gem_helpers.js";
 import { selection_pdf_photo_column_key } from "@/utils/selection_pdf_columns.js";
 
 export default {
   name: "SGSelectionPdfDocument",
-  mixins: [GemPricing, GemDimensions, Medias],
+  mixins: [GemPricing, GemDimensions],
   props: {
     selection: {
       type: Object,
@@ -114,10 +101,6 @@ export default {
     metadata_labels: {
       type: Object,
       default: () => ({}),
-    },
-    show_details_block: {
-      type: Boolean,
-      default: true,
     },
     document_title: {
       type: String,
@@ -151,9 +134,19 @@ export default {
       const currency = this.selection?.currency || "USD";
       return formatPdfCurrencyTotal(this.pricing_sum, currency);
     },
+    pricing_total_column_index() {
+      if (!this.pricing_total_key) return -1;
+      return this.metadata_keys.indexOf(this.pricing_total_key);
+    },
     total_label_colspan() {
-      const count = this.metadata_keys.length;
-      return Math.max(1, 1 + count - 1);
+      const idx = this.pricing_total_column_index;
+      if (idx < 0) return 1 + this.metadata_keys.length;
+      return 1 + idx;
+    },
+    total_trailing_colspan() {
+      const idx = this.pricing_total_column_index;
+      if (idx < 0) return 0;
+      return Math.max(0, this.metadata_keys.length - idx - 1);
     },
   },
   methods: {
@@ -166,12 +159,10 @@ export default {
       return "_colDefault";
     },
     coverUrl(gem) {
-      const cover = gem?.$cover;
-      if (!cover?.$path || !cover?.$media_filename) return "";
-      return this.makeMediaFileURL({
-        $path: cover.$path,
-        $media_filename: cover.$media_filename,
-      });
+      const relative = resolveGemCoverThumbRelative(gem);
+      if (!relative) return "";
+      if (typeof window === "undefined") return relative;
+      return toAbsoluteAppUrl(relative, window.location.origin);
     },
     formatCell(gem, metadata_key) {
       if (metadata_key === "id") return gemIdFromPath(gem);
@@ -197,9 +188,6 @@ export default {
       if (raw_value === null || raw_value === undefined) return "";
       if (typeof raw_value === "object") return "";
       return String(raw_value);
-    },
-    detailLines(gem) {
-      return formatGemPdfDetailLines(gem, this.$t("sg_pdf_no_cert"));
     },
   },
 };
@@ -303,26 +291,6 @@ export default {
 ._cellText {
   display: block;
   font-size: 8pt;
-}
-
-._detailsRow td {
-  border-top: none;
-  padding-top: 0;
-}
-
-._detailsCell {
-  padding: 2mm 2.5mm 3mm;
-}
-
-._gemDetails {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1mm 3mm;
-  font-size: 7.5pt;
-}
-
-._gemDetailsLine {
-  color: #333;
 }
 
 ._totalRow td {

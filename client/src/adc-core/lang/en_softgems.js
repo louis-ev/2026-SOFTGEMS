@@ -399,8 +399,6 @@ export default {
     "Choose the columns for the A4 layout.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_no_pricing: "No price column",
-  sg_pdf_export_show_details:
-    "Show details under each stone (dimensions, origin, treatment, certificates)",
   sg_pdf_export_set_as_main_document: "Set as main document",
   sg_pdf_export_main_document_set:
     "PDF generated and set as the main document.",
@@ -427,7 +425,6 @@ export default {
   sg_pdf_col_ref: "Réf.",
   sg_pdf_col_photo: "Photo",
   sg_pdf_total: "TOTAL",
-  sg_pdf_no_cert: "Pas de certificat",
   sg_pdf_title_generic: "Document N° {number}",
   sg_pdf_title_box: "Boîte N° {number}",
   sg_pdf_title_memo_out: "Consignation N° {number}",

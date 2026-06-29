@@ -1494,7 +1494,6 @@ module.exports = (function () {
 
     data.export_query = {
       cols: metadata_keys.join(","),
-      details: opts.show_details_block === false ? "0" : "1",
     };
     delete data.selection_pdf_export;
   }
