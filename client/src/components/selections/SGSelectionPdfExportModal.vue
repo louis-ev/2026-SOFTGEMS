@@ -249,7 +249,7 @@ export default {
         this.$root?.app_infos?.instance_meta
       );
       try {
-        this.instance_settings = await this.$api.getFolder({ path: "" });
+        this.instance_settings = await this.$api.getFolder({ path: "." });
         presets = readSelectionPdfBankFootersEn(this.instance_settings);
       } catch {
         if (!this.instance_settings) {
@@ -301,7 +301,7 @@ export default {
       }));
       try {
         await this.$api.updateMeta({
-          path: "",
+          path: ".",
           new_meta: {
             [SELECTION_PDF_BANK_FOOTER_EN]: presets_to_save,
           },
@@ -323,8 +323,11 @@ export default {
             presets_to_save
           );
         }
-      } catch ({ code }) {
-        this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
+      } catch (err) {
+        console.error("saveBankFooters failed", err);
+        this.$alertify
+          .delay(4000)
+          .error(err?.code || this.$t("sg_could_not_save"));
       } finally {
         this.is_saving_bank_footer = false;
       }

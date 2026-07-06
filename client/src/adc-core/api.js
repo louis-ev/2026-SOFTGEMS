@@ -28,6 +28,19 @@ export default function () {
     created() {},
     watch: {},
     methods: {
+      normalizeFolderStorePath(path) {
+        const base = String(path ?? "").split("?")[0];
+        if (base === "" || base === ".") return ".";
+        return base;
+      },
+      normalizeFolderApiPath(path) {
+        const raw = String(path ?? "");
+        const query_index = raw.indexOf("?");
+        const base = query_index >= 0 ? raw.slice(0, query_index) : raw;
+        const query = query_index >= 0 ? raw.slice(query_index) : "";
+        if (base === "" || base === ".") return `/${query}`;
+        return raw;
+      },
       async init({ debug_mode }) {
         this.debug_mode = debug_mode;
         await this.initSocketio();
@@ -325,27 +338,36 @@ export default function () {
       },
 
       updateProps({ changed_data, folder_to_update }) {
-        Object.entries(changed_data).map(([key, value]) => {
+        if (!changed_data || !folder_to_update) return;
+        Object.entries(changed_data).forEach(([key, value]) => {
           this.$set(folder_to_update, key, value);
         });
       },
 
-      folderUpdated({ path, path_to_folder, changed_data }) {
-        console.log("folderUpdated", path, path_to_folder, changed_data);
-        // Handle both old format (path) and new format (path_to_folder)
-        const folder_path = path_to_folder || path;
+      resolveFolderStoreEntry(folder_path) {
+        const normalized_path = this.normalizeFolderStorePath(folder_path);
+        if (normalized_path === ".") {
+          return this.store["."] || this.store[""] || null;
+        }
+        if (Object.prototype.hasOwnProperty.call(this.store, normalized_path)) {
+          return this.store[normalized_path];
+        }
+        return null;
+      },
 
-        // updated folder $path
-        if (Object.prototype.hasOwnProperty.call(this.store, folder_path)) {
-          this.updateProps({
-            changed_data,
-            folder_to_update: this.store[folder_path],
-          });
+      folderUpdated({ path, path_to_folder, changed_data }) {
+        if (!changed_data) return;
+
+        const folder_path = this.normalizeFolderStorePath(
+          path_to_folder || path
+        );
+        const folder_to_update = this.resolveFolderStoreEntry(folder_path);
+        if (folder_to_update) {
+          this.updateProps({ changed_data, folder_to_update });
         }
 
-        if (folder_path === "") return;
+        if (folder_path === "" || folder_path === ".") return;
 
-        // parent folder path
         const parent_folder_path = folder_path.substr(
           0,
           folder_path.lastIndexOf("/")
@@ -355,11 +377,11 @@ export default function () {
         ) {
           const parent_folder = this.store[parent_folder_path];
           if (Array.isArray(parent_folder)) {
-            const folder_to_update = parent_folder.find(
+            const nested_folder = parent_folder.find(
               (f) => f.$path === folder_path
             );
-            if (folder_to_update) {
-              this.updateProps({ changed_data, folder_to_update });
+            if (nested_folder) {
+              this.updateProps({ changed_data, folder_to_update: nested_folder });
             }
           }
         }
@@ -490,15 +512,20 @@ export default function () {
         return this.store[path];
       },
       async getFolder({ path, no_files = false, detailed_infos = false }) {
+        const store_path = this.normalizeFolderStorePath(path);
         const use_store = detailed_infos === false && no_files === false;
-        if (use_store && this.store[path]) return this.store[path];
+        if (use_store && this.store[store_path]) return this.store[store_path];
 
-        let queries = [];
+        let request_path = this.normalizeFolderApiPath(path);
+        const queries = [];
         if (detailed_infos) queries.push("detailed=true");
         if (no_files) queries.push("no_files=true");
-        if (queries.length > 0) path += `?${queries.join("&")}`;
+        if (queries.length > 0) {
+          request_path += request_path.includes("?") ? "&" : "?";
+          request_path += queries.join("&");
+        }
 
-        const response = await this.$axios.get(path).catch((err) => {
+        const response = await this.$axios.get(request_path).catch((err) => {
           throw this.processError(err);
         });
         let folder = response.data;
@@ -516,9 +543,12 @@ export default function () {
         }
 
         if (use_store) {
-          // to get reactivity
-          this.$set(this.store, folder.$path, folder);
-          return this.store[folder.$path];
+          const store_key = this.normalizeFolderStorePath(folder.$path);
+          if (store_key !== folder.$path) {
+            this.$set(folder, "$path", store_key);
+          }
+          this.$set(this.store, store_key, folder);
+          return this.store[store_key];
         } else {
           // to only get data
           return folder;
@@ -920,15 +950,16 @@ export default function () {
         return task_id;
       },
       async updateMeta({ path, new_meta }) {
+        const request_path = this.normalizeFolderApiPath(path);
+        const store_path = this.normalizeFolderStorePath(path);
         const response = await this.$axios
-          .patch(path, new_meta)
+          .patch(request_path, new_meta)
           .catch((err) => {
             throw this.processError(err);
           });
         const { changed_data, path_to_meta: response_path_to_meta } =
           response.data || {};
         if (changed_data && Object.keys(changed_data).length > 0) {
-          const clean_path = path.split("?")[0];
           if (response_path_to_meta) {
             const path_to_meta = response_path_to_meta;
             const last_slash_index = path_to_meta.lastIndexOf("/");
@@ -942,12 +973,12 @@ export default function () {
             }
           } else {
             this.folderUpdated({
-              path_to_folder: clean_path,
+              path_to_folder: store_path,
               changed_data,
             });
           }
         }
-        this.$eventHub.$emit("hooks.updateMeta", { path });
+        this.$eventHub.$emit("hooks.updateMeta", { path: store_path });
         return response.data;
       },
       async getFieldHistory({ path }) {
