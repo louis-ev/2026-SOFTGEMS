@@ -53,6 +53,7 @@
               <th scope="col">{{ $t("sg_selection_internal_name") }}</th>
               <th scope="col">{{ $t("sg_selection_date") }}</th>
               <th scope="col">{{ $t("sg_selection_reference_number") }}</th>
+              <th scope="col">{{ $t("sg_selection_main_document") }}</th>
               <th scope="col">{{ $t("sg_selection_counterparty") }}</th>
             </tr>
           </thead>
@@ -83,6 +84,17 @@
               </td>
               <td>{{ formatDateCell(row.selection_date) }}</td>
               <td>{{ displayText(row.reference_number) }}</td>
+              <td class="_mainDocumentCell">
+                <a
+                  v-if="mainDocumentUrl(row)"
+                  class="u-buttonLink _mainDocumentLink"
+                  :href="mainDocumentUrl(row)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  @click.stop
+                >{{ mainDocumentFilename(row) }}</a>
+                <span v-else>—</span>
+              </td>
               <td>{{ counterpartyLabel(row.counterparty_path) }}</td>
             </tr>
           </tbody>
@@ -95,6 +107,7 @@
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import FormatDates from "@/mixins/FormatDates.js";
+import Medias from "@/mixins/Medias.js";
 import {
   buildGemSelectionMembershipRows,
   filterMembershipRowsByType,
@@ -104,6 +117,7 @@ import {
   selectionFolderSlugFromPath,
   selectionMembershipTypeSlug,
 } from "@/utils/gem_selection_memberships.js";
+import { findSelectionMainDocumentFile } from "@/utils/selection_documents.js";
 import { selectionTypeIconFromSlug } from "@/utils/selection_type_registry.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
@@ -111,7 +125,7 @@ import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
 
 export default {
   name: "SGGemSelectionsSection",
-  mixins: [FormatDates],
+  mixins: [FormatDates, Medias],
   components: {
     SGSectionPanel,
   },
@@ -228,6 +242,43 @@ export default {
       if (!path) return "—";
       return this.counterparty_labels[path] || path;
     },
+    mainDocumentFile(row) {
+      return findSelectionMainDocumentFile(row);
+    },
+    mainDocumentFilename(row) {
+      const file = this.mainDocumentFile(row);
+      return file?.$media_filename || file?.$path?.split("/").pop() || "";
+    },
+    mainDocumentUrl(row) {
+      const file = this.mainDocumentFile(row);
+      if (!file?.$path || !file?.$media_filename) return "";
+      return this.makeMediaFileURL({
+        $path: file.$path,
+        $media_filename: file.$media_filename,
+      });
+    },
+    async enrichMembershipRowsWithFiles(rows) {
+      const slugs = (Array.isArray(rows) ? rows : [])
+        .map((row) => selectionFolderSlugFromPath(row?.$path))
+        .filter(Boolean);
+      if (!slugs.length) return rows;
+
+      const { folders = [] } = await this.$api.getFoldersBySlugs({
+        path: this.selections_root_path,
+        folder_slugs: slugs,
+        no_files: false,
+      });
+      const folder_by_path = new Map(
+        folders.map((folder) => [String(folder?.$path || "").trim(), folder])
+      );
+
+      return rows.map((row) => {
+        const path = String(row?.$path || "").trim();
+        const enriched = folder_by_path.get(path);
+        if (!enriched) return row;
+        return { ...row, $files: enriched.$files || [] };
+      });
+    },
     async loadMemberships() {
       if (!this.gem_path) return;
       this.is_loading = true;
@@ -237,11 +288,12 @@ export default {
           path: this.selections_root_path,
         });
         this.selection_folders = Array.isArray(fetched) ? fetched : [];
-        this.membership_rows = buildGemSelectionMembershipRows({
+        const rows = buildGemSelectionMembershipRows({
           gem_path: this.gem_path,
           gem: this.gem,
           selection_folders: this.selection_folders,
         });
+        this.membership_rows = await this.enrichMembershipRowsWithFiles(rows);
         if (
           this.active_type_filter &&
           !this.type_filter_options.some(
@@ -375,5 +427,18 @@ export default {
   font-size: 0.68rem;
   background: var(--c-gris_clair);
   color: var(--c-gris_fonce);
+}
+
+._mainDocumentCell {
+  max-width: 14rem;
+}
+
+._mainDocumentLink {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 </style>
