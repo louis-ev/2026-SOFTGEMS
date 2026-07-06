@@ -2,8 +2,10 @@
   <div class="_bankFootersEditor">
     <div class="_bankFootersHeader">
       <span>{{ $t("sg_pdf_export_bank_footer_title") }}</span>
-      <span class="_fieldKey">{{ field_key }}</span>
     </div>
+    <p class="_bankFootersHint">
+      {{ $t("sg_pdf_export_bank_footer_hint") }}
+    </p>
 
     <p v-if="local_presets.length === 0 && !can_edit" class="_empty">
       {{ $t("sg_pdf_export_bank_footer_empty") }}
@@ -116,10 +118,7 @@
 </template>
 
 <script>
-import {
-  SELECTION_PDF_BANK_FOOTER_EN,
-  createEmptySelectionPdfBankFooterPreset,
-} from "@/utils/selection_pdf_instance_settings.js";
+import { createEmptySelectionPdfBankFooterPreset } from "@/utils/selection_pdf_instance_settings.js";
 
 export default {
   name: "SGSelectionPdfBankFootersEditor",
@@ -139,7 +138,6 @@ export default {
   },
   data() {
     return {
-      field_key: SELECTION_PDF_BANK_FOOTER_EN,
       local_presets: [],
       editing_preset_id: null,
       edit_draft: {
@@ -250,18 +248,13 @@ export default {
 }
 
 ._bankFootersHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: calc(var(--spacing) / 3);
   font-weight: 600;
 }
 
-._fieldKey {
-  font-weight: 400;
-  font-size: 0.8rem;
+._bankFootersHint {
+  margin: 0 0 calc(var(--spacing) * 0.75);
   color: var(--c-gris_fonce);
-  font-family: monospace;
+  font-size: var(--sl-font-size-x-small);
 }
 
 ._empty {
