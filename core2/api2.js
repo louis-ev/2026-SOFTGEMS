@@ -1466,7 +1466,7 @@ module.exports = (function () {
     }
   }
 
-  function _applySelectionPdfExportQuery(path_to_folder, data) {
+  async function _applySelectionPdfExportQuery(path_to_folder, data) {
     if (data?.additional_meta?.is_selection_generated_pdf !== true) return;
 
     data.additional_meta.is_selection_generated_pdf = true;
@@ -1491,11 +1491,65 @@ module.exports = (function () {
           .map((key) => String(key || "").trim())
           .filter((key) => /^[\$a-zA-Z][\w$]*$/.test(key))
       : [];
-
-    data.export_query = {
+    const bank_footer_id = String(opts.bank_footer_id || "").trim();
+    const export_query = {
       cols: metadata_keys.join(","),
     };
+    if (bank_footer_id && /^[a-zA-Z0-9_-]+$/.test(bank_footer_id)) {
+      export_query.bank_footer_id = bank_footer_id;
+    }
+
+    try {
+      const instance_meta = await settings.get();
+      const bank_footer_en = _resolveSelectionPdfBankFooterBodyFromMeta(
+        instance_meta,
+        bank_footer_id
+      );
+      if (bank_footer_en) {
+        export_query.bank_footer_en = bank_footer_en;
+      }
+    } catch (err) {
+      dev.error(
+        "Failed to resolve selection PDF bank footer for export: " + err.message
+      );
+    }
+
+    data.export_query = export_query;
     delete data.selection_pdf_export;
+  }
+
+  function _normalizeSelectionPdfBankFootersEn(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const id = String(item.id || "").trim();
+        if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return null;
+        return {
+          id,
+          internal_name: String(item.internal_name || "").trim(),
+          body: String(item.body ?? ""),
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function _resolveSelectionPdfBankFooterBodyFromMeta(
+    instance_meta,
+    bank_footer_id
+  ) {
+    const presets = _normalizeSelectionPdfBankFootersEn(
+      instance_meta?.selection_pdf_bank_footer_en
+    );
+    if (!presets.length) return "";
+
+    const requested_id = String(bank_footer_id || "").trim();
+    if (requested_id) {
+      const match = presets.find((preset) => preset.id === requested_id);
+      if (match) return match.body;
+    }
+
+    return presets[0]?.body || "";
   }
 
   async function _export(req, res, next) {
@@ -1505,7 +1559,7 @@ module.exports = (function () {
     dev.logapi({ path_to_folder, path_to_parent_folder, data });
 
     try {
-      _applySelectionPdfExportQuery(path_to_folder, data);
+      await _applySelectionPdfExportQuery(path_to_folder, data);
     } catch (err) {
       return res.status(400).send({ code: err.message });
     }

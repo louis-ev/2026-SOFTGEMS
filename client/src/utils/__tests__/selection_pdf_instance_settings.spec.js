@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   SELECTION_PDF_BANK_FOOTER_EN,
-  parseSelectionPdfBankFooterLines,
-  readSelectionPdfBankFooterEn,
+  coerceSelectionPdfBankFooterSelection,
+  createEmptySelectionPdfBankFooterPreset,
+  defaultSelectionPdfBankFooterId,
+  normalizeSelectionPdfBankFootersEn,
+  readSelectionPdfBankFootersEn,
+  resolveSelectionPdfBankFooterBody,
 } from "@/utils/selection_pdf_instance_settings.js";
 
 describe("selection pdf instance settings", () => {
@@ -10,18 +14,55 @@ describe("selection pdf instance settings", () => {
     expect(SELECTION_PDF_BANK_FOOTER_EN).toBe("selection_pdf_bank_footer_en");
   });
 
-  it("reads the bank footer from instance meta", () => {
+  it("normalizes preset arrays only", () => {
+    expect(normalizeSelectionPdfBankFootersEn("legacy")).toEqual([]);
     expect(
-      readSelectionPdfBankFooterEn({
-        selection_pdf_bank_footer_en: "Bank: Example\nIBAN: FR76…",
-      })
-    ).toBe("Bank: Example\nIBAN: FR76…");
+      normalizeSelectionPdfBankFootersEn([
+        { id: "bf_1", internal_name: "SG USD", body: "Bank: Example" },
+        { id: "", internal_name: "Bad", body: "x" },
+      ])
+    ).toEqual([{ id: "bf_1", internal_name: "SG USD", body: "Bank: Example" }]);
   });
 
-  it("parses non-empty footer lines", () => {
-    expect(parseSelectionPdfBankFooterLines("Bank: A\n\nIBAN: X")).toEqual([
-      "Bank: A",
-      "IBAN: X",
-    ]);
+  it("reads presets from instance meta", () => {
+    expect(
+      readSelectionPdfBankFootersEn({
+        selection_pdf_bank_footer_en: [
+          { id: "bf_a", internal_name: "A", body: "Line 1" },
+        ],
+      })
+    ).toEqual([{ id: "bf_a", internal_name: "A", body: "Line 1" }]);
+  });
+
+  it("resolves body by id with fallback to first preset", () => {
+    const presets = [
+      { id: "bf_a", internal_name: "A", body: "First" },
+      { id: "bf_b", internal_name: "B", body: "Second" },
+    ];
+    expect(resolveSelectionPdfBankFooterBody(presets, { id: "bf_b" })).toBe(
+      "Second"
+    );
+    expect(resolveSelectionPdfBankFooterBody(presets, { id: "missing" })).toBe(
+      "First"
+    );
+    expect(defaultSelectionPdfBankFooterId(presets)).toBe("bf_a");
+  });
+
+  it("coerces invalid selection back to the first preset", () => {
+    const presets = [
+      { id: "bf_a", internal_name: "A", body: "First" },
+      { id: "bf_b", internal_name: "B", body: "Second" },
+    ];
+    expect(coerceSelectionPdfBankFooterSelection(presets, "bf_b")).toBe("bf_b");
+    expect(coerceSelectionPdfBankFooterSelection(presets, "missing")).toBe(
+      "bf_a"
+    );
+  });
+
+  it("creates empty presets with ids", () => {
+    const preset = createEmptySelectionPdfBankFooterPreset();
+    expect(preset.id).toMatch(/^bf_/);
+    expect(preset.internal_name).toBe("");
+    expect(preset.body).toBe("");
   });
 });

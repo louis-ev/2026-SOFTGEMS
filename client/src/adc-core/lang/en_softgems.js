@@ -406,10 +406,18 @@ export default {
     "The current main document will be replaced.",
   sg_pdf_export_columns_title: "Columns in this PDF",
   sg_pdf_export_bank_footer_title: "Bank / payment footer (English)",
+  sg_pdf_export_bank_footer_internal_name_placeholder: "Internal name",
+  sg_pdf_export_bank_footer_untitled: "Untitled footer",
   sg_pdf_export_bank_footer_placeholder:
     "Bank name, account number, IBAN, BIC… (one line per row)",
   sg_pdf_export_bank_footer_empty: "No bank footer configured yet.",
-  sg_pdf_export_bank_footer_saved: "Bank footer saved.",
+  sg_pdf_export_bank_footer_saved: "Bank footers saved.",
+  sg_pdf_export_bank_footer_add: "Add footer",
+  sg_pdf_export_bank_footer_move_up: "Move up",
+  sg_pdf_export_bank_footer_move_down: "Move down",
+  sg_pdf_export_bank_footer_remove_confirm:
+    "Remove this bank footer preset?",
+  sg_pdf_export_bank_footer_confirm_edit: "Done",
   sg_pdf_export_columns_limit_hint:
     "Max {max} column units on A4 (photo = {photo_units})",
   sg_pdf_export_columns_counter: "{used} / {max} units",

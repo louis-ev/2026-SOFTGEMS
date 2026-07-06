@@ -117,7 +117,7 @@
         "type": "boolean"
       },
       "selection_pdf_bank_footer_en": {
-        "type": "string"
+        "type": "array"
       }
     },
     "$files": {

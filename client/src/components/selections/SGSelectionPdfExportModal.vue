@@ -30,46 +30,28 @@
       <div class="_columnsHeader">
         <span>{{ $t("sg_pdf_export_columns_title") }}</span>
       </div>
-      <ul class="_columnsList">
-        <li
-          v-for="metadata_key in export_column_keys"
-          :key="metadata_key"
-          class="_columnItem"
-        >
-          {{ columnLabel(metadata_key) }}
-        </li>
-      </ul>
+      <table class="_columnsList">
+        <thead>
+          <tr>
+            <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
+            <th
+              v-for="metadata_key in export_column_keys"
+              :key="metadata_key"
+              :class="columnClass(metadata_key)"
+            >
+              {{ columnLabel(metadata_key) }}
+            </th>
+          </tr>
+        </thead>
+      </table>
 
-      <div class="_bankFooterSection">
-        <div class="_bankFooterHeader">
-          <span>{{ $t("sg_pdf_export_bank_footer_title") }}</span>
-          <span class="_fieldKey">{{ bank_footer_field_key }}</span>
-        </div>
-        <textarea
-          v-if="can_edit_bank_footer"
-          v-model="bank_footer_draft"
-          class="_bankFooterInput u-input"
-          rows="6"
-          :disabled="is_saving_bank_footer"
-          :placeholder="$t('sg_pdf_export_bank_footer_placeholder')"
-        />
-        <pre v-else class="_bankFooterReadonly">{{
-          bank_footer_display || $t("sg_pdf_export_bank_footer_empty")
-        }}</pre>
-        <div v-if="can_edit_bank_footer" class="_bankFooterActions">
-          <button
-            type="button"
-            class="u-button u-button_verysmall u-button_bleuvert"
-            :disabled="is_saving_bank_footer || !bank_footer_dirty"
-            @click="saveBankFooter"
-          >
-            {{ $t("save") }}
-          </button>
-          <span v-if="bank_footer_save_message" class="_bankFooterSaved">
-            {{ bank_footer_save_message }}
-          </span>
-        </div>
-      </div>
+      <SGSelectionPdfBankFootersEditor
+        :presets="bank_footer_presets_draft"
+        :selected_id="selected_bank_footer_id"
+        :can_edit="can_edit_bank_footer"
+        @update:presets="onBankFooterPresetsUpdate"
+        @update:selected_id="selected_bank_footer_id = $event"
+      />
     </div>
 
     <template slot="footer">
@@ -127,13 +109,19 @@
 <script>
 import Medias from "@/mixins/Medias.js";
 import Authors from "@/mixins/Authors.js";
+import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
 import {
+  selection_pdf_description_column_key,
+  selection_pdf_per_carat_column_key,
+  selection_pdf_photo_column_key,
   selectionPdfColumnHeaderLabel,
 } from "@/utils/selection_pdf_columns.js";
 import { selectionPdfExportColumnKeys } from "@/utils/selection_pdf_export_registry.js";
+import SGSelectionPdfBankFootersEditor from "@/components/selections/SGSelectionPdfBankFootersEditor.vue";
 import {
   SELECTION_PDF_BANK_FOOTER_EN,
-  readSelectionPdfBankFooterEn,
+  coerceSelectionPdfBankFooterSelection,
+  readSelectionPdfBankFootersEn,
 } from "@/utils/selection_pdf_instance_settings.js";
 import {
   findSelectionMainDocumentFile,
@@ -148,7 +136,9 @@ import { parseSelectionFolderParam } from "@/utils/selection_urls.js";
 export default {
   name: "SGSelectionPdfExportModal",
   mixins: [Medias, Authors],
-  components: {},
+  components: {
+    SGSelectionPdfBankFootersEditor,
+  },
   props: {
     selection_folder_path: {
       type: String,
@@ -185,22 +175,22 @@ export default {
       is_setting_main_document: false,
       is_main_document_set: false,
       instance_settings: null,
-      bank_footer_draft: "",
-      bank_footer_saved_value: "",
+      bank_footer_presets_draft: [],
+      bank_footer_presets_saved: [],
+      selected_bank_footer_id: "",
       is_saving_bank_footer: false,
-      bank_footer_save_message: "",
-      bank_footer_field_key: SELECTION_PDF_BANK_FOOTER_EN,
+      bank_footer_save_pending: false,
     };
   },
   computed: {
     can_edit_bank_footer() {
       return this.is_instance_admin;
     },
-    bank_footer_display() {
-      return readSelectionPdfBankFooterEn(this.instance_settings);
-    },
-    bank_footer_dirty() {
-      return this.bank_footer_draft !== this.bank_footer_saved_value;
+    bank_footer_presets_dirty() {
+      return (
+        JSON.stringify(this.bank_footer_presets_draft) !==
+        JSON.stringify(this.bank_footer_presets_saved)
+      );
     },
     folder_slug() {
       const parsed = parseSelectionFolderParam(this.selection_path);
@@ -255,53 +245,84 @@ export default {
   },
   methods: {
     async loadInstanceSettings() {
-      const from_app = readSelectionPdfBankFooterEn(
+      let presets = readSelectionPdfBankFootersEn(
         this.$root?.app_infos?.instance_meta
       );
-      if (from_app) {
-        this.bank_footer_draft = from_app;
-        this.bank_footer_saved_value = from_app;
-      }
       try {
         this.instance_settings = await this.$api.getFolder({ path: "" });
-        const value = readSelectionPdfBankFooterEn(this.instance_settings);
-        this.bank_footer_draft = value;
-        this.bank_footer_saved_value = value;
+        presets = readSelectionPdfBankFootersEn(this.instance_settings);
       } catch {
         if (!this.instance_settings) {
           this.instance_settings = this.$root?.app_infos?.instance_meta || null;
+          presets = readSelectionPdfBankFootersEn(this.instance_settings);
         }
       }
+      this.applyBankFooterPresets(presets);
     },
-    async saveBankFooter() {
+    applyBankFooterPresets(presets) {
+      const list = Array.isArray(presets)
+        ? presets.map((preset) => ({ ...preset }))
+        : [];
+      this.bank_footer_presets_draft = list;
+      this.bank_footer_presets_saved = list.map((preset) => ({ ...preset }));
+      this.selected_bank_footer_id = coerceSelectionPdfBankFooterSelection(
+        list,
+        this.selected_bank_footer_id
+      );
+    },
+    onBankFooterPresetsUpdate(presets) {
+      this.bank_footer_presets_draft = Array.isArray(presets)
+        ? presets.map((preset) => ({ ...preset }))
+        : [];
+      this.selected_bank_footer_id = coerceSelectionPdfBankFooterSelection(
+        this.bank_footer_presets_draft,
+        this.selected_bank_footer_id
+      );
+      this.saveBankFootersIfDirty();
+    },
+    async saveBankFootersIfDirty() {
+      if (!this.can_edit_bank_footer || !this.bank_footer_presets_dirty) return;
+      if (this.is_saving_bank_footer) {
+        this.bank_footer_save_pending = true;
+        return;
+      }
+      await this.saveBankFooters();
+      if (this.bank_footer_save_pending) {
+        this.bank_footer_save_pending = false;
+        await this.saveBankFootersIfDirty();
+      }
+    },
+    async saveBankFooters() {
       if (!this.can_edit_bank_footer || this.is_saving_bank_footer) return;
+      if (!this.bank_footer_presets_dirty) return;
       this.is_saving_bank_footer = true;
-      this.bank_footer_save_message = "";
+      const presets_to_save = this.bank_footer_presets_draft.map((preset) => ({
+        ...preset,
+      }));
       try {
         await this.$api.updateMeta({
           path: "",
           new_meta: {
-            [SELECTION_PDF_BANK_FOOTER_EN]: this.bank_footer_draft,
+            [SELECTION_PDF_BANK_FOOTER_EN]: presets_to_save,
           },
         });
-        this.bank_footer_saved_value = this.bank_footer_draft;
+        this.bank_footer_presets_saved = presets_to_save.map((preset) => ({
+          ...preset,
+        }));
         if (this.instance_settings) {
           this.$set(
             this.instance_settings,
             SELECTION_PDF_BANK_FOOTER_EN,
-            this.bank_footer_draft
+            presets_to_save
           );
         }
         if (this.$root?.app_infos?.instance_meta) {
           this.$set(
             this.$root.app_infos.instance_meta,
             SELECTION_PDF_BANK_FOOTER_EN,
-            this.bank_footer_draft
+            presets_to_save
           );
         }
-        this.bank_footer_save_message = this.$t(
-          "sg_pdf_export_bank_footer_saved"
-        );
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
       } finally {
@@ -339,6 +360,22 @@ export default {
     columnLabel(metadata_key) {
       return selectionPdfColumnHeaderLabel(metadata_key, this.export_currency);
     },
+    columnClass(metadata_key) {
+      if (metadata_key === selection_pdf_photo_column_key) return "_colPhoto";
+      if (metadata_key === selection_pdf_description_column_key) {
+        return "_colDescription";
+      }
+      if (
+        metadata_key === selection_pdf_per_carat_column_key ||
+        gem_pricing_total_column_keys.includes(metadata_key)
+      ) {
+        return "_colPrice";
+      }
+      if (metadata_key === "number_of_pieces" || metadata_key === "weight_ct") {
+        return "_colNumeric";
+      }
+      return "_colDefault";
+    },
     buildSuggestedFilename() {
       const slug = this.folder_slug || "selection";
       const date = new Date().toISOString().slice(0, 10);
@@ -348,6 +385,8 @@ export default {
     async startExport() {
       if (!this.folder_slug || this.is_exporting) return;
 
+      await this.saveBankFootersIfDirty();
+
       const instructions = {
         recipe: "pdf",
         page_width: 210,
@@ -356,6 +395,7 @@ export default {
         suggested_file_name: this.buildSuggestedFilename(),
         selection_pdf_export: {
           metadata_keys: this.export_column_keys,
+          bank_footer_id: this.selected_bank_footer_id,
         },
         additional_meta: {
           is_selection_generated_pdf: true,
@@ -499,72 +539,46 @@ export default {
 }
 
 ._columnsList {
-  margin: calc(var(--spacing) / 3) 0 0;
-  padding: calc(var(--spacing) / 2) calc(var(--spacing) * 0.75);
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 4px;
-  list-style: disc;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
-}
-
-._columnItem {
-  font-size: 0.95rem;
-}
-
-._bankFooterSection {
-  margin-top: calc(var(--spacing) / 2);
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) / 3);
-}
-
-._bankFooterHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: calc(var(--spacing) / 3);
-  font-weight: 600;
-}
-
-._fieldKey {
-  font-weight: 400;
-  font-size: 0.8rem;
-  color: var(--c-gris_fonce);
-  font-family: monospace;
-}
-
-._bankFooterInput {
   width: 100%;
-  min-height: 8rem;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.4;
+  margin: calc(var(--spacing) / 3) 0 0;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-._bankFooterReadonly {
-  margin: 0;
-  padding: calc(var(--spacing) / 2);
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 4px;
-  background: #fafafa;
-  white-space: pre-wrap;
-  font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--c-gris_fonce);
+._columnsList th {
+  border: 1px solid #333;
+  padding: 0.35rem 0.4rem;
+  vertical-align: middle;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #f4f4f4;
+  word-break: break-word;
 }
 
-._bankFooterActions {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--spacing) / 2);
+._colNo {
+  width: 2.5rem;
+  text-align: center;
 }
 
-._bankFooterSaved {
-  font-size: 0.85rem;
-  color: var(--c-gris_fonce);
+._colPhoto {
+  width: 3.5rem;
+  text-align: center;
+}
+
+._colDescription {
+  width: auto;
+}
+
+._colPrice,
+._colNumeric {
+  width: 3.5rem;
+  text-align: right;
+}
+
+._colDefault {
+  width: 2.75rem;
+  text-align: center;
 }
 
 ._exporting,

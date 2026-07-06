@@ -61,7 +61,7 @@ export function encodeSelectionPdfExportQueryForType(selection_type) {
 }
 
 /**
- * @param {{ metadata_keys?: string[] }} options
+ * @param {{ metadata_keys?: string[], bank_footer_id?: string }} options
  * @returns {string}
  */
 export function encodeSelectionPdfExportQuery(options) {
@@ -72,12 +72,14 @@ export function encodeSelectionPdfExportQuery(options) {
         .filter(Boolean)
     : [];
   params.set("cols", keys.join(","));
+  const bank_footer_id = String(options?.bank_footer_id || "").trim();
+  if (bank_footer_id) params.set("bank_footer_id", bank_footer_id);
   return params.toString();
 }
 
 /**
  * @param {import('vue-router').Route} route
- * @returns {{ metadata_keys: string[] }}
+ * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string }}
  */
 export function decodeSelectionPdfExportQuery(route) {
   const raw_cols = String(route?.query?.cols || "").trim();
@@ -87,7 +89,9 @@ export function decodeSelectionPdfExportQuery(route) {
         .map((segment) => segment.trim())
         .filter(Boolean)
     : [];
-  return { metadata_keys };
+  const bank_footer_id = String(route?.query?.bank_footer_id || "").trim();
+  const bank_footer_en = String(route?.query?.bank_footer_en || "");
+  return { metadata_keys, bank_footer_id, bank_footer_en };
 }
 
 /**

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   countSelectionPdfColumnUnits,
+  decodeSelectionPdfExportQuery,
+  encodeSelectionPdfExportQuery,
   resolveSelectionPdfExportPrefs,
   selectionPdfColumnHeaderLabel,
   selection_pdf_max_column_units,
@@ -54,6 +56,28 @@ describe("selection pdf fixed columns", () => {
     expect(selectionPdfColumnHeaderLabel("pf_invoiced_price", "USD")).toBe(
       "Total USD"
     );
+  });
+
+  it("encodes and decodes bank_footer_id in export query", () => {
+    const query = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id", "$cover"],
+      bank_footer_id: "bf_abc123",
+    });
+    expect(query).toContain("bank_footer_id=bf_abc123");
+    const decoded = decodeSelectionPdfExportQuery({
+      query: Object.fromEntries(new URLSearchParams(query)),
+    });
+    expect(decoded.bank_footer_id).toBe("bf_abc123");
+  });
+
+  it("decodes bank_footer_en from export query", () => {
+    const decoded = decodeSelectionPdfExportQuery({
+      query: {
+        cols: "id",
+        bank_footer_en: "Bank: Example\nIBAN: FR76…",
+      },
+    });
+    expect(decoded.bank_footer_en).toBe("Bank: Example\nIBAN: FR76…");
   });
 });
 

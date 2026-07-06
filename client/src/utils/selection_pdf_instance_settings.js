@@ -1,33 +1,100 @@
-/** Instance meta key for the English PDF bank / payment footer (multiline). */
+/** Instance meta key for English PDF bank / payment footer presets. */
 export const SELECTION_PDF_BANK_FOOTER_EN = "selection_pdf_bank_footer_en";
 
 /**
- * @param {string} raw_text
- * @returns {string[]}
+ * @typedef {{ id: string, internal_name: string, body: string }} SelectionPdfBankFooterPreset
  */
-export function parseSelectionPdfBankFooterLines(raw_text) {
-  return String(raw_text || "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
 
 /**
- * @param {object|null|undefined} instance_meta
  * @returns {string}
  */
-export function readSelectionPdfBankFooterEn(instance_meta) {
-  const raw = instance_meta?.[SELECTION_PDF_BANK_FOOTER_EN];
-  if (raw === null || raw === undefined) return "";
-  return String(raw);
+export function createSelectionPdfBankFooterId() {
+  return `bf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * @param {unknown} item
+ * @returns {SelectionPdfBankFooterPreset|null}
+ */
+export function normalizeSelectionPdfBankFooterPreset(item) {
+  if (!item || typeof item !== "object") return null;
+  const id = String(item.id || "").trim();
+  if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return null;
+  return {
+    id,
+    internal_name: String(item.internal_name || "").trim(),
+    body: String(item.body ?? ""),
+  };
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {SelectionPdfBankFooterPreset[]}
+ */
+export function normalizeSelectionPdfBankFootersEn(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => normalizeSelectionPdfBankFooterPreset(item))
+    .filter(Boolean);
 }
 
 /**
  * @param {object|null|undefined} instance_meta
- * @returns {string[]}
+ * @returns {SelectionPdfBankFooterPreset[]}
  */
-export function selectionPdfBankFooterLinesFromInstance(instance_meta) {
-  return parseSelectionPdfBankFooterLines(
-    readSelectionPdfBankFooterEn(instance_meta)
+export function readSelectionPdfBankFootersEn(instance_meta) {
+  return normalizeSelectionPdfBankFootersEn(
+    instance_meta?.[SELECTION_PDF_BANK_FOOTER_EN]
   );
+}
+
+/**
+ * @param {SelectionPdfBankFooterPreset[]} presets
+ * @returns {string}
+ */
+export function defaultSelectionPdfBankFooterId(presets) {
+  const list = Array.isArray(presets) ? presets : [];
+  return list[0]?.id || "";
+}
+
+/**
+ * @param {SelectionPdfBankFooterPreset[]} presets
+ * @param {{ id?: string }} [options]
+ * @returns {string}
+ */
+export function resolveSelectionPdfBankFooterBody(presets, options = {}) {
+  const list = Array.isArray(presets) ? presets : [];
+  if (list.length === 0) return "";
+
+  const requested_id = String(options.id || "").trim();
+  if (requested_id) {
+    const match = list.find((preset) => preset.id === requested_id);
+    if (match) return match.body;
+  }
+
+  return list[0]?.body || "";
+}
+
+/**
+ * @param {SelectionPdfBankFooterPreset[]} presets
+ * @param {string} selected_id
+ * @returns {string}
+ */
+export function coerceSelectionPdfBankFooterSelection(presets, selected_id) {
+  const list = Array.isArray(presets) ? presets : [];
+  const id = String(selected_id || "").trim();
+  if (id && list.some((preset) => preset.id === id)) return id;
+  return defaultSelectionPdfBankFooterId(list);
+}
+
+/**
+ * @param {SelectionPdfBankFooterPreset[]} presets
+ * @returns {SelectionPdfBankFooterPreset}
+ */
+export function createEmptySelectionPdfBankFooterPreset() {
+  return {
+    id: createSelectionPdfBankFooterId(),
+    internal_name: "",
+    body: "",
+  };
 }

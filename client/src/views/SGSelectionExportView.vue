@@ -28,7 +28,8 @@ import PublicationReady from "@/mixins/PublicationReady.js";
 import FormatDates from "@/mixins/FormatDates.js";
 import GemPricing from "@/mixins/GemPricing";
 import {
-  readSelectionPdfBankFooterEn,
+  readSelectionPdfBankFootersEn,
+  resolveSelectionPdfBankFooterBody,
 } from "@/utils/selection_pdf_instance_settings.js";
 import {
   decodeSelectionPdfExportQuery,
@@ -123,7 +124,12 @@ export default {
       return "—";
     },
     bank_footer_en() {
-      return readSelectionPdfBankFooterEn(this.instance_settings);
+      const from_query = this.export_query.bank_footer_en;
+      if (from_query) return from_query;
+      return resolveSelectionPdfBankFooterBody(
+        readSelectionPdfBankFootersEn(this.instance_settings),
+        { id: this.export_query.bank_footer_id }
+      );
     },
     legal_text() {
       if (!this.selection) return "";
@@ -152,10 +158,11 @@ export default {
     },
     async getFolderPublic(path) {
       const superadmintoken = this.$route.query?.superadmintoken;
-      if (superadmintoken) {
+      const is_root_path = String(path || "").trim() === "";
+      if (superadmintoken && !is_root_path) {
         return this.$api.getPublicFolder({ path, superadmintoken });
       }
-      return this.$api.getFolder({ path });
+      return this.$api.getFolder({ path, no_files: true });
     },
     async loadExportData() {
       if (!this.selection_folder_path) {
