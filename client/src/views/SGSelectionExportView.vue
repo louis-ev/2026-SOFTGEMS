@@ -156,13 +156,13 @@ export default {
       if (value === null || value === undefined) return "";
       return String(value).trim();
     },
-    async getFolderPublic(path) {
+    async getFolderPublic(path, { no_files = false } = {}) {
       const superadmintoken = this.$route.query?.superadmintoken;
       const is_root_path = String(path || "").trim() === "";
       if (superadmintoken && !is_root_path) {
         return this.$api.getPublicFolder({ path, superadmintoken });
       }
-      return this.$api.getFolder({ path, no_files: true });
+      return this.$api.getFolder({ path, no_files });
     },
     async loadExportData() {
       if (!this.selection_folder_path) {
@@ -183,7 +183,9 @@ export default {
     },
     async loadInstanceSettings() {
       try {
-        this.instance_settings = await this.getFolderPublic("");
+        this.instance_settings = await this.getFolderPublic("", {
+          no_files: true,
+        });
       } catch {
         this.instance_settings = null;
       }

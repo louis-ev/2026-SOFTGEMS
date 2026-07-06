@@ -1,5 +1,8 @@
 import { pdfShapeAbbreviation } from "@/suggestions/softgems/pdf_shape_abbreviations.js";
-import { makeGemMediaFileAbsoluteUrl } from "@/utils/selection_pdf_gem_helpers.js";
+import {
+  makeGemMediaFileAbsoluteUrl,
+  makeGemMediaFilePath,
+} from "@/utils/selection_pdf_gem_helpers.js";
 
 /**
  * @param {object} gem
@@ -93,7 +96,7 @@ export function formatVideoLinkLabel(video_file, index = 0) {
 }
 
 /**
- * @typedef {{ type: 'text'|'link', text: string, href?: string }} PdfDescriptionBlock
+ * @typedef {{ type: 'text'|'link', text: string, href?: string, is_certificate_link?: boolean }} PdfDescriptionBlock
  */
 
 /**
@@ -104,6 +107,8 @@ export function formatVideoLinkLabel(video_file, index = 0) {
 export function buildGemPdfDescriptionBlocks(gem, origin = "") {
   /** @type {PdfDescriptionBlock[]} */
   const blocks = [];
+  /** @type {PdfDescriptionBlock[]} */
+  const certificate_blocks = [];
 
   const title = formatGemPdfTitleLine(gem);
   if (title) blocks.push({ type: "text", text: title });
@@ -113,13 +118,6 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "") {
 
   const treatment = String(gem?.treatment_type || "").trim();
   if (treatment) blocks.push({ type: "text", text: treatment });
-
-  gemCertificateFiles(gem).forEach((certificate_file) => {
-    const href = makeGemMediaFileAbsoluteUrl(certificate_file, origin);
-    const text = formatCertificateLinkLabel(certificate_file);
-    if (href) blocks.push({ type: "link", text, href });
-    else if (text) blocks.push({ type: "text", text });
-  });
 
   const origin_country = String(gem?.origin_country || "").trim();
   if (origin_country) {
@@ -138,5 +136,19 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "") {
     else if (text) blocks.push({ type: "text", text });
   });
 
-  return blocks;
+  gemCertificateFiles(gem).forEach((certificate_file) => {
+    const text = formatCertificateLinkLabel(certificate_file);
+    const href =
+      makeGemMediaFileAbsoluteUrl(certificate_file, origin) ||
+      makeGemMediaFilePath(certificate_file);
+    if (!text || !href) return;
+    certificate_blocks.push({
+      type: "link",
+      text,
+      href,
+      is_certificate_link: true,
+    });
+  });
+
+  return [...blocks, ...certificate_blocks];
 }

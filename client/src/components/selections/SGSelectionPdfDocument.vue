@@ -60,6 +60,7 @@
                 v-for="(block, block_index) in descriptionBlocks(gem)"
                 :key="block_index"
                 class="_descriptionLine"
+                :class="{ _descriptionCertificateLine: block.is_certificate_link }"
               >
                 <a
                   v-if="block.type === 'link' && block.href"
@@ -552,6 +553,10 @@ export default {
 ._descriptionLink {
   color: #111;
   text-decoration: underline;
+}
+
+._descriptionCertificateLine {
+  margin-top: 0.4mm;
 }
 
 ._cellText {
