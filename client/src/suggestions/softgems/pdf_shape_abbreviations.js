@@ -3,9 +3,9 @@
  * Keys must match shape_suggestions values exactly. Edit freely.
  */
 export const pdf_shape_abbreviations = Object.freeze({
-  "Round Brilliant": "RB",
+  "Round Brilliant": "RD",
   Oval: "OV",
-  Cushion: "CU",
+  Cushion: "CN",
   "Square Cushion": "SQ CN",
   "Pear Shape": "PS",
   Marquise: "MQ",
@@ -15,14 +15,13 @@ export const pdf_shape_abbreviations = Object.freeze({
   Trapezoid: "TR",
   "Triangle (Trilliant)": "TRIL",
   Hexagonal: "HX",
-  Octagonal: "OC",
-  Octogonal: "OC",
+  Octagonal: "OCT",
   Lozenge: "LZ",
   "Fancy Shape": "FS",
   "Mixed Cut": "MX",
   "Rose Cut": "RC",
   Briolette: "BR",
-  Cabochon: "CB",
+  Cabochon: "CAB",
   "Sugarloaf Cabochon": "SL CB",
   "Buff Top": "BT",
   Carved: "CV",

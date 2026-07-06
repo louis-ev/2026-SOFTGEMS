@@ -83,8 +83,13 @@ describe("selection pdf fixed columns", () => {
 
 describe("pdf shape abbreviations", () => {
   it("maps known shapes and falls back for unknown values", () => {
+    expect(pdfShapeAbbreviation("Round Brilliant")).toBe("RD");
     expect(pdfShapeAbbreviation("Oval")).toBe("OV");
+    expect(pdfShapeAbbreviation("Cushion")).toBe("CN");
     expect(pdfShapeAbbreviation("Square Cushion")).toBe("SQ CN");
+    expect(pdfShapeAbbreviation("Octagonal")).toBe("OCT");
+    expect(pdfShapeAbbreviation("Octogonal")).toBe("OC");
+    expect(pdfShapeAbbreviation("Cabochon")).toBe("CAB");
     expect(pdfShapeAbbreviation("Custom Fancy")).toBe("CF");
   });
 });
