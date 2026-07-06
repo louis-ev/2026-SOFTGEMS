@@ -1,15 +1,33 @@
 <template>
   <article class="_pdfDocument">
     <header class="_header">
-      <div class="_headerLeft">
-        <h1 class="_docTitle">{{ document_title }}</h1>
-        <p class="_dateLine">{{ date_line }}</p>
+      <div class="_headerTop">
+        <div class="_headerLeft">
+          <h1 class="_docTitle">{{ document_title }}</h1>
+          <p class="_dateLine">{{ date_line }}</p>
+        </div>
+        <div v-if="counterparty_block" class="_headerRight">
+          <p class="_counterpartyName">{{ counterparty_block.name }}</p>
+          <p v-if="counterparty_block.address" class="_counterpartyAddress">
+            {{ counterparty_block.address }}
+          </p>
+        </div>
       </div>
-      <div v-if="counterparty_block" class="_headerRight">
-        <p class="_counterpartyName">{{ counterparty_block.name }}</p>
-        <p v-if="counterparty_block.address" class="_counterpartyAddress">
-          {{ counterparty_block.address }}
-        </p>
+
+      <div class="_headerMeta">
+        <div class="_logoPlaceholder" aria-hidden="true">
+          <span class="_logoText">ACF</span>
+        </div>
+        <div class="_referenceLines">
+          <p v-if="order_number_line">
+            <span class="_refLabel">{{ $t("sg_pdf_order_number") }}</span>
+            {{ order_number_line }}
+          </p>
+          <p>
+            <span class="_refLabel">{{ $t("sg_pdf_supplier_account_number") }}</span>
+            {{ supplier_account_line }}
+          </p>
+        </div>
       </div>
     </header>
 
@@ -34,8 +52,27 @@
             :key="`${gem.$path}-${metadata_key}`"
             :class="columnClass(metadata_key)"
           >
+            <div
+              v-if="metadata_key === description_column_key"
+              class="_descriptionCell"
+            >
+              <div
+                v-for="(block, block_index) in descriptionBlocks(gem)"
+                :key="block_index"
+                class="_descriptionLine"
+              >
+                <a
+                  v-if="block.type === 'link' && block.href"
+                  class="_descriptionLink"
+                  :href="block.href"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ block.text }}</a>
+                <span v-else>{{ block.text }}</span>
+              </div>
+            </div>
             <img
-              v-if="metadata_key === '$cover' && coverUrl(gem)"
+              v-else-if="metadata_key === photo_column_key && coverUrl(gem)"
               class="_coverImg"
               :src="coverUrl(gem)"
               alt=""
@@ -45,21 +82,83 @@
             }}</span>
           </td>
         </tr>
-        <tr
-          v-if="pricing_total_key && pricing_total_column_index >= 0"
-          class="_totalRow"
-        >
-          <td :colspan="total_label_colspan" class="_totalLabel">
-            {{ $t("sg_pdf_total") }}
-          </td>
-          <td class="_totalValue">{{ formatted_total }}</td>
+        <tr v-if="has_pricing" class="_totalRow">
+          <td class="_colNo" />
           <td
-            v-if="total_trailing_colspan > 0"
-            :colspan="total_trailing_colspan"
-          />
+            v-for="metadata_key in metadata_keys"
+            :key="`total-${metadata_key}`"
+            :class="columnClass(metadata_key)"
+          >
+            <span v-if="metadata_key === description_column_key" />
+            <span v-else-if="metadata_key === photo_column_key" />
+            <span v-else-if="metadata_key === 'id'" />
+            <span
+              v-else-if="metadata_key === description_column_key"
+              class="_totalLabel"
+            >
+              {{ $t("sg_pdf_total") }}
+            </span>
+            <span v-else class="_cellText">{{
+              formatTotalCell(metadata_key)
+            }}</span>
+          </td>
+        </tr>
+        <tr v-if="has_pricing" class="_vatRow">
+          <td class="_colNo" />
+          <td
+            v-for="metadata_key in metadata_keys"
+            :key="`vat-${metadata_key}`"
+            :class="columnClass(metadata_key)"
+          >
+            <span v-if="metadata_key === description_column_key" />
+            <span v-else-if="metadata_key === photo_column_key" />
+            <span v-else-if="metadata_key === 'id'" />
+            <span
+              v-else-if="metadata_key === description_column_key"
+              class="_totalLabel"
+            >
+              {{ $t("sg_pdf_vat") }}
+            </span>
+            <span
+              v-else-if="metadata_key === pricing_total_key"
+              class="_cellText"
+            >{{ formatted_vat_amount }}</span>
+            <span
+              v-else-if="metadata_key === per_carat_column_key"
+              class="_cellText"
+            >20%</span>
+          </td>
+        </tr>
+        <tr v-if="has_pricing" class="_grandTotalRow">
+          <td class="_colNo" />
+          <td
+            v-for="metadata_key in metadata_keys"
+            :key="`grand-${metadata_key}`"
+            :class="columnClass(metadata_key)"
+          >
+            <span v-if="metadata_key === description_column_key" />
+            <span v-else-if="metadata_key === photo_column_key" />
+            <span v-else-if="metadata_key === 'id'" />
+            <span
+              v-else-if="metadata_key === description_column_key"
+              class="_totalLabel"
+            >
+              {{ $t("sg_pdf_grand_total") }}
+            </span>
+            <span
+              v-else-if="metadata_key === pricing_total_key"
+              class="_cellText"
+            >{{ formatted_grand_total }}</span>
+          </td>
         </tr>
       </tbody>
     </table>
+
+    <p v-if="has_pricing && payment_line" class="_paymentLine">
+      {{ payment_line }}
+    </p>
+
+    <div v-if="bank_footer_en" class="_bankBlock">{{ bank_footer_en }}</div>
 
     <p class="_legal">{{ legal_text }}</p>
 
@@ -71,20 +170,32 @@
 
 <script>
 import GemPricing from "@/mixins/GemPricing";
-import GemDimensions from "@/mixins/GemDimensions";
-import { SELECTION_PDF_ACF_FOOTER_LINES } from "@/utils/selection_pdf_export_registry.js";
 import {
+  SELECTION_PDF_ACF_FOOTER_LINES,
+  selection_pdf_vat_rate,
+} from "@/utils/selection_pdf_export_registry.js";
+import {
+  selection_pdf_description_column_key,
+  selection_pdf_per_carat_column_key,
+  selection_pdf_photo_column_key,
+  selectionPdfColumnHeaderLabel,
+} from "@/utils/selection_pdf_columns.js";
+import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
+import {
+  formatPdfCurrencyAmount,
   formatPdfCurrencyTotal,
+  formatPdfNumber,
+  formatPdfPerCarat,
   gemIdFromPath,
   resolveGemCoverThumbRelative,
+  sumGemNumericField,
   sumGemPricingTotals,
   toAbsoluteAppUrl,
 } from "@/utils/selection_pdf_gem_helpers.js";
-import { selection_pdf_photo_column_key } from "@/utils/selection_pdf_columns.js";
 
 export default {
   name: "SGSelectionPdfDocument",
-  mixins: [GemPricing, GemDimensions],
+  mixins: [GemPricing],
   props: {
     selection: {
       type: Object,
@@ -97,10 +208,6 @@ export default {
     metadata_keys: {
       type: Array,
       default: () => [],
-    },
-    metadata_labels: {
-      type: Object,
-      default: () => ({}),
     },
     document_title: {
       type: String,
@@ -122,72 +229,165 @@ export default {
       type: String,
       default: "",
     },
+    order_number_line: {
+      type: String,
+      default: "",
+    },
+    supplier_account_line: {
+      type: String,
+      default: "—",
+    },
+    bank_footer_en: {
+      type: String,
+      default: "",
+    },
+  },
+  data() {
+    return {
+      description_column_key: selection_pdf_description_column_key,
+      photo_column_key: selection_pdf_photo_column_key,
+      per_carat_column_key: selection_pdf_per_carat_column_key,
+    };
   },
   computed: {
     footer_lines() {
       return SELECTION_PDF_ACF_FOOTER_LINES;
     },
+    currency() {
+      return String(this.selection?.currency || "USD").trim() || "USD";
+    },
+    has_pricing() {
+      return Boolean(this.pricing_total_key);
+    },
     pricing_sum() {
       return sumGemPricingTotals(this.gems, this.pricing_total_key);
     },
-    formatted_total() {
-      const currency = this.selection?.currency || "USD";
-      return formatPdfCurrencyTotal(this.pricing_sum, currency);
+    qty_sum() {
+      return sumGemNumericField(this.gems, "number_of_pieces");
     },
-    pricing_total_column_index() {
-      if (!this.pricing_total_key) return -1;
-      return this.metadata_keys.indexOf(this.pricing_total_key);
+    weight_sum() {
+      return sumGemNumericField(this.gems, "weight_ct");
     },
-    total_label_colspan() {
-      const idx = this.pricing_total_column_index;
-      if (idx < 0) return 1 + this.metadata_keys.length;
-      return 1 + idx;
+    formatted_subtotal() {
+      return formatPdfCurrencyTotal(this.pricing_sum, this.currency);
     },
-    total_trailing_colspan() {
-      const idx = this.pricing_total_column_index;
-      if (idx < 0) return 0;
-      return Math.max(0, this.metadata_keys.length - idx - 1);
+    vat_amount() {
+      if (!Number.isFinite(this.pricing_sum)) return null;
+      return this.pricing_sum * selection_pdf_vat_rate;
+    },
+    formatted_vat_amount() {
+      return formatPdfCurrencyTotal(this.vat_amount, this.currency);
+    },
+    grand_total_amount() {
+      if (!Number.isFinite(this.pricing_sum)) return null;
+      return this.pricing_sum + (this.vat_amount || 0);
+    },
+    formatted_grand_total() {
+      return formatPdfCurrencyTotal(this.grand_total_amount, this.currency);
+    },
+    payment_line() {
+      if (!Number.isFinite(this.grand_total_amount)) return "";
+      const amount = formatPdfCurrencyAmount(
+        this.grand_total_amount,
+        this.currency
+      );
+      return this.$t("sg_pdf_payment_line", { amount });
+    },
+    media_origin() {
+      if (typeof window === "undefined") return "";
+      return window.location.origin;
     },
   },
   methods: {
     columnLabel(metadata_key) {
-      return this.metadata_labels[metadata_key] || metadata_key;
+      return selectionPdfColumnHeaderLabel(metadata_key, this.currency);
     },
     columnClass(metadata_key) {
       if (metadata_key === selection_pdf_photo_column_key) return "_colPhoto";
-      if (this.isGemPricingTotalColumnKey(metadata_key)) return "_colPrice";
+      if (metadata_key === selection_pdf_description_column_key) {
+        return "_colDescription";
+      }
+      if (
+        metadata_key === selection_pdf_per_carat_column_key ||
+        this.isGemPricingTotalColumnKey(metadata_key)
+      ) {
+        return "_colPrice";
+      }
+      if (metadata_key === "number_of_pieces" || metadata_key === "weight_ct") {
+        return "_colNumeric";
+      }
       return "_colDefault";
     },
     coverUrl(gem) {
       const relative = resolveGemCoverThumbRelative(gem);
       if (!relative) return "";
-      if (typeof window === "undefined") return relative;
-      return toAbsoluteAppUrl(relative, window.location.origin);
+      return toAbsoluteAppUrl(relative, this.media_origin);
+    },
+    descriptionBlocks(gem) {
+      return buildGemPdfDescriptionBlocks(gem, this.media_origin);
     },
     formatCell(gem, metadata_key) {
       if (metadata_key === "id") return gemIdFromPath(gem);
-      if (metadata_key === "$cover") return "";
+      if (metadata_key === selection_pdf_photo_column_key) return "";
+      if (metadata_key === selection_pdf_description_column_key) return "";
+
+      if (metadata_key === selection_pdf_per_carat_column_key) {
+        if (!this.pricing_total_key) return "—";
+        const per = this.computeDisplayedPerCaratForGem(
+          gem,
+          this.pricing_total_key
+        );
+        return formatPdfPerCarat(per);
+      }
 
       if (this.isGemPricingTotalColumnKey(metadata_key)) {
         const raw_total = gem?.[metadata_key];
-        const total_str =
-          raw_total === null || raw_total === undefined || raw_total === ""
-            ? "—"
-            : String(raw_total);
-        const w = this.toNumberOrDefault(gem?.weight_ct);
-        if (!Number.isFinite(w) || w <= 0) return total_str;
-        const per = this.computeDisplayedPerCaratForGem(gem, metadata_key);
-        return `${total_str} | ${per} /ct`;
+        const n = Number(raw_total);
+        if (!Number.isFinite(n)) return "—";
+        return formatPdfCurrencyTotal(n, this.currency);
       }
 
-      if (this.isGemDimensionsMergedColumnKey(metadata_key)) {
-        return this.formatGemDimensionsInline(gem);
+      if (metadata_key === "weight_ct") {
+        return formatPdfNumber(gem?.weight_ct, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      if (metadata_key === "number_of_pieces") {
+        return formatPdfNumber(gem?.number_of_pieces, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        });
       }
 
       const raw_value = gem?.[metadata_key];
-      if (raw_value === null || raw_value === undefined) return "";
+      if (raw_value === null || raw_value === undefined || raw_value === "") {
+        return "—";
+      }
       if (typeof raw_value === "object") return "";
       return String(raw_value);
+    },
+    formatTotalCell(metadata_key) {
+      if (metadata_key === "number_of_pieces") {
+        return formatPdfNumber(this.qty_sum, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        });
+      }
+      if (metadata_key === "weight_ct") {
+        return formatPdfNumber(this.weight_sum, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+      if (metadata_key === selection_pdf_per_carat_column_key) {
+        return "—";
+      }
+      if (metadata_key === this.pricing_total_key) {
+        return this.formatted_subtotal;
+      }
+      return "—";
     },
   },
 };
@@ -208,11 +408,15 @@ export default {
 }
 
 ._header {
+  margin-bottom: 5mm;
+}
+
+._headerTop {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 8mm;
-  margin-bottom: 6mm;
+  margin-bottom: 4mm;
 }
 
 ._docTitle {
@@ -244,11 +448,46 @@ export default {
   white-space: pre-line;
 }
 
+._headerMeta {
+  display: flex;
+  align-items: center;
+  gap: 8mm;
+}
+
+._logoPlaceholder {
+  flex-shrink: 0;
+  width: 28mm;
+  height: 14mm;
+  border: 1px solid #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7f7;
+}
+
+._logoText {
+  font-size: 14pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #666;
+}
+
+._referenceLines {
+  p {
+    margin: 0 0 1mm;
+    font-size: 9pt;
+  }
+}
+
+._refLabel {
+  font-weight: 700;
+}
+
 ._gemsTable {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  margin-bottom: 5mm;
+  margin-bottom: 4mm;
 }
 
 ._gemsTable th,
@@ -276,8 +515,18 @@ export default {
   text-align: center;
 }
 
-._colPrice {
-  width: 22mm;
+._colDescription {
+  width: auto;
+}
+
+._colPrice,
+._colNumeric {
+  width: 16mm;
+  text-align: right;
+}
+
+._colDefault {
+  width: 12mm;
 }
 
 ._coverImg {
@@ -288,12 +537,31 @@ export default {
   margin: 0 auto;
 }
 
+._descriptionCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8mm;
+}
+
+._descriptionLine {
+  display: block;
+  font-size: 8pt;
+  line-height: 1.3;
+}
+
+._descriptionLink {
+  color: #111;
+  text-decoration: underline;
+}
+
 ._cellText {
   display: block;
   font-size: 8pt;
 }
 
-._totalRow td {
+._totalRow td,
+._vatRow td,
+._grandTotalRow td {
   font-weight: 700;
   font-size: 9pt;
 }
@@ -303,8 +571,17 @@ export default {
   text-transform: uppercase;
 }
 
-._totalValue {
-  text-align: right;
+._paymentLine {
+  margin: 0 0 3mm;
+  font-size: 8.5pt;
+  line-height: 1.4;
+}
+
+._bankBlock {
+  margin: 0 0 4mm;
+  font-size: 8pt;
+  line-height: 1.45;
+  white-space: pre-line;
 }
 
 ._legal {
@@ -320,27 +597,10 @@ export default {
   border-top: 1px solid #ccc;
   font-size: 6.5pt;
   line-height: 1.4;
-  color: #444;
-}
+  color: #333;
 
-._footer p {
-  margin: 0 0 0.8mm;
-}
-
-@media print {
-  ._pdfDocument {
-    width: auto;
-    min-height: auto;
-    margin: 0;
-    padding: 10mm 8mm 12mm;
-  }
-
-  ._gemsTable thead {
-    display: table-header-group;
-  }
-
-  ._gemsTable tr {
-    page-break-inside: avoid;
+  p {
+    margin: 0 0 0.5mm;
   }
 }
 </style>

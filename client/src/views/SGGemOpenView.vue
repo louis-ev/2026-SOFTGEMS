@@ -184,6 +184,18 @@
             @saved="onFieldSaved"
           />
           <SGEditableMetaField
+            :label="$t('sg_country_of_cut')"
+            icon="scissors"
+            :value="gem.country_of_cut"
+            :is_flashing="isFieldFlashing('country_of_cut')"
+            :modal_open="editing_field === field_configs.country_of_cut"
+            :modal_title="gemFieldModalTitle(field_configs.country_of_cut)"
+            :gem_edit="gemEditorProps(field_configs.country_of_cut)"
+            @presentClick="openEditModal(field_configs.country_of_cut)"
+            @close="editing_field = null"
+            @saved="onFieldSaved"
+          />
+          <SGEditableMetaField
             :label="$t('sg_treatment_type')"
             icon="tools"
             :value="gem.treatment_type"

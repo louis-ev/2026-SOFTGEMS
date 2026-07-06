@@ -10,12 +10,14 @@
       :selection="selection"
       :gems="entry_gems_list"
       :metadata_keys="metadata_keys"
-      :metadata_labels="metadata_labels"
       :document_title="document_title"
       :date_line="date_line"
       :counterparty_block="counterparty_block"
       :legal_text="legal_text"
       :pricing_total_key="pricing_total_key"
+      :order_number_line="order_number_line"
+      :supplier_account_line="supplier_account_line"
+      :bank_footer_en="bank_footer_en"
     />
   </div>
 </template>
@@ -25,12 +27,17 @@ import SGSelectionPdfDocument from "@/components/selections/SGSelectionPdfDocume
 import PublicationReady from "@/mixins/PublicationReady.js";
 import FormatDates from "@/mixins/FormatDates.js";
 import GemPricing from "@/mixins/GemPricing";
-import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import {
-  activeSelectionPdfPricingKey,
+  readSelectionPdfBankFooterEn,
+} from "@/utils/selection_pdf_instance_settings.js";
+import {
   decodeSelectionPdfExportQuery,
+  resolveSelectionPdfPricingKey,
 } from "@/utils/selection_pdf_columns.js";
-import { selectionPdfExportDefaults } from "@/utils/selection_pdf_export_registry.js";
+import {
+  selectionPdfExportColumnKeys,
+  selectionPdfExportDefaults,
+} from "@/utils/selection_pdf_export_registry.js";
 import {
   formatAddressBookContactLabel,
   formatCounterpartyPersonLabel,
@@ -64,6 +71,7 @@ export default {
       selection: null,
       entry_gems_list: [],
       counterparty_block: null,
+      instance_settings: null,
       is_serversidepreview: false,
       images_loaded: false,
     };
@@ -80,24 +88,16 @@ export default {
       const keys = this.export_query.metadata_keys;
       if (keys.length > 0) return keys;
       if (!this.selection) return [];
-      return selectionPdfExportDefaults(this.selection.selection_type)
-        .default_column_keys;
+      return selectionPdfExportColumnKeys(this.selection.selection_type);
     },
     pricing_total_key() {
-      return activeSelectionPdfPricingKey(this.metadata_keys) || "";
-    },
-    metadata_labels() {
-      const configs = buildGemFieldConfigs(this.$t.bind(this));
-      const labels = {
-        id: this.$t("sg_pdf_col_ref"),
-        $cover: this.$t("sg_pdf_col_photo"),
-      };
-      this.metadata_keys.forEach((metadata_key) => {
-        if (labels[metadata_key]) return;
-        labels[metadata_key] =
-          configs[metadata_key]?.label || metadata_key;
-      });
-      return labels;
+      if (!this.selection) return "";
+      return (
+        resolveSelectionPdfPricingKey(
+          this.selection.selection_type,
+          this.metadata_keys
+        ) || ""
+      );
     },
     document_title() {
       if (!this.selection) return "";
@@ -107,13 +107,23 @@ export default {
     },
     date_line() {
       const raw = this.selection?.selection_date;
-      if (!raw) return "Paris";
-      const formatted = this.formatDate(raw, {
+      const date_value = raw ? new Date(raw) : new Date();
+      const formatted = this.formatDate(date_value, {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
       });
-      return `Paris, ${formatted}`;
+      return `Paris, le ${formatted}`;
+    },
+    order_number_line() {
+      const value = this.cleanString(this.selection?.reference_number);
+      return value || "—";
+    },
+    supplier_account_line() {
+      return "—";
+    },
+    bank_footer_en() {
+      return readSelectionPdfBankFooterEn(this.instance_settings);
     },
     legal_text() {
       if (!this.selection) return "";
@@ -158,9 +168,17 @@ export default {
         await Promise.all([
           this.loadEntryGems(),
           this.resolveCounterpartyBlock(),
+          this.loadInstanceSettings(),
         ]);
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_pdf_export_load_error");
+      }
+    },
+    async loadInstanceSettings() {
+      try {
+        this.instance_settings = await this.getFolderPublic("");
+      } catch {
+        this.instance_settings = null;
       }
     },
     async loadEntryGems() {

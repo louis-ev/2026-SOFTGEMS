@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   resolveGemCoverThumbRelative,
   toAbsoluteAppUrl,
+  formatPdfCurrencyTotal,
+  formatPdfNumber,
 } from "@/utils/selection_pdf_gem_helpers.js";
 
 describe("resolveGemCoverThumbRelative", () => {
@@ -24,5 +26,12 @@ describe("toAbsoluteAppUrl", () => {
     expect(
       toAbsoluteAppUrl("./thumbs/gems/12/cover.jpg", "http://localhost:8080")
     ).toBe("http://localhost:8080/thumbs/gems/12/cover.jpg");
+  });
+});
+
+describe("pdf number formatting", () => {
+  it("formats currency totals and dashes for missing values", () => {
+    expect(formatPdfCurrencyTotal(16125, "USD")).toBe("$16,125.00");
+    expect(formatPdfNumber(null)).toBe("—");
   });
 });

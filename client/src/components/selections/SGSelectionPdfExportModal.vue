@@ -28,64 +28,48 @@
       <p class="_instructions">{{ $t("sg_pdf_export_modal_instructions") }}</p>
 
       <div class="_columnsHeader">
-        <div class="_columnsHeaderMain">
-          <span>{{ $t("sg_pdf_export_columns_title") }}</span>
-          <span class="_columnLimitHint">
-            {{
-              $t("sg_pdf_export_columns_limit_hint", {
-                max: selection_pdf_max_column_units,
-                photo_units: selection_pdf_photo_column_units,
-              })
-            }}
-          </span>
-        </div>
-        <span
-          class="_columnCounter"
-          :class="{ _columnCounter_limit: is_column_limit_reached }"
-        >
-          {{
-            $t("sg_pdf_export_columns_counter", {
-              used: column_units_used,
-              max: selection_pdf_max_column_units,
-            })
-          }}
-        </span>
+        <span>{{ $t("sg_pdf_export_columns_title") }}</span>
       </div>
-      <p v-if="is_column_limit_reached" class="_columnLimitNotice">
-        {{ $t("sg_pdf_export_columns_limit_reached") }}
-      </p>
-
-      <div class="_columnsList">
-        <label
-          v-for="metadata_key in all_metadata_keys"
+      <ul class="_columnsList">
+        <li
+          v-for="metadata_key in export_column_keys"
           :key="metadata_key"
           class="_columnItem"
-          :class="{ _columnItem_disabled: isColumnToggleDisabled(metadata_key) }"
         >
-          <input
-            type="checkbox"
-            :checked="enabled_metadata_keys.includes(metadata_key)"
-            :disabled="isColumnToggleDisabled(metadata_key)"
-            @change="toggleColumn(metadata_key, $event)"
-          />
-          <span>{{ columnLabel(metadata_key) }}</span>
-          <span
-            v-if="isColumnEmpty(metadata_key)"
-            class="_columnEmptyMark"
-            :title="column_empty_legend_text"
-          >*</span>
-          <span
-            v-if="metadata_key === selection_pdf_photo_column_key"
-            class="_photoHint"
+          {{ columnLabel(metadata_key) }}
+        </li>
+      </ul>
+
+      <div class="_bankFooterSection">
+        <div class="_bankFooterHeader">
+          <span>{{ $t("sg_pdf_export_bank_footer_title") }}</span>
+          <span class="_fieldKey">{{ bank_footer_field_key }}</span>
+        </div>
+        <textarea
+          v-if="can_edit_bank_footer"
+          v-model="bank_footer_draft"
+          class="_bankFooterInput u-input"
+          rows="6"
+          :disabled="is_saving_bank_footer"
+          :placeholder="$t('sg_pdf_export_bank_footer_placeholder')"
+        />
+        <pre v-else class="_bankFooterReadonly">{{
+          bank_footer_display || $t("sg_pdf_export_bank_footer_empty")
+        }}</pre>
+        <div v-if="can_edit_bank_footer" class="_bankFooterActions">
+          <button
+            type="button"
+            class="u-button u-button_verysmall u-button_bleuvert"
+            :disabled="is_saving_bank_footer || !bank_footer_dirty"
+            @click="saveBankFooter"
           >
-            (×{{ selection_pdf_photo_column_units }})
+            {{ $t("save") }}
+          </button>
+          <span v-if="bank_footer_save_message" class="_bankFooterSaved">
+            {{ bank_footer_save_message }}
           </span>
-        </label>
+        </div>
       </div>
-      <p v-if="show_column_empty_legend" class="_columnEmptyLegend">
-        <span class="_columnEmptyMark">*</span>
-        {{ column_empty_legend_text }}
-      </p>
     </div>
 
     <template slot="footer">
@@ -130,7 +114,7 @@
         v-if="!is_exporting && !export_done"
         type="button"
         class="u-button u-button_bleuvert"
-        :disabled="enabled_metadata_keys.length === 0 || gems_loading"
+        :disabled="gems_loading"
         @click="startExport"
       >
         <b-icon icon="file-earmark-pdf" />
@@ -142,22 +126,15 @@
 
 <script>
 import Medias from "@/mixins/Medias.js";
-import GemPricing from "@/mixins/GemPricing";
-import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
-import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
+import Authors from "@/mixins/Authors.js";
 import {
-  applySelectionPdfPricingKey,
-  activeSelectionPdfPricingKey,
-  buildSelectionPdfPickerMetadataKeys,
-  canAddSelectionPdfColumn,
-  countSelectionPdfColumnUnits,
-  normalizeSelectionPdfColumnKeys,
-  selection_pdf_max_column_units,
-  selection_pdf_photo_column_key,
-  selection_pdf_photo_column_units,
-  selection_pdf_prefs_localstorage_key,
-  resolveSelectionPdfExportPrefs,
+  selectionPdfColumnHeaderLabel,
 } from "@/utils/selection_pdf_columns.js";
+import { selectionPdfExportColumnKeys } from "@/utils/selection_pdf_export_registry.js";
+import {
+  SELECTION_PDF_BANK_FOOTER_EN,
+  readSelectionPdfBankFooterEn,
+} from "@/utils/selection_pdf_instance_settings.js";
 import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
@@ -167,11 +144,10 @@ import {
   sortSelectionGems,
 } from "@/utils/selection_entries.js";
 import { parseSelectionFolderParam } from "@/utils/selection_urls.js";
-import { countGemsWithFilledTableColumnValue } from "@/utils/gems_table_metadata.js";
 
 export default {
   name: "SGSelectionPdfExportModal",
-  mixins: [Medias, GemPricing],
+  mixins: [Medias, Authors],
   components: {},
   props: {
     selection_folder_path: {
@@ -196,16 +172,10 @@ export default {
     },
   },
   data() {
-    const stored = this.readStoredPrefs();
-    const resolved = resolveSelectionPdfExportPrefs(
-      this.selection?.selection_type,
-      stored
-    );
     return {
       gems_root_path: "gems",
       entry_gems_list: [],
       gems_loading: false,
-      enabled_metadata_keys: resolved.metadata_keys,
       is_exporting: false,
       export_done: false,
       task_progress: 0,
@@ -214,41 +184,33 @@ export default {
       previous_main_document_path: "",
       is_setting_main_document: false,
       is_main_document_set: false,
-      selection_pdf_max_column_units,
-      selection_pdf_photo_column_key,
-      selection_pdf_photo_column_units,
+      instance_settings: null,
+      bank_footer_draft: "",
+      bank_footer_saved_value: "",
+      is_saving_bank_footer: false,
+      bank_footer_save_message: "",
+      bank_footer_field_key: SELECTION_PDF_BANK_FOOTER_EN,
     };
   },
   computed: {
+    can_edit_bank_footer() {
+      return this.is_instance_admin;
+    },
+    bank_footer_display() {
+      return readSelectionPdfBankFooterEn(this.instance_settings);
+    },
+    bank_footer_dirty() {
+      return this.bank_footer_draft !== this.bank_footer_saved_value;
+    },
     folder_slug() {
       const parsed = parseSelectionFolderParam(this.selection_path);
       return parsed.folder_slug || "";
     },
-    all_metadata_keys() {
-      return buildSelectionPdfPickerMetadataKeys(this.entry_gems_list).filter(
-        (metadata_key) => metadata_key !== "pvd_asking_price"
-      );
+    export_column_keys() {
+      return selectionPdfExportColumnKeys(this.selection?.selection_type);
     },
-    column_units_used() {
-      return countSelectionPdfColumnUnits(this.enabled_metadata_keys);
-    },
-    is_column_limit_reached() {
-      return (
-        this.column_units_used >= this.selection_pdf_max_column_units
-      );
-    },
-    show_column_empty_legend() {
-      if (this.gems_loading) return false;
-      if (this.entry_gems_list.length === 0) return true;
-      return this.all_metadata_keys.some((metadata_key) =>
-        this.isColumnEmpty(metadata_key)
-      );
-    },
-    column_empty_legend_text() {
-      if (this.entry_gems_list.length === 0) {
-        return this.$t("sg_pdf_export_column_no_stones");
-      }
-      return this.$t("sg_pdf_export_column_empty");
+    export_currency() {
+      return String(this.selection?.currency || "USD").trim() || "USD";
     },
     show_main_document_option() {
       return (
@@ -289,27 +251,61 @@ export default {
   async created() {
     this.previous_main_document_path =
       findSelectionMainDocumentFile(this.selection)?.$path || "";
-    await this.loadEntryGems();
+    await Promise.all([this.loadEntryGems(), this.loadInstanceSettings()]);
   },
   methods: {
-    readStoredPrefs() {
+    async loadInstanceSettings() {
+      const from_app = readSelectionPdfBankFooterEn(
+        this.$root?.app_infos?.instance_meta
+      );
+      if (from_app) {
+        this.bank_footer_draft = from_app;
+        this.bank_footer_saved_value = from_app;
+      }
       try {
-        const raw = localStorage.getItem(selection_pdf_prefs_localstorage_key);
-        return raw ? JSON.parse(raw) : null;
+        this.instance_settings = await this.$api.getFolder({ path: "" });
+        const value = readSelectionPdfBankFooterEn(this.instance_settings);
+        this.bank_footer_draft = value;
+        this.bank_footer_saved_value = value;
       } catch {
-        return null;
+        if (!this.instance_settings) {
+          this.instance_settings = this.$root?.app_infos?.instance_meta || null;
+        }
       }
     },
-    persistPrefs() {
+    async saveBankFooter() {
+      if (!this.can_edit_bank_footer || this.is_saving_bank_footer) return;
+      this.is_saving_bank_footer = true;
+      this.bank_footer_save_message = "";
       try {
-        localStorage.setItem(
-          selection_pdf_prefs_localstorage_key,
-          JSON.stringify({
-            metadata_keys: this.enabled_metadata_keys,
-          })
+        await this.$api.updateMeta({
+          path: "",
+          new_meta: {
+            [SELECTION_PDF_BANK_FOOTER_EN]: this.bank_footer_draft,
+          },
+        });
+        this.bank_footer_saved_value = this.bank_footer_draft;
+        if (this.instance_settings) {
+          this.$set(
+            this.instance_settings,
+            SELECTION_PDF_BANK_FOOTER_EN,
+            this.bank_footer_draft
+          );
+        }
+        if (this.$root?.app_infos?.instance_meta) {
+          this.$set(
+            this.$root.app_infos.instance_meta,
+            SELECTION_PDF_BANK_FOOTER_EN,
+            this.bank_footer_draft
+          );
+        }
+        this.bank_footer_save_message = this.$t(
+          "sg_pdf_export_bank_footer_saved"
         );
-      } catch {
-        /* ignore */
+      } catch ({ code }) {
+        this.$alertify.delay(4000).error(code || this.$t("sg_could_not_save"));
+      } finally {
+        this.is_saving_bank_footer = false;
       }
     },
     async loadEntryGems() {
@@ -341,52 +337,7 @@ export default {
       }
     },
     columnLabel(metadata_key) {
-      const configs = buildGemFieldConfigs(this.$t.bind(this));
-      if (metadata_key === "id") return this.$t("sg_pdf_col_ref");
-      if (metadata_key === "$cover") return this.$t("sg_pdf_col_photo");
-      return configs[metadata_key]?.label || metadata_key;
-    },
-    isPricingColumn(metadata_key) {
-      return gem_pricing_total_column_keys.includes(metadata_key);
-    },
-    isColumnEmpty(metadata_key) {
-      if (this.gems_loading) return false;
-      if (this.entry_gems_list.length === 0) return true;
-      return (
-        countGemsWithFilledTableColumnValue(
-          this.entry_gems_list,
-          metadata_key
-        ) === 0
-      );
-    },
-    isColumnToggleDisabled(metadata_key) {
-      if (this.enabled_metadata_keys.includes(metadata_key)) return false;
-      if (
-        this.isPricingColumn(metadata_key) &&
-        activeSelectionPdfPricingKey(this.enabled_metadata_keys)
-      ) {
-        return false;
-      }
-      return !canAddSelectionPdfColumn(
-        this.enabled_metadata_keys,
-        metadata_key
-      );
-    },
-    toggleColumn(metadata_key, event) {
-      const checked = event?.target?.checked === true;
-      let keys = [...this.enabled_metadata_keys];
-      if (checked) {
-        if (this.isPricingColumn(metadata_key)) {
-          keys = applySelectionPdfPricingKey(keys, metadata_key);
-        } else if (!canAddSelectionPdfColumn(keys, metadata_key)) {
-          return;
-        } else {
-          keys.push(metadata_key);
-        }
-      } else {
-        keys = keys.filter((key) => key !== metadata_key);
-      }
-      this.enabled_metadata_keys = normalizeSelectionPdfColumnKeys(keys);
+      return selectionPdfColumnHeaderLabel(metadata_key, this.export_currency);
     },
     buildSuggestedFilename() {
       const slug = this.folder_slug || "selection";
@@ -396,7 +347,6 @@ export default {
     },
     async startExport() {
       if (!this.folder_slug || this.is_exporting) return;
-      this.persistPrefs();
 
       const instructions = {
         recipe: "pdf",
@@ -405,7 +355,7 @@ export default {
         layout_mode: "print",
         suggested_file_name: this.buildSuggestedFilename(),
         selection_pdf_export: {
-          metadata_keys: this.enabled_metadata_keys,
+          metadata_keys: this.export_column_keys,
         },
         additional_meta: {
           is_selection_generated_pdf: true,
@@ -544,83 +494,76 @@ export default {
 }
 
 ._columnsHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: calc(var(--spacing) / 2);
   font-weight: 600;
   margin-top: calc(var(--spacing) / 2);
 }
 
-._columnsHeaderMain {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) / 4);
-  min-width: 0;
-}
-
-._columnLimitHint {
-  font-weight: 400;
-  font-size: 0.85rem;
-  color: var(--c-gris_fonce);
-}
-
-._columnCounter {
-  flex-shrink: 0;
-  font-weight: 600;
-  color: var(--c-gris_fonce);
-}
-
-._columnCounter_limit {
-  color: var(--c-rouge, #c00);
-}
-
-._columnLimitNotice {
-  margin: calc(var(--spacing) / 4) 0 0;
-  font-size: 0.85rem;
-  color: var(--c-rouge, #c00);
-  line-height: 1.3;
-}
-
 ._columnsList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: calc(var(--spacing) / 3);
-  max-height: 280px;
-  overflow-y: auto;
-  padding: calc(var(--spacing) / 2);
+  margin: calc(var(--spacing) / 3) 0 0;
+  padding: calc(var(--spacing) / 2) calc(var(--spacing) * 0.75);
   border: 1px solid var(--c-gris_clair);
   border-radius: 4px;
+  list-style: disc;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: calc(var(--spacing) / 4) calc(var(--spacing) / 2);
 }
 
 ._columnItem {
+  font-size: 0.95rem;
+}
+
+._bankFooterSection {
+  margin-top: calc(var(--spacing) / 2);
   display: flex;
-  align-items: center;
-  gap: calc(var(--spacing) / 4);
-  cursor: pointer;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 3);
 }
 
-._columnItem_disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-._columnEmptyMark {
-  color: var(--c-gris_fonce);
+._bankFooterHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(var(--spacing) / 3);
   font-weight: 600;
-  line-height: 1;
 }
 
-._columnEmptyLegend {
-  margin: calc(var(--spacing) / 3) 0 0;
+._fieldKey {
+  font-weight: 400;
   font-size: 0.8rem;
   color: var(--c-gris_fonce);
-  font-style: italic;
-  line-height: 1.3;
+  font-family: monospace;
 }
 
-._photoHint {
-  font-size: 0.85em;
+._bankFooterInput {
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+._bankFooterReadonly {
+  margin: 0;
+  padding: calc(var(--spacing) / 2);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 4px;
+  background: #fafafa;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--c-gris_fonce);
+}
+
+._bankFooterActions {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
+}
+
+._bankFooterSaved {
+  font-size: 0.85rem;
   color: var(--c-gris_fonce);
 }
 

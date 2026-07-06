@@ -29,6 +29,7 @@ export const gems_table_catalog_column_keys = Object.freeze([
   "color",
   "shape",
   "origin_country",
+  "country_of_cut",
   "treatment_type",
   "dimensions_lwh",
   "base_price_pcb",

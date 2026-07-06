@@ -43,13 +43,41 @@ export function gemIdFromPath(gem) {
 }
 
 /**
+ * @param {{ $path?: string, $media_filename?: string }} file
+ * @returns {string}
+ */
+export function makeGemMediaFilePath(file) {
+  const path = String(file?.$path || "").trim();
+  const filename = String(file?.$media_filename || "").trim();
+  if (!path || !filename) return "";
+  const parent = path.substring(0, path.lastIndexOf("/"));
+  return `/${parent}/${filename}`;
+}
+
+/**
+ * @param {{ $path?: string, $media_filename?: string }} file
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export function makeGemMediaFileAbsoluteUrl(file, origin = "") {
+  const full_path = makeGemMediaFilePath(file);
+  if (!full_path) return "";
+  const resolved_origin =
+    origin ||
+    (typeof window !== "undefined" ? window.location.origin : "") ||
+    "";
+  if (!resolved_origin) return full_path;
+  return `${resolved_origin}${full_path}`;
+}
+
+/**
  * @param {object[]} gems
- * @param {string|null} pricing_key
+ * @param {string} field_key
  * @returns {number|null}
  */
-export function sumGemPricingTotals(gems, pricing_key) {
-  const key = String(pricing_key || "").trim();
-  if (!key || !gem_pricing_total_column_keys.includes(key)) return null;
+export function sumGemNumericField(gems, field_key) {
+  const key = String(field_key || "").trim();
+  if (!key) return null;
   let sum = 0;
   let has_value = false;
   (gems || []).forEach((gem) => {
@@ -64,7 +92,48 @@ export function sumGemPricingTotals(gems, pricing_key) {
 }
 
 /**
- * @param {number|null} value
+ * @param {object[]} gems
+ * @param {string|null} pricing_key
+ * @returns {number|null}
+ */
+export function sumGemPricingTotals(gems, pricing_key) {
+  const key = String(pricing_key || "").trim();
+  if (!key || !gem_pricing_total_column_keys.includes(key)) return null;
+  return sumGemNumericField(gems, key);
+}
+
+/**
+ * @param {number|null|undefined} value
+ * @param {{ minimumFractionDigits?: number, maximumFractionDigits?: number }} [options]
+ * @returns {string}
+ */
+export function formatPdfNumber(value, options = {}) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+  const {
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 2,
+  } = options;
+  return value.toLocaleString("en-GB", {
+    minimumFractionDigits,
+    maximumFractionDigits,
+  });
+}
+
+/**
+ * @param {number|null|undefined} value
+ * @returns {string}
+ */
+export function formatPdfPerCarat(value) {
+  return formatPdfNumber(value, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * @param {number|null|undefined} value
  * @param {string} currency
  * @returns {string}
  */
@@ -73,14 +142,27 @@ export function formatPdfCurrencyTotal(value, currency) {
     return "—";
   }
   const code = String(currency || "USD").trim() || "USD";
-  try {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: code,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `${value.toLocaleString("fr-FR")} ${code}`;
+  const formatted = value.toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  if (code === "USD") return `$${formatted}`;
+  return `${formatted} ${code}`;
+}
+
+/**
+ * @param {number|null|undefined} value
+ * @param {string} currency
+ * @returns {string}
+ */
+export function formatPdfCurrencyAmount(value, currency) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
   }
+  const code = String(currency || "USD").trim() || "USD";
+  const formatted = value.toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${formatted} ${code}`;
 }

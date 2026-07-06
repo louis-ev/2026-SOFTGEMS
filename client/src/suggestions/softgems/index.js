@@ -3,5 +3,6 @@ export { status_suggestions } from "./status_suggestions";
 export { color_suggestions } from "./color_suggestions";
 export { shape_suggestions } from "./shape_suggestions";
 export { origin_country_suggestions } from "./origin_country_suggestions";
+export { country_of_cut_suggestions } from "./country_of_cut_suggestions";
 export { treatment_type_suggestions } from "./treatment_type_suggestions";
 export { pair_single_indicator_suggestions } from "./pair_single_indicator_suggestions";

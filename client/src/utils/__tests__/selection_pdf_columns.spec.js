@@ -1,12 +1,17 @@
 import { describe, it, expect } from "vitest";
 import {
-  applySelectionPdfPricingKey,
-  buildSelectionPdfPickerMetadataKeys,
-  canAddSelectionPdfColumn,
   countSelectionPdfColumnUnits,
+  resolveSelectionPdfExportPrefs,
+  selectionPdfColumnHeaderLabel,
   selection_pdf_max_column_units,
 } from "@/utils/selection_pdf_columns.js";
-import { selectionPdfExportEnabled } from "@/utils/selection_pdf_export_registry.js";
+import {
+  selectionPdfExportColumnKeys,
+  selectionPdfExportEnabled,
+  selectionPdfExportPricingKey,
+} from "@/utils/selection_pdf_export_registry.js";
+import { pdfShapeAbbreviation } from "@/suggestions/softgems/pdf_shape_abbreviations.js";
+import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
 
 describe("selectionPdfExportEnabled", () => {
   it("enables memo out and excludes memo in", () => {
@@ -16,33 +21,64 @@ describe("selectionPdfExportEnabled", () => {
   });
 });
 
-describe("selection pdf column units", () => {
-  it("counts photo as two units", () => {
-    expect(countSelectionPdfColumnUnits(["id", "$cover", "weight_ct"])).toBe(4);
-  });
-
-  it("blocks columns above the A4 cap", () => {
-    const keys = ["id", "$cover", "stone_type", "weight_ct", "pc_to"];
-    expect(countSelectionPdfColumnUnits(keys)).toBeLessThanOrEqual(
+describe("selection pdf fixed columns", () => {
+  it("uses eight column units for priced layouts", () => {
+    const keys = selectionPdfExportColumnKeys("memo out");
+    expect(keys).toContain("$description");
+    expect(keys).toContain("$per_carat");
+    expect(keys).toContain("pc_to");
+    expect(countSelectionPdfColumnUnits(keys)).toBe(
       selection_pdf_max_column_units
     );
-    expect(canAddSelectionPdfColumn(keys, "color")).toBe(false);
   });
 
-  it("applies pricing key within the cap", () => {
-    const next = applySelectionPdfPricingKey(
-      ["id", "stone_type", "weight_ct"],
-      "pc_to"
+  it("omits pricing columns for box selections", () => {
+    const keys = selectionPdfExportColumnKeys("boîte");
+    expect(keys).not.toContain("$per_carat");
+    expect(keys).not.toContain("pc_to");
+  });
+
+  it("resolves prefs from the registry only", () => {
+    const prefs = resolveSelectionPdfExportPrefs("sale invoice");
+    expect(prefs.metadata_keys).toEqual(
+      selectionPdfExportColumnKeys("sale invoice")
     );
-    expect(next).toContain("pc_to");
+    expect(selectionPdfExportPricingKey("sale invoice")).toBe(
+      "pf_invoiced_price"
+    );
   });
 
-  it("offers the full table catalog in the PDF picker", () => {
-    const keys = buildSelectionPdfPickerMetadataKeys([
-      { $path: "gems/1", stone_type: "Ruby" },
-    ]);
-    expect(keys).toContain("pf_invoiced_price");
-    expect(keys).toContain("dimensions_lwh");
-    expect(keys).not.toContain("status");
+  it("labels columns in English for PDF export", () => {
+    expect(selectionPdfColumnHeaderLabel("$description")).toBe("Description");
+    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("$/ct");
+    expect(selectionPdfColumnHeaderLabel("pf_invoiced_price", "USD")).toBe(
+      "Total USD"
+    );
+  });
+});
+
+describe("pdf shape abbreviations", () => {
+  it("maps known shapes and falls back for unknown values", () => {
+    expect(pdfShapeAbbreviation("Oval")).toBe("OV");
+    expect(pdfShapeAbbreviation("Square Cushion")).toBe("SQ CN");
+    expect(pdfShapeAbbreviation("Custom Fancy")).toBe("CF");
+  });
+});
+
+describe("pdf description blocks", () => {
+  it("builds title, origin, and country of cut lines", () => {
+    const blocks = buildGemPdfDescriptionBlocks({
+      color: "Blue",
+      stone_type: "sapphire",
+      shape: "Oval",
+      origin_country: "Sri Lanka",
+      country_of_cut: "Thailand",
+      treatment_type: "No heat",
+    });
+    expect(blocks[0].text).toBe("Blue sapphire OV");
+    expect(blocks.some((b) => b.text === "Origin: Sri Lanka")).toBe(true);
+    expect(blocks.some((b) => b.text === "Country of cut: Thailand")).toBe(
+      true
+    );
   });
 });

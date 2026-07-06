@@ -396,7 +396,7 @@ export default {
   sg_pdf_export_button: "Export PDF",
   sg_pdf_export_modal_title: "Export selection to PDF",
   sg_pdf_export_modal_instructions:
-    "Choose the columns for the A4 layout.",
+    "The PDF layout is fixed for this selection type. Review the columns below, then generate.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_no_pricing: "No price column",
   sg_pdf_export_set_as_main_document: "Set as main document",
@@ -404,7 +404,12 @@ export default {
     "PDF generated and set as the main document.",
   sg_pdf_export_replace_main_document_warning:
     "The current main document will be replaced.",
-  sg_pdf_export_columns_title: "Table columns",
+  sg_pdf_export_columns_title: "Columns in this PDF",
+  sg_pdf_export_bank_footer_title: "Bank / payment footer (English)",
+  sg_pdf_export_bank_footer_placeholder:
+    "Bank name, account number, IBAN, BIC… (one line per row)",
+  sg_pdf_export_bank_footer_empty: "No bank footer configured yet.",
+  sg_pdf_export_bank_footer_saved: "Bank footer saved.",
   sg_pdf_export_columns_limit_hint:
     "Max {max} column units on A4 (photo = {photo_units})",
   sg_pdf_export_columns_counter: "{used} / {max} units",
@@ -422,9 +427,15 @@ export default {
   sg_pdf_generated_empty: "No PDFs generated for this selection yet.",
   sg_pdf_generated_on: "Generated on {date}",
   sg_pdf_col_no: "N°",
-  sg_pdf_col_ref: "Réf.",
+  sg_pdf_col_ref: "REF",
   sg_pdf_col_photo: "Photo",
   sg_pdf_total: "TOTAL",
+  sg_pdf_vat: "VAT",
+  sg_pdf_grand_total: "Total",
+  sg_pdf_order_number: "Order No.:",
+  sg_pdf_supplier_account_number: "Supplier account No.:",
+  sg_pdf_payment_line:
+    "Net amount due: {amount}, by bank transfer to SOCIETE GENERALE — Paris (details below).",
   sg_pdf_title_generic: "Document N° {number}",
   sg_pdf_title_box: "Boîte N° {number}",
   sg_pdf_title_memo_out: "Consignation N° {number}",

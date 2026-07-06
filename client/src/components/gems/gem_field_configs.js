@@ -1,5 +1,6 @@
 import {
   color_suggestions,
+  country_of_cut_suggestions,
   origin_country_suggestions,
   shape_suggestions,
   stone_type_suggestions,
@@ -16,6 +17,9 @@ const sortSuggestions = (suggestions) =>
 const sorted_color_suggestions = sortSuggestions(color_suggestions);
 const sorted_origin_country_suggestions = sortSuggestions(
   origin_country_suggestions
+);
+const sorted_country_of_cut_suggestions = sortSuggestions(
+  country_of_cut_suggestions
 );
 const sorted_shape_suggestions = sortSuggestions(shape_suggestions);
 const sorted_stone_type_suggestions = sortSuggestions(stone_type_suggestions);
@@ -106,6 +110,13 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       icon: "pin-map",
       type: "select",
       options: sorted_origin_country_suggestions,
+    },
+    country_of_cut: {
+      key: "country_of_cut",
+      label: t("sg_country_of_cut"),
+      icon: "scissors",
+      type: "select",
+      options: sorted_country_of_cut_suggestions,
     },
     treatment_type: {
       key: "treatment_type",

@@ -115,6 +115,9 @@
       },
       "confidentiality_in_footer": {
         "type": "boolean"
+      },
+      "selection_pdf_bank_footer_en": {
+        "type": "string"
       }
     },
     "$files": {
@@ -162,6 +165,9 @@
             "type": "string"
           },
           "origin_country": {
+            "type": "string"
+          },
+          "country_of_cut": {
             "type": "string"
           },
           "treatment_type": {
