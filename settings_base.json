@@ -260,7 +260,16 @@
           "contact_type": {
             "type": "string"
           },
-          "address": {
+          "address_street": {
+            "type": "string"
+          },
+          "address_city": {
+            "type": "string"
+          },
+          "address_zip": {
+            "type": "string"
+          },
+          "address_country": {
             "type": "string"
           },
           "phone": {
@@ -290,7 +299,16 @@
               "email": {
                 "type": "string"
               },
-              "address": {
+              "address_street": {
+                "type": "string"
+              },
+              "address_city": {
+                "type": "string"
+              },
+              "address_zip": {
+                "type": "string"
+              },
+              "address_country": {
                 "type": "string"
               },
               "phone": {

@@ -1,9 +1,11 @@
 <template>
   <select
+    ref="select_el"
     class="_sgSelectField"
     :value="normalized_value"
     :required="required"
     :disabled="disabled"
+    :autofocus="autofocus"
     @change="onValueChange"
     @keyup.enter.exact="onEnterKeyup"
   >
@@ -47,6 +49,10 @@ export default {
     empty_label: {
       type: String,
       default: "-",
+    },
+    autofocus: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {
@@ -106,7 +112,14 @@ export default {
       immediate: true,
     },
   },
+  mounted() {
+    if (this.autofocus) this.focusSelect();
+  },
   methods: {
+    focusSelect() {
+      const el = this.$refs.select_el;
+      if (el && typeof el.focus === "function") el.focus();
+    },
     onEnterKeyup() {
       if (this.disabled) return;
       this.$emit("enterSubmit");

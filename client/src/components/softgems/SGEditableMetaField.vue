@@ -191,6 +191,7 @@ export default {
           required_empty_hint: mt.required_empty_hint || "",
           is_saving: !!mt.is_saving,
           external_warning: mt.external_warning || "",
+          options: Array.isArray(mt.options) ? mt.options : [],
         };
       }
       return this.editor_props;
@@ -217,7 +218,10 @@ export default {
       if (open) {
         this.footer_save_disabled = true;
         this.editor_loading = false;
-        this.$nextTick(() => this.syncFooterFromEditorRef());
+        this.$nextTick(() => {
+          this.syncFooterFromEditorRef();
+          this.focusSimpleInputSelect();
+        });
       }
     },
     resolved_editor_component() {

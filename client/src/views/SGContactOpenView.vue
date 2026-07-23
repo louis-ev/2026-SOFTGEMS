@@ -62,17 +62,72 @@
         <div class="_fieldsGrid">
           <div class="_fullWidthField">
             <SGEditableMetaField
-              :label="$t('sg_company_address')"
+              :label="$t('sg_address_street')"
               icon="geo-alt"
-              :value="edited_address"
-              :is_flashing="isFieldFlashing(flashCompanyFieldKey('address'))"
-              :modal_open="company_detail_modal_open('address')"
+              :value="edited_address_street"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('address_street'))
+              "
+              :modal_open="company_detail_modal_open('address_street')"
               :modal_title="contact_edit_modal_title"
               :modal_is_loading="
-                company_detail_modal_saving('address')
+                company_detail_modal_saving('address_street')
               "
-              :meta_text="company_field_meta_text('address')"
-              @presentClick="openCompanyDetailModal('address')"
+              :meta_text="company_field_meta_text('address_street')"
+              @presentClick="openCompanyDetailModal('address_street')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
+            />
+          </div>
+          <div>
+            <SGEditableMetaField
+              :label="$t('sg_address_city')"
+              icon="geo-alt"
+              :value="edited_address_city"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('address_city'))
+              "
+              :modal_open="company_detail_modal_open('address_city')"
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="company_detail_modal_saving('address_city')"
+              :meta_text="company_field_meta_text('address_city')"
+              @presentClick="openCompanyDetailModal('address_city')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
+            />
+          </div>
+          <div>
+            <SGEditableMetaField
+              :label="$t('sg_address_zip')"
+              icon="geo-alt"
+              :value="edited_address_zip"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('address_zip'))
+              "
+              :modal_open="company_detail_modal_open('address_zip')"
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="company_detail_modal_saving('address_zip')"
+              :meta_text="company_field_meta_text('address_zip')"
+              @presentClick="openCompanyDetailModal('address_zip')"
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
+            />
+          </div>
+          <div class="_fullWidthField">
+            <SGEditableMetaField
+              :label="$t('sg_address_country')"
+              icon="geo-alt"
+              :value="edited_address_country"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('address_country'))
+              "
+              :modal_open="company_detail_modal_open('address_country')"
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="
+                company_detail_modal_saving('address_country')
+              "
+              :meta_text="company_field_meta_text('address_country')"
+              @presentClick="openCompanyDetailModal('address_country')"
               @close="closeContactEditModal"
               @save="onContactEditModalSave"
             />
@@ -208,11 +263,36 @@
               />
             </div>
             <div class="_fullWidthField">
-              <DLabel :str="$t('sg_person_address')" icon="geo-alt" />
+              <DLabel :str="$t('sg_address_street')" icon="geo-alt" />
               <TextInput
-                :content.sync="new_person_address"
+                :content.sync="new_person_address_street"
                 :required="false"
                 @update:content="onNewPersonInput"
+              />
+            </div>
+            <div>
+              <DLabel :str="$t('sg_address_city')" icon="geo-alt" />
+              <TextInput
+                :content.sync="new_person_address_city"
+                :required="false"
+                @update:content="onNewPersonInput"
+              />
+            </div>
+            <div>
+              <DLabel :str="$t('sg_address_zip')" icon="geo-alt" />
+              <TextInput
+                :content.sync="new_person_address_zip"
+                :required="false"
+                @update:content="onNewPersonInput"
+              />
+            </div>
+            <div class="_fullWidthField">
+              <DLabel :str="$t('sg_address_country')" icon="geo-alt" />
+              <SGSelectField
+                :value="new_person_address_country"
+                :options="address_country_select_options"
+                :allow_empty="true"
+                @input="onNewPersonAddressCountryInput"
               />
             </div>
             <div>
@@ -336,26 +416,99 @@
               </div>
               <div class="_fullWidthField">
                 <SGEditableMetaField
-                  :label="$t('sg_person_address')"
+                  :label="$t('sg_address_street')"
                   icon="geo-alt"
-                  :value="personField(person, 'address')"
+                  :value="personField(person, 'address_street')"
                   :is_flashing="
                     isFieldFlashing(
-                      personFieldFlashKey(person, 'address')
+                      personFieldFlashKey(person, 'address_street')
                     )
                   "
                   :modal_open="
-                    person_detail_modal_open(person, 'address')
+                    person_detail_modal_open(person, 'address_street')
                   "
                   :modal_title="contact_edit_modal_title"
                   :modal_is_loading="
-                    person_detail_modal_saving(person, 'address')
+                    person_detail_modal_saving(person, 'address_street')
                   "
                   :meta_text="
-                    person_field_meta_text(person, 'address')
+                    person_field_meta_text(person, 'address_street')
                   "
                   @presentClick="
-                    openPersonDetailModal(person, 'address')
+                    openPersonDetailModal(person, 'address_street')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
+                />
+              </div>
+              <div>
+                <SGEditableMetaField
+                  :label="$t('sg_address_city')"
+                  icon="geo-alt"
+                  :value="personField(person, 'address_city')"
+                  :is_flashing="
+                    isFieldFlashing(
+                      personFieldFlashKey(person, 'address_city')
+                    )
+                  "
+                  :modal_open="
+                    person_detail_modal_open(person, 'address_city')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'address_city')
+                  "
+                  :meta_text="person_field_meta_text(person, 'address_city')"
+                  @presentClick="
+                    openPersonDetailModal(person, 'address_city')
+                  "
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
+                />
+              </div>
+              <div>
+                <SGEditableMetaField
+                  :label="$t('sg_address_zip')"
+                  icon="geo-alt"
+                  :value="personField(person, 'address_zip')"
+                  :is_flashing="
+                    isFieldFlashing(
+                      personFieldFlashKey(person, 'address_zip')
+                    )
+                  "
+                  :modal_open="person_detail_modal_open(person, 'address_zip')"
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'address_zip')
+                  "
+                  :meta_text="person_field_meta_text(person, 'address_zip')"
+                  @presentClick="openPersonDetailModal(person, 'address_zip')"
+                  @close="closeContactEditModal"
+                  @save="onContactEditModalSave"
+                />
+              </div>
+              <div class="_fullWidthField">
+                <SGEditableMetaField
+                  :label="$t('sg_address_country')"
+                  icon="geo-alt"
+                  :value="personField(person, 'address_country')"
+                  :is_flashing="
+                    isFieldFlashing(
+                      personFieldFlashKey(person, 'address_country')
+                    )
+                  "
+                  :modal_open="
+                    person_detail_modal_open(person, 'address_country')
+                  "
+                  :modal_title="contact_edit_modal_title"
+                  :modal_is_loading="
+                    person_detail_modal_saving(person, 'address_country')
+                  "
+                  :meta_text="
+                    person_field_meta_text(person, 'address_country')
+                  "
+                  @presentClick="
+                    openPersonDetailModal(person, 'address_country')
                   "
                   @close="closeContactEditModal"
                   @save="onContactEditModalSave"
@@ -403,6 +556,11 @@ import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import RemoveMenu2 from "@/adc-core/fields/RemoveMenu2.vue";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
+import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import {
+  contact_address_country_options,
+  readContactAddressFields,
+} from "@/utils/contact_address.js";
 
 export default {
   name: "SGContactOpenView",
@@ -411,6 +569,7 @@ export default {
     SGEditableMetaField,
     SGFolderMetaPeek,
     SGSectionPanel,
+    SGSelectField,
     RemoveMenu2,
   },
   props: {
@@ -424,7 +583,10 @@ export default {
       address_book_path: "address_book",
       contact: null,
       edited_name: "",
-      edited_address: "",
+      edited_address_street: "",
+      edited_address_city: "",
+      edited_address_zip: "",
+      edited_address_country: "",
       edited_phone: "",
       edited_company_email: "",
       edited_tva_number: "",
@@ -441,7 +603,10 @@ export default {
       new_person_last_name: "",
       new_person_first_name: "",
       new_person_email: "",
-      new_person_address: "",
+      new_person_address_street: "",
+      new_person_address_city: "",
+      new_person_address_zip: "",
+      new_person_address_country: "",
       new_person_phone: "",
       is_creating_company_person: false,
       contact_edit_modal: null,
@@ -523,6 +688,9 @@ export default {
     contact_guest_action_hint() {
       return this.connected_as ? "" : this.$t("sg_action_requires_account");
     },
+    address_country_select_options() {
+      return contact_address_country_options;
+    },
   },
   watch: {
     contact_slug: {
@@ -577,15 +745,12 @@ export default {
       );
     },
     company_field_meta_text(meta_key) {
-      return {
+      return this.build_meta_text_payload({
         meta_path: this.contact_path,
         field_key: meta_key,
         stored_value: this.stored_string_field(meta_key),
         is_saving: this.company_detail_modal_saving(meta_key),
-        required: false,
-        required_empty_hint: "",
-        external_warning: "",
-      };
+      });
     },
     person_detail_modal_open(person, field_key) {
       const slug = this.personSlugFromFolder(person);
@@ -615,7 +780,7 @@ export default {
     person_field_meta_text(person, field_key) {
       const slug = this.personSlugFromFolder(person);
       const person_path = slug ? `${this.company_contacts_path}/${slug}` : "";
-      return {
+      return this.build_meta_text_payload({
         meta_path: person_path,
         field_key,
         stored_value: this.person_stored_comparison_string(person, field_key),
@@ -625,8 +790,30 @@ export default {
           field_key === "last_name"
             ? this.$t("sg_person_last_name_required")
             : "",
-        external_warning: "",
+      });
+    },
+    build_meta_text_payload({
+      meta_path,
+      field_key,
+      stored_value,
+      is_saving,
+      required = false,
+      required_empty_hint = "",
+      external_warning = "",
+    }) {
+      const payload = {
+        meta_path,
+        field_key,
+        stored_value,
+        is_saving,
+        required,
+        required_empty_hint,
+        external_warning,
       };
+      if (field_key === "address_country") {
+        payload.options = this.address_country_select_options;
+      }
+      return payload;
     },
     openCompanyDetailModal(meta_key) {
       if (!this.connected_as || !this.is_company || !this.clean_string(meta_key))
@@ -673,7 +860,10 @@ export default {
     },
     company_details_field_label(meta_key) {
       const labels = {
-        address: this.$t("sg_company_address"),
+        address_street: this.$t("sg_address_street"),
+        address_city: this.$t("sg_address_city"),
+        address_zip: this.$t("sg_address_zip"),
+        address_country: this.$t("sg_address_country"),
         phone: this.$t("sg_company_phone"),
         company_email: this.$t("sg_company_email"),
         tva_number: this.$t("sg_company_tva_number"),
@@ -686,7 +876,10 @@ export default {
         last_name: this.$t("sg_person_last_name"),
         first_name: this.$t("sg_person_first_name"),
         email: this.$t("sg_person_email"),
-        address: this.$t("sg_person_address"),
+        address_street: this.$t("sg_address_street"),
+        address_city: this.$t("sg_address_city"),
+        address_zip: this.$t("sg_address_zip"),
+        address_country: this.$t("sg_address_country"),
         phone: this.$t("sg_person_phone"),
       };
       return labels[meta_key] || "";
@@ -711,7 +904,10 @@ export default {
     assign_company_detail_value_from_modal(meta_key, raw_string) {
       const v =
         typeof raw_string === "string" ? raw_string : String(raw_string || "");
-      if (meta_key === "address") this.edited_address = v;
+      if (meta_key === "address_street") this.edited_address_street = v;
+      else if (meta_key === "address_city") this.edited_address_city = v;
+      else if (meta_key === "address_zip") this.edited_address_zip = v;
+      else if (meta_key === "address_country") this.edited_address_country = v;
       else if (meta_key === "phone") this.edited_phone = v;
       else if (meta_key === "company_email") this.edited_company_email = v;
       else if (meta_key === "tva_number") this.edited_tva_number = v;
@@ -719,7 +915,10 @@ export default {
         this.edited_tva_attestation = v;
     },
     company_detail_edited_value(meta_key) {
-      if (meta_key === "address") return this.edited_address;
+      if (meta_key === "address_street") return this.edited_address_street;
+      if (meta_key === "address_city") return this.edited_address_city;
+      if (meta_key === "address_zip") return this.edited_address_zip;
+      if (meta_key === "address_country") return this.edited_address_country;
       if (meta_key === "phone") return this.edited_phone;
       if (meta_key === "company_email") return this.edited_company_email;
       if (meta_key === "tva_number") return this.edited_tva_number;
@@ -761,7 +960,11 @@ export default {
     },
     populate_company_editors_from_contact() {
       const c = this.contact;
-      this.edited_address = this.string_from_contact(c, "address");
+      const address_fields = readContactAddressFields(c);
+      this.edited_address_street = address_fields.address_street;
+      this.edited_address_city = address_fields.address_city;
+      this.edited_address_zip = address_fields.address_zip;
+      this.edited_address_country = address_fields.address_country;
       this.edited_phone = this.string_from_contact(c, "phone");
       this.edited_company_email = this.string_from_contact(c, "company_email");
       this.edited_tva_number = this.string_from_contact(c, "tva_number");
@@ -925,7 +1128,10 @@ export default {
           last_name: "",
           first_name: "",
           email: "",
-          address: "",
+          address_street: "",
+          address_city: "",
+          address_zip: "",
+          address_country: "",
           phone: "",
         });
       }
@@ -963,10 +1169,18 @@ export default {
       this.new_person_last_name = "";
       this.new_person_first_name = "";
       this.new_person_email = "";
-      this.new_person_address = "";
+      this.new_person_address_street = "";
+      this.new_person_address_city = "";
+      this.new_person_address_zip = "";
+      this.new_person_address_country = "";
       this.new_person_phone = "";
     },
     onNewPersonInput() {},
+    onNewPersonAddressCountryInput(value) {
+      this.new_person_address_country =
+        value === null || value === undefined ? "" : String(value);
+      this.onNewPersonInput();
+    },
     person_requested_slug_basis(last_name_raw, first_name_raw) {
       const last_name = this.clean_string(last_name_raw);
       const first_name = this.clean_string(first_name_raw);
@@ -1004,13 +1218,17 @@ export default {
         for (const folder of list) {
           const slug = this.personSlugFromFolder(folder);
           if (!slug) continue;
+          const address_fields = readContactAddressFields(folder);
           buffers[slug] = {
             last_name:
               this.string_from_contact(folder, "last_name") ||
               this.string_from_contact(folder, "full_name"),
             first_name: this.string_from_contact(folder, "first_name"),
             email: this.string_from_contact(folder, "email"),
-            address: this.string_from_contact(folder, "address"),
+            address_street: address_fields.address_street,
+            address_city: address_fields.address_city,
+            address_zip: address_fields.address_zip,
+            address_country: address_fields.address_country,
             phone: this.string_from_contact(folder, "phone"),
           };
         }
@@ -1044,7 +1262,10 @@ export default {
             last_name,
             first_name,
             email: this.clean_string(this.new_person_email),
-            address: this.clean_string(this.new_person_address),
+            address_street: this.clean_string(this.new_person_address_street),
+            address_city: this.clean_string(this.new_person_address_city),
+            address_zip: this.clean_string(this.new_person_address_zip),
+            address_country: this.clean_string(this.new_person_address_country),
             phone: this.clean_string(this.new_person_phone),
             requested_slug: slug_basis,
           },

@@ -1,18 +1,37 @@
 <template>
   <div class="_metaTextEditor">
     <DLabel :str="label" :icon="label_icon || null" />
+    <SGSelectField
+      v-if="has_select_options"
+      ref="primary_field_ref"
+      :value="draft"
+      :options="options"
+      :allow_empty="!required"
+      :required="required"
+      :disabled="is_saving"
+      :autofocus="true"
+      @input="onSelectInput"
+      @enterSubmit="onSingleLineEnter"
+    />
     <TextInput
+      v-else
       :content.sync="draft"
       :required="required"
       :autofocus="true"
       @update:content="onDraftInput"
       @onEnter="onSingleLineEnter"
     />
-    <p v-if="required_field_hint" class="_fieldError">{{ required_field_hint }}</p>
+    <p v-if="required_field_hint" class="_fieldError">
+      {{ required_field_hint }}
+    </p>
     <p v-if="external_warning" class="u-warning _externalWarning" role="alert">
       {{ external_warning }}
     </p>
-    <p v-if="remote_update_notice" class="u-warning _remoteNotice" role="status">
+    <p
+      v-if="remote_update_notice"
+      class="u-warning _remoteNotice"
+      role="status"
+    >
       {{ remote_update_notice }}
     </p>
 
@@ -29,12 +48,14 @@
 
 <script>
 import SGFieldHistoryPanel from "@/components/softgems/SGFieldHistoryPanel.vue";
+import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import { extract_field_entries } from "@/utils/field_history.js";
 
 export default {
   name: "SGSimpleMetaTextEditor",
   components: {
     SGFieldHistoryPanel,
+    SGSelectField,
   },
   props: {
     label: {
@@ -82,6 +103,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    options: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
@@ -95,6 +120,9 @@ export default {
     };
   },
   computed: {
+    has_select_options() {
+      return Array.isArray(this.options) && this.options.length > 0;
+    },
     has_field_history() {
       return (
         typeof this.history_path === "string" &&
@@ -150,6 +178,7 @@ export default {
   },
   mounted() {
     this.emitFooterState();
+    this.focusInputSelect();
   },
   methods: {
     onParentStoredSnapshotChanged() {
@@ -209,8 +238,7 @@ export default {
         entry && Object.prototype.hasOwnProperty.call(entry, "value")
           ? entry.value
           : "";
-      this.draft =
-        raw === null || raw === undefined ? "" : String(raw);
+      this.draft = raw === null || raw === undefined ? "" : String(raw);
       this.onDraftInput();
     },
     clean_string(value) {
@@ -225,6 +253,10 @@ export default {
       this.attempted_save_without_value = false;
       this.remote_update_notice = "";
       this.$emit("draftChange");
+    },
+    onSelectInput(value) {
+      this.draft = value === null || value === undefined ? "" : String(value);
+      this.onDraftInput();
     },
     onSingleLineEnter() {
       if (this.multiline) return;
@@ -252,9 +284,20 @@ export default {
     },
     focusInputSelect() {
       this.$nextTick(() => {
+        const select_ref = this.$refs.primary_field_ref;
+        if (select_ref && typeof select_ref.focusSelect === "function") {
+          select_ref.focusSelect();
+          return;
+        }
         const el =
-          this.$el && this.$el.querySelector(".u-inputGroup input");
-        if (el && typeof el.select === "function") el.select();
+          this.$el &&
+          this.$el.querySelector(
+            this.has_select_options ? "._sgSelectField" : ".u-inputGroup input"
+          );
+        if (el && typeof el.focus === "function") el.focus();
+        if (el && !this.has_select_options && typeof el.select === "function") {
+          el.select();
+        }
       });
     },
   },

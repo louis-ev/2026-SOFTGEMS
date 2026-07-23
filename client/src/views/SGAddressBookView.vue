@@ -79,9 +79,9 @@
                     <td class="_colAddress">
                       <span
                         class="_cellText"
-                        :title="contactFieldDisplay(contact, 'address')"
+                        :title="contactAddressDisplay(contact)"
                       >
-                        {{ contactFieldDisplay(contact, "address") }}
+                        {{ contactAddressDisplay(contact) }}
                       </span>
                     </td>
                     <td class="_colPhone">
@@ -108,6 +108,7 @@
 
 <script>
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
+import { formatContactAddress } from "@/utils/contact_address.js";
 
 export default {
   name: "SGAddressBookView",
@@ -185,6 +186,9 @@ export default {
       const raw = contact[field_key];
       if (typeof raw !== "string") return "";
       return this.cleanString(raw);
+    },
+    contactAddressDisplay(contact) {
+      return formatContactAddress(contact);
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";

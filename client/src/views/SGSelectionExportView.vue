@@ -46,6 +46,7 @@ import {
   parseAddressBookPath,
   splitCounterpartyPath,
 } from "@/utils/address_book_paths.js";
+import { formatContactAddressMultiline } from "@/utils/contact_address.js";
 import {
   normalizeSelectionGemPaths,
   sortSelectionGems,
@@ -236,7 +237,7 @@ export default {
         try {
           const contact = await this.getFolderPublic(contact_path);
           contact_name = formatAddressBookContactLabel(contact);
-          contact_address = this.cleanString(contact?.address);
+          contact_address = formatContactAddressMultiline(contact);
         } catch {
           contact_name = contact_path.split("/").pop() || contact_path;
         }
@@ -247,7 +248,7 @@ export default {
         try {
           const person = await this.getFolderPublic(person_path);
           person_name = formatPersonDisplayName(person);
-          person_address = this.cleanString(person?.address);
+          person_address = formatContactAddressMultiline(person);
         } catch {
           person_name = person_path.split("/").pop() || person_path;
         }
