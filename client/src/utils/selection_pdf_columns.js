@@ -18,6 +18,75 @@ export const selection_pdf_description_column_key =
 export const selection_pdf_per_carat_column_key =
   selection_pdf_virtual_column_keys.per_carat;
 
+/** Printable table width inside A4 margins (210mm − 2×10mm padding). */
+export const selection_pdf_page_content_width_mm = 190;
+
+/** Fixed column widths in the PDF table (mm). Keep aligned with SGSelectionPdfDocument styles. */
+export const selection_pdf_column_width_mm = Object.freeze({
+  no: 7,
+  ref: 12,
+  photo: 16,
+  numeric: 16,
+  price: 16,
+});
+
+/**
+ * @param {string} metadata_key
+ * @returns {number|null} mm, or null for the flexible description column
+ */
+export function selectionPdfColumnWidthMm(metadata_key) {
+  if (metadata_key === selection_pdf_description_column_key) return null;
+  if (metadata_key === selection_pdf_photo_column_key) {
+    return selection_pdf_column_width_mm.photo;
+  }
+  if (
+    metadata_key === selection_pdf_per_carat_column_key ||
+    gem_pricing_total_column_keys.includes(metadata_key)
+  ) {
+    return selection_pdf_column_width_mm.price;
+  }
+  if (metadata_key === "number_of_pieces" || metadata_key === "weight_ct") {
+    return selection_pdf_column_width_mm.numeric;
+  }
+  if (metadata_key === "id") return selection_pdf_column_width_mm.ref;
+  return selection_pdf_column_width_mm.ref;
+}
+
+/**
+ * Column width percentages for table-layout: fixed (N° + metadata columns).
+ * @param {string[]} metadata_keys
+ * @returns {{ key: string, percent: number }[]}
+ */
+export function selectionPdfTableColPercents(metadata_keys) {
+  const keys = Array.isArray(metadata_keys) ? metadata_keys : [];
+  const content_width_mm = selection_pdf_page_content_width_mm;
+  let fixed_mm = selection_pdf_column_width_mm.no;
+  keys.forEach((metadata_key) => {
+    const width_mm = selectionPdfColumnWidthMm(metadata_key);
+    if (width_mm !== null) fixed_mm += width_mm;
+  });
+  const description_percent =
+    ((content_width_mm - fixed_mm) / content_width_mm) * 100;
+
+  const cols = [
+    {
+      key: "__no__",
+      percent: (selection_pdf_column_width_mm.no / content_width_mm) * 100,
+    },
+  ];
+  keys.forEach((metadata_key) => {
+    const width_mm = selectionPdfColumnWidthMm(metadata_key);
+    cols.push({
+      key: metadata_key,
+      percent:
+        width_mm === null
+          ? description_percent
+          : (width_mm / content_width_mm) * 100,
+    });
+  });
+  return cols;
+}
+
 /**
  * @param {string} metadata_key
  * @returns {number}

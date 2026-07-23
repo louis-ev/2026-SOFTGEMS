@@ -27,25 +27,49 @@
     <div v-else class="_body">
       <p class="_instructions">{{ $t("sg_pdf_export_modal_instructions") }}</p>
 
+      <div class="_pricingSection">
+        <label class="_pricingLabel" for="pdf-export-pricing-select">
+          {{ $t("sg_pdf_export_pricing_line") }}
+        </label>
+        <SGSelectField
+          id="pdf-export-pricing-select"
+          :value="selected_pricing_key"
+          :options="pricing_select_options"
+          :allow_empty="true"
+          :empty_label="$t('sg_pdf_export_no_pricing')"
+          @input="selected_pricing_key = $event"
+        />
+      </div>
+
       <div class="_columnsHeader">
         <span>{{ $t("sg_pdf_export_columns_title") }}</span>
       </div>
-      <table class="_columnsList">
-        <thead>
-          <tr>
-            <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
-            <th
-              v-for="metadata_key in export_column_keys"
-              :key="metadata_key"
-              :class="columnClass(metadata_key)"
-            >
-              {{ columnLabel(metadata_key) }}
-            </th>
-          </tr>
-        </thead>
-      </table>
+      <div class="_columnsPreview">
+        <table class="_columnsList">
+          <colgroup>
+            <col
+              v-for="col in export_table_col_widths"
+              :key="col.key"
+              :style="{ width: `${col.percent}%` }"
+            />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
+              <th
+                v-for="metadata_key in export_column_keys"
+                :key="metadata_key"
+                :class="columnClass(metadata_key)"
+              >
+                {{ columnLabel(metadata_key) }}
+              </th>
+            </tr>
+          </thead>
+        </table>
+      </div>
 
       <SGSelectionPdfBankFootersEditor
+        v-if="has_pricing_selected"
         :presets="bank_footer_presets_draft"
         :selected_id="selected_bank_footer_id"
         :can_edit="can_edit_bank_footer"
@@ -115,9 +139,16 @@ import {
   selection_pdf_per_carat_column_key,
   selection_pdf_photo_column_key,
   selectionPdfColumnHeaderLabel,
+  selectionPdfTableColPercents,
 } from "@/utils/selection_pdf_columns.js";
-import { selectionPdfExportColumnKeys } from "@/utils/selection_pdf_export_registry.js";
+import {
+  buildSelectionPdfColumnKeys,
+  selection_pdf_pricing_label_keys,
+  SELECTION_PDF_PRICING_OPTION_KEYS,
+  selectionPdfExportPricingKey,
+} from "@/utils/selection_pdf_export_registry.js";
 import SGSelectionPdfBankFootersEditor from "@/components/selections/SGSelectionPdfBankFootersEditor.vue";
+import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import {
   SELECTION_PDF_BANK_FOOTER_EN,
   coerceSelectionPdfBankFooterSelection,
@@ -138,6 +169,7 @@ export default {
   mixins: [Medias, Authors],
   components: {
     SGSelectionPdfBankFootersEditor,
+    SGSelectField,
   },
   props: {
     selection_folder_path: {
@@ -180,6 +212,7 @@ export default {
       selected_bank_footer_id: "",
       is_saving_bank_footer: false,
       bank_footer_save_pending: false,
+      selected_pricing_key: "",
     };
   },
   computed: {
@@ -197,7 +230,22 @@ export default {
       return parsed.folder_slug || "";
     },
     export_column_keys() {
-      return selectionPdfExportColumnKeys(this.selection?.selection_type);
+      const pricing_key = String(this.selected_pricing_key || "").trim();
+      return buildSelectionPdfColumnKeys(pricing_key || null);
+    },
+    export_table_col_widths() {
+      return selectionPdfTableColPercents(this.export_column_keys);
+    },
+    has_pricing_selected() {
+      return Boolean(String(this.selected_pricing_key || "").trim());
+    },
+    pricing_select_options() {
+      return SELECTION_PDF_PRICING_OPTION_KEYS.map((pricing_key) => ({
+        value: pricing_key,
+        label: this.$t(
+          selection_pdf_pricing_label_keys[pricing_key] || pricing_key
+        ),
+      }));
     },
     export_currency() {
       return String(this.selection?.currency || "USD").trim() || "USD";
@@ -239,11 +287,21 @@ export default {
     },
   },
   async created() {
+    this.resetPricingSelection();
     this.previous_main_document_path =
       findSelectionMainDocumentFile(this.selection)?.$path || "";
     await Promise.all([this.loadEntryGems(), this.loadInstanceSettings()]);
   },
   methods: {
+    defaultPricingKeyValue() {
+      const default_key = selectionPdfExportPricingKey(
+        this.selection?.selection_type
+      );
+      return default_key ? String(default_key) : "";
+    },
+    resetPricingSelection() {
+      this.selected_pricing_key = this.defaultPricingKeyValue();
+    },
     async loadInstanceSettings() {
       let presets = readSelectionPdfBankFootersEn(
         this.$root?.app_infos?.instance_meta
@@ -398,7 +456,9 @@ export default {
         suggested_file_name: this.buildSuggestedFilename(),
         selection_pdf_export: {
           metadata_keys: this.export_column_keys,
-          bank_footer_id: this.selected_bank_footer_id,
+          bank_footer_id: this.has_pricing_selected
+            ? this.selected_bank_footer_id
+            : "",
         },
         additional_meta: {
           is_selection_generated_pdf: true,
@@ -510,6 +570,7 @@ export default {
       this.fail_message = "";
       this.task_progress = 0;
       this.created_doc = null;
+      this.resetPricingSelection();
       if (had_created_doc) {
         this.$emit("exported");
       }
@@ -536,9 +597,24 @@ export default {
   color: var(--c-gris_fonce);
 }
 
+._pricingSection {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 4);
+}
+
+._pricingLabel {
+  font-weight: 600;
+}
+
 ._columnsHeader {
   font-weight: 600;
   margin-top: calc(var(--spacing) / 2);
+}
+
+._columnsPreview {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 ._columnsList {
@@ -550,38 +626,45 @@ export default {
 
 ._columnsList th {
   border: 1px solid #333;
-  padding: 0.35rem 0.4rem;
+  padding: 0.35rem 0.25rem;
   vertical-align: middle;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   background: #f4f4f4;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 ._colNo {
-  width: 2.5rem;
   text-align: center;
 }
 
 ._colPhoto {
-  width: 3.5rem;
   text-align: center;
 }
 
 ._colDescription {
-  width: auto;
+  white-space: normal;
+  text-align: left;
 }
 
 ._colPrice,
 ._colNumeric {
-  width: 3.5rem;
   text-align: right;
 }
 
 ._colDefault {
-  width: 2.75rem;
   text-align: center;
+}
+
+._colNo,
+._colPhoto,
+._colPrice,
+._colNumeric,
+._colDefault {
+  white-space: nowrap;
 }
 
 ._exporting,

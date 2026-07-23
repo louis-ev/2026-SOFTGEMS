@@ -413,7 +413,7 @@ export default {
   sg_pdf_export_columns_title: "Columns in this PDF",
   sg_pdf_export_bank_footer_title: "Bank / payment footer",
   sg_pdf_export_bank_footer_hint:
-    "Shown under the table in the exported PDF. The first footer is selected by default when exporting.",
+    "Shown under the table in the exported PDF when a price line is selected. The first footer is selected by default when exporting.",
   sg_pdf_export_bank_footer_internal_name_placeholder: "Internal name",
   sg_pdf_export_bank_footer_untitled: "Untitled footer",
   sg_pdf_export_bank_footer_placeholder:

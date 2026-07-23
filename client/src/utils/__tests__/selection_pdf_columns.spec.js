@@ -5,6 +5,7 @@ import {
   encodeSelectionPdfExportQuery,
   resolveSelectionPdfExportPrefs,
   selectionPdfColumnHeaderLabel,
+  selectionPdfTableColPercents,
   selection_pdf_max_column_units,
 } from "@/utils/selection_pdf_columns.js";
 import {
@@ -16,10 +17,13 @@ import { pdfShapeAbbreviation } from "@/suggestions/softgems/pdf_shape_abbreviat
 import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
 
 describe("selectionPdfExportEnabled", () => {
-  it("enables memo out and excludes memo in", () => {
+  it("enables all selection types including simple and memo in", () => {
     expect(selectionPdfExportEnabled("memo out")).toBe(true);
-    expect(selectionPdfExportEnabled("memo in")).toBe(false);
-    expect(selectionPdfExportEnabled("simple")).toBe(false);
+    expect(selectionPdfExportEnabled("simple")).toBe(true);
+    expect(selectionPdfExportEnabled("boîte")).toBe(true);
+    expect(selectionPdfExportEnabled("memo in")).toBe(true);
+    expect(selectionPdfExportEnabled("importation")).toBe(true);
+    expect(selectionPdfExportEnabled("")).toBe(false);
   });
 });
 
@@ -40,6 +44,18 @@ describe("selection pdf fixed columns", () => {
     expect(keys).not.toContain("pc_to");
   });
 
+  it("builds columns from an explicit pricing override", () => {
+    const keys = selectionPdfExportColumnKeys("boîte", "pv_selling_price");
+    expect(keys).toContain("$per_carat");
+    expect(keys).toContain("pv_selling_price");
+    expect(selectionPdfExportColumnKeys("boîte", null)).toEqual(
+      selectionPdfExportColumnKeys("boîte")
+    );
+    expect(selectionPdfExportColumnKeys("boîte", "")).toEqual(
+      selectionPdfExportColumnKeys("boîte")
+    );
+  });
+
   it("resolves prefs from the registry only", () => {
     const prefs = resolveSelectionPdfExportPrefs("sale invoice");
     expect(prefs.metadata_keys).toEqual(
@@ -56,6 +72,26 @@ describe("selection pdf fixed columns", () => {
     expect(selectionPdfColumnHeaderLabel("pf_invoiced_price", "USD")).toBe(
       "Total USD"
     );
+  });
+
+  it("assigns table column percents that sum to 100", () => {
+    const priced = selectionPdfTableColPercents(
+      selectionPdfExportColumnKeys("memo out")
+    );
+    const priced_sum = priced.reduce((sum, col) => sum + col.percent, 0);
+    expect(priced_sum).toBeCloseTo(100, 5);
+    expect(priced.find((col) => col.key === "$description")?.percent).toBeGreaterThan(
+      40
+    );
+
+    const unpriced = selectionPdfTableColPercents(
+      selectionPdfExportColumnKeys("boîte")
+    );
+    const unpriced_sum = unpriced.reduce((sum, col) => sum + col.percent, 0);
+    expect(unpriced_sum).toBeCloseTo(100, 5);
+    expect(
+      unpriced.find((col) => col.key === "$description")?.percent
+    ).toBeGreaterThan(priced.find((col) => col.key === "$description")?.percent);
   });
 
   it("encodes and decodes bank_footer_id in export query", () => {

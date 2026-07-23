@@ -1,4 +1,6 @@
+import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
 import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
+import { SELECTION_TYPE_VALUES } from "@/utils/selection_types.js";
 
 /** Fixed PDF export column keys (virtual + persisted). */
 export const selection_pdf_virtual_column_keys = Object.freeze({
@@ -10,20 +12,23 @@ export const selection_pdf_virtual_column_keys = Object.freeze({
 /** VAT rate applied to the pricing subtotal when a total column is present. */
 export const selection_pdf_vat_rate = 0.2;
 
-/** Stored `selection_type` values that support PDF export. */
-export const SELECTION_PDF_EXPORT_ENABLED_TYPES = Object.freeze([
-  "boîte",
-  "return memo in",
-  "buying invoice",
-  "memo out",
-  "return memo out",
-  "sale invoice",
-  "partner invoice",
-  "credit note",
-  "importation return",
+/** Total price fields offered in the PDF export pricing select. */
+export const SELECTION_PDF_PRICING_OPTION_KEYS = Object.freeze([
+  ...gem_pricing_total_column_keys,
 ]);
 
-const _enabled_type_set = new Set(SELECTION_PDF_EXPORT_ENABLED_TYPES);
+/** i18n keys for {@link SELECTION_PDF_PRICING_OPTION_KEYS} labels. */
+export const selection_pdf_pricing_label_keys = Object.freeze({
+  base_price_pcb: "sg_base_price_pcb",
+  purchased_price_pa: "sg_purchased_price_pa",
+  pv_selling_price: "sg_pv_selling_price",
+  pvd_asking_price: "sg_pvd_asking_price",
+  pc_to: "sg_pc_to",
+  pf_invoiced_price: "sg_pf_invoiced_price",
+});
+
+/** Stored `selection_type` values that support PDF export. */
+export const SELECTION_PDF_EXPORT_ENABLED_TYPES = SELECTION_TYPE_VALUES;
 
 /**
  * @param {string|null|undefined} pricing_key
@@ -46,8 +51,20 @@ export function buildSelectionPdfColumnKeys(pricing_key) {
 
 /** @type {Record<string, { document_title_key: string, legal_text_key: string, default_pricing_key: string|null, column_keys: string[] }>} */
 const _defaults_by_slug = Object.freeze({
+  simple: {
+    document_title_key: "sg_pdf_title_generic",
+    legal_text_key: "sg_pdf_legal_generic",
+    default_pricing_key: null,
+    column_keys: buildSelectionPdfColumnKeys(null),
+  },
   box: {
     document_title_key: "sg_pdf_title_box",
+    legal_text_key: "sg_pdf_legal_generic",
+    default_pricing_key: null,
+    column_keys: buildSelectionPdfColumnKeys(null),
+  },
+  "memo-in": {
+    document_title_key: "sg_pdf_title_generic",
     legal_text_key: "sg_pdf_legal_generic",
     default_pricing_key: null,
     column_keys: buildSelectionPdfColumnKeys(null),
@@ -94,6 +111,12 @@ const _defaults_by_slug = Object.freeze({
     default_pricing_key: "pf_invoiced_price",
     column_keys: buildSelectionPdfColumnKeys("pf_invoiced_price"),
   },
+  importation: {
+    document_title_key: "sg_pdf_title_generic",
+    legal_text_key: "sg_pdf_legal_generic",
+    default_pricing_key: null,
+    column_keys: buildSelectionPdfColumnKeys(null),
+  },
   "importation-return": {
     document_title_key: "sg_pdf_title_importation_return",
     legal_text_key: "sg_pdf_legal_generic",
@@ -110,7 +133,7 @@ export const SELECTION_PDF_ACF_FOOTER_LINES = Object.freeze([
 
 /** @param {string} selection_type */
 export function selectionPdfExportEnabled(selection_type) {
-  return _enabled_type_set.has(String(selection_type || "").trim());
+  return SELECTION_TYPE_VALUES.includes(String(selection_type || "").trim());
 }
 
 /** @param {string} selection_type */
@@ -126,8 +149,14 @@ export function selectionPdfExportDefaults(selection_type) {
   );
 }
 
-/** @param {string} selection_type */
-export function selectionPdfExportColumnKeys(selection_type) {
+/**
+ * @param {string} selection_type
+ * @param {string|null|undefined} [pricing_key] When set, builds columns for that price line (empty/null = none).
+ */
+export function selectionPdfExportColumnKeys(selection_type, pricing_key) {
+  if (pricing_key !== undefined) {
+    return buildSelectionPdfColumnKeys(pricing_key);
+  }
   return selectionPdfExportDefaults(selection_type).column_keys;
 }
 
