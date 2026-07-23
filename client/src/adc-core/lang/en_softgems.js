@@ -51,7 +51,7 @@ export default {
   sg_no_certificates_yet:
     "No certificates yet. Upload a PDF certificate to add one.",
   sg_certificate_pdf_only: "Certificates must be PDF files only.",
-  sg_certificate_provider: "Provider (address book)",
+  sg_certificate_provider: "Provider",
   sg_certificate_reference: "Report / reference No.",
   sg_certificate_date: "Date",
   sg_certificate_price: "Price",

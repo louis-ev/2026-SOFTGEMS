@@ -1,7 +1,7 @@
 <template>
   <div class="_gemFieldEditorBody">
     <DLabel
-      v-if="!active_pricing_pair"
+      v-if="!active_pricing_pair && !active_address_book_counterparty"
       :str="field.label"
       :icon="field.icon"
     />
@@ -19,6 +19,12 @@
         :disabled="auxiliary_disable"
         @input="onEditorInput"
         @enterSubmit="onEnterSubmitFromShell"
+      />
+      <SGSelectionCounterpartyEditor
+        v-else-if="field.type === 'address_book_counterparty'"
+        ref="address_book_counterparty_editor_ref"
+        :initial_value="address_book_counterparty_initial_value"
+        @footerStateChange="onCounterpartyFooterStateChange"
       />
       <div v-else-if="active_pricing_pair" class="_pricingPairInputs">
         <p class="_pricingPairWeight" role="note">
@@ -151,6 +157,7 @@
 </template>
 
 <script>
+import SGSelectionCounterpartyEditor from "@/components/selections/SGSelectionCounterpartyEditor.vue";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGDateInput from "@/components/softgems/SGDateInput.vue";
 import SGFieldHistoryPanel from "@/components/softgems/SGFieldHistoryPanel.vue";
@@ -166,6 +173,7 @@ export default {
   name: "SGGemFieldEditorBody",
   mixins: [GemDimensions, GemPricing],
   components: {
+    SGSelectionCounterpartyEditor,
     SGSelectField,
     SGDateInput,
     SGFieldHistoryPanel,
@@ -210,6 +218,7 @@ export default {
       show_history: false,
       is_loading_history: false,
       field_history: [],
+      counterparty_footer_save_disabled: false,
     };
   },
   created() {
@@ -234,6 +243,14 @@ export default {
     this.emitFooterState();
   },
   computed: {
+    active_address_book_counterparty() {
+      return this.field?.type === "address_book_counterparty";
+    },
+    address_book_counterparty_initial_value() {
+      const raw = this.current_value;
+      if (raw === null || raw === undefined) return "";
+      return String(raw);
+    },
     is_date_field() {
       return is_date_input_field(this.field);
     },
@@ -341,6 +358,14 @@ export default {
       return this.field_validation.error_message;
     },
     is_footer_save_disabled() {
+      if (this.active_address_book_counterparty) {
+        return (
+          this.auxiliary_disable ||
+          this.field.readonly ||
+          this.is_committing ||
+          this.counterparty_footer_save_disabled
+        );
+      }
       return (
         this.auxiliary_disable ||
         this.field.readonly ||
@@ -726,6 +751,15 @@ export default {
       if ((this.field.input_type || "") === "editor") return;
       this.tryShellSave();
     },
+    onCounterpartyFooterStateChange(payload) {
+      if (
+        payload &&
+        Object.prototype.hasOwnProperty.call(payload, "save_disabled")
+      ) {
+        this.counterparty_footer_save_disabled = Boolean(payload.save_disabled);
+        this.emitFooterState();
+      }
+    },
     onEditorInput() {
       this.remote_update_notice = "";
     },
@@ -1102,6 +1136,12 @@ export default {
     },
     async tryShellSave() {
       if (this.is_footer_save_disabled) return false;
+      if (this.active_address_book_counterparty) {
+        const editor = this.$refs.address_book_counterparty_editor_ref;
+        if (!editor) return false;
+        this.edit_value = editor.draft_counterparty_path || "";
+        return await this.commitSave();
+      }
       return await this.commitSave();
     },
   },

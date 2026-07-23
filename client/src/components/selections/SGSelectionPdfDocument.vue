@@ -61,10 +61,9 @@
               class="_descriptionCell"
             >
               <div
-                v-for="(block, block_index) in descriptionBlocks(gem)"
-                :key="block_index"
+                v-for="(block, block_index) in descriptionContentBlocks(gem)"
+                :key="'description-' + block_index"
                 class="_descriptionLine"
-                :class="{ _descriptionCertificateLine: block.is_certificate_link }"
               >
                 <a
                   v-if="block.type === 'link' && block.href"
@@ -74,6 +73,27 @@
                   rel="noopener noreferrer"
                 >{{ block.text }}</a>
                 <span v-else>{{ block.text }}</span>
+              </div>
+              <div
+                v-if="descriptionCertificateLinks(gem).length"
+                class="_descriptionLine _descriptionCertificateLine"
+              >
+                <template
+                  v-for="(link, link_index) in descriptionCertificateLinks(gem)"
+                >
+                  <a
+                    v-if="link.href"
+                    :key="'certificate-link-' + link_index"
+                    class="_descriptionLink"
+                    :href="link.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ link.text }}</a><span
+                    v-if="link_index < descriptionCertificateLinks(gem).length - 1"
+                    :key="'certificate-sep-' + link_index"
+                    aria-hidden="true"
+                  > </span>
+                </template>
               </div>
             </div>
             <img
@@ -246,6 +266,10 @@ export default {
       type: String,
       default: "",
     },
+    certificate_provider_labels: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   data() {
     return {
@@ -345,7 +369,19 @@ export default {
       return toAbsoluteAppUrl(relative, this.media_origin);
     },
     descriptionBlocks(gem) {
-      return buildGemPdfDescriptionBlocks(gem, this.media_origin);
+      return buildGemPdfDescriptionBlocks(gem, this.media_origin, {
+        provider_labels_by_path: this.certificate_provider_labels,
+      });
+    },
+    descriptionContentBlocks(gem) {
+      return this.descriptionBlocks(gem).filter(
+        (block) => !block.is_certificate_link
+      );
+    },
+    descriptionCertificateLinks(gem) {
+      return this.descriptionBlocks(gem).filter(
+        (block) => block.is_certificate_link && block.href
+      );
     },
     formatCell(gem, metadata_key) {
       if (metadata_key === "id") return gemIdFromPath(gem);
@@ -581,6 +617,7 @@ export default {
 
 ._descriptionCertificateLine {
   margin-top: 0.4mm;
+  word-break: break-word;
 }
 
 ._cellText {

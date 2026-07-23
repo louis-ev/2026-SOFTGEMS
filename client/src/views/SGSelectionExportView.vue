@@ -18,6 +18,7 @@
       :order_number_line="order_number_line"
       :supplier_account_line="supplier_account_line"
       :bank_footer_en="bank_footer_en"
+      :certificate_provider_labels="certificate_provider_labels"
     />
   </div>
 </template>
@@ -47,6 +48,8 @@ import {
   splitCounterpartyPath,
 } from "@/utils/address_book_paths.js";
 import { resolveCounterpartyPostalAddressLines } from "@/utils/contact_address.js";
+import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
+import { gemCertificateFiles } from "@/utils/selection_pdf_description.js";
 import {
   normalizeSelectionGemPaths,
   sortSelectionGems,
@@ -76,6 +79,7 @@ export default {
       instance_settings: null,
       is_serversidepreview: false,
       images_loaded: false,
+      certificate_provider_labels: {},
     };
   },
   computed: {
@@ -211,6 +215,28 @@ export default {
         })
       );
       this.entry_gems_list = sortSelectionGems(loaded);
+      await this.resolveCertificateProviderLabels();
+    },
+    async resolveCertificateProviderLabels() {
+      const paths = [];
+      this.entry_gems_list.forEach((gem) => {
+        gemCertificateFiles(gem).forEach((certificate_file) => {
+          const path = String(certificate_file?.provider_path || "").trim();
+          if (path) paths.push(path);
+        });
+      });
+      if (!paths.length) {
+        this.certificate_provider_labels = {};
+        return;
+      }
+      try {
+        this.certificate_provider_labels = await resolveAddressBookPathLabels(
+          this.$api,
+          paths
+        );
+      } catch {
+        this.certificate_provider_labels = {};
+      }
     },
     ensureGemPricingFields(gem) {
       if (!gem || typeof gem !== "object") return;

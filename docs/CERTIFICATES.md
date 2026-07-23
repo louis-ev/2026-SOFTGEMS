@@ -14,7 +14,7 @@ Defined file-level fields relevant to certificates:
 | Field | Schema type | Role |
 | --- | --- | --- |
 | `is_gem_certificate` | `boolean` | Marks this file as a certificate for the Certificates section (set on upload via `additional_meta`). |
-| `provider_path` | `string` | Provider/contact; value is typically an **`authors`** folder path (address book convention in the client). |
+| `provider_path` | `string` | Provider; **`address_book/{company}`** or **`address_book/{company}/contacts/{person}`** when a company contact person is selected (same rules as selection **`counterparty_path`**). |
 | `certificate_reference` | `string` | Report / reference number (free text). |
 | `certificate_date` | `date` | Calendar date (stored as ISO 8601 `YYYY-MM-DD`; validated server-side via `normalizeCalendarDate`). |
 | `certificate_price` | `any` | Numeric price when set; **`null`/empty clears** in UI (needs `any` so the API can persist nullable values alongside strict number validation). |
@@ -38,7 +38,7 @@ Open/download links follow the same media URL rules as other gem files (`makeMed
 
 ## Editing and removal
 
-- Field edits (**provider**, **reference**, **date**, **price**) use the same **`SGGemFieldCard`** + **`SGGemEditFieldModal`** pattern as gem folder fields: PATCH the **file meta** (`file.$path` via **`updateMeta`**); the server validates against **`gems.$files.fields`**. The provider list populates from **`authors`** contacts (loaded when the section mounts).
+- Field edits (**provider**, **reference**, **date**, **price**) use the same **`SGGemFieldCard`** + **`SGGemEditFieldModal`** pattern as gem folder fields: PATCH the **file meta** (`file.$path` via **`updateMeta`**); the server validates against **`gems.$files.fields`**. The provider field uses **`SGSelectionCounterpartyEditor`** (company from **`address_book`**, optional contact person at that company — same path rules as selection **`counterparty_path`**).
 - **Remove**: after confirmation (**`BaseModal2`**, destructive action), the client calls **`deleteItem`** on the file meta path — the PDF and its meta are **removed from storage** and **`$files`** updates via the usual store/socket path (`fileRemoved`).
 
 Live updates rely on existing store/socket behaviour (`getFolder` store reference plus `folderUpdated` / `fileUpdated`); no dedicated refetch hook is required for certificate saves.

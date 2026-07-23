@@ -174,9 +174,6 @@
       :gem="gem"
       :meta_target_path="certificate_field_edit.meta_target_path"
       :context_heading="certificate_field_edit.context_heading"
-      :auxiliary_disable="
-        auxiliary_disable_certificate_field_modal
-      "
       @saved="closeCertificateFieldModal"
       @close="closeCertificateFieldModal"
     />
@@ -189,6 +186,7 @@ import SGGemCertificateRemoveModal from "@/components/gems/SGGemCertificateRemov
 import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
 import SGGemFieldCard from "@/components/gems/SGGemFieldCard.vue";
 import UploadFiles from "@/adc-core/modals/UploadFiles.vue";
+import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
 
 export default {
   name: "SGGemCertificatesSection",
@@ -216,8 +214,7 @@ export default {
   data() {
     return {
       pdf_files_queue: [],
-      contacts_list: [],
-      is_loading_contacts: false,
+      provider_labels: {},
       certificate_upload_meta: { is_gem_certificate: true },
       certificate_preview_resolution: 640,
       certificate_remove_modal_open: false,
@@ -230,11 +227,6 @@ export default {
     };
   },
   computed: {
-    auxiliary_disable_certificate_field_modal() {
-      if (!this.certificate_field_edit?.field?.key) return false;
-      if (this.is_loading_contacts !== true) return false;
-      return this.certificate_field_edit.field.key === "provider_path";
-    },
     certificate_field_edit_modal_key() {
       if (!this.certificate_field_edit) return "closed";
       return `${this.certificate_field_edit.meta_target_path}::${this.certificate_field_edit.field.key}`;
@@ -250,35 +242,14 @@ export default {
             +new Date(a?.$date_uploaded || 0)
         );
     },
-    contact_select_options() {
-      const rows = Array.isArray(this.contacts_list) ? this.contacts_list : [];
-      return rows
-        .map((contact_folder) => {
-          const contact_path =
-            typeof contact_folder?.$path === "string"
-              ? contact_folder.$path.trim()
-              : "";
-          if (!contact_path) return null;
-          const contact_name_raw =
-            typeof contact_folder?.name === "string"
-              ? contact_folder.name.trim()
-              : "";
-          const slug =
-            typeof contact_folder?.$slug === "string"
-              ? contact_folder.$slug.trim()
-              : "";
-          const label =
-            contact_name_raw ||
-            slug ||
-            contact_path.split("/").filter(Boolean).pop() ||
-            contact_path;
-          return { value: contact_path, label };
-        })
-        .filter(Boolean);
-    },
   },
-  async mounted() {
-    await this.refreshContacts();
+  watch: {
+    gem_certificate_files: {
+      handler() {
+        this.refreshProviderLabels();
+      },
+      immediate: true,
+    },
   },
   methods: {
     getCertificateFieldConfig(field_key) {
@@ -287,8 +258,7 @@ export default {
           key: "provider_path",
           label: this.$t("sg_certificate_provider"),
           icon: "person-badge",
-          type: "select",
-          options: this.contact_select_options,
+          type: "address_book_counterparty",
         },
         certificate_reference: {
           key: "certificate_reference",
@@ -323,12 +293,26 @@ export default {
       const path_raw = certificate_file?.provider_path;
       const path_str = typeof path_raw === "string" ? path_raw.trim() : "";
       if (!path_str) return "";
-      const opts = Array.isArray(this.contact_select_options)
-        ? this.contact_select_options
-        : [];
-      const match = opts.find((opt) => opt && opt.value === path_str);
-      if (match && match.label) return String(match.label);
+      const label = this.provider_labels[path_str];
+      if (label) return String(label);
       return path_str;
+    },
+    async refreshProviderLabels() {
+      const paths = this.gem_certificate_files
+        .map((certificate_file) => certificate_file?.provider_path)
+        .filter((path) => typeof path === "string" && path.trim() !== "");
+      if (!paths.length) {
+        this.provider_labels = {};
+        return;
+      }
+      try {
+        this.provider_labels = await resolveAddressBookPathLabels(
+          this.$api,
+          paths
+        );
+      } catch {
+        this.provider_labels = {};
+      }
     },
     openCertificateFieldModal(certificate_file, field_key) {
       if (
@@ -363,17 +347,6 @@ export default {
     },
     closeCertificateFieldModal() {
       this.certificate_field_edit = null;
-    },
-    async refreshContacts() {
-      this.is_loading_contacts = true;
-      try {
-        const folders = await this.$api.getFolders({ path: "authors" });
-        this.contacts_list = Array.isArray(folders) ? folders : [];
-      } catch {
-        this.contacts_list = [];
-      } finally {
-        this.is_loading_contacts = false;
-      }
     },
     displayCertificateFilename(certificate_file) {
       const name =

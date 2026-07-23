@@ -78,7 +78,9 @@ export default {
   },
   computed: {
     is_footer_save_disabled() {
-      return false;
+      const baseline = this.cleanString(this.initial_value);
+      const draft = this.cleanString(this.draft_counterparty_path);
+      return draft === baseline;
     },
     selected_contact() {
       const path = this.cleanString(this.draft_contact_path);
@@ -146,6 +148,9 @@ export default {
       if (contact_path && person_path) {
         this.ensurePersonsLoaded(contact_path);
       }
+    },
+    draft_counterparty_path() {
+      this.emitFooterState();
     },
     is_footer_save_disabled() {
       this.emitFooterState();

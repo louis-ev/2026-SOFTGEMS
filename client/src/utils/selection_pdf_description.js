@@ -1,7 +1,6 @@
 import { pdfShapeAbbreviation } from "@/suggestions/softgems/pdf_shape_abbreviations.js";
 import {
   makeGemMediaFileAbsoluteUrl,
-  makeGemMediaFilePath,
 } from "@/utils/selection_pdf_gem_helpers.js";
 
 /**
@@ -65,19 +64,45 @@ export function gemVideoFiles(gem) {
     );
 }
 
+/** Separator between provider name and certificate reference in PDF links. */
+export const selection_pdf_certificate_link_separator = " – ";
+
 /**
- * @param {object} certificate_file
+ * @param {string} provider_path
+ * @param {Record<string, string>} [provider_labels_by_path]
  * @returns {string}
  */
-export function formatCertificateLinkLabel(certificate_file) {
-  const provider = String(certificate_file?.provider_path || "").trim();
-  const provider_label = provider
-    ? provider.split("/").filter(Boolean).pop() || provider
-    : "";
+export function resolveCertificateProviderLabel(
+  provider_path,
+  provider_labels_by_path = {}
+) {
+  const path = String(provider_path || "").trim();
+  if (!path) return "";
+  const mapped = provider_labels_by_path[path];
+  if (mapped) return String(mapped).trim();
+  const segments = path.split("/").filter(Boolean);
+  return segments[segments.length - 1] || path;
+}
+
+/**
+ * @param {object} certificate_file
+ * @param {Record<string, string>} [provider_labels_by_path]
+ * @returns {string}
+ */
+export function formatCertificateLinkLabel(
+  certificate_file,
+  provider_labels_by_path = {}
+) {
+  const provider_label = resolveCertificateProviderLabel(
+    certificate_file?.provider_path,
+    provider_labels_by_path
+  );
   const reference = String(
     certificate_file?.certificate_reference || ""
   ).trim();
-  if (provider_label && reference) return `${provider_label} ${reference}`;
+  if (provider_label && reference) {
+    return `${provider_label}${selection_pdf_certificate_link_separator}${reference}`;
+  }
   if (reference) return reference;
   if (provider_label) return provider_label;
   const filename = String(certificate_file?.$media_filename || "").trim();
@@ -102,9 +127,15 @@ export function formatVideoLinkLabel(video_file, index = 0) {
 /**
  * @param {object} gem
  * @param {string} [origin]
+ * @param {{ provider_labels_by_path?: Record<string, string> }} [options]
  * @returns {PdfDescriptionBlock[]}
  */
-export function buildGemPdfDescriptionBlocks(gem, origin = "") {
+export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
+  const provider_labels_by_path =
+    options?.provider_labels_by_path &&
+    typeof options.provider_labels_by_path === "object"
+      ? options.provider_labels_by_path
+      : {};
   /** @type {PdfDescriptionBlock[]} */
   const blocks = [];
   /** @type {PdfDescriptionBlock[]} */
@@ -137,11 +168,12 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "") {
   });
 
   gemCertificateFiles(gem).forEach((certificate_file) => {
-    const text = formatCertificateLinkLabel(certificate_file);
-    const href =
-      makeGemMediaFileAbsoluteUrl(certificate_file, origin) ||
-      makeGemMediaFilePath(certificate_file);
-    if (!text || !href) return;
+    const text = formatCertificateLinkLabel(
+      certificate_file,
+      provider_labels_by_path
+    );
+    const href = makeGemMediaFileAbsoluteUrl(certificate_file, origin);
+    if (!text || !href || !/^https?:\/\//i.test(href)) return;
     certificate_blocks.push({
       type: "link",
       text,
