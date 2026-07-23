@@ -41,31 +41,31 @@
         />
       </div>
 
-      <div class="_columnsHeader">
-        <span>{{ $t("sg_pdf_export_columns_title") }}</span>
-      </div>
-      <div class="_columnsPreview">
-        <table class="_columnsList">
-          <colgroup>
-            <col
-              v-for="col in export_table_col_widths"
-              :key="col.key"
-              :style="{ width: `${col.percent}%` }"
-            />
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
-              <th
-                v-for="metadata_key in export_column_keys"
-                :key="metadata_key"
-                :class="columnClass(metadata_key)"
-              >
-                {{ columnLabel(metadata_key) }}
-              </th>
-            </tr>
-          </thead>
-        </table>
+      <div class="_columnsSection">
+        <span class="_columnsLabel">{{ $t("sg_pdf_export_columns_title") }}</span>
+        <div class="_columnsPreview">
+          <table class="_columnsList">
+            <colgroup>
+              <col
+                v-for="col in export_table_col_widths"
+                :key="col.key"
+                :style="{ width: `${col.percent}%` }"
+              />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
+                <th
+                  v-for="metadata_key in export_column_keys"
+                  :key="metadata_key"
+                  :class="columnClass(metadata_key)"
+                >
+                  {{ columnLabel(metadata_key) }}
+                </th>
+              </tr>
+            </thead>
+          </table>
+        </div>
       </div>
 
       <SGSelectionPdfBankFootersEditor
@@ -607,9 +607,14 @@ export default {
   font-weight: 600;
 }
 
-._columnsHeader {
+._columnsSection {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 4);
+}
+
+._columnsLabel {
   font-weight: 600;
-  margin-top: calc(var(--spacing) / 2);
 }
 
 ._columnsPreview {
@@ -619,7 +624,7 @@ export default {
 
 ._columnsList {
   width: 100%;
-  margin: calc(var(--spacing) / 3) 0 0;
+  margin: 0;
   border-collapse: collapse;
   table-layout: fixed;
 }

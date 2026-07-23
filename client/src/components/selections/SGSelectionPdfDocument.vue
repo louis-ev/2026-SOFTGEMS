@@ -96,6 +96,23 @@
                 </template>
               </div>
             </div>
+            <a
+              v-else-if="
+                metadata_key === photo_column_key &&
+                coverUrl(gem) &&
+                coverLinkUrl(gem)
+              "
+              class="_coverLink"
+              :href="coverLinkUrl(gem)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                class="_coverImg"
+                :src="coverUrl(gem)"
+                alt=""
+              />
+            </a>
             <img
               v-else-if="metadata_key === photo_column_key && coverUrl(gem)"
               class="_coverImg"
@@ -214,6 +231,7 @@ import {
   formatPdfPerCarat,
   gemIdFromPath,
   resolveGemCoverThumbRelative,
+  resolveGemCoverAbsoluteUrl,
   sumGemNumericField,
   sumGemPricingTotals,
   toAbsoluteAppUrl,
@@ -368,6 +386,11 @@ export default {
       const relative = resolveGemCoverThumbRelative(gem);
       if (!relative) return "";
       return toAbsoluteAppUrl(relative, this.media_origin);
+    },
+    coverLinkUrl(gem) {
+      const href = resolveGemCoverAbsoluteUrl(gem, this.media_origin);
+      if (!href || !/^https?:\/\//i.test(href)) return "";
+      return href;
     },
     descriptionBlocks(gem) {
       return buildGemPdfDescriptionBlocks(gem, this.media_origin, {
@@ -589,6 +612,11 @@ export default {
 
 ._colDefault {
   width: 12mm;
+}
+
+._coverLink {
+  display: block;
+  line-height: 0;
 }
 
 ._coverImg {

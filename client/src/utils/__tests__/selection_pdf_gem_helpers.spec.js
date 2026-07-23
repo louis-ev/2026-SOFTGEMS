@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   makeGemMediaFileAbsoluteUrl,
+  resolveGemCoverAbsoluteUrl,
+  resolveGemCoverMediaRelative,
   resolveGemCoverThumbRelative,
   toAbsoluteAppUrl,
   formatPdfCurrencyTotal,
@@ -19,6 +21,40 @@ describe("resolveGemCoverThumbRelative", () => {
 
   it("returns empty when cover is missing", () => {
     expect(resolveGemCoverThumbRelative({ $path: "gems/12" })).toBe("");
+  });
+});
+
+describe("resolveGemCoverMediaRelative", () => {
+  it("builds a path to meta_cover.jpeg on the gem folder", () => {
+    expect(
+      resolveGemCoverMediaRelative({
+        $path: "gems/42",
+        $cover: { 320: "cover-320.jpg" },
+      })
+    ).toBe("/gems/42/meta_cover.jpeg");
+  });
+
+  it("preserves cache-busting query from cover.original", () => {
+    expect(
+      resolveGemCoverMediaRelative({
+        $path: "gems/42",
+        $cover: { original: "meta_cover.jpeg?v=123" },
+      })
+    ).toBe("/gems/42/meta_cover.jpeg?v=123");
+  });
+});
+
+describe("resolveGemCoverAbsoluteUrl", () => {
+  it("prefixes public_url origin on the cover media path", () => {
+    expect(
+      resolveGemCoverAbsoluteUrl(
+        {
+          $path: "gems/42",
+          $cover: { 320: "cover-320.jpg" },
+        },
+        "https://softgems.example.com"
+      )
+    ).toBe("https://softgems.example.com/gems/42/meta_cover.jpeg");
   });
 });
 

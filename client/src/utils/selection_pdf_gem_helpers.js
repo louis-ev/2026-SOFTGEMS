@@ -21,6 +21,32 @@ export function resolveGemCoverThumbRelative(
 }
 
 /**
+ * App-relative path to the gem folder cover image (`meta_cover.jpeg`).
+ * @param {object} gem
+ * @returns {string}
+ */
+export function resolveGemCoverMediaRelative(gem) {
+  const folder_path = String(gem?.$path || "").trim();
+  const cover = gem?.$cover;
+  if (!folder_path || !cover) return "";
+  const original = String(cover.original || "").trim();
+  const filename = original || "meta_cover.jpeg";
+  return `/${folder_path}/${filename}`;
+}
+
+/**
+ * @param {object} gem
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export function resolveGemCoverAbsoluteUrl(gem, origin = "") {
+  const relative = resolveGemCoverMediaRelative(gem);
+  if (!relative) return "";
+  const resolved_origin = origin || resolveAppPublicOrigin() || "";
+  return toAbsoluteAppUrl(relative, resolved_origin);
+}
+
+/**
  * @param {string} relative_path
  * @param {string} [origin]
  * @returns {string}
