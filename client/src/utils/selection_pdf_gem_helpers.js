@@ -1,4 +1,5 @@
 import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
+import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 
 /**
  * @param {object} gem
@@ -62,10 +63,7 @@ export function makeGemMediaFilePath(file) {
 export function makeGemMediaFileAbsoluteUrl(file, origin = "") {
   const full_path = makeGemMediaFilePath(file);
   if (!full_path) return "";
-  const resolved_origin =
-    origin ||
-    (typeof window !== "undefined" ? window.location.origin : "") ||
-    "";
+  const resolved_origin = origin || resolveAppPublicOrigin() || "";
   if (!resolved_origin) return full_path;
   return `${resolved_origin}${full_path}`;
 }

@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
+  makeGemMediaFileAbsoluteUrl,
   resolveGemCoverThumbRelative,
   toAbsoluteAppUrl,
   formatPdfCurrencyTotal,
@@ -26,6 +27,34 @@ describe("toAbsoluteAppUrl", () => {
     expect(
       toAbsoluteAppUrl("./thumbs/gems/12/cover.jpg", "http://localhost:8080")
     ).toBe("http://localhost:8080/thumbs/gems/12/cover.jpg");
+  });
+});
+
+describe("makeGemMediaFileAbsoluteUrl", () => {
+  const original_app_infos = window.app_infos;
+  const original_origin = window.location.origin;
+
+  afterEach(() => {
+    window.app_infos = original_app_infos;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { origin: original_origin },
+    });
+  });
+
+  it("uses public_url from app_infos when origin is omitted", () => {
+    window.app_infos = { public_url: "https://softgems.example.com" };
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { origin: "http://localhost:8080" },
+    });
+
+    expect(
+      makeGemMediaFileAbsoluteUrl({
+        $path: "gems/42/files/cert-1",
+        $media_filename: "cert.pdf",
+      })
+    ).toBe("https://softgems.example.com/gems/42/files/cert.pdf");
   });
 });
 

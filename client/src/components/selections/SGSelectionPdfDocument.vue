@@ -205,6 +205,7 @@ import {
   selection_pdf_photo_column_key,
   selectionPdfColumnHeaderLabel,
 } from "@/utils/selection_pdf_columns.js";
+import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
 import {
   formatPdfCurrencyAmount,
@@ -340,7 +341,7 @@ export default {
     },
     media_origin() {
       if (typeof window === "undefined") return "";
-      return window.location.origin;
+      return resolveAppPublicOrigin();
     },
   },
   methods: {

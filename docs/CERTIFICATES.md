@@ -36,6 +36,14 @@ Defined file-level fields relevant to certificates:
 
 Open/download links follow the same media URL rules as other gem files (`makeMediaFileURL`). PDF thumbnails use **`MediaContent`** with a modest **`resolution`** (thumb quality / payload trade-off).
 
+## Selection PDF export links
+
+When a gem certificate is included in a **selection PDF**, each certificate with an absolute **`https://`** or **`http://`** URL is rendered as a clickable link (`Provider – Ref`).
+
+Relative certificate file paths are turned into absolute URLs using **`resolveAppPublicOrigin()`** ([`app_public_url.js`](../client/src/utils/app_public_url.js)), which reads **`window.app_infos.public_url`** (from the **`public_url`** setting in `settings.json`, exposed server-side via **`getPublicUrl()`**).
+
+Set **`public_url`** to the public site origin (e.g. `https://softgems.example.com`) so PDF links remain correct when Puppeteer runs on a machine whose browser origin is **`localhost`**. If **`public_url`** is empty, the client falls back to **`window.location.origin`**.
+
 ## Editing and removal
 
 - Field edits (**provider**, **reference**, **date**, **price**) use the same **`SGGemFieldCard`** + **`SGGemEditFieldModal`** pattern as gem folder fields: PATCH the **file meta** (`file.$path` via **`updateMeta`**); the server validates against **`gems.$files.fields`**. The provider field uses **`SGSelectionCounterpartyEditor`** (company from **`address_book`**, optional contact person at that company — same path rules as selection **`counterparty_path`**).
