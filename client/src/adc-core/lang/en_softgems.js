@@ -71,6 +71,10 @@ export default {
   sg_media_remove_modal_body:
     'Permanently delete "{filename}" from this gem? This removes the file from the server.',
   sg_media_remove_success: "Media file deleted.",
+  sg_media_pdf_hint:
+    "Photos and videos are linked in the selection PDF unless unchecked below.",
+  sg_media_include_in_pdf: "Include in PDF",
+  sg_media_excluded_from_pdf: "Excluded from PDF",
   sg_section_creation: "Creation",
   sg_see_all_gems: "See all gems",
   sg_back_home: "Back to home",

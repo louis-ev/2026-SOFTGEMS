@@ -61,38 +61,34 @@
               class="_descriptionCell"
             >
               <div
-                v-for="(block, block_index) in descriptionContentBlocks(gem)"
+                v-for="(block, block_index) in descriptionTextBlocks(gem)"
                 :key="'description-' + block_index"
                 class="_descriptionLine"
               >
-                <a
-                  v-if="block.type === 'link' && block.href"
-                  class="_descriptionLink"
-                  :href="block.href"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >{{ block.text }}</a>
-                <span v-else>{{ block.text }}</span>
+                {{ block.text }}
               </div>
               <div
-                v-if="descriptionCertificateLinks(gem).length"
-                class="_descriptionLine _descriptionCertificateLine"
+                v-if="descriptionInlineLinks(gem).length"
+                class="_descriptionLine _descriptionLinksLine"
               >
                 <template
-                  v-for="(link, link_index) in descriptionCertificateLinks(gem)"
+                  v-for="(link, link_index) in descriptionInlineLinks(gem)"
                 >
                   <a
                     v-if="link.href"
-                    :key="'certificate-link-' + link_index"
+                    :key="'description-link-' + link_index"
                     class="_descriptionLink"
                     :href="link.href"
                     target="_blank"
                     rel="noopener noreferrer"
                   >{{ link.text }}</a><span
-                    v-if="link_index < descriptionCertificateLinks(gem).length - 1"
-                    :key="'certificate-sep-' + link_index"
+                    v-else
+                    :key="'description-text-' + link_index"
+                  >{{ link.text }}</span><span
+                    v-if="link_index < descriptionInlineLinks(gem).length - 1"
+                    :key="'description-sep-' + link_index"
                     aria-hidden="true"
-                  > </span>
+                  >  </span>
                 </template>
               </div>
             </div>
@@ -397,15 +393,11 @@ export default {
         provider_labels_by_path: this.certificate_provider_labels,
       });
     },
-    descriptionContentBlocks(gem) {
-      return this.descriptionBlocks(gem).filter(
-        (block) => !block.is_certificate_link
-      );
+    descriptionTextBlocks(gem) {
+      return this.descriptionBlocks(gem).filter((block) => block.type === "text");
     },
-    descriptionCertificateLinks(gem) {
-      return this.descriptionBlocks(gem).filter(
-        (block) => block.is_certificate_link && block.href
-      );
+    descriptionInlineLinks(gem) {
+      return this.descriptionBlocks(gem).filter((block) => block.type === "link");
     },
     formatCell(gem, metadata_key) {
       if (metadata_key === "id") return gemIdFromPath(gem);
@@ -644,8 +636,8 @@ export default {
   text-decoration: underline;
 }
 
-._descriptionCertificateLine {
-  margin-top: 0.4mm;
+._descriptionLinksLine {
+  white-space: pre-wrap;
   word-break: break-word;
 }
 

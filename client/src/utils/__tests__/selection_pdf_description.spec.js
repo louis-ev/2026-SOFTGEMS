@@ -55,7 +55,7 @@ describe("formatCertificateLinkLabel", () => {
 });
 
 describe("buildGemPdfDescriptionBlocks", () => {
-  it("places certificate links after text fields and videos", () => {
+  it("places certificate links before media links, after text fields", () => {
     const blocks = buildGemPdfDescriptionBlocks(
       base_gem,
       "http://localhost:8080",
@@ -70,7 +70,7 @@ describe("buildGemPdfDescriptionBlocks", () => {
     );
 
     expect(cert_index).toBeGreaterThan(origin_index);
-    expect(cert_index).toBeGreaterThan(video_index);
+    expect(video_index).toBeGreaterThan(cert_index);
     expect(blocks[cert_index].type).toBe("link");
   });
 
@@ -120,5 +120,105 @@ describe("buildGemPdfDescriptionBlocks", () => {
     expect(certificate?.href).toBe(
       "https://app.example.com/gems/42/files/cert.pdf"
     );
+  });
+
+  it("emits photo links for gem media images", () => {
+    const blocks = buildGemPdfDescriptionBlocks(
+      {
+        ...base_gem,
+        $files: [
+          {
+            is_gem_media: true,
+            $type: "image",
+            $media_filename: "face.jpg",
+            $path: "gems/42/files/photo-1",
+          },
+        ],
+      },
+      "https://app.example.com"
+    );
+    const photo = blocks.find(
+      (block) => block.type === "link" && block.text === "face.jpg"
+    );
+
+    expect(photo).toMatchObject({
+      type: "link",
+      text: "face.jpg",
+      href: "https://app.example.com/gems/42/files/face.jpg",
+    });
+  });
+
+  it("excludes media files with dont_link_in_pdf from description links", () => {
+    const blocks = buildGemPdfDescriptionBlocks(
+      {
+        ...base_gem,
+        $files: [
+          {
+            is_gem_media: true,
+            $type: "video",
+            dont_link_in_pdf: true,
+            $media_filename: "hidden.mp4",
+            $path: "gems/42/files/video-hidden",
+          },
+          {
+            is_gem_media: true,
+            $type: "image",
+            dont_link_in_pdf: true,
+            $media_filename: "hidden.jpg",
+            $path: "gems/42/files/photo-hidden",
+          },
+          {
+            is_gem_media: true,
+            $type: "video",
+            $media_filename: "visible.mp4",
+            $path: "gems/42/files/video-visible",
+          },
+        ],
+      },
+      "https://app.example.com"
+    );
+    const media_links = blocks.filter(
+      (block) => block.type === "link" && !block.is_certificate_link
+    );
+
+    expect(media_links).toHaveLength(1);
+    expect(media_links[0]).toMatchObject({
+      text: "visible.mp4",
+      href: "https://app.example.com/gems/42/files/visible.mp4",
+    });
+  });
+
+  it("sorts media links alphabetically by filename", () => {
+    const blocks = buildGemPdfDescriptionBlocks(
+      {
+        ...base_gem,
+        $files: [
+          {
+            is_gem_media: true,
+            $type: "video",
+            $media_filename: "zebra.mp4",
+            $path: "gems/42/files/video-z",
+          },
+          {
+            is_gem_media: true,
+            $type: "image",
+            $media_filename: "alpha.jpg",
+            $path: "gems/42/files/photo-a",
+          },
+          {
+            is_gem_media: true,
+            $type: "image",
+            $media_filename: "middle.jpg",
+            $path: "gems/42/files/photo-m",
+          },
+        ],
+      },
+      "https://app.example.com"
+    );
+    const media_links = blocks
+      .filter((block) => block.type === "link" && !block.is_certificate_link)
+      .map((block) => block.text);
+
+    expect(media_links).toEqual(["alpha.jpg", "middle.jpg", "zebra.mp4"]);
   });
 });

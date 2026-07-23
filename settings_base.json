@@ -229,6 +229,9 @@
             "is_gem_media": {
               "type": "boolean"
             },
+            "dont_link_in_pdf": {
+              "type": "boolean"
+            },
             "provider_path": {
               "type": "string"
             },

@@ -35,6 +35,31 @@ export function formatGemPdfDimensionsLine(gem) {
 }
 
 /**
+ * @param {{ $media_filename?: string, $path?: string }} file
+ * @returns {string}
+ */
+export function gemFileMediaFilename(file) {
+  const name = String(file?.$media_filename || "").trim();
+  if (name) return name;
+  const path_slug = String(file?.$path || "")
+    .split("/")
+    .filter(Boolean)
+    .pop();
+  return path_slug || "";
+}
+
+/**
+ * @param {{ $media_filename?: string, $path?: string }} a
+ * @param {{ $media_filename?: string, $path?: string }} b
+ * @returns {number}
+ */
+export function compareGemFilesByMediaFilename(a, b) {
+  return gemFileMediaFilename(a).localeCompare(gemFileMediaFilename(b), undefined, {
+    sensitivity: "base",
+  });
+}
+
+/**
  * @param {object} gem
  * @returns {object[]}
  */
@@ -53,15 +78,26 @@ export function gemCertificateFiles(gem) {
  * @param {object} gem
  * @returns {object[]}
  */
-export function gemVideoFiles(gem) {
+export function gemPdfMediaFiles(gem) {
   const files = Array.isArray(gem?.$files) ? gem.$files : [];
   return files
-    .filter((file) => file && file.is_gem_media === true && file.$type === "video")
+    .filter(
+      (file) =>
+        file &&
+        file.is_gem_media === true &&
+        (file.$type === "image" || file.$type === "video") &&
+        file.dont_link_in_pdf !== true
+    )
     .slice()
-    .sort(
-      (a, b) =>
-        +new Date(b?.$date_uploaded || 0) - +new Date(a?.$date_uploaded || 0)
-    );
+    .sort(compareGemFilesByMediaFilename);
+}
+
+/**
+ * @param {object} gem
+ * @returns {object[]}
+ */
+export function gemVideoFiles(gem) {
+  return gemPdfMediaFiles(gem).filter((file) => file.$type === "video");
 }
 
 /** Separator between provider name and certificate reference in PDF links. */
@@ -115,9 +151,20 @@ export function formatCertificateLinkLabel(
  * @returns {string}
  */
 export function formatVideoLinkLabel(video_file, index = 0) {
-  const filename = String(video_file?.$media_filename || "").trim();
+  return formatMediaLinkLabel(video_file, index);
+}
+
+/**
+ * @param {object} media_file
+ * @param {number} index
+ * @returns {string}
+ */
+export function formatMediaLinkLabel(media_file, index = 0) {
+  const filename = String(media_file?.$media_filename || "").trim();
   if (filename) return filename;
-  return index === 0 ? "Video" : `Video ${index + 1}`;
+  const is_video = media_file?.$type === "video";
+  const fallback = is_video ? "Video" : "Photo";
+  return index === 0 ? fallback : `${fallback} ${index + 1}`;
 }
 
 /**
@@ -139,7 +186,7 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
   /** @type {PdfDescriptionBlock[]} */
   const blocks = [];
   /** @type {PdfDescriptionBlock[]} */
-  const certificate_blocks = [];
+  const link_blocks = [];
 
   const title = formatGemPdfTitleLine(gem);
   if (title) blocks.push({ type: "text", text: title });
@@ -160,13 +207,6 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     blocks.push({ type: "text", text: `Country of cut: ${country_of_cut}` });
   }
 
-  gemVideoFiles(gem).forEach((video_file, index) => {
-    const href = makeGemMediaFileAbsoluteUrl(video_file, origin);
-    const text = formatVideoLinkLabel(video_file, index);
-    if (href) blocks.push({ type: "link", text, href });
-    else if (text) blocks.push({ type: "text", text });
-  });
-
   gemCertificateFiles(gem).forEach((certificate_file) => {
     const text = formatCertificateLinkLabel(
       certificate_file,
@@ -174,7 +214,7 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     );
     const href = makeGemMediaFileAbsoluteUrl(certificate_file, origin);
     if (!text || !href || !/^https?:\/\//i.test(href)) return;
-    certificate_blocks.push({
+    link_blocks.push({
       type: "link",
       text,
       href,
@@ -182,5 +222,12 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     });
   });
 
-  return [...blocks, ...certificate_blocks];
+  gemPdfMediaFiles(gem).forEach((media_file, index) => {
+    const href = makeGemMediaFileAbsoluteUrl(media_file, origin);
+    const text = formatMediaLinkLabel(media_file, index);
+    if (href) link_blocks.push({ type: "link", text, href });
+    else if (text) link_blocks.push({ type: "text", text });
+  });
+
+  return [...blocks, ...link_blocks];
 }
