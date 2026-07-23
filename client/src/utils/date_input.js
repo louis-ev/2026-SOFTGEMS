@@ -16,10 +16,10 @@ export function toDateInputValue(raw) {
   return `${year}-${month}-${day}`;
 }
 
-/** Alias for persisted calendar dates (`selection_date`, `certificate_date`, …). */
+/** Alias for persisted calendar dates (`selection_date`, `certificate_date`, `start_date`, `end_date`, …). */
 export const toStoredCalendarDate = toDateInputValue;
 
-/** Whether a gem/certificate field config should use the date picker. */
+/** Whether a schema field config should use the date picker. */
 export function is_date_input_field(field) {
   if (!field || typeof field !== "object") return false;
   return field.type === "date" || field.input_type === "date";

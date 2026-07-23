@@ -386,7 +386,7 @@ export default {
   panes_visible_in_project_instr:
     "Choose which panes are available in this project. Only these will appear in the bar above.",
   panes_hidden_in_project_instr:
-    "Shown panes are checked. Uncheck a pane to hide it from the project bar.",
+    "Shown panes are checked. Uncheck a pane to hide it from the project bar. This setting applies to all contributors.",
   capture: "Capture",
   collect: "Collect",
   make: "Make",
@@ -926,7 +926,7 @@ export default {
     "Resolution selection is not compatible with screenshot.",
   take_picture: "Take a photo",
   delay: "Self-timer",
-  timelapse: "time-lapse",
+  timelapse: "Time-lapse",
   live: "Live",
   img_per_second: "Frames per second",
 
@@ -1361,7 +1361,7 @@ export default {
   restore: "Restore",
   remove_for_good: "Remove for good",
   bin_is_empty: "The trash is empty",
-  date_removed: "Date removed",
+  date_removed: "Removed on",
   current_resolution: "Current resolution",
   gallery: "Gallery",
   removed_successfully: "Removed successfully",

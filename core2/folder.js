@@ -575,6 +575,10 @@ module.exports = (function () {
         detailed: true,
       });
 
+      bin_folders.sort(
+        (a, b) => +new Date(b.$date_modified) - +new Date(a.$date_modified)
+      );
+
       return {
         size: bin_size,
         items: bin_folders,

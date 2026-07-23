@@ -22,7 +22,7 @@ function notifyAxiosRequest(request) {
     Vue.prototype.$alertify &&
     typeof Vue.prototype.$alertify.log === "function"
   ) {
-    Vue.prototype.$alertify.delay(5800).log(label);
+    Vue.prototype.$alertify.delay(3000).log(label);
   }
 }
 

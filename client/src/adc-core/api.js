@@ -14,7 +14,9 @@ export default function () {
       },
       general_password: "",
 
-      rooms_joined: [],
+      // Socket subscriptions: { [room]: { ref_count, pinned } }
+      rooms: {},
+      store_meta: {},
 
       is_tracking_users: false,
       self_user_id: null,
@@ -58,11 +60,11 @@ export default function () {
         this.setAuthorizationHeader();
 
         await this.getAllAuthors();
-        this.join({ room: "authors" });
+        this.join({ room: "authors", pinned: true });
 
         if (this.tokenpath.token_path) {
           await this.getCurrentAuthor().catch(() => {});
-          this.join({ room: this.tokenpath.token_path });
+          this.join({ room: this.tokenpath.token_path, pinned: true });
         }
 
         const sessionID = localStorage.getItem("sessionID");
@@ -104,6 +106,7 @@ export default function () {
           console.log("socket disconnected");
 
           this.connected = false;
+          this.markAllStoreStale();
           this.$eventHub.$emit("socketio.disconnect", reason);
         });
 
@@ -157,43 +160,143 @@ export default function () {
 
         return normalized_room;
       },
-      join({ room }) {
+      markStoreFresh(store_key) {
+        this.$set(this.store_meta, store_key, {
+          stale: false,
+          fetched_at: Date.now(),
+        });
+      },
+      isStoreStale(store_key) {
+        const meta = this.store_meta[store_key];
+        return !meta || meta.stale === true;
+      },
+      markAllStoreStale() {
+        Object.keys(this.store).forEach((store_key) => {
+          if (this.store_meta[store_key]) {
+            this.$set(this.store_meta[store_key], "stale", true);
+          } else {
+            this.$set(this.store_meta, store_key, { stale: true });
+          }
+        });
+      },
+      isRoomSubscribed(room) {
+        const normalized_room = this.normalizeRoomPath(room);
+        const subscription = this.rooms[normalized_room];
+        return Boolean(subscription && subscription.ref_count > 0);
+      },
+      getSubscribedRooms() {
+        return Object.entries(this.rooms)
+          .filter(([, subscription]) => subscription.ref_count > 0)
+          .map(([room]) => room);
+      },
+      async fetchAndStore(path) {
+        const normalized_path = this.normalizeRoomPath(path);
+        if (!normalized_path) return;
+
+        const response = await this.$axios.get(normalized_path).catch((err) => {
+          throw this.processError(err);
+        });
+        const content = response.data;
+
+        if (Array.isArray(content)) {
+          this.$set(this.store, normalized_path, content);
+          this.markStoreFresh(normalized_path);
+          return this.store[normalized_path];
+        }
+
+        if (typeof content === "object" && content !== null) {
+          const store_key = content.$path || normalized_path;
+          this.$set(this.store, store_key, content);
+          this.markStoreFresh(store_key);
+          return this.store[store_key];
+        }
+
+        return content;
+      },
+      async refreshStoreForRoom(room) {
+        const normalized_room = this.normalizeRoomPath(room);
+        if (!normalized_room || normalized_room.startsWith("task_")) return;
+        if (!this.isStoreStale(normalized_room)) return;
+
+        const response = await this.$axios.get(normalized_room).catch((err) => {
+          throw this.processError(err);
+        });
+        const content = response.data;
+
+        if (Array.isArray(content)) {
+          const existing = this.store[normalized_room];
+          if (Array.isArray(existing)) {
+            existing.splice(0, existing.length, ...content);
+          } else {
+            this.$set(this.store, normalized_room, content);
+          }
+          this.markStoreFresh(normalized_room);
+          return this.store[normalized_room];
+        }
+
+        if (typeof content === "object" && content !== null) {
+          const store_key = content.$path || normalized_room;
+          const existing = this.store[store_key];
+          if (existing && typeof existing === "object" && !Array.isArray(existing)) {
+            this.folderUpdated({
+              path_to_folder: store_key,
+              changed_data: content,
+            });
+          } else {
+            this.$set(this.store, store_key, content);
+            this.markStoreFresh(store_key);
+          }
+          return this.store[store_key];
+        }
+
+        return content;
+      },
+      join({ room, pinned = false }) {
         const normalized_room = this.normalizeRoomPath(room);
         if (!normalized_room) return;
 
-        const is_first_subscription = !this.rooms_joined.includes(normalized_room);
-        // We always track locally first so reconnect logic can rejoin later.
-        this.rooms_joined.push(normalized_room);
-        if (is_first_subscription) this.apiJoinRoom({ room: normalized_room });
+        if (!this.rooms[normalized_room]) {
+          this.$set(this.rooms, normalized_room, {
+            ref_count: 0,
+            pinned: false,
+          });
+        }
+
+        const subscription = this.rooms[normalized_room];
+        if (pinned) subscription.pinned = true;
+
+        const was_unsubscribed = subscription.ref_count === 0;
+        subscription.ref_count++;
+
+        if (was_unsubscribed) this.apiJoinRoom({ room: normalized_room });
       },
       leave({ room }) {
         const normalized_room = this.normalizeRoomPath(room);
         if (!normalized_room) return;
 
-        const index_to_remove = this.rooms_joined.findIndex(
-          (rj) => rj === normalized_room
-        );
+        const subscription = this.rooms[normalized_room];
+        if (!subscription || subscription.pinned) return;
 
-        if (index_to_remove !== -1) this.rooms_joined.splice(index_to_remove, 1);
-        // if room isnt tracked anymore
-        if (!this.rooms_joined.includes(normalized_room)) {
-          // console.log("LEAVE – room isnt tracked anymore, delete store", room);
-          if (this.socket) this.socket.emit("leaveRoom", { room: normalized_room });
+        subscription.ref_count = Math.max(0, subscription.ref_count - 1);
+
+        if (subscription.ref_count === 0) {
+          if (this.socket) {
+            this.socket.emit("leaveRoom", { room: normalized_room });
+          }
           this.$delete(this.store, normalized_room);
-        } else {
-          // console.log("LEAVE – room still tracked", room);
+          this.$delete(this.store_meta, normalized_room);
+          this.$delete(this.rooms, normalized_room);
         }
       },
 
       async rejoinRooms() {
-        const paths = this.rooms_joined.filter(
-          (value, index, array) => array.indexOf(value) === index
-        );
-        for (const path of paths) {
-          const normalized_path = this.normalizeRoomPath(path);
-          if (!normalized_path) continue;
-          await this.updateStore(normalized_path);
-          this.apiJoinRoom({ room: normalized_path });
+        for (const room of this.getSubscribedRooms()) {
+          try {
+            await this.refreshStoreForRoom(room);
+          } catch (err) {
+            console.warn(`Failed to refresh store for room ${room}`, err);
+          }
+          this.apiJoinRoom({ room });
         }
       },
       apiJoinRoom({ room }) {
@@ -327,13 +430,14 @@ export default function () {
         if (!type_path) return;
 
         // only update store if content is tracked
-        if (!this.rooms_joined.includes(type_path)) {
+        if (!this.isRoomSubscribed(type_path)) {
           // console.log("folderCreated – room isnt tracked, not adding to store");
           return;
         }
         if (!Object.prototype.hasOwnProperty.call(this.store, type_path))
           this.store[type_path] = new Array();
         this.store[type_path].push(meta);
+        this.markStoreFresh(type_path);
         // this.$set(this.store, meta.$path, meta);
       },
 
@@ -385,12 +489,16 @@ export default function () {
             }
           }
         }
+
+        if (folder_path) this.markStoreFresh(folder_path);
+        if (parent_folder_path) this.markStoreFresh(parent_folder_path);
       },
       folderRemoved({ path, path_to_folder }) {
         // Handle both old format (path) and new format (path_to_folder)
         const folder_path = path_to_folder || path;
 
         this.$delete(this.store, folder_path);
+        this.$delete(this.store_meta, folder_path);
 
         if (Object.prototype.hasOwnProperty.call(this.store, folder_path)) {
           this.store.$delete(folder_path);
@@ -416,12 +524,17 @@ export default function () {
       },
 
       fileCreated({ path_to_folder, meta }) {
-        const folder = this.store[path_to_folder];
-        if (!folder)
+        const folder_path = this.normalizeRoomPath(path_to_folder);
+        if (!folder_path) return;
+
+        const folder = this.store[folder_path];
+        if (!folder) {
           if (this.debug_mode)
             this.$alertify
               .delay(4000)
-              .error("Folder missing in store : " + path_to_folder);
+              .error("Folder missing in store : " + folder_path);
+          return;
+        }
         if (!folder.$files) this.$set(folder, "$files", new Array());
         folder.$files.push(meta);
         this.$eventHub.$emit("file.created", { meta });
@@ -485,36 +598,40 @@ export default function () {
         return await this.$axios.post(`_admin`);
       },
       async updateStore(path) {
-        const response = await this.$axios.get(path).catch((err) => {
-          throw this.processError(err);
-        });
-        const content = response.data;
-        this.folderUpdated({ path, changed_data: content });
-        return;
+        return this.fetchAndStore(path);
       },
       async getFolders({ path }) {
-        if (this.store[path]) return this.store[path];
-        const response = await this.$axios.get(path).catch((err) => {
-          throw this.processError(err);
-        });
-
-        let folders = response.data;
-        if (!Array.isArray(folders)) {
-          console.error(
-            `getFolders: Expected array for path "${path}" but got:`,
-            folders
-          );
-          folders = [];
+        const normalized_path = this.normalizeRoomPath(path);
+        if (
+          this.store[normalized_path] &&
+          !this.isStoreStale(normalized_path)
+        ) {
+          return this.store[normalized_path];
         }
 
-        this.$set(this.store, path, folders);
-        // we use the store to trigger updates to array if item is updated
-        return this.store[path];
+        await this.fetchAndStore(normalized_path);
+
+        if (!Array.isArray(this.store[normalized_path])) {
+          console.error(
+            `getFolders: Expected array for path "${normalized_path}" but got:`,
+            this.store[normalized_path]
+          );
+          this.$set(this.store, normalized_path, []);
+        }
+
+        this.markStoreFresh(normalized_path);
+        return this.store[normalized_path];
       },
       async getFolder({ path, no_files = false, detailed_infos = false }) {
         const store_path = this.normalizeFolderStorePath(path);
         const use_store = detailed_infos === false && no_files === false;
-        if (use_store && this.store[store_path]) return this.store[store_path];
+        if (
+          use_store &&
+          this.store[store_path] &&
+          !this.isStoreStale(store_path)
+        ) {
+          return this.store[store_path];
+        }
 
         let request_path = this.normalizeFolderApiPath(path);
         const queries = [];
@@ -536,7 +653,7 @@ export default function () {
           Array.isArray(folder)
         ) {
           console.error(
-            `getFolder: Expected object for path "${path}" but got:`,
+            `getFolder: Expected object for path "${request_path}" but got:`,
             folder
           );
           folder = {};
@@ -548,11 +665,55 @@ export default function () {
             this.$set(folder, "$path", store_key);
           }
           this.$set(this.store, store_key, folder);
+          this.markStoreFresh(store_key);
           return this.store[store_key];
-        } else {
-          // to only get data
-          return folder;
         }
+
+        return folder;
+      },
+      async getFoldersBySlugs({
+        path,
+        folder_slugs,
+        no_files = false,
+        detailed_infos = false,
+      }) {
+        const batch_size = 500;
+        const normalized_path = this.normalizeRoomPath(path);
+        const unique_folder_slugs = [...new Set(folder_slugs)];
+        const use_store = detailed_infos === false && no_files === false;
+        const all_folders = [];
+        const all_failed = [];
+
+        for (let i = 0; i < unique_folder_slugs.length; i += batch_size) {
+          const folder_slugs_batch = unique_folder_slugs.slice(
+            i,
+            i + batch_size
+          );
+          const response = await this.$axios
+            .post(`${normalized_path}/_getfolders`, {
+              folder_slugs: folder_slugs_batch,
+              no_files,
+              detailed: detailed_infos,
+            })
+            .catch((err) => {
+              throw this.processError(err);
+            });
+
+          const { folders = [], failed = [] } = response.data;
+          all_folders.push(...folders);
+          all_failed.push(...failed);
+        }
+
+        if (use_store) {
+          for (const folder of all_folders) {
+            if (folder?.$path) {
+              this.$set(this.store, folder.$path, folder);
+              this.markStoreFresh(folder.$path);
+            }
+          }
+        }
+
+        return { folders: all_folders, failed: all_failed };
       },
       async getFoldersBySlugs({
         path,
