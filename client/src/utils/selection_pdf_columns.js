@@ -21,68 +21,107 @@ export const selection_pdf_per_carat_column_key =
 /** Printable table width inside A4 margins (210mm − 2×10mm padding). */
 export const selection_pdf_page_content_width_mm = 190;
 
-/** Fixed column widths in the PDF table (mm). Keep aligned with SGSelectionPdfDocument styles. */
-export const selection_pdf_column_width_mm = Object.freeze({
-  no: 7,
-  ref: 12,
-  photo: 16,
-  numeric: 16,
-  price: 16,
+/** Sentinel key for the pricing-total column slot in width maps. */
+export const selection_pdf_pricing_total_column_slot = "__pricing_total__";
+
+/** Column width percentages for the standard priced invoice layout (sum = 100). */
+export const selection_pdf_invoice_col_percents = Object.freeze({
+  __no__: 5,
+  id: 7.5,
+  [selection_pdf_virtual_column_keys.description]: 30,
+  [selection_pdf_virtual_column_keys.photo]: 15,
+  number_of_pieces: 7.5,
+  weight_ct: 10,
+  [selection_pdf_virtual_column_keys.per_carat]: 11,
+  [selection_pdf_pricing_total_column_slot]: 14,
 });
 
 /**
  * @param {string} metadata_key
- * @returns {number|null} mm, or null for the flexible description column
+ * @returns {string}
  */
-export function selectionPdfColumnWidthMm(metadata_key) {
-  if (metadata_key === selection_pdf_description_column_key) return null;
-  if (metadata_key === selection_pdf_photo_column_key) {
-    return selection_pdf_column_width_mm.photo;
+export function selectionPdfColumnPercentSlotKey(metadata_key) {
+  if (gem_pricing_total_column_keys.includes(metadata_key)) {
+    return selection_pdf_pricing_total_column_slot;
   }
+  return metadata_key;
+}
+
+/**
+ * @param {string} metadata_key
+ * @returns {number|undefined}
+ */
+export function selectionPdfBaseColumnPercent(metadata_key) {
+  const slot = selectionPdfColumnPercentSlotKey(metadata_key);
+  return selection_pdf_invoice_col_percents[slot];
+}
+
+/**
+ * @param {string} metadata_key
+ * @returns {'left'|'center'|'right'}
+ */
+export function selectionPdfColumnTextAlign(metadata_key) {
+  if (metadata_key === "__no__") return "center";
+  if (metadata_key === selection_pdf_photo_column_key) return "center";
   if (
     metadata_key === selection_pdf_per_carat_column_key ||
-    gem_pricing_total_column_keys.includes(metadata_key)
+    metadata_key === "number_of_pieces" ||
+    metadata_key === "weight_ct" ||
+    metadata_key === "id" ||
+    metadata_key === selection_pdf_description_column_key
   ) {
-    return selection_pdf_column_width_mm.price;
+    return "left";
   }
-  if (metadata_key === "number_of_pieces" || metadata_key === "weight_ct") {
-    return selection_pdf_column_width_mm.numeric;
-  }
-  if (metadata_key === "id") return selection_pdf_column_width_mm.ref;
-  return selection_pdf_column_width_mm.ref;
+  if (gem_pricing_total_column_keys.includes(metadata_key)) return "right";
+  return "left";
 }
 
 /**
  * Column width percentages for table-layout: fixed (N° + metadata columns).
+ * Omitted pricing columns redistribute their share to Description and Photo.
  * @param {string[]} metadata_keys
  * @returns {{ key: string, percent: number }[]}
  */
 export function selectionPdfTableColPercents(metadata_keys) {
   const keys = Array.isArray(metadata_keys) ? metadata_keys : [];
-  const content_width_mm = selection_pdf_page_content_width_mm;
-  let fixed_mm = selection_pdf_column_width_mm.no;
+  const present_slots = new Set(["__no__"]);
   keys.forEach((metadata_key) => {
-    const width_mm = selectionPdfColumnWidthMm(metadata_key);
-    if (width_mm !== null) fixed_mm += width_mm;
+    present_slots.add(selectionPdfColumnPercentSlotKey(metadata_key));
   });
-  const description_percent =
-    ((content_width_mm - fixed_mm) / content_width_mm) * 100;
 
-  const cols = [
-    {
-      key: "__no__",
-      percent: (selection_pdf_column_width_mm.no / content_width_mm) * 100,
-    },
-  ];
+  let omitted_percent = 0;
+  Object.entries(selection_pdf_invoice_col_percents).forEach(
+    ([slot_key, percent]) => {
+      if (!present_slots.has(slot_key)) omitted_percent += percent;
+    }
+  );
+
+  const description_base =
+    selection_pdf_invoice_col_percents[selection_pdf_description_column_key];
+  const photo_base =
+    selection_pdf_invoice_col_percents[selection_pdf_photo_column_key];
+  const flex_base = description_base + photo_base;
+  const description_bonus =
+    flex_base > 0 ? omitted_percent * (description_base / flex_base) : 0;
+  const photo_bonus =
+    flex_base > 0 ? omitted_percent * (photo_base / flex_base) : 0;
+
+  const resolvePercent = (metadata_key) => {
+    const slot = selectionPdfColumnPercentSlotKey(metadata_key);
+    const base = selection_pdf_invoice_col_percents[slot];
+    if (base === undefined) return 0;
+    if (slot === selection_pdf_description_column_key) {
+      return base + description_bonus;
+    }
+    if (slot === selection_pdf_photo_column_key) {
+      return base + photo_bonus;
+    }
+    return base;
+  };
+
+  const cols = [{ key: "__no__", percent: resolvePercent("__no__") }];
   keys.forEach((metadata_key) => {
-    const width_mm = selectionPdfColumnWidthMm(metadata_key);
-    cols.push({
-      key: metadata_key,
-      percent:
-        width_mm === null
-          ? description_percent
-          : (width_mm / content_width_mm) * 100,
-    });
+    cols.push({ key: metadata_key, percent: resolvePercent(metadata_key) });
   });
   return cols;
 }
@@ -187,19 +226,16 @@ export function resolveSelectionPdfPricingKey(selection_type, metadata_keys) {
 
 /**
  * @param {string} metadata_key
- * @param {string} currency
+ * @param {string} [_currency]
  * @returns {string}
  */
-export function selectionPdfColumnHeaderLabel(metadata_key, currency = "USD") {
+export function selectionPdfColumnHeaderLabel(metadata_key, _currency = "USD") {
   if (metadata_key === "id") return "REF";
   if (metadata_key === selection_pdf_description_column_key) return "Description";
   if (metadata_key === selection_pdf_photo_column_key) return "Photo";
   if (metadata_key === "number_of_pieces") return "Qty";
-  if (metadata_key === "weight_ct") return "Ct weight";
-  if (metadata_key === selection_pdf_per_carat_column_key) return "$/ct";
-  if (gem_pricing_total_column_keys.includes(metadata_key)) {
-    const code = String(currency || "USD").trim() || "USD";
-    return `Total ${code}`;
-  }
+  if (metadata_key === "weight_ct") return "weight";
+  if (metadata_key === selection_pdf_per_carat_column_key) return "price /ct";
+  if (gem_pricing_total_column_keys.includes(metadata_key)) return "Total";
   return metadata_key;
 }

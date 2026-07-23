@@ -68,10 +68,11 @@ describe("selection pdf fixed columns", () => {
 
   it("labels columns in English for PDF export", () => {
     expect(selectionPdfColumnHeaderLabel("$description")).toBe("Description");
-    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("$/ct");
+    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("price /ct");
     expect(selectionPdfColumnHeaderLabel("pf_invoiced_price", "USD")).toBe(
-      "Total USD"
+      "Total"
     );
+    expect(selectionPdfColumnHeaderLabel("weight_ct")).toBe("weight");
   });
 
   it("assigns table column percents that sum to 100", () => {
@@ -80,8 +81,21 @@ describe("selection pdf fixed columns", () => {
     );
     const priced_sum = priced.reduce((sum, col) => sum + col.percent, 0);
     expect(priced_sum).toBeCloseTo(100, 5);
-    expect(priced.find((col) => col.key === "$description")?.percent).toBeGreaterThan(
-      40
+    expect(priced.find((col) => col.key === "__no__")?.percent).toBeCloseTo(
+      5,
+      5
+    );
+    expect(priced.find((col) => col.key === "$description")?.percent).toBeCloseTo(
+      30,
+      5
+    );
+    expect(priced.find((col) => col.key === "$cover")?.percent).toBeCloseTo(
+      15,
+      5
+    );
+    expect(priced.find((col) => col.key === "pc_to")?.percent).toBeCloseTo(
+      14,
+      5
     );
 
     const unpriced = selectionPdfTableColPercents(

@@ -1,10 +1,18 @@
 <template>
   <article class="_pdfDocument">
     <header class="_header">
-      <div class="_headerTop">
+      <div class="_logoRow" aria-hidden="true">
+        <span class="_logoText">ACF</span>
+      </div>
+
+      <div class="_headerInfo">
         <div class="_headerLeft">
           <h1 class="_docTitle">{{ document_title }}</h1>
           <p class="_dateLine">{{ date_line }}</p>
+          <p class="_orderLine">
+            <span class="_refLabel">{{ $t("sg_pdf_order_number") }}</span>
+            {{ order_number_line || "—" }}
+          </p>
         </div>
         <div v-if="counterparty_block" class="_headerRight">
           <p class="_counterpartyName">{{ counterparty_block.name }}</p>
@@ -17,28 +25,19 @@
           </p>
         </div>
       </div>
-
-      <div class="_headerMeta">
-        <div class="_logoPlaceholder" aria-hidden="true">
-          <span class="_logoText">ACF</span>
-        </div>
-        <div class="_referenceLines">
-          <p v-if="order_number_line">
-            <span class="_refLabel">{{ $t("sg_pdf_order_number") }}</span>
-            {{ order_number_line }}
-          </p>
-          <p>
-            <span class="_refLabel">{{ $t("sg_pdf_supplier_account_number") }}</span>
-            {{ supplier_account_line }}
-          </p>
-        </div>
-      </div>
     </header>
 
     <table class="_gemsTable">
+      <colgroup>
+        <col
+          v-for="col in table_col_widths"
+          :key="col.key"
+          :style="{ width: `${col.percent}%` }"
+        />
+      </colgroup>
       <thead>
         <tr>
-          <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
+          <th :class="columnClass('__no__')">{{ $t("sg_pdf_col_no") }}</th>
           <th
             v-for="metadata_key in metadata_keys"
             :key="metadata_key"
@@ -50,7 +49,7 @@
       </thead>
       <tbody>
         <tr v-for="(gem, index) in gems" :key="gem.$path || index">
-          <td class="_colNo">{{ index + 1 }}</td>
+          <td :class="columnClass('__no__')">{{ index + 1 }}</td>
           <td
             v-for="metadata_key in metadata_keys"
             :key="`${gem.$path}-${metadata_key}`"
@@ -121,42 +120,40 @@
           </td>
         </tr>
         <tr v-if="has_pricing" class="_totalRow">
-          <td class="_colNo" />
+          <td :class="columnClass('__no__')" />
           <td
             v-for="metadata_key in metadata_keys"
             :key="`total-${metadata_key}`"
             :class="columnClass(metadata_key)"
           >
-            <span v-if="metadata_key === description_column_key" />
-            <span v-else-if="metadata_key === photo_column_key" />
-            <span v-else-if="metadata_key === 'id'" />
             <span
-              v-else-if="metadata_key === description_column_key"
+              v-if="metadata_key === description_column_key"
               class="_totalLabel"
             >
               {{ $t("sg_pdf_total") }}
             </span>
+            <span v-else-if="metadata_key === photo_column_key" />
+            <span v-else-if="metadata_key === 'id'" />
             <span v-else class="_cellText">{{
               formatTotalCell(metadata_key)
             }}</span>
           </td>
         </tr>
         <tr v-if="has_pricing" class="_vatRow">
-          <td class="_colNo" />
+          <td :class="columnClass('__no__')" />
           <td
             v-for="metadata_key in metadata_keys"
             :key="`vat-${metadata_key}`"
             :class="columnClass(metadata_key)"
           >
-            <span v-if="metadata_key === description_column_key" />
-            <span v-else-if="metadata_key === photo_column_key" />
-            <span v-else-if="metadata_key === 'id'" />
             <span
-              v-else-if="metadata_key === description_column_key"
+              v-if="metadata_key === description_column_key"
               class="_totalLabel"
             >
               {{ $t("sg_pdf_vat") }}
             </span>
+            <span v-else-if="metadata_key === photo_column_key" />
+            <span v-else-if="metadata_key === 'id'" />
             <span
               v-else-if="metadata_key === pricing_total_key"
               class="_cellText"
@@ -168,21 +165,20 @@
           </td>
         </tr>
         <tr v-if="has_pricing" class="_grandTotalRow">
-          <td class="_colNo" />
+          <td :class="columnClass('__no__')" />
           <td
             v-for="metadata_key in metadata_keys"
             :key="`grand-${metadata_key}`"
             :class="columnClass(metadata_key)"
           >
-            <span v-if="metadata_key === description_column_key" />
-            <span v-else-if="metadata_key === photo_column_key" />
-            <span v-else-if="metadata_key === 'id'" />
             <span
-              v-else-if="metadata_key === description_column_key"
+              v-if="metadata_key === description_column_key"
               class="_totalLabel"
             >
               {{ $t("sg_pdf_grand_total") }}
             </span>
+            <span v-else-if="metadata_key === photo_column_key" />
+            <span v-else-if="metadata_key === 'id'" />
             <span
               v-else-if="metadata_key === pricing_total_key"
               class="_cellText"
@@ -217,6 +213,8 @@ import {
   selection_pdf_per_carat_column_key,
   selection_pdf_photo_column_key,
   selectionPdfColumnHeaderLabel,
+  selectionPdfColumnTextAlign,
+  selectionPdfTableColPercents,
 } from "@/utils/selection_pdf_columns.js";
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
@@ -273,10 +271,6 @@ export default {
       type: String,
       default: "",
     },
-    supplier_account_line: {
-      type: String,
-      default: "—",
-    },
     bank_footer_en: {
       type: String,
       default: "",
@@ -294,6 +288,9 @@ export default {
     };
   },
   computed: {
+    table_col_widths() {
+      return selectionPdfTableColPercents(this.metadata_keys);
+    },
     counterparty_address_lines() {
       const block = this.counterparty_block;
       if (!block) return [];
@@ -363,20 +360,10 @@ export default {
       return selectionPdfColumnHeaderLabel(metadata_key, this.currency);
     },
     columnClass(metadata_key) {
-      if (metadata_key === selection_pdf_photo_column_key) return "_colPhoto";
-      if (metadata_key === selection_pdf_description_column_key) {
-        return "_colDescription";
-      }
-      if (
-        metadata_key === selection_pdf_per_carat_column_key ||
-        this.isGemPricingTotalColumnKey(metadata_key)
-      ) {
-        return "_colPrice";
-      }
-      if (metadata_key === "number_of_pieces" || metadata_key === "weight_ct") {
-        return "_colNumeric";
-      }
-      return "_colDefault";
+      const align = selectionPdfColumnTextAlign(metadata_key);
+      if (align === "center") return "_alignCenter";
+      if (align === "right") return "_alignRight";
+      return "_alignLeft";
     },
     coverUrl(gem) {
       const relative = resolveGemCoverThumbRelative(gem);
@@ -399,6 +386,14 @@ export default {
     descriptionInlineLinks(gem) {
       return this.descriptionBlocks(gem).filter((block) => block.type === "link");
     },
+    formatWeight(value) {
+      const formatted = formatPdfNumber(value, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      if (formatted === "—") return formatted;
+      return `${formatted} ct`;
+    },
     formatCell(gem, metadata_key) {
       if (metadata_key === "id") return gemIdFromPath(gem);
       if (metadata_key === selection_pdf_photo_column_key) return "";
@@ -410,7 +405,9 @@ export default {
           gem,
           this.pricing_total_key
         );
-        return formatPdfPerCarat(per);
+        const formatted = formatPdfPerCarat(per);
+        if (formatted === "—") return formatted;
+        return `${formatted}/ct`;
       }
 
       if (this.isGemPricingTotalColumnKey(metadata_key)) {
@@ -421,10 +418,7 @@ export default {
       }
 
       if (metadata_key === "weight_ct") {
-        return formatPdfNumber(gem?.weight_ct, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
+        return this.formatWeight(gem?.weight_ct);
       }
 
       if (metadata_key === "number_of_pieces") {
@@ -449,10 +443,7 @@ export default {
         });
       }
       if (metadata_key === "weight_ct") {
-        return formatPdfNumber(this.weight_sum, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
+        return this.formatWeight(this.weight_sum);
       }
       if (metadata_key === selection_pdf_per_carat_column_key) {
         return "—";
@@ -481,28 +472,44 @@ export default {
 }
 
 ._header {
-  margin-bottom: 5mm;
+  margin-bottom: 8mm;
 }
 
-._headerTop {
+._logoRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6mm;
+}
+
+._logoText {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 28pt;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: #111;
+}
+
+._headerInfo {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 8mm;
-  margin-bottom: 4mm;
 }
 
 ._docTitle {
   margin: 0 0 2mm;
   font-size: 13pt;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 ._dateLine {
-  margin: 0;
+  margin: 0 0 2mm;
   font-size: 10pt;
+}
+
+._orderLine {
+  margin: 0;
+  font-size: 9pt;
 }
 
 ._headerRight {
@@ -525,37 +532,6 @@ export default {
   margin-top: 0.5mm;
 }
 
-._headerMeta {
-  display: flex;
-  align-items: center;
-  gap: 8mm;
-}
-
-._logoPlaceholder {
-  flex-shrink: 0;
-  width: 28mm;
-  height: 14mm;
-  border: 1px solid #999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f7f7f7;
-}
-
-._logoText {
-  font-size: 14pt;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #666;
-}
-
-._referenceLines {
-  p {
-    margin: 0 0 1mm;
-    font-size: 9pt;
-  }
-}
-
 ._refLabel {
   font-weight: 700;
 }
@@ -569,41 +545,26 @@ export default {
 
 ._gemsTable th,
 ._gemsTable td {
-  border: 1px solid #333;
-  padding: 1.5mm 1.2mm;
+  padding: 1.5mm 0.8mm;
   vertical-align: top;
   word-break: break-word;
 }
 
 ._gemsTable th {
-  font-size: 7.5pt;
+  font-size: 8pt;
   font-weight: 700;
-  text-transform: uppercase;
-  background: #f4f4f4;
 }
 
-._colNo {
-  width: 7mm;
+._alignLeft {
+  text-align: left;
+}
+
+._alignCenter {
   text-align: center;
 }
 
-._colPhoto {
-  width: 16mm;
-  text-align: center;
-}
-
-._colDescription {
-  width: auto;
-}
-
-._colPrice,
-._colNumeric {
-  width: 16mm;
+._alignRight {
   text-align: right;
-}
-
-._colDefault {
-  width: 12mm;
 }
 
 ._coverLink {
@@ -654,8 +615,7 @@ export default {
 }
 
 ._totalLabel {
-  text-align: right;
-  text-transform: uppercase;
+  text-align: left;
 }
 
 ._paymentLine {

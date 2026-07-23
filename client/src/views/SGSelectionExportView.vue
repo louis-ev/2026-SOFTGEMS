@@ -16,7 +16,6 @@
       :legal_text="legal_text"
       :pricing_total_key="pricing_total_key"
       :order_number_line="order_number_line"
-      :supplier_account_line="supplier_account_line"
       :bank_footer_en="bank_footer_en"
       :certificate_provider_labels="certificate_provider_labels"
     />
@@ -119,14 +118,11 @@ export default {
         month: "2-digit",
         day: "2-digit",
       });
-      return `Paris, le ${formatted}`;
+      return `Paris, ${formatted}`;
     },
     order_number_line() {
       const value = this.cleanString(this.selection?.reference_number);
       return value || "—";
-    },
-    supplier_account_line() {
-      return "—";
     },
     bank_footer_en() {
       const from_query = this.export_query.bank_footer_en;

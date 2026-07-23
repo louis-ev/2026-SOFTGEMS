@@ -54,7 +54,7 @@
             </colgroup>
             <thead>
               <tr>
-                <th class="_colNo">{{ $t("sg_pdf_col_no") }}</th>
+                <th :class="columnClass('__no__')">{{ $t("sg_pdf_col_no") }}</th>
                 <th
                   v-for="metadata_key in export_column_keys"
                   :key="metadata_key"
@@ -133,12 +133,9 @@
 <script>
 import Medias from "@/mixins/Medias.js";
 import Authors from "@/mixins/Authors.js";
-import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
 import {
-  selection_pdf_description_column_key,
-  selection_pdf_per_carat_column_key,
-  selection_pdf_photo_column_key,
   selectionPdfColumnHeaderLabel,
+  selectionPdfColumnTextAlign,
   selectionPdfTableColPercents,
 } from "@/utils/selection_pdf_columns.js";
 import {
@@ -422,20 +419,10 @@ export default {
       return selectionPdfColumnHeaderLabel(metadata_key, this.export_currency);
     },
     columnClass(metadata_key) {
-      if (metadata_key === selection_pdf_photo_column_key) return "_colPhoto";
-      if (metadata_key === selection_pdf_description_column_key) {
-        return "_colDescription";
-      }
-      if (
-        metadata_key === selection_pdf_per_carat_column_key ||
-        gem_pricing_total_column_keys.includes(metadata_key)
-      ) {
-        return "_colPrice";
-      }
-      if (metadata_key === "number_of_pieces" || metadata_key === "weight_ct") {
-        return "_colNumeric";
-      }
-      return "_colDefault";
+      const align = selectionPdfColumnTextAlign(metadata_key);
+      if (align === "center") return "_alignCenter";
+      if (align === "right") return "_alignRight";
+      return "_alignLeft";
     },
     buildSuggestedFilename() {
       const slug = this.folder_slug || "selection";
@@ -630,45 +617,27 @@ export default {
 }
 
 ._columnsList th {
-  border: 1px solid #333;
+  border: none;
   padding: 0.35rem 0.25rem;
   vertical-align: middle;
   font-size: 0.65rem;
   font-weight: 700;
-  text-transform: uppercase;
-  background: #f4f4f4;
   word-break: normal;
   overflow-wrap: normal;
   hyphens: none;
 }
 
-._colNo {
-  text-align: center;
-}
-
-._colPhoto {
-  text-align: center;
-}
-
-._colDescription {
-  white-space: normal;
+._alignLeft {
   text-align: left;
 }
 
-._colPrice,
-._colNumeric {
-  text-align: right;
-}
-
-._colDefault {
+._alignCenter {
   text-align: center;
+  white-space: nowrap;
 }
 
-._colNo,
-._colPhoto,
-._colPrice,
-._colNumeric,
-._colDefault {
+._alignRight {
+  text-align: right;
   white-space: nowrap;
 }
 
