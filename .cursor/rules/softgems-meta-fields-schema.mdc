@@ -1,0 +1,49 @@
+---
+description: >-
+  Keep settings_base.json field schemas in sync when adding, removing, or
+  renaming folder meta fields in SoftGems.
+globs:
+  - settings_base.json
+  - "**/views/SG*.vue"
+  - "**/components/softgems/**"
+  - "**/components/gems/**"
+  - "**/utils/**"
+  - docs/**/*.md
+alwaysApply: false
+---
+
+# Meta fields ↔ settings_base.json
+
+When you **add, remove, rename, or change the type** of a folder meta field in SoftGems client or server behaviour, update the matching schema in root **`settings_base.json`** in the **same change**.
+
+## Where schemas live
+
+- Root folder types: `settings_base.json` → `$folders` → `{folder_type}` → `fields`
+- Nested folders: same tree under `$folders` → `{parent}` → `$folders` → `{child}` → `fields`
+- File meta (certificates, etc.): under `$files` → `fields` when applicable
+
+Examples:
+
+- Gems inventory: `$folders.gems.fields`
+- Address book (company): `$folders.address_book.fields`
+- Company contact person: `$folders.address_book.$folders.contacts.fields`
+- Selections: `$folders.selections.fields`
+
+## Checklist
+
+1. Find every client write path: `createFolder({ additional_meta })`, `updateMeta({ new_meta })`, and any default/meta helpers.
+2. Add or remove the matching entry under the correct `fields` object in `settings_base.json`.
+3. Keep field keys **identical** between client code and schema (snake_case).
+4. Mirror `type`, `required`, and other constraints (`unique`, etc.) when the UI or API enforces them.
+5. Update related docs under `docs/` when the contract is documented there (e.g. `docs/FIELDS.md`, `docs/CERTIFICATES.md`).
+
+## Address book example
+
+Company and person postal addresses use four string fields — not a single `address` field:
+
+- `address_street`
+- `address_city`
+- `address_zip`
+- `address_country` — string; UI select uses `country_of_cut_suggestions` (COC list)
+
+Define them on both `address_book.fields` and `address_book.$folders.contacts.fields`.
