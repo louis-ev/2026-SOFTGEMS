@@ -33,6 +33,7 @@ import {
   BIconImages,
   BIconLayoutThreeColumns,
   BIconLink,
+  BIconLink45deg,
   BIconListOl,
   BIconPaletteFill,
   BIconPencil,
@@ -46,6 +47,7 @@ import {
   BIconPlusLg,
   BIconReceipt,
   BIconRulers,
+  BIconScissors,
   BIconTag,
   BIconTags,
   BIconTelephone,
@@ -89,6 +91,7 @@ Vue.component("BIconHouse", BIconHouse);
 Vue.component("BIconImages", BIconImages);
 Vue.component("BIconLayoutThreeColumns", BIconLayoutThreeColumns);
 Vue.component("BIconLink", BIconLink);
+Vue.component("BIconLink45deg", BIconLink45deg);
 Vue.component("BIconListOl", BIconListOl);
 Vue.component("BIconPaletteFill", BIconPaletteFill);
 Vue.component("BIconPencil", BIconPencil);
@@ -102,6 +105,7 @@ Vue.component("BIconPinMap", BIconPinMap);
 Vue.component("BIconPlusLg", BIconPlusLg);
 Vue.component("BIconReceipt", BIconReceipt);
 Vue.component("BIconRulers", BIconRulers);
+Vue.component("BIconScissors", BIconScissors);
 Vue.component("BIconTag", BIconTag);
 Vue.component("BIconTags", BIconTags);
 Vue.component("BIconTelephone", BIconTelephone);
