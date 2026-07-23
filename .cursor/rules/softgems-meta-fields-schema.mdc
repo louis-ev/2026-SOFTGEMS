@@ -46,4 +46,4 @@ Company and person postal addresses use four string fields — not a single `add
 - `address_zip`
 - `address_country` — string; UI select uses `country_of_cut_suggestions` (COC list)
 
-Define them on both `address_book.fields` and `address_book.$folders.contacts.fields`.
+Define them on both `address_book.fields` and `address_book.$folders.contacts.fields`. Format for PDF/print via `contactAddressPostalLines()` in [contact_address.js](../client/src/utils/contact_address.js) (street; `ZIP city`; country).

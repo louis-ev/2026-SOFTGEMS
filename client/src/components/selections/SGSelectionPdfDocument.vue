@@ -8,8 +8,12 @@
         </div>
         <div v-if="counterparty_block" class="_headerRight">
           <p class="_counterpartyName">{{ counterparty_block.name }}</p>
-          <p v-if="counterparty_block.address" class="_counterpartyAddress">
-            {{ counterparty_block.address }}
+          <p
+            v-for="(line, line_index) in counterparty_address_lines"
+            :key="'counterparty-address-' + line_index"
+            class="_counterpartyAddressLine"
+          >
+            {{ line }}
           </p>
         </div>
       </div>
@@ -251,6 +255,22 @@ export default {
     };
   },
   computed: {
+    counterparty_address_lines() {
+      const block = this.counterparty_block;
+      if (!block) return [];
+      if (Array.isArray(block.address_lines) && block.address_lines.length) {
+        return block.address_lines
+          .map((line) => String(line || "").trim())
+          .filter(Boolean);
+      }
+      const raw_address =
+        typeof block.address === "string" ? block.address.trim() : "";
+      if (!raw_address) return [];
+      return raw_address
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    },
     footer_lines() {
       return SELECTION_PDF_ACF_FOOTER_LINES;
     },
@@ -444,9 +464,13 @@ export default {
   text-transform: uppercase;
 }
 
-._counterpartyAddress {
+._counterpartyAddressLine {
   margin: 0;
-  white-space: pre-line;
+  line-height: 1.35;
+}
+
+._counterpartyAddressLine + ._counterpartyAddressLine {
+  margin-top: 0.5mm;
 }
 
 ._headerMeta {

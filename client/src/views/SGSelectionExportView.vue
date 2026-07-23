@@ -46,7 +46,7 @@ import {
   parseAddressBookPath,
   splitCounterpartyPath,
 } from "@/utils/address_book_paths.js";
-import { formatContactAddressMultiline } from "@/utils/contact_address.js";
+import { resolveCounterpartyPostalAddressLines } from "@/utils/contact_address.js";
 import {
   normalizeSelectionGemPaths,
   sortSelectionGems,
@@ -232,23 +232,21 @@ export default {
       }
       const { contact_path, person_path } = splitCounterpartyPath(path);
       let contact_name = "";
-      let contact_address = "";
+      let contact_folder = null;
       if (contact_path) {
         try {
-          const contact = await this.getFolderPublic(contact_path);
-          contact_name = formatAddressBookContactLabel(contact);
-          contact_address = formatContactAddressMultiline(contact);
+          contact_folder = await this.getFolderPublic(contact_path);
+          contact_name = formatAddressBookContactLabel(contact_folder);
         } catch {
           contact_name = contact_path.split("/").pop() || contact_path;
         }
       }
       let person_name = "";
-      let person_address = "";
+      let person_folder = null;
       if (person_path) {
         try {
-          const person = await this.getFolderPublic(person_path);
-          person_name = formatPersonDisplayName(person);
-          person_address = formatContactAddressMultiline(person);
+          person_folder = await this.getFolderPublic(person_path);
+          person_name = formatPersonDisplayName(person_folder);
         } catch {
           person_name = person_path.split("/").pop() || person_path;
         }
@@ -258,8 +256,15 @@ export default {
         parsed?.kind === "person"
           ? formatCounterpartyPersonLabel(contact_name, person_name)
           : contact_name || path;
-      const address = person_address || contact_address;
-      this.counterparty_block = { name, address };
+      const address_lines = resolveCounterpartyPostalAddressLines({
+        contact: contact_folder,
+        person: person_folder,
+      });
+      this.counterparty_block = {
+        name,
+        address: address_lines.join("\n"),
+        address_lines,
+      };
     },
     waitForImages() {
       return new Promise((resolve) => {

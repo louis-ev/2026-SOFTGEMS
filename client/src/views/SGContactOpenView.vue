@@ -55,9 +55,12 @@
       </SGSectionPanel>
 
       <SGSectionPanel
-        v-if="is_company"
-        section_id="company_details"
-        :title="$t('sg_section_company_details')"
+        section_id="contact_details"
+        :title="
+          is_company
+            ? $t('sg_section_company_details')
+            : $t('sg_section_contact_details')
+        "
       >
         <div class="_fieldsGrid">
           <div class="_fullWidthField">
@@ -147,7 +150,7 @@
               @save="onContactEditModalSave"
             />
           </div>
-          <div>
+          <div v-if="is_company">
             <SGEditableMetaField
               :label="$t('sg_company_email')"
               icon="envelope"
@@ -168,7 +171,7 @@
               @save="onContactEditModalSave"
             />
           </div>
-          <div>
+          <div v-if="is_company">
             <SGEditableMetaField
               :label="$t('sg_company_tva_number')"
               icon="hash"
@@ -189,7 +192,7 @@
               @save="onContactEditModalSave"
             />
           </div>
-          <div>
+          <div v-if="is_company">
             <SGEditableMetaField
               :label="$t('sg_company_tva_attestation')"
               icon="file-earmark-text"
@@ -816,9 +819,27 @@ export default {
       return payload;
     },
     openCompanyDetailModal(meta_key) {
-      if (!this.connected_as || !this.is_company || !this.clean_string(meta_key))
+      if (
+        !this.connected_as ||
+        !this.clean_string(meta_key) ||
+        !this.is_contact_root_detail_field(meta_key)
+      )
         return;
       this.contact_edit_modal = { kind: "company", meta_key };
+    },
+    is_contact_root_detail_field(meta_key) {
+      const shared_fields = [
+        "address_street",
+        "address_city",
+        "address_zip",
+        "address_country",
+        "phone",
+      ];
+      if (shared_fields.includes(meta_key)) return true;
+      if (!this.is_company) return false;
+      return ["company_email", "tva_number", "tva_attestation"].includes(
+        meta_key
+      );
     },
     openPersonDetailModal(person, field_key) {
       if (!this.connected_as) return;
@@ -1066,8 +1087,8 @@ export default {
     },
     async persistCompanyDetailModal(meta_key) {
       if (
-        !this.is_company ||
         !this.clean_string(meta_key) ||
+        !this.is_contact_root_detail_field(meta_key) ||
         this.company_field_matches_stored(meta_key) ||
         this.saving_company_field_key
       ) {
@@ -1094,17 +1115,25 @@ export default {
         this.populate_company_editors_from_contact();
         this.closeContactEditModal();
         this.flashFields([this.flashCompanyFieldKey(meta_key)]);
-        this.$alertify
-          .delay(3000)
-          .success(this.$t("sg_company_details_updated"));
+        this.$alertify.delay(3000).success(this.contact_details_saved_message());
       } catch (err) {
         const code = err && err.code;
         this.$alertify
           .delay(4000)
-          .error(code || this.$t("sg_could_not_save_company_details"));
+          .error(code || this.contact_details_save_error_message());
       } finally {
         this.saving_company_field_key = "";
       }
+    },
+    contact_details_saved_message() {
+      return this.is_company
+        ? this.$t("sg_company_details_updated")
+        : this.$t("sg_contact_details_updated");
+    },
+    contact_details_save_error_message() {
+      return this.is_company
+        ? this.$t("sg_could_not_save_company_details")
+        : this.$t("sg_could_not_save_contact_details");
     },
     personSlugFromFolder(folder) {
       const folder_path =

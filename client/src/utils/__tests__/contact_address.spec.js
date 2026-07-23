@@ -1,37 +1,42 @@
 import { describe, expect, it } from "vitest";
 import {
   contact_address_country_options,
+  contactAddressPostalLines,
   formatContactAddress,
-  formatContactAddressMultiline,
+  formatContactAddressPostal,
   readContactAddressFields,
+  resolveCounterpartyPostalAddressLines,
 } from "@/utils/contact_address.js";
 
 describe("contact_address", () => {
+  const sample_address = {
+    address_street: "12 Rue de la Paix",
+    address_city: "Paris",
+    address_zip: "75002",
+    address_country: "France",
+  };
+
   it("formats structured address parts inline", () => {
-    expect(
-      formatContactAddress({
-        address_street: "12 Rue de la Paix",
-        address_city: "Paris",
-        address_zip: "75002",
-        address_country: "France",
-      })
-    ).toBe("12 Rue de la Paix, Paris, 75002, France");
+    expect(formatContactAddress(sample_address)).toBe(
+      "12 Rue de la Paix, Paris, 75002, France"
+    );
   });
 
-  it("formats structured address parts on multiple lines", () => {
-    expect(
-      formatContactAddressMultiline({
-        address_street: "12 Rue de la Paix",
-        address_city: "Paris",
-        address_zip: "75002",
-        address_country: "France",
-      })
-    ).toBe("12 Rue de la Paix\nParis\n75002\nFrance");
+  it("formats structured address parts for postal display", () => {
+    expect(formatContactAddressPostal(sample_address)).toBe(
+      "12 Rue de la Paix\n75002 Paris\nFrance"
+    );
+    expect(contactAddressPostalLines(sample_address)).toEqual([
+      "12 Rue de la Paix",
+      "75002 Paris",
+      "France",
+    ]);
   });
 
-  it("returns empty string when all address parts are empty", () => {
+  it("returns empty output when all address parts are empty", () => {
     expect(formatContactAddress({})).toBe("");
-    expect(formatContactAddress({ address: "ignored legacy" })).toBe("");
+    expect(formatContactAddressPostal({})).toBe("");
+    expect(contactAddressPostalLines({})).toEqual([]);
   });
 
   it("reads structured address fields from a record", () => {
@@ -46,6 +51,31 @@ describe("contact_address", () => {
       address_zip: "",
       address_country: "",
     });
+  });
+
+  it("prefers person address lines over company address lines", () => {
+    expect(
+      resolveCounterpartyPostalAddressLines({
+        contact: {
+          address_street: "Company street",
+          address_city: "Lyon",
+        },
+        person: {
+          address_street: "Person street",
+          address_city: "Paris",
+          address_zip: "75001",
+        },
+      })
+    ).toEqual(["Person street", "75001 Paris"]);
+  });
+
+  it("falls back to company address lines when person address is empty", () => {
+    expect(
+      resolveCounterpartyPostalAddressLines({
+        contact: sample_address,
+        person: {},
+      })
+    ).toEqual(["12 Rue de la Paix", "75002 Paris", "France"]);
   });
 
   it("exposes COC country options for contact address country", () => {
