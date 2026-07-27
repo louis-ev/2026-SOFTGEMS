@@ -1,0 +1,25 @@
+/* ACF brand fonts — Inter (functional) + Crimson Pro (headings). */
+
+@font-face {
+  font-family: "Inter";
+  src: url("acf/inter-variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Crimson Pro";
+  src: url("acf/crimson-pro-variable.ttf") format("truetype");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Crimson Pro";
+  src: url("acf/crimson-pro-italic-variable.ttf") format("truetype");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: block;
+}

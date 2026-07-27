@@ -41,33 +41,6 @@
         />
       </div>
 
-      <div class="_columnsSection">
-        <span class="_columnsLabel">{{ $t("sg_pdf_export_columns_title") }}</span>
-        <div class="_columnsPreview">
-          <table class="_columnsList">
-            <colgroup>
-              <col
-                v-for="col in export_table_col_widths"
-                :key="col.key"
-                :style="{ width: `${col.percent}%` }"
-              />
-            </colgroup>
-            <thead>
-              <tr>
-                <th :class="columnClass('__no__')">{{ $t("sg_pdf_col_no") }}</th>
-                <th
-                  v-for="metadata_key in export_column_keys"
-                  :key="metadata_key"
-                  :class="columnClass(metadata_key)"
-                >
-                  {{ columnLabel(metadata_key) }}
-                </th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-
       <SGSelectionPdfBankFootersEditor
         v-if="has_pricing_selected"
         :presets="bank_footer_presets_draft"
@@ -120,7 +93,6 @@
         v-if="!is_exporting && !export_done"
         type="button"
         class="u-button u-button_bleuvert"
-        :disabled="gems_loading"
         @click="startExport"
       >
         <b-icon icon="file-earmark-pdf" />
@@ -133,11 +105,6 @@
 <script>
 import Medias from "@/mixins/Medias.js";
 import Authors from "@/mixins/Authors.js";
-import {
-  selectionPdfColumnHeaderLabel,
-  selectionPdfColumnTextAlign,
-  selectionPdfTableColPercents,
-} from "@/utils/selection_pdf_columns.js";
 import {
   buildSelectionPdfColumnKeys,
   selection_pdf_pricing_label_keys,
@@ -155,10 +122,6 @@ import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
-import {
-  normalizeSelectionGemPaths,
-  sortSelectionGems,
-} from "@/utils/selection_entries.js";
 import { parseSelectionFolderParam } from "@/utils/selection_urls.js";
 
 export default {
@@ -192,9 +155,6 @@ export default {
   },
   data() {
     return {
-      gems_root_path: "gems",
-      entry_gems_list: [],
-      gems_loading: false,
       is_exporting: false,
       export_done: false,
       task_progress: 0,
@@ -229,9 +189,6 @@ export default {
     export_column_keys() {
       const pricing_key = String(this.selected_pricing_key || "").trim();
       return buildSelectionPdfColumnKeys(pricing_key || null);
-    },
-    export_table_col_widths() {
-      return selectionPdfTableColPercents(this.export_column_keys);
     },
     has_pricing_selected() {
       return Boolean(String(this.selected_pricing_key || "").trim());
@@ -287,7 +244,7 @@ export default {
     this.resetPricingSelection();
     this.previous_main_document_path =
       findSelectionMainDocumentFile(this.selection)?.$path || "";
-    await Promise.all([this.loadEntryGems(), this.loadInstanceSettings()]);
+    await this.loadInstanceSettings();
   },
   methods: {
     defaultPricingKeyValue() {
@@ -386,43 +343,6 @@ export default {
       } finally {
         this.is_saving_bank_footer = false;
       }
-    },
-    async loadEntryGems() {
-      const gem_paths = normalizeSelectionGemPaths(
-        this.selection?.selection_entries
-      );
-      if (!gem_paths.length) {
-        this.entry_gems_list = [];
-        return;
-      }
-      this.gems_loading = true;
-      try {
-        const folder_slugs = gem_paths.map((p) => p.split("/").pop());
-        const { folders } = await this.$api.getFoldersBySlugs({
-          path: this.gems_root_path,
-          folder_slugs,
-          no_files: true,
-        });
-        const by_path = Object.fromEntries(
-          folders.map((meta) => [meta.$path, meta])
-        );
-        this.entry_gems_list = sortSelectionGems(
-          gem_paths.map((p) => by_path[p] || { $path: p })
-        );
-      } catch {
-        this.entry_gems_list = gem_paths.map((p) => ({ $path: p }));
-      } finally {
-        this.gems_loading = false;
-      }
-    },
-    columnLabel(metadata_key) {
-      return selectionPdfColumnHeaderLabel(metadata_key, this.export_currency);
-    },
-    columnClass(metadata_key) {
-      const align = selectionPdfColumnTextAlign(metadata_key);
-      if (align === "center") return "_alignCenter";
-      if (align === "right") return "_alignRight";
-      return "_alignLeft";
     },
     buildSuggestedFilename() {
       const slug = this.folder_slug || "selection";
@@ -592,53 +512,6 @@ export default {
 
 ._pricingLabel {
   font-weight: 600;
-}
-
-._columnsSection {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) / 4);
-}
-
-._columnsLabel {
-  font-weight: 600;
-}
-
-._columnsPreview {
-  max-width: 100%;
-  overflow: hidden;
-}
-
-._columnsList {
-  width: 100%;
-  margin: 0;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-._columnsList th {
-  border: none;
-  padding: 0.35rem 0.25rem;
-  vertical-align: middle;
-  font-size: 0.65rem;
-  font-weight: 700;
-  word-break: normal;
-  overflow-wrap: normal;
-  hyphens: none;
-}
-
-._alignLeft {
-  text-align: left;
-}
-
-._alignCenter {
-  text-align: center;
-  white-space: nowrap;
-}
-
-._alignRight {
-  text-align: right;
-  white-space: nowrap;
 }
 
 ._exporting,

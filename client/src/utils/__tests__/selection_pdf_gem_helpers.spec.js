@@ -7,6 +7,7 @@ import {
   toAbsoluteAppUrl,
   formatPdfCurrencyTotal,
   formatPdfNumber,
+  formatPdfPerCarat,
 } from "@/utils/selection_pdf_gem_helpers.js";
 
 describe("resolveGemCoverThumbRelative", () => {
@@ -96,7 +97,23 @@ describe("makeGemMediaFileAbsoluteUrl", () => {
 
 describe("pdf number formatting", () => {
   it("formats currency totals and dashes for missing values", () => {
-    expect(formatPdfCurrencyTotal(16125, "USD")).toBe("$16,125.00");
+    expect(formatPdfCurrencyTotal(16125, "USD")).toBe("$16\u00a0125.00");
+    expect(formatPdfCurrencyTotal(424476, "USD")).toBe("$424\u00a0476.00");
     expect(formatPdfNumber(null)).toBe("—");
+  });
+
+  it("formats weights with a decimal dot", () => {
+    expect(
+      formatPdfNumber(2.15, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    ).toBe("2.15");
+  });
+
+  it("formats per-carat prices without thousands grouping", () => {
+    expect(formatPdfPerCarat(7500)).toBe("7500.00");
+    expect(formatPdfPerCarat(26500)).toBe("26500.00");
+    expect(formatPdfPerCarat(null)).toBe("—");
   });
 });

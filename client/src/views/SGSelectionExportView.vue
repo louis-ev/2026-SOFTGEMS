@@ -10,12 +10,14 @@
       :selection="selection"
       :gems="entry_gems_list"
       :metadata_keys="metadata_keys"
-      :document_title="document_title"
+      :document_title_prefix="document_title_prefix"
+      :document_number="document_number"
       :date_line="date_line"
       :counterparty_block="counterparty_block"
       :legal_text="legal_text"
       :pricing_total_key="pricing_total_key"
       :order_number_line="order_number_line"
+      :supplier_account_line="supplier_account_line"
       :bank_footer_en="bank_footer_en"
       :certificate_provider_labels="certificate_provider_labels"
     />
@@ -104,11 +106,13 @@ export default {
         ) || ""
       );
     },
-    document_title() {
+    document_title_prefix() {
       if (!this.selection) return "";
       const defaults = selectionPdfExportDefaults(this.selection.selection_type);
-      const number = this.cleanString(this.selection.document_number_name);
-      return this.$t(defaults.document_title_key, { number: number || "—" });
+      return this.$t(defaults.document_title_key, { number: "" }).trim();
+    },
+    document_number() {
+      return this.cleanString(this.selection?.document_number_name) || "—";
     },
     date_line() {
       const raw = this.selection?.selection_date;
@@ -123,6 +127,9 @@ export default {
     order_number_line() {
       const value = this.cleanString(this.selection?.reference_number);
       return value || "—";
+    },
+    supplier_account_line() {
+      return "—";
     },
     bank_footer_en() {
       const from_query = this.export_query.bank_footer_en;
@@ -144,6 +151,7 @@ export default {
     }
     await this.loadExportData();
     await this.$nextTick();
+    await this.waitForBrandFonts();
     await this.waitForImages();
     this.setPublicationReadyState(true);
     this.is_loading = false;
@@ -287,6 +295,30 @@ export default {
         address: address_lines.join("\n"),
         address_lines,
       };
+    },
+    async waitForBrandFonts() {
+      if (typeof document === "undefined") return;
+      const href = "/fonts/acf_brand.css";
+      if (!document.querySelector(`link[href="${href}"]`)) {
+        await new Promise((resolve) => {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = href;
+          link.onload = resolve;
+          link.onerror = resolve;
+          document.head.appendChild(link);
+          setTimeout(resolve, 3000);
+        });
+      }
+      if (!document.fonts) return;
+      try {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 5000)),
+        ]);
+      } catch {
+        // Proceed even if font loading fails (fallback to system fonts).
+      }
     },
     waitForImages() {
       return new Promise((resolve) => {

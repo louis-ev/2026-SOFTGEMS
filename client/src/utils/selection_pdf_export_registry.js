@@ -127,8 +127,8 @@ const _defaults_by_slug = Object.freeze({
 
 /** ACF company footer (French, static). */
 export const SELECTION_PDF_ACF_FOOTER_LINES = Object.freeze([
-  "SIÈGE SOCIAL : 10, rue Place Vendôme - 75001 PARIS - TEL : 33 (6) 69241489 - info@acfinegems.com",
-  "SAS AU CAPITAL DE 50000 EUROS - R.C. PARIS - SIRET 99409944800015",
+  "SIEGE SOCIAL: 10, rue Place Vendôme - 75001 PARIS - TEL: 33(6)69 24 14 89 - info@acfinegems.com",
+  "SAS AU CAPITAL DE 50 000 EUROS-SIRET 994 099 448 00015",
 ]);
 
 /** @param {string} selection_type */

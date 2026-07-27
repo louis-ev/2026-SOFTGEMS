@@ -127,6 +127,28 @@ export function sumGemPricingTotals(gems, pricing_key) {
 }
 
 /**
+ * Number formatting used across the PDF: decimal dot, optional
+ * non-breaking-space thousands separator (`424 476.00`) — no commas.
+ * @param {number} value
+ * @param {{ minimumFractionDigits?: number, maximumFractionDigits?: number, useGrouping?: boolean }} [options]
+ * @returns {string}
+ */
+function formatPdfBaseNumber(value, options = {}) {
+  const {
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 2,
+    useGrouping = true,
+  } = options;
+  return value
+    .toLocaleString("en-US", {
+      minimumFractionDigits,
+      maximumFractionDigits,
+      useGrouping,
+    })
+    .replace(/,/g, "\u00a0");
+}
+
+/**
  * @param {number|null|undefined} value
  * @param {{ minimumFractionDigits?: number, maximumFractionDigits?: number }} [options]
  * @returns {string}
@@ -135,28 +157,27 @@ export function formatPdfNumber(value, options = {}) {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "—";
   }
-  const {
-    minimumFractionDigits = 0,
-    maximumFractionDigits = 2,
-  } = options;
-  return value.toLocaleString("en-GB", {
-    minimumFractionDigits,
-    maximumFractionDigits,
-  });
+  return formatPdfBaseNumber(value, options);
 }
 
 /**
+ * Per-carat prices are shown without thousands grouping (`7500.00`).
  * @param {number|null|undefined} value
  * @returns {string}
  */
 export function formatPdfPerCarat(value) {
-  return formatPdfNumber(value, {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+  return formatPdfBaseNumber(value, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: false,
   });
 }
 
 /**
+ * Currency totals follow the reference layout: `$16 125.00` for USD.
  * @param {number|null|undefined} value
  * @param {string} currency
  * @returns {string}
@@ -166,7 +187,7 @@ export function formatPdfCurrencyTotal(value, currency) {
     return "—";
   }
   const code = String(currency || "USD").trim() || "USD";
-  const formatted = value.toLocaleString("en-GB", {
+  const formatted = formatPdfBaseNumber(value, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -184,7 +205,7 @@ export function formatPdfCurrencyAmount(value, currency) {
     return "—";
   }
   const code = String(currency || "USD").trim() || "USD";
-  const formatted = value.toLocaleString("en-GB", {
+  const formatted = formatPdfBaseNumber(value, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

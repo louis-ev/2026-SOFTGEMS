@@ -1,18 +1,16 @@
 <template>
   <article class="_pdfDocument">
     <header class="_header">
-      <div class="_logoRow" aria-hidden="true">
-        <span class="_logoText">ACF</span>
+      <div class="_logoRow">
+        <AcfLogoMark class="_logoMark" />
       </div>
 
       <div class="_headerInfo">
         <div class="_headerLeft">
-          <h1 class="_docTitle">{{ document_title }}</h1>
+          <h1 class="_docTitle">
+            {{ document_title_prefix }}<strong>{{ document_number }}</strong>
+          </h1>
           <p class="_dateLine">{{ date_line }}</p>
-          <p class="_orderLine">
-            <span class="_refLabel">{{ $t("sg_pdf_order_number") }}</span>
-            {{ order_number_line || "—" }}
-          </p>
         </div>
         <div v-if="counterparty_block" class="_headerRight">
           <p class="_counterpartyName">{{ counterparty_block.name }}</p>
@@ -24,6 +22,17 @@
             {{ line }}
           </p>
         </div>
+      </div>
+
+      <div class="_referenceLines">
+        <p class="_orderLine">
+          <span class="_refLabel">{{ $t("sg_pdf_order_number") }}</span>
+          {{ order_number_line || "—" }}
+        </p>
+        <p class="_supplierLine">
+          <span class="_refLabel">{{ $t("sg_pdf_supplier_account_number") }}</span>
+          {{ supplier_account_line || "—" }}
+        </p>
       </div>
     </header>
 
@@ -120,18 +129,15 @@
           </td>
         </tr>
         <tr v-if="has_pricing" class="_totalRow">
-          <td :class="columnClass('__no__')" />
+          <td :class="columnClass('__no__')">
+            <span class="_totalLabel">{{ $t("sg_pdf_total") }}</span>
+          </td>
           <td
             v-for="metadata_key in metadata_keys"
             :key="`total-${metadata_key}`"
             :class="columnClass(metadata_key)"
           >
-            <span
-              v-if="metadata_key === description_column_key"
-              class="_totalLabel"
-            >
-              {{ $t("sg_pdf_total") }}
-            </span>
+            <span v-if="metadata_key === description_column_key" />
             <span v-else-if="metadata_key === photo_column_key" />
             <span v-else-if="metadata_key === 'id'" />
             <span v-else class="_cellText">{{
@@ -147,21 +153,17 @@
             :class="columnClass(metadata_key)"
           >
             <span
-              v-if="metadata_key === description_column_key"
+              v-if="metadata_key === 'weight_ct'"
               class="_totalLabel"
-            >
-              {{ $t("sg_pdf_vat") }}
-            </span>
-            <span v-else-if="metadata_key === photo_column_key" />
-            <span v-else-if="metadata_key === 'id'" />
-            <span
-              v-else-if="metadata_key === pricing_total_key"
-              class="_cellText"
-            >{{ formatted_vat_amount }}</span>
+            >{{ $t("sg_pdf_vat") }}</span>
             <span
               v-else-if="metadata_key === per_carat_column_key"
               class="_cellText"
             >20%</span>
+            <span
+              v-else-if="metadata_key === pricing_total_key"
+              class="_cellText"
+            >{{ formatted_vat_amount }}</span>
           </td>
         </tr>
         <tr v-if="has_pricing" class="_grandTotalRow">
@@ -172,13 +174,9 @@
             :class="columnClass(metadata_key)"
           >
             <span
-              v-if="metadata_key === description_column_key"
+              v-if="metadata_key === 'weight_ct'"
               class="_totalLabel"
-            >
-              {{ $t("sg_pdf_grand_total") }}
-            </span>
-            <span v-else-if="metadata_key === photo_column_key" />
-            <span v-else-if="metadata_key === 'id'" />
+            >{{ $t("sg_pdf_grand_total") }}</span>
             <span
               v-else-if="metadata_key === pricing_total_key"
               class="_cellText"
@@ -192,9 +190,12 @@
       {{ payment_line }}
     </p>
 
+    <p v-if="has_pricing && bank_footer_en" class="_bankIntro">
+      {{ $t("sg_pdf_bank_intro") }}
+    </p>
     <div v-if="bank_footer_en" class="_bankBlock">{{ bank_footer_en }}</div>
 
-    <p class="_legal">{{ legal_text }}</p>
+    <p v-if="legal_text && !has_pricing" class="_legal">{{ legal_text }}</p>
 
     <footer class="_footer">
       <p v-for="(line, index) in footer_lines" :key="index">{{ line }}</p>
@@ -203,6 +204,7 @@
 </template>
 
 <script>
+import AcfLogoMark from "@/components/selections/AcfLogoMark.vue";
 import GemPricing from "@/mixins/GemPricing";
 import {
   SELECTION_PDF_ACF_FOOTER_LINES,
@@ -216,10 +218,10 @@ import {
   selectionPdfColumnTextAlign,
   selectionPdfTableColPercents,
 } from "@/utils/selection_pdf_columns.js";
+import { numberToWordsEnCapitalized } from "@/utils/number_to_words_en.js";
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
 import {
-  formatPdfCurrencyAmount,
   formatPdfCurrencyTotal,
   formatPdfNumber,
   formatPdfPerCarat,
@@ -234,6 +236,9 @@ import {
 export default {
   name: "SGSelectionPdfDocument",
   mixins: [GemPricing],
+  components: {
+    AcfLogoMark,
+  },
   props: {
     selection: {
       type: Object,
@@ -247,9 +252,13 @@ export default {
       type: Array,
       default: () => [],
     },
-    document_title: {
+    document_title_prefix: {
       type: String,
       default: "",
+    },
+    document_number: {
+      type: String,
+      default: "—",
     },
     date_line: {
       type: String,
@@ -270,6 +279,10 @@ export default {
     order_number_line: {
       type: String,
       default: "",
+    },
+    supplier_account_line: {
+      type: String,
+      default: "—",
     },
     bank_footer_en: {
       type: String,
@@ -344,11 +357,12 @@ export default {
     },
     payment_line() {
       if (!Number.isFinite(this.grand_total_amount)) return "";
-      const amount = formatPdfCurrencyAmount(
-        this.grand_total_amount,
-        this.currency
-      );
-      return this.$t("sg_pdf_payment_line", { amount });
+      const amount = formatPdfNumber(this.grand_total_amount, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+      const amount_words = numberToWordsEnCapitalized(this.grand_total_amount);
+      return this.$t("sg_pdf_payment_line", { amount, amount_words });
     },
     media_origin() {
       if (typeof window === "undefined") return "";
@@ -387,12 +401,10 @@ export default {
       return this.descriptionBlocks(gem).filter((block) => block.type === "link");
     },
     formatWeight(value) {
-      const formatted = formatPdfNumber(value, {
+      return formatPdfNumber(value, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      if (formatted === "—") return formatted;
-      return `${formatted} ct`;
     },
     formatCell(gem, metadata_key) {
       if (metadata_key === "id") return gemIdFromPath(gem);
@@ -407,7 +419,7 @@ export default {
         );
         const formatted = formatPdfPerCarat(per);
         if (formatted === "—") return formatted;
-        return `${formatted}/ct`;
+        return formatted;
       }
 
       if (this.isGemPricingTotalColumnKey(metadata_key)) {
@@ -446,94 +458,118 @@ export default {
         return this.formatWeight(this.weight_sum);
       }
       if (metadata_key === selection_pdf_per_carat_column_key) {
-        return "—";
+        return "";
       }
       if (metadata_key === this.pricing_total_key) {
         return this.formatted_subtotal;
       }
-      return "—";
+      return "";
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
+$acf-brand-primary: #1c2b3a;
+$acf-brand-light: #7b95a6;
+
+/*
+  Metrics measured on the reference "ACF INV N°20265.pdf" (A4):
+  side margins 17.8mm, single 8pt body size, ~1.4 line-height,
+  logo ~18mm wide centered, first text line at 34mm from the top.
+*/
+
 ._pdfDocument {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: 210mm;
   min-height: 297mm;
   margin: 0 auto;
-  padding: 12mm 10mm 14mm;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 9pt;
-  line-height: 1.35;
-  color: #111;
+  padding: 14mm 17.8mm 14mm;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  font-size: 8pt;
+  line-height: 1.4;
+  color: $acf-brand-primary;
   background: #fff;
 }
 
 ._header {
-  margin-bottom: 8mm;
+  margin-bottom: 0;
 }
 
 ._logoRow {
   display: flex;
   justify-content: center;
-  margin-bottom: 6mm;
+  margin-bottom: 12mm;
 }
 
-._logoText {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 28pt;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  color: #111;
+._logoMark {
+  width: 18mm;
 }
 
 ._headerInfo {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 8mm;
+  margin-bottom: 7.5mm;
+}
+
+._headerLeft {
+  /* Counterparty block starts at ~72% of the content width in the reference. */
+  flex: 0 0 71.8%;
 }
 
 ._docTitle {
-  margin: 0 0 2mm;
-  font-size: 13pt;
-  font-weight: 700;
+  margin: 0;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-size: 8pt;
+  font-weight: 400;
+  line-height: 1.4;
+
+  strong {
+    font-weight: 700;
+  }
 }
 
 ._dateLine {
-  margin: 0 0 2mm;
-  font-size: 10pt;
+  margin: 0;
+  font-size: 8pt;
+  font-weight: 400;
 }
 
-._orderLine {
+._referenceLines {
+  p {
+    margin: 0;
+    font-size: 8pt;
+    font-weight: 400;
+  }
+}
+
+._orderLine,
+._supplierLine {
   margin: 0;
-  font-size: 9pt;
 }
 
 ._headerRight {
-  text-align: right;
-  max-width: 48%;
+  flex: 1;
+  text-align: left;
 }
 
 ._counterpartyName {
-  margin: 0 0 1mm;
+  margin: 0;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 ._counterpartyAddressLine {
   margin: 0;
-  line-height: 1.35;
-}
-
-._counterpartyAddressLine + ._counterpartyAddressLine {
-  margin-top: 0.5mm;
+  line-height: 1.4;
+  font-weight: 400;
 }
 
 ._refLabel {
-  font-weight: 700;
+  font-weight: 400;
 }
 
 ._gemsTable {
@@ -545,14 +581,21 @@ export default {
 
 ._gemsTable th,
 ._gemsTable td {
-  padding: 1.5mm 0.8mm;
+  border: 0.5pt solid $acf-brand-primary;
+  padding: 0.5mm 1mm;
   vertical-align: top;
   word-break: break-word;
 }
 
 ._gemsTable th {
+  font-family: "Inter", Arial, sans-serif;
   font-size: 8pt;
   font-weight: 700;
+}
+
+._gemsTable tbody td {
+  font-size: 8pt;
+  font-weight: 400;
 }
 
 ._alignLeft {
@@ -574,8 +617,8 @@ export default {
 
 ._coverImg {
   display: block;
-  width: 14mm;
-  height: 14mm;
+  width: 17mm;
+  height: 17mm;
   object-fit: cover;
   margin: 0 auto;
 }
@@ -583,17 +626,17 @@ export default {
 ._descriptionCell {
   display: flex;
   flex-direction: column;
-  gap: 0.8mm;
 }
 
 ._descriptionLine {
   display: block;
   font-size: 8pt;
-  line-height: 1.3;
+  line-height: 1.4;
+  font-weight: 400;
 }
 
 ._descriptionLink {
-  color: #111;
+  color: $acf-brand-primary;
   text-decoration: underline;
 }
 
@@ -605,30 +648,39 @@ export default {
 ._cellText {
   display: block;
   font-size: 8pt;
+  font-weight: 400;
 }
 
 ._totalRow td,
 ._vatRow td,
 ._grandTotalRow td {
   font-weight: 700;
-  font-size: 9pt;
+  font-size: 8pt;
 }
 
 ._totalLabel {
-  text-align: left;
+  font-weight: 700;
 }
 
 ._paymentLine {
-  margin: 0 0 3mm;
-  font-size: 8.5pt;
+  margin: 0 0 4mm;
+  font-size: 8pt;
   line-height: 1.4;
+  font-weight: 400;
+}
+
+._bankIntro {
+  margin: 0;
+  font-size: 8pt;
+  font-weight: 700;
 }
 
 ._bankBlock {
-  margin: 0 0 4mm;
+  margin: 0 0 5mm;
   font-size: 8pt;
-  line-height: 1.45;
+  line-height: 1.4;
   white-space: pre-line;
+  font-weight: 400;
 }
 
 ._legal {
@@ -636,18 +688,50 @@ export default {
   font-size: 7pt;
   line-height: 1.45;
   text-align: justify;
+  font-weight: 300;
+  color: $acf-brand-primary;
 }
 
 ._footer {
   margin-top: auto;
-  padding-top: 3mm;
-  border-top: 1px solid #ccc;
-  font-size: 6.5pt;
+  padding-top: 2mm;
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 7.3pt;
   line-height: 1.4;
-  color: #333;
+  font-weight: 400;
+  text-align: center;
+  color: $acf-brand-primary;
 
   p {
-    margin: 0 0 0.5mm;
+    margin: 0;
+  }
+}
+
+@media print {
+  /* Block layout fragments across pages reliably (flex does not). */
+  ._pdfDocument {
+    display: block;
+    /* Reserve room so flowing content never overlaps the fixed footer. */
+    padding-bottom: 24mm;
+  }
+
+  ._gemsTable thead {
+    display: table-header-group;
+  }
+
+  ._gemsTable tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Chromium repeats fixed elements on every printed page. */
+  ._footer {
+    position: fixed;
+    bottom: 10mm;
+    left: 0;
+    right: 0;
+    margin-top: 0;
+    padding-top: 0;
   }
 }
 </style>
