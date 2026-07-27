@@ -54,13 +54,13 @@ export default {
 }
 
 .sg-icon-sidebar--primary {
-  background: var(--c-vert);
+  background: var(--acf-brand-primary);
   z-index: 3;
 }
 
 .sg-icon-sidebar--secondary {
   flex: 0 0 56px;
-  background: color-mix(in srgb, var(--c-vert) 70%, white);
+  background: color-mix(in srgb, var(--acf-brand-primary) 78%, var(--acf-brand-light));
   z-index: 2;
   overflow-y: auto;
   min-height: 0;
@@ -74,26 +74,28 @@ export default {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: black;
   background: transparent;
   font-size: var(--sl-font-size-large);
   transition: background-color 150ms ease, color 150ms ease;
 }
 
+.sg-icon-sidebar--primary .sg-icon-sidebar__item {
+  color: var(--acf-brand-light);
+}
+
 .sg-icon-sidebar--secondary .sg-icon-sidebar__item {
   flex-shrink: 0;
+  color: color-mix(in srgb, var(--acf-brand-cream) 80%, var(--acf-brand-light));
 }
 
 .sg-icon-sidebar__item:hover {
-  background: rgba(255, 255, 255, 0.54);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--acf-brand-cream);
 }
 
-.sg-icon-sidebar--primary .sg-icon-sidebar__item.is--active {
-  background: #ffffff;
-  color: #111;
-}
-
+.sg-icon-sidebar--primary .sg-icon-sidebar__item.is--active,
 .sg-icon-sidebar--secondary .sg-icon-sidebar__item.is--active {
-  background: rgb(0, 0, 0, 0.14);
+  background: var(--acf-brand-cream);
+  color: var(--acf-brand-primary);
 }
 </style>

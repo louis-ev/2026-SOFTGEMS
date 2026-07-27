@@ -144,7 +144,7 @@
     <div v-if="!meta_target_path" class="u-spacingBottom"></div>
 
     <SGFieldHistoryPanel
-      v-if="!meta_target_path && !active_dimensions_merged"
+      v-if="!active_dimensions_merged"
       :history_enabled="true"
       :show_history="show_history"
       :is_loading_history="is_loading_history"
@@ -324,6 +324,13 @@ export default {
         this.field.pricing_total_key ||
         this.field.key
       );
+    },
+    history_path() {
+      const file_path =
+        typeof this.meta_target_path === "string"
+          ? this.meta_target_path.trim()
+          : "";
+      return file_path || this.gem_path;
     },
     field_validation() {
       if (this.active_dimensions_merged) {
@@ -842,7 +849,7 @@ export default {
       this.is_loading_history = true;
       try {
         const entries = await this.$api.getFieldHistory({
-          path: this.gem_path,
+          path: this.history_path,
         });
         this.field_history = extract_field_entries(
           entries,
@@ -1049,6 +1056,7 @@ export default {
         return this.formatAffectedFieldValue(this.toNumberOrDefault(value));
       }
       if (value === null || value === undefined || value === "") return "—";
+      if (this.is_date_field) return toDateInputValue(value) || "—";
       if (this.field.pricing_total_key) {
         const weight_ct = this.toNumberOrDefault(this.gem?.weight_ct);
         const per_carat = this.computePerCarat({
@@ -1086,6 +1094,10 @@ export default {
           total_value: this.toNumberOrDefault(raw),
           weight_ct,
         });
+        return;
+      }
+      if (this.is_date_field) {
+        this.onDateEditorInput(toDateInputValue(raw));
         return;
       }
       this.edit_value = raw;

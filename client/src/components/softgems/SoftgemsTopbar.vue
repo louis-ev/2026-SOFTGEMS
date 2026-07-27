@@ -58,8 +58,8 @@ export default {
 </script>
 <style lang="scss" scoped>
 ._softgemsTopbar {
-  background: var(--c-noir);
-  // border-bottom: 1px solid var(--c-gris_clair);
+  background: var(--acf-brand-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--acf-brand-light) 35%, transparent);
 }
 
 ._inner {
@@ -92,6 +92,7 @@ export default {
 ._subtitle {
   margin: 0;
   font-size: var(--sl-font-size-small);
+  color: var(--acf-brand-light);
 }
 
 ._right {

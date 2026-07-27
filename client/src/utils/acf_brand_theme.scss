@@ -1,0 +1,86 @@
+/**
+ * ACF brand palette (Brand Guidelines v1.1).
+ * Keep in sync with acf_brand_tokens.js.
+ * Imported last in App.vue so these tokens override the legacy palette.
+ */
+:root {
+  --acf-brand-primary: #1c2b3a;
+  --acf-brand-primary-dark: #0f161d;
+  --acf-brand-light: #7b95a6;
+  --acf-brand-cream: #faf9f7;
+  --acf-brand-text-secondary: rgba(28, 43, 58, 0.6);
+
+  /* Full-app palette takeover */
+  --c-noir: var(--acf-brand-primary);
+  --c-gris_fonce: var(--acf-brand-light);
+  --label-color: var(--acf-brand-light);
+  --c-bodybg: var(--acf-brand-cream);
+  --c-blanc: #ffffff;
+  --c-gris_clair: color-mix(in srgb, var(--acf-brand-light) 18%, var(--acf-brand-cream));
+  --c-gris: color-mix(in srgb, var(--acf-brand-light) 42%, white);
+  --c-vert: var(--acf-brand-primary);
+  --c-vert_fonce: var(--acf-brand-primary-dark);
+  --c-bleuvert: var(--acf-brand-primary);
+  --c-bleuvert_clair: color-mix(in srgb, var(--acf-brand-light) 55%, white);
+  --c-bleuvert_fonce: var(--acf-brand-primary-dark);
+  --c-bleumarine: var(--acf-brand-primary);
+  --c-bleumarine_clair: color-mix(in srgb, var(--acf-brand-light) 50%, white);
+  --c-bleumarine_fonce: var(--acf-brand-primary-dark);
+  --active-color: var(--acf-brand-primary);
+  --body-bg-pattern-color: var(--acf-brand-cream);
+  --color-make: var(--acf-brand-primary);
+  --color-publish: var(--acf-brand-primary);
+  --plyr-color-main: var(--acf-brand-primary);
+
+  --g-100: var(--acf-brand-cream);
+  --g-200: color-mix(in srgb, var(--acf-brand-light) 14%, white);
+  --g-300: color-mix(in srgb, var(--acf-brand-light) 28%, white);
+  --g-400: color-mix(in srgb, var(--acf-brand-light) 42%, white);
+  --g-500: var(--acf-brand-light);
+  --g-600: color-mix(in srgb, var(--acf-brand-primary) 35%, var(--acf-brand-light));
+
+  accent-color: var(--acf-brand-primary);
+}
+
+html {
+  color: var(--acf-brand-primary);
+}
+
+html,
+body,
+#app {
+  background-color: var(--acf-brand-cream);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--acf-brand-light) 45%, transparent);
+  color: var(--acf-brand-primary);
+}
+
+a {
+  color: var(--acf-brand-primary);
+  text-decoration-color: var(--acf-brand-light);
+}
+
+.u-button_bleuvert,
+.u-button_black {
+  background-color: var(--acf-brand-primary) !important;
+  color: var(--acf-brand-cream) !important;
+
+  &:not(:disabled):hover,
+  &:not(:disabled):focus-visible,
+  &:not([disabled]):hover,
+  &:not([disabled]):focus-visible {
+    background-color: var(--acf-brand-primary-dark) !important;
+    color: var(--acf-brand-cream) !important;
+  }
+}
+
+.u-buttonLink:not(.u-buttonLink_red) {
+  color: var(--acf-brand-primary);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--acf-brand-primary-dark);
+  }
+}

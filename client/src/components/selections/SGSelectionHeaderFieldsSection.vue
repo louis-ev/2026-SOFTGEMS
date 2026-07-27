@@ -140,9 +140,14 @@ export default {
       return this.counterparty_label || path;
     },
     date_editor_props() {
+      const stored = toDateInputValue(this.selection?.selection_date);
       return {
-        initial_value: toDateInputValue(this.selection?.selection_date),
+        initial_value: stored,
         label: this.$t("sg_selection_date"),
+        stored_comparison_value: stored,
+        history_path: this.selection_folder_path,
+        history_field_key: "selection_date",
+        is_saving: this.is_saving_field === "selection_date",
       };
     },
     counterparty_editor_props() {
