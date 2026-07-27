@@ -24,6 +24,8 @@ module.exports = (function () {
       document_height,
       reportProgress,
       number_of_pages_to_export,
+      pdf_footer_lines,
+      pdf_page_margins,
     }) => {
       dev.logfunction({
         url,
@@ -32,6 +34,8 @@ module.exports = (function () {
         number_of_pages_to_export,
         document_width,
         document_height,
+        pdf_footer_lines,
+        pdf_page_margins,
         reportProgress,
       });
 
@@ -57,6 +61,8 @@ module.exports = (function () {
           bw_pagesize,
           printToPDF_pagesize,
           number_of_pages_to_export,
+          pdf_footer_lines,
+          pdf_page_margins,
           reportProgress,
         });
       } else {
@@ -68,6 +74,8 @@ module.exports = (function () {
           bw_pagesize,
           printToPDF_pagesize,
           number_of_pages_to_export,
+          pdf_footer_lines,
+          pdf_page_margins,
           reportProgress,
         });
       }

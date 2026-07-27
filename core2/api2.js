@@ -1518,6 +1518,18 @@ module.exports = (function () {
 
     data.export_query = export_query;
     delete data.selection_pdf_export;
+
+    // Repeated on every PDF page via the print engine's footer template
+    // (kept in sync with SELECTION_PDF_ACF_FOOTER_LINES in
+    // client/src/utils/selection_pdf_export_registry.js).
+    data.pdf_footer_lines = [
+      "SIEGE SOCIAL: 10, rue Place Vendôme - 75001 PARIS - TEL: 33(6)69 24 14 89 - info@acfinegems.com",
+      "SAS AU CAPITAL DE 50 000 EUROS-SIRET 994 099 448 00015",
+    ];
+    // Per-page margins so content clears the footer zone and following
+    // pages keep a top margin (sides are handled by the document itself).
+    // Bottom must fit the 2-line ACF footer (~12mm) with breathing room.
+    data.pdf_page_margins = { top_mm: 14, bottom_mm: 22 };
   }
 
   function _normalizeSelectionPdfBankFootersEn(raw) {

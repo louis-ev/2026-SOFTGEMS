@@ -26,6 +26,43 @@ async function installReadyForExportListener(page) {
 }
 
 /**
+ * Escape text for safe inclusion in the print footer template. Non-ASCII
+ * characters become numeric entities (Chromium's header/footer renderer
+ * mangles raw UTF-8 accents like "ô").
+ * @param {string} text
+ * @returns {string}
+ */
+function escapePdfTemplateText(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/[\u0080-\uffff]/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+/**
+ * Build the print footer template repeated on every PDF page.
+ * Chromium templates require inline styles and an explicit font-size.
+ * @param {string[]} lines
+ * @returns {string}
+ */
+function buildPdfFooterTemplate(lines) {
+  const rows = lines
+    .map((line) => `<div>${escapePdfTemplateText(line)}</div>`)
+    .join("");
+  // Padding keeps the two lines clear of the page edge and of the
+  // content box above (footerTemplate is painted inside the bottom margin).
+  return (
+    `<div style="width:100%; box-sizing:border-box; padding: 2mm 17.8mm 3mm;` +
+    ` font-family: Arial, Helvetica, sans-serif; font-size: 7.3pt;` +
+    ` line-height: 1.4; color: #1c2b3a; text-align: center;">` +
+    rows +
+    `</div>`
+  );
+}
+
+/**
  * Wait for the first ready event or READY_WAIT_MS, then READY_SETTLE_MS.
  */
 async function waitForReadyForExportOrTimeout(page) {
@@ -128,6 +165,8 @@ module.exports = (function () {
       bw_pagesize,
       number_of_pages_to_export,
       printToPDF_pagesize,
+      pdf_footer_lines,
+      pdf_page_margins,
       reportProgress,
     }) => {
       if (reportProgress) reportProgress(0);
@@ -205,18 +244,29 @@ module.exports = (function () {
         if (recipe === "pdf") {
           path_to_temp_file = await utils.createUniqueFilenameInCache("pdf");
 
+          // Always pass string mm units — mixing numbers (0) with "12mm"
+          // can make Chromium ignore the whole margin box, which collapses
+          // content into the footer and leaves no top gap on page 2+.
+          const margins = pdf_page_margins || {};
+          const mm = (value, fallback = 0) =>
+            `${Number.isFinite(value) ? value : fallback}mm`;
           const options = {
             path: path_to_temp_file,
             printBackground: true,
             width: `${printToPDF_pagesize.width}mm`,
             height: `${printToPDF_pagesize.height}mm`,
             margin: {
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
+              top: mm(margins.top_mm),
+              right: mm(margins.right_mm),
+              bottom: mm(margins.bottom_mm),
+              left: mm(margins.left_mm),
             },
           };
+          if (Array.isArray(pdf_footer_lines) && pdf_footer_lines.length) {
+            options.displayHeaderFooter = true;
+            options.headerTemplate = "<div></div>";
+            options.footerTemplate = buildPdfFooterTemplate(pdf_footer_lines);
+          }
           if (number_of_pages_to_export) {
             options.pageRanges = `1-${number_of_pages_to_export}`;
           }

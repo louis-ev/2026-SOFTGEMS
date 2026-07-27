@@ -89,14 +89,12 @@
                     :href="link.href"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >{{ link.text }}</a><span
+                  >{{ link.text }}</a>
+                  <span
                     v-else
                     :key="'description-text-' + link_index"
-                  >{{ link.text }}</span><span
-                    v-if="link_index < descriptionInlineLinks(gem).length - 1"
-                    :key="'description-sep-' + link_index"
-                    aria-hidden="true"
-                  >  </span>
+                    class="_descriptionLinkText"
+                  >{{ link.text }}</span>
                 </template>
               </div>
             </div>
@@ -641,8 +639,12 @@ $acf-brand-light: #7b95a6;
 }
 
 ._descriptionLinksLine {
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
+
+  > * + * {
+    margin-left: 0.4em;
+  }
 }
 
 ._cellText {
@@ -707,12 +709,19 @@ $acf-brand-light: #7b95a6;
   }
 }
 
+/*
+  In print, per-page top/bottom margins and the repeated company footer
+  come from the export pipeline (Puppeteer/Electron print options set in
+  core2/api2.js: 14mm top, 22mm bottom, footerTemplate on every page).
+*/
 @media print {
   /* Block layout fragments across pages reliably (flex does not). */
   ._pdfDocument {
     display: block;
-    /* Reserve room so flowing content never overlaps the fixed footer. */
-    padding-bottom: 24mm;
+    min-height: 0;
+    /* Vertical breathing room comes from the print-engine page margins. */
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   ._gemsTable thead {
@@ -724,14 +733,9 @@ $acf-brand-light: #7b95a6;
     page-break-inside: avoid;
   }
 
-  /* Chromium repeats fixed elements on every printed page. */
+  /* Rendered by the print engine's footer template instead. */
   ._footer {
-    position: fixed;
-    bottom: 10mm;
-    left: 0;
-    right: 0;
-    margin-top: 0;
-    padding-top: 0;
+    display: none;
   }
 }
 </style>

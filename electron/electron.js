@@ -159,6 +159,8 @@ module.exports = (function () {
       bw_pagesize,
       printToPDF_pagesize,
       number_of_pages_to_export,
+      pdf_footer_lines,
+      pdf_page_margins,
       reportProgress,
     }) => {
       let win;
@@ -179,16 +181,40 @@ module.exports = (function () {
           height: printToPDF_pagesize.height / 10 / 2.54,
         };
 
+        const mmToInches = (mm) =>
+          (Number.isFinite(mm) ? mm : 0) / 25.4;
+        const margins_mm = pdf_page_margins || {};
         const options = {
           margins: {
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
+            marginType: "custom",
+            top: mmToInches(margins_mm.top_mm),
+            bottom: mmToInches(margins_mm.bottom_mm),
+            left: mmToInches(margins_mm.left_mm),
+            right: mmToInches(margins_mm.right_mm),
           },
           pageSize,
           printBackground: true,
         };
+
+        if (Array.isArray(pdf_footer_lines) && pdf_footer_lines.length) {
+          const escapeTemplateText = (text) =>
+            String(text ?? "")
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/[\u0080-\uffff]/g, (c) => `&#${c.charCodeAt(0)};`);
+          options.displayHeaderFooter = true;
+          options.headerTemplate = "<div></div>";
+          options.footerTemplate =
+            `<div style="width:100%; box-sizing:border-box;` +
+            ` padding: 2mm 17.8mm 3mm; font-family: Arial, Helvetica, sans-serif;` +
+            ` font-size: 7.3pt; line-height: 1.4; color: #1c2b3a; text-align: center;">` +
+            pdf_footer_lines
+              .map((line) => `<div>${escapeTemplateText(line)}</div>`)
+              .join("") +
+            `</div>`;
+        }
 
         if (number_of_pages_to_export) {
           options.pageRanges = `1-${number_of_pages_to_export}`;

@@ -398,6 +398,8 @@ class Exporter {
         document_width,
         document_height,
         number_of_pages_to_export,
+        pdf_footer_lines: this.instructions.pdf_footer_lines,
+        pdf_page_margins: this.instructions.pdf_page_margins,
         reportProgress,
       });
 
