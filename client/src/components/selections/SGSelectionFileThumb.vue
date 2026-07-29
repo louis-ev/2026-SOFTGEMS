@@ -27,7 +27,7 @@ export default {
 
 <style lang="scss" scoped>
 ._selectionFileThumb {
-  width: 120px;
+  width: 65px;
   flex-shrink: 0;
   border: 1px solid var(--c-gris_clair);
   border-radius: 6px;
