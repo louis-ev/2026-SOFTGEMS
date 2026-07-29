@@ -22,7 +22,7 @@
       var(--sg-table-border-color);
     border-bottom: var(--sg-table-border-width-thin) solid
       var(--sg-table-border-color);
-    padding: var(--sg-cell-padding);
+    padding: calc(var(--sg-cell-padding) / 2) var(--sg-cell-padding);
     vertical-align: top;
     background: var(--c-bodybg);
     font-size: var(--sg-metadata-font-size);

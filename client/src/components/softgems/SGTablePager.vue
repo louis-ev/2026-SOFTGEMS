@@ -5,35 +5,39 @@
     role="navigation"
     :aria-label="nav_label || $t('sg_table_page_nav_label')"
   >
-    <button
-      type="button"
-      class="u-buttonLink _tablePagerLink"
-      :disabled="page_index === 0"
-      @click="$emit('pageChange', -1)"
-    >
-      {{ $t("sg_gems_page_previous") }}
-    </button>
-    <p class="_tablePagerStatus" role="status">
-      {{
-        $t("sg_gems_page_status", {
-          start: range_start,
-          end: range_end,
-          total: total_items,
-          page: page_index + 1,
-          pages: page_count,
-        })
-      }}
-    </p>
-    <button
-      type="button"
-      class="u-buttonLink _tablePagerLink"
-      :disabled="page_index >= page_count - 1"
-      @click="$emit('pageChange', 1)"
-    >
-      {{ $t("sg_gems_page_next") }}
-    </button>
+    <div class="_tablePagerLeft">
+      <button
+        type="button"
+        class="u-buttonLink _tablePagerLink"
+        :disabled="page_index === 0"
+        @click="$emit('pageChange', -1)"
+      >
+        {{ $t("sg_gems_page_previous") }}
+      </button>
+      <p class="_tablePagerStatus" role="status">
+        {{
+          $t("sg_gems_page_status", {
+            start: range_start,
+            end: range_end,
+            total: total_items,
+            page: page_index + 1,
+            pages: page_count,
+          })
+        }}
+      </p>
+      <button
+        type="button"
+        class="u-buttonLink _tablePagerLink"
+        :disabled="page_index >= page_count - 1"
+        @click="$emit('pageChange', 1)"
+      >
+        {{ $t("sg_gems_page_next") }}
+      </button>
+    </div>
     <label class="_tablePageSize">
-      <span class="_tablePageSizeLabel">{{ $t("sg_table_page_size_label") }}</span>
+      <span class="_tablePageSizeLabel">{{
+        $t("sg_table_page_size_label")
+      }}</span>
       <select
         class="_tablePageSizeSelect"
         size="small"
@@ -84,11 +88,19 @@ export default {
 <style lang="scss" scoped>
 ._tablePager {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: center;
+  flex-flow: row wrap;
+  justify-content: space-between;
+  align-items: center;
   gap: calc(var(--spacing) / 3);
   padding: calc(var(--spacing) / 8) 0;
+}
+
+._tablePagerLeft {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: calc(var(--spacing) / 3);
 }
 
 ._tablePagerStatus {
@@ -105,11 +117,16 @@ export default {
 }
 
 ._tablePageSize {
-  display: inline-flex;
+  display: flex;
+  flex-flow: row nowrap;
   align-items: center;
   gap: calc(var(--spacing) / 4);
   font-size: var(--sl-font-size-x-small);
   color: color-mix(in srgb, var(--c-gris_fonce) 88%, transparent);
+}
+
+._tablePageSizeLabel {
+  flex-shrink: 0;
 }
 
 ._tablePageSizeSelect {

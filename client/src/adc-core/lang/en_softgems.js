@@ -310,7 +310,8 @@ export default {
   sg_selection_main_document_upload: "Upload PDF",
   sg_selection_main_document_replace: "Replace PDF",
   sg_selection_main_document_empty: "No main document yet.",
-  sg_selection_main_document_pdf_only: "Only PDF files are allowed for the main document.",
+  sg_selection_main_document_pdf_only:
+    "Only PDF files are allowed for the main document.",
   sg_selection_field_saved: "Field saved.",
   sg_section_gem_selections: "Selections",
   sg_gem_selections_empty: "This gem is not linked to any selection yet.",
@@ -358,8 +359,7 @@ export default {
     "Adding a gem to this memo in selection sets its status to {status}.",
   sg_selection_add_gems_status_hint:
     "Adding a gem to this selection sets its status to {status}.",
-  sg_selection_gem_status_set_on_add:
-    "Gem added. Status set to {status}.",
+  sg_selection_gem_status_set_on_add: "Gem added. Status set to {status}.",
   sg_selection_gem_status_restored_on_remove:
     "Gem removed from selection. Status restored to {status} (from another linked selection or from status history).",
   sg_gems_table_remove_column_header_aria: "Remove from selection",
@@ -430,8 +430,7 @@ export default {
   sg_pdf_export_bank_footer_add: "Add footer",
   sg_pdf_export_bank_footer_move_up: "Move up",
   sg_pdf_export_bank_footer_move_down: "Move down",
-  sg_pdf_export_bank_footer_remove_confirm:
-    "Remove this bank footer preset?",
+  sg_pdf_export_bank_footer_remove_confirm: "Remove this bank footer preset?",
   sg_pdf_export_bank_footer_confirm_edit: "Done",
   sg_pdf_export_columns_limit_hint:
     "Max {max} column units on A4 (photo = {photo_units})",
