@@ -39,14 +39,33 @@
             </div>
           </div>
         </div>
+        <button
+          v-if="can_edit"
+          type="button"
+          class="u-buttonLink u-buttonLink_red"
+          :disabled="remove_modal_open"
+          @click="openRemoveModal(file)"
+        >
+          {{ $t("sg_certificate_remove") }}
+        </button>
       </li>
     </ul>
+
+    <SGGemMediaRemoveModal
+      v-if="remove_modal_open"
+      :file_path="remove_file_path"
+      :display_filename="remove_display_name"
+      :can_delete="can_edit"
+      @removedSuccessfully="onRemovedSuccessfully"
+      @close="closeRemoveModal"
+    />
   </SGSectionPanel>
 </template>
 
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGSelectionFileThumb from "@/components/selections/SGSelectionFileThumb.vue";
+import SGGemMediaRemoveModal from "@/components/gems/SGGemMediaRemoveModal.vue";
 import Medias from "@/mixins/Medias.js";
 import FormatDates from "@/mixins/FormatDates.js";
 import { findSelectionGeneratedPdfFiles } from "@/utils/selection_documents.js";
@@ -57,12 +76,24 @@ export default {
   components: {
     SGSectionPanel,
     SGSelectionFileThumb,
+    SGGemMediaRemoveModal,
   },
   props: {
     selection_folder: {
       type: Object,
       default: null,
     },
+    can_edit: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      remove_modal_open: false,
+      remove_file_path: "",
+      remove_display_name: "",
+    };
   },
   computed: {
     generated_files() {
@@ -91,6 +122,21 @@ export default {
         minute: "2-digit",
       });
     },
+    openRemoveModal(file) {
+      if (!file?.$path) return;
+      this.remove_file_path = file.$path;
+      this.remove_display_name = this.displayFilename(file);
+      this.remove_modal_open = true;
+    },
+    closeRemoveModal() {
+      this.remove_modal_open = false;
+      this.remove_file_path = "";
+      this.remove_display_name = "";
+    },
+    onRemovedSuccessfully() {
+      this.closeRemoveModal();
+      this.$emit("changed");
+    },
   },
 };
 </script>
@@ -111,6 +157,10 @@ export default {
 }
 
 ._row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 2);
   border: 1px solid var(--c-gris_clair);
   border-radius: 4px;
   padding: calc(var(--spacing) / 2);
@@ -120,6 +170,7 @@ export default {
   display: flex;
   gap: calc(var(--spacing) * 0.75);
   min-width: 0;
+  flex: 1;
 }
 
 ._main {

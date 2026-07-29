@@ -42,117 +42,97 @@
         :key="certificate_file.$path"
         class="_row"
       >
-        <div
-          class="_rowBody"
-          :class="{
-            _rowBody_withPreview: !!getCertificateDownloadUrl(certificate_file),
-          }"
-        >
-          <div
-            v-if="getCertificateDownloadUrl(certificate_file)"
-            class="_certificatePreview"
-          >
-            <MediaContent
-              :file="certificate_file"
-              context="preview"
-              :resolution="certificate_preview_resolution"
-            />
-          </div>
-          <div class="_certificateMain">
-            <div class="_rowTop">
-              <div class="_fileBlock">
-                <p class="_fileName">
-                  {{ displayCertificateFilename(certificate_file) }}
-                </p>
-                <div
-                  v-if="getCertificateDownloadUrl(certificate_file)"
-                  class="_fileActions"
-                >
-                  <a
-                    class="u-buttonLink"
-                    :href="getCertificateDownloadUrl(certificate_file)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {{ $t("sg_certificate_open_pdf") }}
-                  </a>
-                  <a
-                    class="u-buttonLink"
-                    :href="getCertificateDownloadUrl(certificate_file)"
-                    :download="
-                      certificate_file.$media_filename ||
-                      displayCertificateFilename(certificate_file)
-                    "
-                  >
-                    {{ $t("sg_certificate_download_pdf") }}
-                  </a>
-                </div>
-              </div>
-
-              <button
-                v-if="can_edit"
-                type="button"
-                class="u-buttonLink u-buttonLink_red"
-                :disabled="certificate_remove_modal_open"
-                @click="openCertificateRemoveModal(certificate_file)"
+        <div class="_rowHeader">
+          <div class="_rowBody">
+            <SGSelectionFileThumb :file="certificate_file" />
+            <div class="_main">
+              <p class="_fileName">
+                {{ displayCertificateFilename(certificate_file) }}
+              </p>
+              <p
+                v-if="formatCertificateUploadedDate(certificate_file)"
+                class="_fileMeta"
               >
-                {{ $t("sg_certificate_remove") }}
-              </button>
-            </div>
-
-            <div class="_fieldsGrid">
-              <SGGemFieldCard
-                :label="$t('sg_certificate_provider')"
-                icon="person-badge"
-                :value="
-                  displayCertificateProviderLabel(certificate_file)
-                "
-                :readonly="!can_edit"
-                @click="
-                  openCertificateFieldModal(certificate_file, 'provider_path')
-                "
-              />
-              <SGGemFieldCard
-                :label="$t('sg_certificate_reference')"
-                icon="file-earmark-text"
-                :value="certificate_file.certificate_reference || ''"
-                :readonly="!can_edit"
-                @click="
-                  openCertificateFieldModal(
-                    certificate_file,
-                    'certificate_reference'
-                  )
-                "
-              />
-              <SGGemFieldCard
-                :label="$t('sg_certificate_date')"
-                icon="calendar3"
-                value_type="date"
-                :value="certificate_file.certificate_date || ''"
-                :readonly="!can_edit"
-                @click="
-                  openCertificateFieldModal(
-                    certificate_file,
-                    'certificate_date'
-                  )
-                "
-              />
-              <SGGemFieldCard
-                :label="$t('sg_certificate_price')"
-                icon="tag"
-                :value="
-                  certificatePriceForFieldCard(certificate_file)
-                "
-                :readonly="!can_edit"
-                @click="
-                  openCertificateFieldModal(
-                    certificate_file,
-                    'certificate_price'
-                  )
-                "
-              />
+                {{
+                  $t("sg_certificate_uploaded_on", {
+                    date: formatCertificateUploadedDate(certificate_file),
+                  })
+                }}
+              </p>
+              <div
+                v-if="getCertificateDownloadUrl(certificate_file)"
+                class="_actions"
+              >
+                <a
+                  class="u-buttonLink"
+                  :href="getCertificateDownloadUrl(certificate_file)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ $t("open") }}
+                </a>
+                <a
+                  class="u-buttonLink"
+                  :href="getCertificateDownloadUrl(certificate_file)"
+                  :download="displayCertificateFilename(certificate_file)"
+                >
+                  {{ $t("download") }}
+                </a>
+              </div>
             </div>
           </div>
+          <button
+            v-if="can_edit"
+            type="button"
+            class="u-buttonLink u-buttonLink_red"
+            :disabled="certificate_remove_modal_open"
+            @click="openCertificateRemoveModal(certificate_file)"
+          >
+            {{ $t("sg_certificate_remove") }}
+          </button>
+        </div>
+
+        <div class="_fieldsGrid">
+          <SGGemFieldCard
+            :label="$t('sg_certificate_provider')"
+            icon="person-badge"
+            :value="displayCertificateProviderLabel(certificate_file)"
+            :readonly="!can_edit"
+            @click="
+              openCertificateFieldModal(certificate_file, 'provider_path')
+            "
+          />
+          <SGGemFieldCard
+            :label="$t('sg_certificate_reference')"
+            icon="file-earmark-text"
+            :value="certificate_file.certificate_reference || ''"
+            :readonly="!can_edit"
+            @click="
+              openCertificateFieldModal(
+                certificate_file,
+                'certificate_reference'
+              )
+            "
+          />
+          <SGGemFieldCard
+            :label="$t('sg_certificate_date')"
+            icon="calendar3"
+            value_type="date"
+            :value="certificate_file.certificate_date || ''"
+            :readonly="!can_edit"
+            @click="
+              openCertificateFieldModal(certificate_file, 'certificate_date')
+            "
+          />
+          <SGGemFieldCard
+            :label="$t('sg_certificate_price')"
+            icon="tag"
+            :value="certificatePriceForFieldCard(certificate_file)"
+            :readonly="!can_edit"
+            @click="
+              openCertificateFieldModal(certificate_file, 'certificate_price')
+            "
+          />
         </div>
       </li>
     </ul>
@@ -182,6 +162,7 @@
 
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
+import SGSelectionFileThumb from "@/components/selections/SGSelectionFileThumb.vue";
 import SGGemCertificateRemoveModal from "@/components/gems/SGGemCertificateRemoveModal.vue";
 import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
 import SGGemFieldCard from "@/components/gems/SGGemFieldCard.vue";
@@ -192,6 +173,7 @@ export default {
   name: "SGGemCertificatesSection",
   components: {
     SGSectionPanel,
+    SGSelectionFileThumb,
     SGGemCertificateRemoveModal,
     SGGemEditFieldModal,
     SGGemFieldCard,
@@ -216,7 +198,6 @@ export default {
       pdf_files_queue: [],
       provider_labels: {},
       certificate_upload_meta: { is_gem_certificate: true },
-      certificate_preview_resolution: 640,
       certificate_remove_modal_open: false,
       certificate_remove_path: "",
       certificate_remove_filename: "",
@@ -369,6 +350,17 @@ export default {
         $media_filename: certificate_file.$media_filename,
       });
     },
+    formatCertificateUploadedDate(certificate_file) {
+      const raw = certificate_file?.$date_uploaded;
+      if (!raw) return "";
+      return this.formatDate(raw, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
     onPickPdfs(event) {
       const file_list = event?.target?.files;
       const picked = file_list ? Array.from(file_list) : [];
@@ -430,97 +422,57 @@ export default {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing) * 0.75);
+  gap: calc(var(--spacing) / 2);
 }
 
 ._row {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 8px;
-  padding: calc(var(--spacing) * 0.6);
-  background: var(--c-bodybg);
-}
-
-._rowBody {
-  display: grid;
-  gap: calc(var(--spacing) * 0.75);
-  grid-template-columns: 1fr;
-  align-items: start;
-}
-
-._rowBody_withPreview {
-  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
-}
-
-._certificatePreview {
-  border: 1px solid var(--c-gris_clair);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--c-gris_clair);
-}
-
-._certificatePreview :deep(._mediaContent) {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1 / 1;
-  max-width: 220px;
-  margin-inline: auto;
-}
-
-._certificatePreview :deep(img._mediaContent--image) {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-._certificatePreview :deep(._fileName) {
+  flex-direction: column;
+  gap: calc(var(--spacing) * 0.6);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 4px;
   padding: calc(var(--spacing) / 2);
 }
 
-._certificateMain {
-  min-width: 0;
-}
-
-._rowTop {
+._rowHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: calc(var(--spacing) / 2);
 }
 
-._fileBlock {
+._rowBody {
+  display: flex;
+  gap: calc(var(--spacing) * 0.75);
+  min-width: 0;
+  flex: 1;
+}
+
+._main {
   min-width: 0;
 }
 
 ._fileName {
-  margin: 0;
-  font-size: var(--sl-font-size-small);
+  margin: 0 0 calc(var(--spacing) / 4);
   font-weight: 600;
   word-break: break-word;
 }
 
-._fileActions {
-  margin-top: calc(var(--spacing) / 3);
+._fileMeta {
+  margin: 0 0 calc(var(--spacing) / 3);
+  font-size: 0.9rem;
+  color: var(--c-gris_fonce);
+}
+
+._actions {
   display: flex;
   flex-wrap: wrap;
   gap: calc(var(--spacing) / 2);
 }
 
 ._fieldsGrid {
-  margin-top: calc(var(--spacing) * 0.6);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: calc(var(--spacing) / 1.5);
-}
-
-@media (max-width: 720px) {
-  ._rowBody_withPreview {
-    grid-template-columns: 1fr;
-  }
-
-  ._certificatePreview {
-    max-width: min(220px, 100%);
-    margin-inline: auto;
-  }
 }
 </style>

@@ -96,6 +96,7 @@
             :selection_folder_path="selection_folder_path"
             :selection="selection"
             :can_edit="can_edit"
+            @changed="refreshSelectionFolder"
           />
 
           <SGSelectionHeaderFieldsSection
@@ -129,12 +130,15 @@
           <SGSelectionGeneratedPdfsSection
             v-if="selection"
             :selection_folder="selection"
+            :can_edit="can_edit"
+            @changed="refreshSelectionFolder"
           />
 
           <SGSelectionFilesSection
             :selection_path="selection_folder_path"
             :selection_folder="selection"
             :can_edit="can_edit"
+            @changed="refreshSelectionFolder"
           />
 
           <SGFolderMetaPeek :folder_meta="selection" />
@@ -431,12 +435,16 @@ export default {
     closeGemSidePanel() {
       this.side_panel_gem_id = "";
     },
-    async onPdfExported() {
+    async refreshSelectionFolder() {
+      if (!this.selection_folder_path) return;
       try {
         await this.$api.getFolder({ path: this.selection_folder_path });
       } catch {
         /* folder refresh is best-effort */
       }
+    },
+    async onPdfExported() {
+      await this.refreshSelectionFolder();
     },
   },
 };

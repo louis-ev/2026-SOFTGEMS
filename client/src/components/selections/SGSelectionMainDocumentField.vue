@@ -26,6 +26,15 @@
           </a>
         </div>
       </div>
+      <button
+        v-if="can_edit"
+        type="button"
+        class="u-buttonLink u-buttonLink_red"
+        :disabled="remove_modal_open"
+        @click="openRemoveModal"
+      >
+        {{ $t("sg_certificate_remove") }}
+      </button>
     </div>
 
     <div v-if="can_edit" class="_uploadRow">
@@ -48,15 +57,6 @@
         }}
         <b-icon icon="upload" />
       </label>
-      <button
-        v-if="main_document_file"
-        type="button"
-        class="u-buttonLink u-buttonLink_red"
-        :disabled="remove_modal_open"
-        @click="openRemoveModal"
-      >
-        {{ $t("sg_certificate_remove") }}
-      </button>
       <UploadFiles
         v-if="pdf_files_queue.length > 0"
         :files_to_import="pdf_files_queue"
@@ -219,6 +219,7 @@ export default {
   display: flex;
   gap: calc(var(--spacing) * 0.75);
   align-items: flex-start;
+  justify-content: space-between;
   padding: calc(var(--spacing) * 0.75);
   border: 1px solid var(--c-gris_clair);
   border-radius: 8px;

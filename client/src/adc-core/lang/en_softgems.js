@@ -63,6 +63,7 @@ export default {
   sg_certificate_remove_modal_body:
     'Permanently delete "{filename}" from this gem? This removes the PDF from the server.',
   sg_certificate_remove_success: "Certificate file deleted.",
+  sg_certificate_uploaded_on: "Uploaded on {date}",
   sg_certificate_open_pdf: "Open",
   sg_certificate_download_pdf: "Download",
   sg_media_upload: "Upload (photos/videos)",

@@ -7,6 +7,7 @@
       :selection_path="selection_folder_path"
       :selection_folder="selection"
       :can_edit="can_edit"
+      @changed="$emit('changed')"
     />
   </SGSectionPanel>
 </template>
