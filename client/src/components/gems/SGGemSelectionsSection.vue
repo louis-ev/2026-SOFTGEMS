@@ -59,7 +59,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="row in filtered_membership_rows"
+              v-for="row in paginated_membership_rows"
               :key="row.$path"
               class="_dataRow"
               tabindex="0"
@@ -100,14 +100,26 @@
           </tbody>
         </table>
       </div>
+      <SGTablePager
+        :total_items="filtered_membership_rows.length"
+        :page_index="table_page_index"
+        :page_count="table_page_count"
+        :range_start="table_page_range_start"
+        :range_end="table_page_range_end"
+        :page_size="table_page_size"
+        @pageChange="goToTablePage($event, filtered_membership_rows)"
+        @update:page_size="onTablePageSizeChange"
+      />
     </div>
   </SGSectionPanel>
 </template>
 
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
+import SGTablePager from "@/components/softgems/SGTablePager.vue";
 import FormatDates from "@/mixins/FormatDates.js";
 import Medias from "@/mixins/Medias.js";
+import TablePaginationMixin from "@/mixins/TablePaginationMixin.js";
 import {
   buildGemSelectionMembershipRows,
   filterMembershipRowsByType,
@@ -125,9 +137,10 @@ import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
 
 export default {
   name: "SGGemSelectionsSection",
-  mixins: [FormatDates, Medias],
+  mixins: [FormatDates, Medias, TablePaginationMixin],
   components: {
     SGSectionPanel,
+    SGTablePager,
   },
   props: {
     gem_path: {
@@ -148,6 +161,7 @@ export default {
       active_type_filter: "",
       is_loading: false,
       fetch_error: "",
+      table_rows_previous_length: null,
     };
   },
   computed: {
@@ -160,8 +174,34 @@ export default {
         this.active_type_filter
       );
     },
+    paginated_membership_rows() {
+      return this.paginateTableRows(this.filtered_membership_rows);
+    },
+    table_page_count() {
+      return this.tablePageCountForRows(this.filtered_membership_rows);
+    },
+    table_page_range_start() {
+      return this.tablePageRangeStartForRows(this.filtered_membership_rows);
+    },
+    table_page_range_end() {
+      return this.tablePageRangeEndForRows(this.filtered_membership_rows);
+    },
   },
   watch: {
+    filtered_membership_rows: {
+      handler(new_rows) {
+        const new_len = Array.isArray(new_rows) ? new_rows.length : 0;
+        this.resetTablePageIndexOnRowCountChange(
+          new_len,
+          this.table_rows_previous_length
+        );
+        this.table_rows_previous_length = new_len;
+        this.clampTablePageIndexForRows(new_rows);
+      },
+    },
+    active_type_filter() {
+      this.table_page_index = 0;
+    },
     gem_path: {
       immediate: true,
       handler() {

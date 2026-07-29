@@ -48,7 +48,6 @@
         :is_gem_open="is_gem_open"
         view_density="compact"
         :cover_can_edit="false"
-        :gems_page_size="50"
         :selection_remove_column="can_edit"
         :fixed_gem_order="true"
         @rowClick="onEntryRowClick"

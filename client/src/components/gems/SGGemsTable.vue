@@ -231,45 +231,23 @@
       </table>
     </div>
 
-    <div
-      v-if="gems_page_count > 1"
-      class="_gemsPager"
-      role="navigation"
-      :aria-label="$t('sg_gems_page_nav_label')"
-    >
-      <button
-        type="button"
-        class="u-buttonLink _gemsPagerLink"
-        :disabled="gems_page_index === 0"
-        @click="goToGemsPage(-1)"
-      >
-        {{ $t("sg_gems_page_previous") }}
-      </button>
-      <p class="_gemsPagerStatus" role="status">
-        {{
-          $t("sg_gems_page_status", {
-            start: gems_page_range_start,
-            end: gems_page_range_end,
-            total: sorted_gems.length,
-            page: gems_page_index + 1,
-            pages: gems_page_count,
-          })
-        }}
-      </p>
-      <button
-        type="button"
-        class="u-buttonLink _gemsPagerLink"
-        :disabled="gems_page_index >= gems_page_count - 1"
-        @click="goToGemsPage(1)"
-      >
-        {{ $t("sg_gems_page_next") }}
-      </button>
-    </div>
+    <SGTablePager
+      :total_items="sorted_gems.length"
+      :page_index="gems_page_index"
+      :page_count="gems_page_count"
+      :range_start="gems_page_range_start"
+      :range_end="gems_page_range_end"
+      :page_size="gems_effective_page_size"
+      :nav_label="$t('sg_gems_page_nav_label')"
+      @pageChange="goToGemsPage"
+      @update:page_size="onGemsPageSizeChange"
+    />
   </div>
 </template>
 
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
+import SGTablePager from "@/components/softgems/SGTablePager.vue";
 import { getFormatLocale } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import GemPricing from "@/mixins/GemPricing";
@@ -277,11 +255,16 @@ import GemDimensions, {
   gem_linear_dimension_keys,
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
+import {
+  loadTablePageSize,
+  normalizeTablePageSize,
+  persistTablePageSize,
+} from "@/utils/table_page_size.js";
 
 export default {
   name: "SGGemsTable",
   mixins: [GemPricing, GemDimensions],
-  components: { CoverField },
+  components: { CoverField, SGTablePager },
   props: {
     gems: { type: Array, default: () => [] },
     metadata_keys: { type: Array, default: () => [] },
@@ -309,6 +292,7 @@ export default {
   },
   data() {
     return {
+      gems_page_size_value: loadTablePageSize(),
       gems_page_index: 0,
       gems_watch_previous_length: null,
       sort_key: "id",
@@ -355,7 +339,7 @@ export default {
       });
     },
     gems_effective_page_size() {
-      return Math.max(1, Number(this.gems_page_size) || 100);
+      return Math.max(1, Number(this.gems_page_size_value) || 100);
     },
     gems_page_count() {
       const total = this.sorted_gems.length;
@@ -471,6 +455,12 @@ export default {
       const next = this.gems_page_index + delta;
       if (next < 0 || next >= this.gems_page_count) return;
       this.gems_page_index = next;
+      this.scrollGemsTableToTop();
+    },
+    onGemsPageSizeChange(next_size) {
+      this.gems_page_size_value = normalizeTablePageSize(next_size);
+      persistTablePageSize(this.gems_page_size_value);
+      this.gems_page_index = 0;
       this.scrollGemsTableToTop();
     },
     scrollGemsTableToTop() {
@@ -833,28 +823,6 @@ export default {
   min-height: 0;
   height: 100%;
   gap: calc(var(--spacing) / 4);
-}
-
-._gemsPager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: center;
-  gap: calc(var(--spacing) / 3);
-  padding: calc(var(--spacing) / 8) 0;
-}
-
-._gemsPagerStatus {
-  margin: 0;
-  font-size: var(--sl-font-size-x-small);
-  color: color-mix(in srgb, var(--c-gris_fonce) 88%, transparent);
-  text-align: center;
-  line-height: 1.25;
-}
-
-._gemsPagerLink {
-  flex-shrink: 0;
-  font-size: var(--sl-font-size-x-small);
 }
 
 ._gemsTable {

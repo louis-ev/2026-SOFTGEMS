@@ -2,9 +2,9 @@
   <header class="_softgemsTopbar">
     <div class="_inner">
       <div class="_left">
-        <router-link to="/">
-          <h1 class="_title">ACF</h1>
-          <p class="_subtitle">Inventory workspace</p>
+        <router-link to="/" class="_brandLink">
+          <AcfLogoMark class="_logoMark" />
+          <!-- <p class="_subtitle">Inventory workspace</p> -->
         </router-link>
       </div>
 
@@ -31,10 +31,12 @@
 
 <script>
 import AuthorList from "@/adc-core/author/AuthorList.vue";
+import AcfLogoMark from "@/components/selections/AcfLogoMark.vue";
 
 export default {
   components: {
     AuthorList,
+    AcfLogoMark,
   },
   data() {
     return {
@@ -59,7 +61,8 @@ export default {
 <style lang="scss" scoped>
 ._softgemsTopbar {
   background: var(--acf-brand-primary);
-  border-bottom: 1px solid color-mix(in srgb, var(--acf-brand-light) 35%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--acf-brand-light) 35%, transparent);
 }
 
 ._inner {
@@ -76,17 +79,21 @@ export default {
   gap: calc(var(--spacing) / 5);
   color: #fff;
   min-width: 0;
-
-  > a {
-    text-decoration: none;
-    color: inherit;
-  }
 }
 
-._title {
-  margin: 0;
-  line-height: 1;
-  font-size: var(--sl-font-size-large);
+._brandLink {
+  display: flex;
+  flex-flow: row wrap;
+  gap: calc(var(--spacing) / 1);
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+._logoMark {
+  --acf-logo-fill: var(--acf-brand-cream);
+  height: 1.8rem;
+  width: 4rem;
 }
 
 ._subtitle {

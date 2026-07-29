@@ -47,7 +47,7 @@
                 </tr>
                 <template v-else>
                   <tr
-                    v-for="contact in sorted_entries"
+                    v-for="contact in paginated_entries"
                     :key="contact.$path || contactIdFromPath(contact.$path)"
                     class="_dataRow"
                     :class="{
@@ -97,6 +97,16 @@
               </tbody>
             </table>
           </div>
+          <SGTablePager
+            :total_items="sorted_entries.length"
+            :page_index="table_page_index"
+            :page_count="table_page_count"
+            :range_start="table_page_range_start"
+            :range_end="table_page_range_end"
+            :page_size="table_page_size"
+            @pageChange="goToTablePage($event, sorted_entries)"
+            @update:page_size="onTablePageSizeChange"
+          />
         </div>
       </div>
       <template #panel>
@@ -108,12 +118,16 @@
 
 <script>
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
+import SGTablePager from "@/components/softgems/SGTablePager.vue";
+import TablePaginationMixin from "@/mixins/TablePaginationMixin.js";
 import { formatContactAddress } from "@/utils/contact_address.js";
 
 export default {
   name: "SGAddressBookView",
+  mixins: [TablePaginationMixin],
   components: {
     SGOverlaySidePanelLayout,
+    SGTablePager,
   },
   data() {
     return {
@@ -121,6 +135,7 @@ export default {
       address_book_entries: [],
       is_loading: false,
       fetch_error: "",
+      table_rows_previous_length: null,
     };
   },
   computed: {
@@ -135,6 +150,18 @@ export default {
         })
       );
     },
+    paginated_entries() {
+      return this.paginateTableRows(this.sorted_entries);
+    },
+    table_page_count() {
+      return this.tablePageCountForRows(this.sorted_entries);
+    },
+    table_page_range_start() {
+      return this.tablePageRangeStartForRows(this.sorted_entries);
+    },
+    table_page_range_end() {
+      return this.tablePageRangeEndForRows(this.sorted_entries);
+    },
     selected_contact_slug() {
       if (this.$route.name !== "Open contact") return "";
       return this.cleanString(this.$route.params.contact_slug);
@@ -147,6 +174,17 @@ export default {
         if (route_name === "Address book") {
           this.fetchAddressBook();
         }
+      },
+    },
+    sorted_entries: {
+      handler(new_entries) {
+        const new_len = Array.isArray(new_entries) ? new_entries.length : 0;
+        this.resetTablePageIndexOnRowCountChange(
+          new_len,
+          this.table_rows_previous_length
+        );
+        this.table_rows_previous_length = new_len;
+        this.clampTablePageIndexForRows(new_entries);
       },
     },
   },
