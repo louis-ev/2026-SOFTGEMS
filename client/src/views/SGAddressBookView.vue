@@ -119,12 +119,12 @@
 <script>
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import SGTablePager from "@/components/softgems/SGTablePager.vue";
-import TablePaginationMixin from "@/mixins/TablePaginationMixin.js";
+import { createTablePaginationMixin } from "@/mixins/TablePaginationMixin.js";
 import { formatContactAddress } from "@/utils/contact_address.js";
 
 export default {
   name: "SGAddressBookView",
-  mixins: [TablePaginationMixin],
+  mixins: [createTablePaginationMixin("address_book")],
   components: {
     SGOverlaySidePanelLayout,
     SGTablePager,

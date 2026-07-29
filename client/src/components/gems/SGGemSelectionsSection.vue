@@ -119,7 +119,7 @@ import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGTablePager from "@/components/softgems/SGTablePager.vue";
 import FormatDates from "@/mixins/FormatDates.js";
 import Medias from "@/mixins/Medias.js";
-import TablePaginationMixin from "@/mixins/TablePaginationMixin.js";
+import { createTablePaginationMixin } from "@/mixins/TablePaginationMixin.js";
 import {
   buildGemSelectionMembershipRows,
   filterMembershipRowsByType,
@@ -137,7 +137,7 @@ import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
 
 export default {
   name: "SGGemSelectionsSection",
-  mixins: [FormatDates, Medias, TablePaginationMixin],
+  mixins: [FormatDates, Medias, createTablePaginationMixin("selections")],
   components: {
     SGSectionPanel,
     SGTablePager,

@@ -292,7 +292,7 @@ export default {
   },
   data() {
     return {
-      gems_page_size_value: loadTablePageSize(),
+      gems_page_size_value: loadTablePageSize("gems"),
       gems_page_index: 0,
       gems_watch_previous_length: null,
       sort_key: "id",
@@ -459,7 +459,7 @@ export default {
     },
     onGemsPageSizeChange(next_size) {
       this.gems_page_size_value = normalizeTablePageSize(next_size);
-      persistTablePageSize(this.gems_page_size_value);
+      persistTablePageSize(this.gems_page_size_value, "gems");
       this.gems_page_index = 0;
       this.scrollGemsTableToTop();
     },

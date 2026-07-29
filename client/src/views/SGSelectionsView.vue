@@ -101,7 +101,7 @@
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import SGTablePager from "@/components/softgems/SGTablePager.vue";
 import FormatDates from "@/mixins/FormatDates.js";
-import TablePaginationMixin from "@/mixins/TablePaginationMixin.js";
+import { createTablePaginationMixin } from "@/mixins/TablePaginationMixin.js";
 import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
 import {
   parseSelectionFolderParam,
@@ -114,7 +114,7 @@ import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 
 export default {
   name: "SGSelectionsView",
-  mixins: [FormatDates, TablePaginationMixin],
+  mixins: [FormatDates, createTablePaginationMixin("selections")],
   components: {
     SGOverlaySidePanelLayout,
     SGTablePager,
