@@ -37,4 +37,11 @@ describe("selection file flags", () => {
 
     expect(isSelectionAttachmentFile(generated)).toBe(false);
   });
+
+  it("requires an explicit attachment flag", () => {
+    expect(isSelectionAttachmentFile({ $type: "pdf" })).toBe(false);
+    expect(
+      isSelectionAttachmentFile({ is_selection_attachment: false })
+    ).toBe(false);
+  });
 });

@@ -93,6 +93,14 @@ describe("FormatDates mixin", () => {
       expect(formatted).toBe("il y a 20 minutes");
     });
 
+    it('formats very recent dates as "now" regardless of locale', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-05-06T14:32:00"));
+
+      const formatted = vm.formatRecentDateTime("2026-05-06T14:31:45");
+      expect(formatted).toBe("now");
+    });
+
     it("formats yesterday in french as expected", () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-05-06T14:32:00"));

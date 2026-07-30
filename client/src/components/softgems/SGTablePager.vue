@@ -2,11 +2,12 @@
   <div
     v-if="total_items > 0"
     class="_tablePager"
-    role="navigation"
-    :aria-label="nav_label || $t('sg_table_page_nav_label')"
+    :role="show_page_navigation ? 'navigation' : undefined"
+    :aria-label="show_page_navigation ? nav_label || $t('sg_table_page_nav_label') : undefined"
   >
     <div class="_tablePagerLeft">
       <button
+        v-if="show_page_navigation"
         type="button"
         class="u-buttonLink _tablePagerLink"
         :disabled="page_index === 0"
@@ -16,16 +17,23 @@
       </button>
       <p class="_tablePagerStatus" role="status">
         {{
-          $t("sg_gems_page_status", {
-            start: range_start,
-            end: range_end,
-            total: total_items,
-            page: page_index + 1,
-            pages: page_count,
-          })
+          show_page_navigation
+            ? $t("sg_gems_page_status", {
+                start: range_start,
+                end: range_end,
+                total: total_items,
+                page: page_index + 1,
+                pages: page_count,
+              })
+            : $t("sg_table_page_range_status", {
+                start: range_start,
+                end: range_end,
+                total: total_items,
+              })
         }}
       </p>
       <button
+        v-if="show_page_navigation"
         type="button"
         class="u-buttonLink _tablePagerLink"
         :disabled="page_index >= page_count - 1"
@@ -74,6 +82,11 @@ export default {
       default: () => [...table_page_size_options],
     },
     nav_label: { type: String, default: "" },
+  },
+  computed: {
+    show_page_navigation() {
+      return this.page_count > 1;
+    },
   },
   methods: {
     onPageSizeChange(event) {

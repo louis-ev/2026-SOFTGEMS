@@ -11,13 +11,20 @@ export function isSelectionMainDocumentFile(file) {
   return file?.is_selection_main_document === true;
 }
 
+function isTruthySelectionFlag(value) {
+  return value === true || value === "true" || value === 1;
+}
+
+export function isSelectionGeneratedPdfFile(file) {
+  return isTruthySelectionFlag(file?.is_selection_generated_pdf);
+}
+
 export function isSelectionAttachmentFile(file) {
   if (!file) return false;
   if (isSelectionMainDocumentFile(file)) return false;
   if (isSelectionGeneratedPdfFile(file)) return false;
-  if (file.is_selection_attachment === false) return false;
   if (file.is_gem_media === true || file.is_gem_certificate === true) return false;
-  return true;
+  return file.is_selection_attachment === true;
 }
 
 export function findSelectionMainDocumentFile(selection_folder) {
@@ -33,10 +40,6 @@ export function findSelectionMainDocumentFile(selection_folder) {
           +new Date(b?.$date_uploaded || 0) - +new Date(a?.$date_uploaded || 0),
       )[0] || null
   );
-}
-
-export function isSelectionGeneratedPdfFile(file) {
-  return file?.is_selection_generated_pdf === true;
 }
 
 export function findSelectionGeneratedPdfFiles(selection_folder) {

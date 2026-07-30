@@ -162,7 +162,7 @@ export default {
   more_informations: "More informations",
 
   already_added: "Already added",
-  open: "open",
+  open: "Open",
   create_and_open: "Create and open",
   create_a_project: "Create a project",
   create_an_event: "Create an event",

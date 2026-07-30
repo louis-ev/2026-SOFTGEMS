@@ -145,7 +145,7 @@ export default {
         });
 
         if (abs_diff_seconds < 60) {
-          return relative_time_formatter.format(diff_seconds, "second");
+          return "now";
         }
         if (abs_diff_seconds < 3600) {
           return relative_time_formatter.format(
