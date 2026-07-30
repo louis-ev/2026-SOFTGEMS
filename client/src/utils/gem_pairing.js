@@ -6,7 +6,7 @@ const clean_string = (value) => {
 export function getGemIdFromPath(gem_path) {
   const cleaned_path = clean_string(gem_path);
   if (!cleaned_path) return "";
-  const path_parts = cleaned_path.split("/");
+  const path_parts = cleaned_path.split("/").filter(Boolean);
   return path_parts[path_parts.length - 1] || "";
 }
 
@@ -17,6 +17,17 @@ export function normalizePairedGemId(value) {
     return getGemIdFromPath(cleaned);
   }
   return cleaned;
+}
+
+/**
+ * Returns a usable paired-gem id, or "" when empty / self-referential.
+ */
+export function sanitizePairedGemId(value, self_gem_id) {
+  const paired_id = normalizePairedGemId(value);
+  const self_id = normalizePairedGemId(self_gem_id);
+  if (!paired_id) return "";
+  if (self_id && paired_id === self_id) return "";
+  return paired_id;
 }
 
 export function buildPairedGemListLabel(gem) {
@@ -70,14 +81,15 @@ export function applyPairedGemPartnerUpdates(gems, partner_updates, vue_set) {
   partner_updates.forEach(({ gem_id, paired_gem }) => {
     const normalized_id = normalizePairedGemId(gem_id);
     if (!normalized_id) return;
+    const next_paired_gem = sanitizePairedGemId(paired_gem, normalized_id);
     const target_gem = gems.find(
       (gem) => getGemIdFromPath(gem?.$path) === normalized_id
     );
     if (!target_gem) return;
     if (typeof vue_set === "function") {
-      vue_set(target_gem, "paired_gem", paired_gem);
+      vue_set(target_gem, "paired_gem", next_paired_gem);
     } else {
-      target_gem.paired_gem = paired_gem;
+      target_gem.paired_gem = next_paired_gem;
     }
   });
 }
@@ -85,10 +97,11 @@ export function applyPairedGemPartnerUpdates(gems, partner_updates, vue_set) {
 function pushUniquePartnerUpdate(partner_updates, gem_id, paired_gem) {
   const normalized_id = normalizePairedGemId(gem_id);
   if (!normalized_id) return;
+  const next_paired_gem = sanitizePairedGemId(paired_gem, normalized_id);
   const existing_index = partner_updates.findIndex(
     (item) => normalizePairedGemId(item.gem_id) === normalized_id
   );
-  const next_item = { gem_id: normalized_id, paired_gem: paired_gem ?? "" };
+  const next_item = { gem_id: normalized_id, paired_gem: next_paired_gem };
   if (existing_index === -1) {
     partner_updates.push(next_item);
     return;
@@ -100,12 +113,29 @@ function applyLocalPartnerMeta(api, gems_path, gem_id, paired_gem) {
   if (!api || typeof api.folderUpdated !== "function") return;
   const normalized_id = normalizePairedGemId(gem_id);
   if (!normalized_id) return;
+  const next_paired_gem = sanitizePairedGemId(paired_gem, normalized_id);
   api.folderUpdated({
     path_to_folder: `${gems_path}/${normalized_id}`,
-    changed_data: { paired_gem: paired_gem ?? "" },
+    changed_data: { paired_gem: next_paired_gem },
   });
 }
 
+function queuePartnerUpdate(updates_by_id, gem_id, paired_gem) {
+  const normalized_id = normalizePairedGemId(gem_id);
+  if (!normalized_id) return;
+  // Never persist a self-pair on any gem.
+  const next_paired_gem = sanitizePairedGemId(paired_gem, normalized_id);
+  updates_by_id.set(normalized_id, next_paired_gem);
+}
+
+/**
+ * Keep reciprocal pairing in sync after the source gem's `paired_gem` was saved.
+ *
+ * Example: source 30 paired with 326
+ * - gems/326.paired_gem = "30"
+ * - if 326 previously pointed at 99, clear gems/99.paired_gem
+ * - if 30 previously pointed at 20, clear gems/20.paired_gem
+ */
 export async function syncPairedGemLinks({
   api,
   gems_path,
@@ -113,96 +143,70 @@ export async function syncPairedGemLinks({
   new_paired_gem_id,
   previous_paired_gem_id,
 }) {
-  const cleaned_source_gem_id = normalizePairedGemId(source_gem_id);
-  const cleaned_new_paired_gem_id = normalizePairedGemId(new_paired_gem_id);
-  const cleaned_previous_paired_gem_id = normalizePairedGemId(
-    previous_paired_gem_id
-  );
+  const source_id = normalizePairedGemId(source_gem_id);
+  const target_id = sanitizePairedGemId(new_paired_gem_id, source_id);
+  const previous_id = sanitizePairedGemId(previous_paired_gem_id, source_id);
 
-  if (!cleaned_source_gem_id || !api) {
+  if (!source_id || !api) {
     return { partner_updates: [], failed_paths: [] };
   }
 
-  const updates = [];
-  const partner_updates = [];
-  const failed_paths = [];
+  const updates_by_id = new Map();
 
-  if (
-    cleaned_new_paired_gem_id &&
-    cleaned_new_paired_gem_id !== cleaned_source_gem_id
-  ) {
-    updates.push({
-      path: `${gems_path}/${cleaned_new_paired_gem_id}`,
-      new_meta: { paired_gem: cleaned_source_gem_id },
-      gem_id: cleaned_new_paired_gem_id,
-      paired_gem: cleaned_source_gem_id,
-    });
-  }
+  if (target_id) {
+    let target_previous_id = "";
+    if (typeof api.getFolder === "function") {
+      try {
+        const target_gem = await api.getFolder({
+          path: `${gems_path}/${target_id}`,
+          no_files: true,
+        });
+        target_previous_id = sanitizePairedGemId(
+          target_gem?.paired_gem,
+          target_id
+        );
+      } catch {
+        target_previous_id = "";
+      }
+    }
 
-  const previous_partner_to_clear =
-    cleaned_previous_paired_gem_id &&
-    cleaned_previous_paired_gem_id !== cleaned_source_gem_id &&
-    cleaned_previous_paired_gem_id !== cleaned_new_paired_gem_id
-      ? cleaned_previous_paired_gem_id
-      : "";
+    // Target must point back at the source — never at itself.
+    queuePartnerUpdate(updates_by_id, target_id, source_id);
 
-  if (previous_partner_to_clear) {
-    updates.push({
-      path: `${gems_path}/${previous_partner_to_clear}`,
-      new_meta: { paired_gem: "" },
-      gem_id: previous_partner_to_clear,
-      paired_gem: "",
-    });
-  }
-
-  if (!cleaned_new_paired_gem_id && cleaned_previous_paired_gem_id) {
-    const unlink_id =
-      cleaned_previous_paired_gem_id !== cleaned_source_gem_id
-        ? cleaned_previous_paired_gem_id
-        : "";
     if (
-      unlink_id &&
-      !updates.some(
-        (update_item) =>
-          normalizePairedGemId(update_item.gem_id) === unlink_id &&
-          Object.prototype.hasOwnProperty.call(update_item.new_meta, "paired_gem")
-      )
+      target_previous_id &&
+      target_previous_id !== source_id &&
+      target_previous_id !== target_id
     ) {
-      updates.push({
-        path: `${gems_path}/${unlink_id}`,
-        new_meta: { paired_gem: "" },
-        gem_id: unlink_id,
-        paired_gem: "",
-      });
+      queuePartnerUpdate(updates_by_id, target_previous_id, "");
     }
   }
 
-  for (const update_item of updates) {
+  if (previous_id && previous_id !== target_id && previous_id !== source_id) {
+    queuePartnerUpdate(updates_by_id, previous_id, "");
+  }
+
+  const partner_updates = [];
+  const failed_paths = [];
+
+  for (const [gem_id, paired_gem] of updates_by_id.entries()) {
+    const path = `${gems_path}/${gem_id}`;
     try {
       await api.updateMeta({
-        path: update_item.path,
-        new_meta: update_item.new_meta,
+        path,
+        new_meta: { paired_gem },
       });
-      pushUniquePartnerUpdate(
-        partner_updates,
-        update_item.gem_id,
-        update_item.paired_gem
-      );
-      applyLocalPartnerMeta(
-        api,
-        gems_path,
-        update_item.gem_id,
-        update_item.paired_gem
-      );
+      pushUniquePartnerUpdate(partner_updates, gem_id, paired_gem);
+      applyLocalPartnerMeta(api, gems_path, gem_id, paired_gem);
     } catch {
-      failed_paths.push(update_item.path);
+      failed_paths.push(path);
     }
   }
 
   return { partner_updates, failed_paths };
 }
 
-export function getPairedGemDraftValue(editor) {
+export function getPairedGemDraftValue(editor, self_gem_id = "") {
   if (!editor) return "";
-  return normalizePairedGemId(editor.draft_paired_gem_id);
+  return sanitizePairedGemId(editor.draft_paired_gem_id, self_gem_id);
 }

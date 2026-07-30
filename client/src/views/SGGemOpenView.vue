@@ -101,7 +101,7 @@
           <SGEditableMetaField
             :label="$t('sg_paired_gem')"
             icon="link"
-            :value="gem.paired_gem"
+            :value="sanitized_paired_gem_value"
             :is_flashing="isFieldFlashing('paired_gem')"
             :modal_open="editing_field === field_configs.paired_gem"
             :modal_title="gemFieldModalTitle(field_configs.paired_gem)"
@@ -534,7 +534,13 @@ export default {
       return buildGemFieldConfigs(this.$t.bind(this));
     },
     paired_gem_preview_id() {
-      return this.cleanString(this.gem?.paired_gem);
+      const paired_id = this.cleanString(this.gem?.paired_gem);
+      // Ignore corrupt self-pairs (a gem must never point at itself).
+      if (paired_id && paired_id === this.cleanString(this.gem_id)) return "";
+      return paired_id;
+    },
+    sanitized_paired_gem_value() {
+      return this.paired_gem_preview_id;
     },
     paired_gem_shortcut_path() {
       const paired_id = this.paired_gem_preview_id;
@@ -607,9 +613,13 @@ export default {
       return this.gem_title;
     },
     gemEditorProps(field_config) {
+      const current_value =
+        field_config?.key === "paired_gem"
+          ? this.sanitized_paired_gem_value
+          : this.gemFieldDisplayValue(this.gem, field_config);
       return {
         field: field_config,
-        current_value: this.gemFieldDisplayValue(this.gem, field_config),
+        current_value,
         gem_path: this.gem_path,
         gem: this.gem,
         meta_target_path: "",

@@ -84,6 +84,7 @@ import SGPairedGemShortcutCard from "@/components/gems/SGPairedGemShortcutCard.v
 import {
   getGemIdFromPath,
   getPairedGemConflict,
+  sanitizePairedGemId,
 } from "@/utils/gem_pairing.js";
 
 export default {
@@ -106,7 +107,10 @@ export default {
     return {
       gems_path: "gems",
       all_gems: [],
-      draft_paired_gem_id: this.cleanString(this.initial_value),
+      draft_paired_gem_id: sanitizePairedGemId(
+        this.initial_value,
+        this.current_gem_id
+      ),
       picker_open: false,
       is_loading: false,
       fetch_error: "",
@@ -188,8 +192,17 @@ export default {
   },
   watch: {
     initial_value(next_value) {
-      this.draft_paired_gem_id = this.cleanString(next_value);
+      this.draft_paired_gem_id = sanitizePairedGemId(
+        next_value,
+        this.current_gem_id
+      );
       this.picker_open = false;
+    },
+    current_gem_id(next_id) {
+      this.draft_paired_gem_id = sanitizePairedGemId(
+        this.draft_paired_gem_id,
+        next_id
+      );
     },
     draft_paired_gem_id() {
       this.emitFooterState();
@@ -221,7 +234,10 @@ export default {
       this.picker_open = false;
     },
     onPickRowClick(gem) {
-      const gem_id = getGemIdFromPath(gem?.$path);
+      const gem_id = sanitizePairedGemId(
+        getGemIdFromPath(gem?.$path),
+        this.current_gem_id
+      );
       if (!gem_id) return;
       this.draft_paired_gem_id = gem_id;
       this.picker_open = false;

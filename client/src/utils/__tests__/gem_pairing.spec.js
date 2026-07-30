@@ -6,12 +6,17 @@ import {
   getGemIdFromPath,
   getPairedGemConflict,
   normalizePairedGemId,
+  sanitizePairedGemId,
   syncPairedGemLinks,
 } from "@/utils/gem_pairing.js";
 
 describe("getGemIdFromPath", () => {
   it("returns the last path segment", () => {
     expect(getGemIdFromPath("gems/1390")).toBe("1390");
+  });
+
+  it("ignores trailing slashes", () => {
+    expect(getGemIdFromPath("gems/1390/")).toBe("1390");
   });
 });
 
@@ -22,6 +27,17 @@ describe("normalizePairedGemId", () => {
 
   it("keeps bare ids unchanged", () => {
     expect(normalizePairedGemId("30")).toBe("30");
+  });
+});
+
+describe("sanitizePairedGemId", () => {
+  it("rejects self-pairs", () => {
+    expect(sanitizePairedGemId("30", "30")).toBe("");
+    expect(sanitizePairedGemId("gems/30", "30")).toBe("");
+  });
+
+  it("keeps a different partner id", () => {
+    expect(sanitizePairedGemId("326", "30")).toBe("326");
   });
 });
 
@@ -98,14 +114,21 @@ describe("applyPairedGemPartnerUpdates", () => {
     applyPairedGemPartnerUpdates(gems, [{ gem_id: "326", paired_gem: "30" }]);
     expect(gems[0].paired_gem).toBe("30");
   });
+
+  it("never applies a self-pair", () => {
+    const gems = [{ $path: "gems/326", paired_gem: "30" }];
+    applyPairedGemPartnerUpdates(gems, [{ gem_id: "326", paired_gem: "326" }]);
+    expect(gems[0].paired_gem).toBe("");
+  });
 });
 
 describe("syncPairedGemLinks", () => {
-  it("sets reciprocal pairing on the new target", async () => {
+  it("sets reciprocal pairing on the new target (30 ? 326 means 326 ? 30)", async () => {
     const updateMeta = vi.fn().mockResolvedValue({});
+    const getFolder = vi.fn().mockResolvedValue({ paired_gem: "" });
     const folderUpdated = vi.fn();
     const result = await syncPairedGemLinks({
-      api: { updateMeta, folderUpdated },
+      api: { updateMeta, getFolder, folderUpdated },
       gems_path: "gems",
       source_gem_id: "30",
       new_paired_gem_id: "326",
@@ -127,10 +150,54 @@ describe("syncPairedGemLinks", () => {
     expect(result.failed_paths).toEqual([]);
   });
 
+  it("never writes a self-pair when source equals target", async () => {
+    const updateMeta = vi.fn().mockResolvedValue({});
+    const result = await syncPairedGemLinks({
+      api: { updateMeta },
+      gems_path: "gems",
+      source_gem_id: "30",
+      new_paired_gem_id: "30",
+      previous_paired_gem_id: "",
+    });
+
+    expect(updateMeta).not.toHaveBeenCalled();
+    expect(result.partner_updates).toEqual([]);
+  });
+
+  it("clears the target's previous partner when re-pairing that target", async () => {
+    const updateMeta = vi.fn().mockResolvedValue({});
+    const getFolder = vi.fn().mockResolvedValue({ paired_gem: "99" });
+    const result = await syncPairedGemLinks({
+      api: { updateMeta, getFolder },
+      gems_path: "gems",
+      source_gem_id: "30",
+      new_paired_gem_id: "326",
+      previous_paired_gem_id: "",
+    });
+
+    expect(getFolder).toHaveBeenCalledWith({
+      path: "gems/326",
+      no_files: true,
+    });
+    expect(updateMeta).toHaveBeenCalledWith({
+      path: "gems/326",
+      new_meta: { paired_gem: "30" },
+    });
+    expect(updateMeta).toHaveBeenCalledWith({
+      path: "gems/99",
+      new_meta: { paired_gem: "" },
+    });
+    expect(result.partner_updates).toEqual([
+      { gem_id: "326", paired_gem: "30" },
+      { gem_id: "99", paired_gem: "" },
+    ]);
+  });
+
   it("normalizes folder-path ids before syncing", async () => {
     const updateMeta = vi.fn().mockResolvedValue({});
+    const getFolder = vi.fn().mockResolvedValue({ paired_gem: "" });
     await syncPairedGemLinks({
-      api: { updateMeta },
+      api: { updateMeta, getFolder },
       gems_path: "gems",
       source_gem_id: "gems/30",
       new_paired_gem_id: "gems/326",
@@ -145,8 +212,9 @@ describe("syncPairedGemLinks", () => {
 
   it("clears the previous partner when changing pairing", async () => {
     const updateMeta = vi.fn().mockResolvedValue({});
+    const getFolder = vi.fn().mockResolvedValue({ paired_gem: "" });
     const result = await syncPairedGemLinks({
-      api: { updateMeta },
+      api: { updateMeta, getFolder },
       gems_path: "gems",
       source_gem_id: "10",
       new_paired_gem_id: "30",
@@ -193,8 +261,9 @@ describe("syncPairedGemLinks", () => {
       .fn()
       .mockRejectedValueOnce(new Error("network"))
       .mockResolvedValueOnce({});
+    const getFolder = vi.fn().mockResolvedValue({ paired_gem: "" });
     const result = await syncPairedGemLinks({
-      api: { updateMeta },
+      api: { updateMeta, getFolder },
       gems_path: "gems",
       source_gem_id: "10",
       new_paired_gem_id: "30",

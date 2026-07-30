@@ -183,6 +183,7 @@ import { is_date_input_field, toDateInputValue } from "@/utils/date_input.js";
 import {
   getGemIdFromPath,
   getPairedGemDraftValue,
+  sanitizePairedGemId,
   syncPairedGemLinks,
 } from "@/utils/gem_pairing.js";
 
@@ -949,7 +950,10 @@ export default {
       } else if (this.active_paired_gem_picker && !targets_file_meta) {
         field_key_saved = "paired_gem";
         meta_patch = {
-          paired_gem: getPairedGemDraftValue(this.$refs.paired_gem_editor_ref),
+          paired_gem: getPairedGemDraftValue(
+            this.$refs.paired_gem_editor_ref,
+            this.current_gem_id
+          ),
         };
       } else {
         field_key_saved = this.field.key;
@@ -1002,16 +1006,24 @@ export default {
         const value_from_response = saved_changes[field_key_saved];
         let paired_gem_partner_updates = [];
         let paired_gem_sync_failed_paths = [];
+        let paired_gem_saved_value =
+          value_from_response !== undefined
+            ? value_from_response
+            : meta_patch[field_key_saved];
         if (field_key_saved === "paired_gem" && !targets_file_meta) {
-          const saved_paired_gem_id =
-            value_from_response !== undefined
-              ? value_from_response
-              : meta_patch.paired_gem;
+          // Always sync from the draft we intended to save — not the API
+          // response — and never allow a gem to pair with itself.
+          const draft_paired_gem_id = sanitizePairedGemId(
+            meta_patch.paired_gem,
+            this.current_gem_id
+          );
+          paired_gem_saved_value = draft_paired_gem_id;
+          saved_changes = { ...saved_changes, paired_gem: draft_paired_gem_id };
           const sync_result = await syncPairedGemLinks({
             api: this.$api,
             gems_path: this.gems_path,
             source_gem_id: this.current_gem_id,
-            new_paired_gem_id: saved_paired_gem_id ?? "",
+            new_paired_gem_id: draft_paired_gem_id,
             previous_paired_gem_id: this.paired_gem_initial_value,
           });
           paired_gem_partner_updates = sync_result.partner_updates || [];
@@ -1020,10 +1032,7 @@ export default {
         this.$emit("saved", {
           changes: saved_changes,
           key: field_key_saved,
-          value:
-            value_from_response !== undefined
-              ? value_from_response
-              : meta_patch[field_key_saved],
+          value: paired_gem_saved_value,
           update_response,
           paired_gem_partner_updates,
           paired_gem_sync_failed_paths,
@@ -1233,7 +1242,7 @@ export default {
       if (this.active_paired_gem_picker) {
         const editor = this.$refs.paired_gem_editor_ref;
         if (!editor) return false;
-        this.edit_value = getPairedGemDraftValue(editor);
+        this.edit_value = getPairedGemDraftValue(editor, this.current_gem_id);
         return await this.commitSave();
       }
       return await this.commitSave();
