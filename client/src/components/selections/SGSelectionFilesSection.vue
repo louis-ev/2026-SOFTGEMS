@@ -37,11 +37,7 @@
     </p>
 
     <ul v-else class="_list">
-      <li
-        v-for="file in attachment_files"
-        :key="file.$path"
-        class="_row"
-      >
+      <li v-for="file in attachment_files" :key="file.$path" class="_row">
         <div class="_rowBody">
           <SGSelectionFileThumb :file="file" />
           <div class="_main">
@@ -145,7 +141,7 @@ export default {
         .sort(
           (a, b) =>
             +new Date(b?.$date_uploaded || 0) -
-            +new Date(a?.$date_uploaded || 0),
+            +new Date(a?.$date_uploaded || 0)
         );
     },
   },
@@ -200,7 +196,7 @@ export default {
 ._empty {
   margin: 0;
   color: var(--c-gris_fonce);
-  font-size: var(--sl-font-size-small);
+  // font-size: var(--sl-font-size-small);
 }
 
 ._list {

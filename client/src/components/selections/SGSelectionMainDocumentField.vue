@@ -166,11 +166,7 @@ export default {
       await this.$nextTick();
 
       const current_path = this.main_document_file?.$path || "";
-      if (
-        previous_path &&
-        current_path &&
-        previous_path !== current_path
-      ) {
+      if (previous_path && current_path && previous_path !== current_path) {
         try {
           await this.$api.deleteItem({ path: previous_path });
         } catch ({ code }) {
@@ -212,7 +208,7 @@ export default {
 ._empty {
   margin: 0;
   color: var(--c-gris_fonce);
-  font-size: var(--sl-font-size-small);
+  // font-size: var(--sl-font-size-small);
 }
 
 ._fileRow {

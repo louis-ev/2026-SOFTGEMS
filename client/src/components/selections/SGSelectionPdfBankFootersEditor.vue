@@ -39,7 +39,9 @@
               v-model="edit_draft.internal_name"
               class="_internalNameInput u-input"
               type="text"
-              :placeholder="$t('sg_pdf_export_bank_footer_internal_name_placeholder')"
+              :placeholder="
+                $t('sg_pdf_export_bank_footer_internal_name_placeholder')
+              "
             />
             <textarea
               v-model="edit_draft.body"
@@ -151,12 +153,14 @@ export default {
       immediate: true,
       deep: true,
       handler(next_presets) {
-        this.local_presets = (Array.isArray(next_presets) ? next_presets : []).map(
-          (preset) => ({ ...preset })
-        );
+        this.local_presets = (
+          Array.isArray(next_presets) ? next_presets : []
+        ).map((preset) => ({ ...preset }));
         if (
           this.editing_preset_id &&
-          !this.local_presets.some((preset) => preset.id === this.editing_preset_id)
+          !this.local_presets.some(
+            (preset) => preset.id === this.editing_preset_id
+          )
         ) {
           this.cancelEdit();
         }
@@ -220,10 +224,7 @@ export default {
       this.local_presets = this.local_presets.filter((_, i) => i !== index);
       this.emitPresets();
       if (removed?.id === this.selected_id) {
-        this.$emit(
-          "update:selected_id",
-          this.local_presets[0]?.id || ""
-        );
+        this.$emit("update:selected_id", this.local_presets[0]?.id || "");
       }
     },
     movePreset(index, direction) {
@@ -260,7 +261,7 @@ export default {
 ._empty {
   margin: 0;
   color: var(--c-gris_fonce);
-  font-style: italic;
+  // font-style: italic;
 }
 
 ._list {
