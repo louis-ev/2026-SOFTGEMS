@@ -119,9 +119,8 @@ import {
   gem_linear_dimension_keys,
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
-import GemsInventoryTableMixin, {
-  selections_gems_metadata_keys_localstorage_key,
-} from "@/mixins/GemsInventoryTableMixin.js";
+import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
+import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import {
   areSelectionGemPathsEqual,
   normalizeSelectionGemPaths,
@@ -230,8 +229,11 @@ export default {
     },
   },
   methods: {
-    getGemsMetadataKeysStorageKey() {
-      return selections_gems_metadata_keys_localstorage_key;
+    getGemsMetadataKeysStorageScope() {
+      const selection_type = String(this.selection_folder?.selection_type || "");
+      const type_slug = selectionSlugFromType(selection_type);
+      if (!type_slug) return "selection:unknown";
+      return `selection:${type_slug}`;
     },
     openColumnsModal() {
       this.show_columns_modal = true;

@@ -68,7 +68,9 @@ import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGGemColumnsModal from "@/components/gems/SGGemColumnsModal.vue";
 import GemsQuickSearchMixin from "@/mixins/GemsQuickSearchMixin.js";
-import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
+import GemsInventoryTableMixin, {
+  gems_table_columns_storage_scopes,
+} from "@/mixins/GemsInventoryTableMixin.js";
 
 export default {
   name: "SGGemsInventoryTableSection",
@@ -147,6 +149,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    metadata_keys_storage_scope: {
+      type: String,
+      default: gems_table_columns_storage_scopes.all_gems,
+    },
+    persist_metadata_keys: {
+      type: Boolean,
+      default: true,
+    },
     use_sorted_gems: {
       type: Boolean,
       default: false,
@@ -216,6 +226,13 @@ export default {
     },
   },
   methods: {
+    getGemsMetadataKeysStorageScope() {
+      if (!this.persist_metadata_keys) return "";
+      return (
+        String(this.metadata_keys_storage_scope || "").trim() ||
+        gems_table_columns_storage_scopes.all_gems
+      );
+    },
     openColumnsModal() {
       this.show_columns_modal = true;
     },

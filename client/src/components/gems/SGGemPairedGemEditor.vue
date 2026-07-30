@@ -71,6 +71,7 @@
         use_sorted_gems
         selection_pick_column
         :single_pick_selected_path="draft_paired_gem_path"
+        :persist_metadata_keys="false"
         table_shell_class="_pairedGemTableShell"
         @rowClick="onPickRowClick"
       />

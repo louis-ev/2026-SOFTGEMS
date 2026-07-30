@@ -7,10 +7,17 @@ import {
   stripLinearDimensionKeys,
   stripVirtualPerCaratKeys,
 } from "@/utils/gems_table_metadata.js";
+import {
+  gems_table_columns_storage_scopes,
+  loadGemsMetadataKeysFromStorage,
+  persistGemsMetadataKeysToStorage,
+} from "@/utils/gems_table_columns_storage.js";
 
-export const gems_metadata_keys_localstorage_key = "sg_gems_metadata_keys";
-export const selections_gems_metadata_keys_localstorage_key =
-  "sg_selections_gems_metadata_keys";
+export {
+  gems_metadata_keys_localstorage_key,
+  gems_table_columns_storage_scopes,
+  selections_gems_metadata_keys_localstorage_key,
+} from "@/utils/gems_table_columns_storage.js";
 export const gems_pinned_metadata_keys = ["id", "status"];
 export const gem_excluded_metadata_keys = [...gems_table_gem_excluded_metadata_keys];
 
@@ -26,6 +33,9 @@ export default {
     this.loadGemsMetadataKeysFromStorage();
   },
   computed: {
+    gems_metadata_keys_storage_scope() {
+      return this.getGemsMetadataKeysStorageScope();
+    },
     all_metadata_keys() {
       const gems = Array.isArray(this.gems) ? this.gems : [];
       return buildGemsTableAllMetadataKeys(gems);
@@ -77,10 +87,16 @@ export default {
         this.syncSelectedGemsMetadataKeys();
       },
     },
+    gems_metadata_keys_storage_scope: {
+      handler(next_scope, previous_scope) {
+        if (next_scope === previous_scope) return;
+        this.reloadGemsMetadataKeysFromStorage();
+      },
+    },
   },
   methods: {
-    getGemsMetadataKeysStorageKey() {
-      return gems_metadata_keys_localstorage_key;
+    getGemsMetadataKeysStorageScope() {
+      return gems_table_columns_storage_scopes.all_gems;
     },
     stripLinearDimensionKeys,
     stripVirtualPerCaratKeys,
@@ -90,22 +106,21 @@ export default {
         (key) => !gem_excluded_metadata_keys.includes(key)
       );
     },
-    loadGemsMetadataKeysFromStorage() {
-      try {
-        const stored_keys_json = localStorage.getItem(
-          this.getGemsMetadataKeysStorageKey()
-        );
-        if (!stored_keys_json) return;
-        const stored_keys = JSON.parse(stored_keys_json);
-        if (!Array.isArray(stored_keys)) return;
-        this.selected_metadata_keys = this.stripExcludedGemMetadataKeys(
-          normalizeGemsTableSelectedMetadataKeys(
-            stored_keys.filter((metadata_key) => typeof metadata_key === "string")
-          )
-        );
-      } catch {
-        // Keep defaults when storage is unavailable or invalid.
+    reloadGemsMetadataKeysFromStorage() {
+      const storage_scope = this.gems_metadata_keys_storage_scope;
+      if (!storage_scope) {
+        this.selected_metadata_keys = [];
+        this.syncSelectedGemsMetadataKeys();
+        return;
       }
+
+      this.selected_metadata_keys = this.stripExcludedGemMetadataKeys(
+        loadGemsMetadataKeysFromStorage(storage_scope)
+      );
+      this.syncSelectedGemsMetadataKeys();
+    },
+    loadGemsMetadataKeysFromStorage() {
+      this.reloadGemsMetadataKeysFromStorage();
     },
     syncSelectedGemsMetadataKeys() {
       const all_keys = Array.isArray(this.all_metadata_keys)
@@ -138,18 +153,15 @@ export default {
         )
       ) {
         this.selected_metadata_keys = normalized_selected_keys;
-        this.persistGemsMetadataKeysToStorage();
       }
     },
     persistGemsMetadataKeysToStorage() {
-      try {
-        localStorage.setItem(
-          this.getGemsMetadataKeysStorageKey(),
-          JSON.stringify(this.selected_metadata_keys)
-        );
-      } catch {
-        // Ignore storage write errors.
-      }
+      const storage_scope = this.gems_metadata_keys_storage_scope;
+      if (!storage_scope) return;
+      persistGemsMetadataKeysToStorage(
+        storage_scope,
+        this.selected_metadata_keys
+      );
     },
     onSaveGemsColumnsSelection(next_selected_metadata_keys) {
       if (

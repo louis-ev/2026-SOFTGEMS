@@ -47,6 +47,7 @@
         use_sorted_gems
         selection_pick_column
         :disabled_row_paths="disabled_row_paths"
+        :metadata_keys_storage_scope="add_gems_metadata_keys_storage_scope"
         table_shell_class="_tableShellBounded"
         @rowClick="onPickRowClick"
       />
@@ -58,6 +59,7 @@
 import SGGemsInventoryTableSection from "@/components/gems/SGGemsInventoryTableSection.vue";
 import { scrollElementToViewportFraction } from "@/utils/section_anchor_scroll.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
+import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import {
   gemStatusSlugForSelectionType,
   selectionTypeAffectsGemStatus,
@@ -83,6 +85,11 @@ export default {
     },
   },
   computed: {
+    add_gems_metadata_keys_storage_scope() {
+      const type_slug = selectionSlugFromType(this.selection_type);
+      if (!type_slug) return "selection:unknown";
+      return `selection:${type_slug}`;
+    },
     selection_status_hint() {
       if (!selectionTypeAffectsGemStatus(this.selection_type)) return "";
       const mapped_status = gemStatusSlugForSelectionType(this.selection_type);
