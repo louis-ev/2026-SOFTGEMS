@@ -68,9 +68,14 @@ export default {
       );
       return pair ? pair.virtual_per_carat_key : null;
     },
+    isUnsetGemNumberValue(value) {
+      if (value === null || value === undefined || value === "") return true;
+      if (typeof value === "string" && value.trim() === "") return true;
+      return false;
+    },
     computeDisplayedPerCaratForGem(gem, total_key) {
       const raw_total = gem?.[total_key];
-      if (raw_total === null || raw_total === undefined || raw_total === "") {
+      if (this.isUnsetGemNumberValue(raw_total)) {
         return null;
       }
       const weight_ct = this.toNumberOrDefault(gem?.weight_ct);

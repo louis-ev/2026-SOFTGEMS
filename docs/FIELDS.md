@@ -146,7 +146,7 @@ This section documents **how pricing works in the SoftGems client** (single sour
 
 - **Persisted**: for each pair line (see table below), only the **total** is stored in meta. Matching “/ Ct” values are **virtual** in the app and are not written as separate price fields for those lines.
 - **Displayed “/ Ct”**: computed when the stored **total** is set and `weight_ct` is valid and > 0: **`per_carat = total / weight_ct`**, rounded for display/calculations as implemented in the client (see `computePerCarat` / `computeTotal` in [`client/src/mixins/GemPricing.js`](../client/src/mixins/GemPricing.js); currently 2 decimal places via `toFixed(2)`). When the total is unset (null / empty), the derived per-carat displays as empty (—), not `0`.
-- **Editing the total**: saves the total; the UI refreshes the derived per-carat.
+- **Editing the total**: saves the total; the UI refreshes the derived per-carat. Opening the pair editor for an unset total shows blank inputs (not `0`).
 - **Editing “/ Ct”** (virtual field): saves **`total = per_carat × weight_ct`** (same rounding rules as code). **`weight_ct` is never changed** by price edits.
 - **No or zero weight**: the intended UX is that **per-carat entry is disabled** (or shows inactive) until a valid carat weight is set; totals remain editable regardless.
 - **Changing `weight_ct`**: totals stay the same; displayed per-carat values update from the new weight.

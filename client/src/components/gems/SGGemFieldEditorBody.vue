@@ -679,10 +679,13 @@ export default {
       if (!pair) return;
       const { total: t_cfg, per: p_cfg } = this.pair_field_configs;
       if (!t_cfg || !p_cfg) return;
-      const total = this.normalizeFieldValueWithConfig(
-        this.gem?.[pair.total_key] ?? "",
-        t_cfg
-      );
+      const raw_total = this.gem?.[pair.total_key];
+      if (this.isUnsetGemNumberValue(raw_total)) {
+        this.pair_edit_total = "";
+        this.pair_edit_per_carat = "";
+        return;
+      }
+      const total = this.normalizeFieldValueWithConfig(raw_total, t_cfg);
       const weight = this.toNumberOrDefault(this.gem?.weight_ct);
       const per = this.computePerCarat({
         total_value: total,
@@ -697,6 +700,11 @@ export default {
       const total_cfg = this.pair_field_configs.total;
       const per_cfg = this.pair_field_configs.per;
       if (!total_cfg || !per_cfg) return;
+      if (this.isUnsetGemNumberValue(val)) {
+        this.pair_edit_per_carat = "";
+        this.emitFooterState();
+        return;
+      }
       const validation = this.validateFieldValueWithConfig(val, total_cfg);
       if (!validation.is_valid) {
         this.emitFooterState();
@@ -717,6 +725,11 @@ export default {
       const total_cfg = this.pair_field_configs.total;
       const per_cfg = this.pair_field_configs.per;
       if (!total_cfg || !per_cfg) return;
+      if (this.isUnsetGemNumberValue(val)) {
+        this.pair_edit_total = "";
+        this.emitFooterState();
+        return;
+      }
       const validation = this.validateFieldValueWithConfig(val, per_cfg);
       if (!validation.is_valid) {
         this.emitFooterState();
@@ -1164,6 +1177,12 @@ export default {
           ? entry.value
           : "";
       if (this.active_pricing_pair) {
+        if (this.isUnsetGemNumberValue(raw)) {
+          this.pair_edit_total = "";
+          this.pair_edit_per_carat = "";
+          this.onEditorInput();
+          return;
+        }
         const total = this.toNumberOrDefault(raw);
         const t_cfg = this.pair_field_configs.total;
         const p_cfg = this.pair_field_configs.per;
