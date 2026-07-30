@@ -183,9 +183,9 @@ export default {
   border-left: 2px solid var(--c-gris);
   transition: background-color 0.15s ease;
 
-  &:hover {
-    background: var(--c-gris_clair);
-  }
+  // &:hover {
+  //   background: var(--c-gris_clair);
+  // }
 }
 
 ._historyEntryBody {
@@ -211,10 +211,7 @@ export default {
   color: var(--c-gris_fonce);
   cursor: pointer;
   opacity: 0;
-  transition:
-    opacity 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 
   &:hover {
     background: var(--c-gris_clair);

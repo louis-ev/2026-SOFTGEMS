@@ -8,19 +8,21 @@
     <button
       v-if="!readonly"
       type="button"
-      class="_value u-input"
+      class="u-input _value"
+      :class="{ _empty: is_empty }"
       :title="hint_title || undefined"
       @click="$emit('click')"
     >
-      <span :class="{ _empty: is_empty }">{{ display_value }}</span>
+      {{ display_value }}
     </button>
-    <div
+    <input
       v-else
-      class="_value u-input _readonly"
+      :value="display_value"
+      class="u-input _value"
+      :class="{ _empty: is_empty }"
+      readonly
       :title="hint_title || undefined"
-    >
-      <span :class="{ _empty: is_empty }">{{ display_value }}</span>
-    </div>
+    />
   </div>
 </template>
 
@@ -84,9 +86,12 @@ export default {
       }
       if (typeof this.value === "number")
         return Number.isFinite(this.value)
-          ? this.value.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
-              maximumFractionDigits: 3,
-            })
+          ? this.value.toLocaleString(
+              getNumberFormatLocale(this.$i18n?.locale),
+              {
+                maximumFractionDigits: 3,
+              }
+            )
           : "—";
       return String(this.value);
     },
@@ -127,39 +132,13 @@ export default {
   padding: 3px 6px;
 }
 
-._value {
-  all: unset;
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
-  padding: calc(var(--spacing) * 0.5);
-  border: 2px solid transparent;
-  border-radius: var(--input-border-radius);
-  background-color: var(--c-gris_clair);
-  line-height: inherit;
+button._value {
   cursor: pointer;
-  text-align: inherit;
-  font: inherit;
-  transition:
-    border-color 0.25s cubic-bezier(0.19, 1, 0.22, 1),
-    background-color 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  text-align: left;
+}
 
-  &:hover {
-    border-color: var(--c-gris);
-  }
-
-  &._readonly {
-    cursor: default;
-    opacity: 0.7;
-
-    &:hover {
-      border-color: transparent;
-    }
-  }
-
-  ._empty {
-    color: var(--c-gris_fonce);
-  }
+._value._empty {
+  color: var(--c-gris_fonce);
 }
 
 @keyframes sg_field_value_present_flash {

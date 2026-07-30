@@ -42,7 +42,7 @@
         {{ $t("sg_gems_page_next") }}
       </button>
     </div>
-    <label class="_tablePageSize">
+    <label v-if="show_page_size_selector" class="_tablePageSize">
       <span class="_tablePageSizeLabel">{{
         $t("sg_table_page_size_label")
       }}</span>
@@ -86,6 +86,10 @@ export default {
   computed: {
     show_page_navigation() {
       return this.page_count > 1;
+    },
+    show_page_size_selector() {
+      const min_option = Math.min(...this.page_size_options);
+      return this.total_items > min_option;
     },
   },
   methods: {
