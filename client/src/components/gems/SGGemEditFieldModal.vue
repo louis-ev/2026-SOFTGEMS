@@ -1,6 +1,8 @@
 <template>
   <BaseModal2
     :title="modal_title"
+    :size="field.modal_size || ''"
+    :nopadding="Boolean(field.modal_nopadding)"
     :is_loading="editor_committing"
     @close="$emit('close')"
   >

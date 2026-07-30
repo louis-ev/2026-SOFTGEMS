@@ -5,6 +5,13 @@
         <div class="_titleRow">
           <div class="_titleGroup">
             <h1 class="_pageTitle">{{ gem_title }}</h1>
+            <SGPairedGemShortcutCard
+              v-if="paired_gem_preview_id"
+              :gem_id="paired_gem_preview_id"
+              :gem_path="paired_gem_shortcut_path"
+              :cover="paired_gem_preview && paired_gem_preview.$cover"
+              @open="openPairedGemPage"
+            />
             <SGFolderModificationsHistory
               :folder_path="gem_path"
               :folder_meta="gem"
@@ -101,7 +108,7 @@
             :gem_edit="gemEditorProps(field_configs.paired_gem)"
             @presentClick="openEditModal(field_configs.paired_gem)"
             @close="editing_field = null"
-            @saved="onFieldSaved"
+            @saved="onPairedGemFieldSaved"
           />
         </div>
       </SGSectionPanel>
@@ -451,6 +458,7 @@ import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
+import SGPairedGemShortcutCard from "@/components/gems/SGPairedGemShortcutCard.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
@@ -467,6 +475,7 @@ export default {
   ],
   components: {
     RemoveMenu2,
+    SGPairedGemShortcutCard,
     SGEditableMetaField,
     SGFolderMetaPeek,
     SGFolderModificationsHistory,
@@ -495,8 +504,8 @@ export default {
       is_loading: false,
       show_remove_modal: false,
       fetch_error: "",
-      paired_gem_options: [],
       editing_field: null,
+      paired_gem_preview: null,
     };
   },
   computed: {
@@ -522,13 +531,30 @@ export default {
       });
     },
     field_configs() {
-      return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
+      return buildGemFieldConfigs(this.$t.bind(this));
+    },
+    paired_gem_preview_id() {
+      return this.cleanString(this.gem?.paired_gem);
+    },
+    paired_gem_shortcut_path() {
+      const paired_id = this.paired_gem_preview_id;
+      if (!paired_id) return "";
+      return (
+        this.paired_gem_preview?.$path || `${this.gems_path}/${paired_id}`
+      );
+    },
+  },
+  watch: {
+    paired_gem_preview_id: {
+      immediate: true,
+      handler() {
+        this.fetchPairedGemPreview();
+      },
     },
   },
   async created() {
     await this.fetchGem();
     this.$api.join({ room: this.gem_path });
-    this.fetchPairableGems();
   },
   mounted() {},
   beforeDestroy() {
@@ -549,23 +575,29 @@ export default {
         }
       }
     },
-    async fetchPairableGems() {
-      try {
-        const gems = await this.$api.getFolders({ path: this.gems_path });
-        this.paired_gem_options = (Array.isArray(gems) ? gems : [])
-          .filter((g) => g?.$path && !g.$path.endsWith(this.gem_id))
-          .map((g) => {
-            const parts = String(g.$path || "").split("/");
-            const gem_slug = parts[parts.length - 1] || "";
-            const gem_label =
-              this.cleanString(g.reference_supplier) ||
-              this.cleanString(g.reference_customer) ||
-              gem_slug;
-            return { value: gem_slug, label: gem_label };
-          });
-      } catch {
-        this.paired_gem_options = [];
+    async fetchPairedGemPreview() {
+      const paired_id = this.paired_gem_preview_id;
+      if (!paired_id) {
+        this.paired_gem_preview = null;
+        return;
       }
+      try {
+        this.paired_gem_preview = await this.$api.getFolder({
+          path: `${this.gems_path}/${paired_id}`,
+          no_files: true,
+        });
+      } catch {
+        this.paired_gem_preview = null;
+      }
+    },
+    openPairedGemPage() {
+      const paired_id = this.paired_gem_preview_id;
+      if (!paired_id) return;
+      this.$router.push(`/gems/${paired_id}`);
+    },
+    onPairedGemFieldSaved(payload) {
+      this.onFieldSaved(payload);
+      this.fetchPairedGemPreview();
     },
     openEditModal(field_config) {
       if (!this.connected_as) return;

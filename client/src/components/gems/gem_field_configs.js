@@ -30,9 +30,8 @@ const sorted_treatment_type_suggestions = sortSuggestions(
 /**
  * Returns the full field config map for all gem fields.
  * @param {Function} t - Vue $t translation function
- * @param {Array} paired_gem_options - select options for the paired_gem field
  */
-export function buildGemFieldConfigs(t, paired_gem_options = []) {
+export function buildGemFieldConfigs(t) {
   const status_options = GEM_STATUS_MANUAL_SLUGS.map((value) => ({
     value,
     label: gemStatusLabel(t, value),
@@ -62,8 +61,9 @@ export function buildGemFieldConfigs(t, paired_gem_options = []) {
       key: "paired_gem",
       label: t("sg_paired_gem"),
       icon: "link",
-      type: "select",
-      options: paired_gem_options,
+      type: "paired_gem_picker",
+      modal_size: "x-large",
+      modal_nopadding: true,
     },
     number_of_pieces: {
       key: "number_of_pieces",

@@ -1,6 +1,6 @@
 /** Shared quick search for gems inventory (same rules as SGGemsView). Host must expose `gems` (array). */
 
-import { getNumberFormatLocale } from "@/utils/format_locale.js";
+import { formatDisplayNumber, parseEnglishNumber } from "@/utils/format_locale.js";
 
 const gems_quick_search_debounce_ms = 200;
 
@@ -39,14 +39,11 @@ export default {
 
       const parsed = this.parseGemsQuickSearchInput(raw);
       const lines = [];
-      const locale = getNumberFormatLocale(this.$i18n?.locale);
       const fmt_weight = (n) =>
-        Number.isFinite(n)
-          ? n.toLocaleString(locale, {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 6,
-            })
-          : "";
+        formatDisplayNumber(n, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 6,
+        }) ?? "";
 
       if (parsed.id_needle) {
         lines.push(
@@ -132,9 +129,8 @@ export default {
       return path_parts[path_parts.length - 1] || "";
     },
     normalizeGemsSearchNumber(str) {
-      if (str === undefined || str === null) return NaN;
-      const s = String(str).trim().replace(",", ".");
-      return parseFloat(s);
+      const n = parseEnglishNumber(str);
+      return n === null ? NaN : n;
     },
     inferWeightSpecFromPlainNumberToken(token) {
       const normalized_token = String(token).trim();

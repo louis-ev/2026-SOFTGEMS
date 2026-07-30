@@ -10,10 +10,16 @@
       :pill_text="pill_text"
       :hint_title="guest_value_hint_title"
       @click="onPresentClick"
-    />
+    >
+      <template v-if="$slots.value_trailing" #value_trailing>
+        <slot name="value_trailing" />
+      </template>
+    </SGFieldValuePresent>
     <BaseModal2
       v-if="modal_open"
       :title="resolved_modal_title"
+      :size="resolved_modal_size"
+      :nopadding="resolved_modal_nopadding"
       :is_loading="combined_modal_loading"
       @close="onModalClose"
     >
@@ -131,6 +137,14 @@ export default {
       type: [Number, String],
       default: 0,
     },
+    modal_size: {
+      type: String,
+      default: "",
+    },
+    modal_nopadding: {
+      type: Boolean,
+      default: false,
+    },
     /**
      * When false (default), guests (no `connected_as`) see the value as read-only and cannot open the editor.
      */
@@ -158,6 +172,15 @@ export default {
     },
     resolved_modal_title() {
       return this.modal_title || this.modal_title_str || "";
+    },
+    resolved_modal_size() {
+      if (this.modal_size) return this.modal_size;
+      if (this.gem_edit?.field?.modal_size) return this.gem_edit.field.modal_size;
+      return "";
+    },
+    resolved_modal_nopadding() {
+      if (this.modal_nopadding) return true;
+      return Boolean(this.gem_edit?.field?.modal_nopadding);
     },
     resolved_editor_component() {
       if (this.gem_edit) return SGGemFieldEditorBody;

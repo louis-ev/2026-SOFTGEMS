@@ -9,25 +9,31 @@
       v-if="!readonly"
       type="button"
       class="u-input _value"
-      :class="{ _empty: is_empty }"
+      :class="{ _empty: is_empty, _hasTrailing: has_value_trailing }"
       :title="hint_title || undefined"
       @click="$emit('click')"
     >
-      {{ display_value }}
+      <span class="_valueText">{{ display_value }}</span>
+      <div v-if="has_value_trailing" class="_valueTrailing" @click.stop>
+        <slot name="value_trailing" />
+      </div>
     </button>
-    <input
+    <div
       v-else
-      :value="display_value"
-      class="u-input _value"
-      :class="{ _empty: is_empty }"
-      readonly
+      class="u-input _value _valueReadonly"
+      :class="{ _empty: is_empty, _hasTrailing: has_value_trailing }"
       :title="hint_title || undefined"
-    />
+    >
+      <span class="_valueText">{{ display_value }}</span>
+      <div v-if="has_value_trailing" class="_valueTrailing">
+        <slot name="value_trailing" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { getNumberFormatLocale } from "@/utils/format_locale.js";
+import { formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 
 export default {
@@ -67,6 +73,9 @@ export default {
     },
   },
   computed: {
+    has_value_trailing() {
+      return Boolean(this.$slots.value_trailing);
+    },
     is_empty() {
       const v = this.value;
       return v === null || v === undefined || v === "";
@@ -84,15 +93,12 @@ export default {
         });
         return formatted || String(this.value);
       }
-      if (typeof this.value === "number")
-        return Number.isFinite(this.value)
-          ? this.value.toLocaleString(
-              getNumberFormatLocale(this.$i18n?.locale),
-              {
-                maximumFractionDigits: 3,
-              }
-            )
-          : "—";
+      if (typeof this.value === "number" || typeof this.value === "string") {
+        const formatted = formatDisplayNumber(this.value, {
+          maximumFractionDigits: 3,
+        });
+        if (formatted !== null) return formatted;
+      }
       return String(this.value);
     },
   },
@@ -137,8 +143,31 @@ button._value {
   text-align: left;
 }
 
+._value._hasTrailing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 0.35);
+}
+
+._valueText {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 400;
+}
+
+._valueTrailing {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
 ._value._empty {
   color: var(--c-gris_fonce);
+}
+
+._valueReadonly {
+  cursor: default;
 }
 
 @keyframes sg_field_value_present_flash {

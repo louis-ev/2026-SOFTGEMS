@@ -41,6 +41,7 @@
           :cover_can_edit="cover_can_edit"
           :disabled_row_paths="disabled_row_paths"
           :selection_pick_column="selection_pick_column"
+          :single_pick_selected_path="single_pick_selected_path"
           :gems_page_size="gems_page_size"
           :fixed_gem_order="fixed_gem_order"
           :append_column="append_column"
@@ -109,6 +110,10 @@ export default {
     selection_pick_column: {
       type: Boolean,
       default: false,
+    },
+    single_pick_selected_path: {
+      type: String,
+      default: "",
     },
     disabled_row_paths: {
       type: Array,

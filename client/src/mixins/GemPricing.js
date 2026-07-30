@@ -1,3 +1,5 @@
+import { parseEnglishNumber } from "@/utils/format_locale.js";
+
 /** Persisted totals only; virtual_per_carat_key is UI / table display, not stored. */
 const price_field_pairs = [
   {
@@ -96,11 +98,7 @@ export default {
       return Array.from(expanded);
     },
     toNumberOrNull(value) {
-      if (value === null || value === undefined || value === "") return null;
-      const normalized_value = String(value).trim().replace(",", ".");
-      const number_value = Number(normalized_value);
-      if (!Number.isFinite(number_value)) return null;
-      return number_value;
+      return parseEnglishNumber(value);
     },
     toNumberOrDefault(value, fallback_value = 0) {
       const number_value = this.toNumberOrNull(value);

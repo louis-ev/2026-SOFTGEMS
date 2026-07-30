@@ -96,7 +96,7 @@ import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import GemPricing from "@/mixins/GemPricing";
-
+import { syncPairedGemLinks } from "@/utils/gem_pairing.js";
 const creation_locked_field_keys = [
   "reference_supplier",
   "reference_customer",
@@ -150,21 +150,8 @@ export default {
     };
   },
   computed: {
-    paired_gem_options() {
-      return (Array.isArray(this.all_gems) ? this.all_gems : []).map((gem) => {
-        const gem_id = this.getGemIdFromPath(gem?.$path);
-        const gem_label =
-          this.cleanString(gem?.reference_supplier) ||
-          this.cleanString(gem?.reference_customer) ||
-          gem_id;
-        return {
-          value: gem_id,
-          label: gem_label,
-        };
-      });
-    },
     gem_field_configs() {
-      return buildGemFieldConfigs(this.$t.bind(this), this.paired_gem_options);
+      return buildGemFieldConfigs(this.$t.bind(this));
     },
     form_sections() {
       return [
@@ -281,10 +268,18 @@ export default {
           },
         });
         if (new_gem_slug) {
-          await this.syncReciprocalPairing({
-            new_gem_slug,
-            paired_gem_id,
+          const sync_result = await syncPairedGemLinks({
+            api: this.$api,
+            gems_path: this.gems_path,
+            source_gem_id: new_gem_slug,
+            new_paired_gem_id: paired_gem_id,
+            previous_paired_gem_id: "",
           });
+          if (sync_result.failed_paths?.length) {
+            this.$alertify
+              .delay(5000)
+              .error(this.$t("sg_paired_gem_reciprocal_sync_failed"));
+          }
           this.$router.push(`/gems/${new_gem_slug}`);
         } else this.$router.push("/gems");
       } catch ({ code }) {
@@ -293,23 +288,6 @@ export default {
           .error(code || this.$t("sg_could_not_create_gem"));
       } finally {
         this.is_creating = false;
-      }
-    },
-    async syncReciprocalPairing({ new_gem_slug, paired_gem_id }) {
-      const cleaned_new_gem_slug = this.cleanString(new_gem_slug);
-      const cleaned_paired_gem_id = this.cleanString(paired_gem_id);
-      if (!cleaned_new_gem_slug || !cleaned_paired_gem_id) return;
-      if (cleaned_new_gem_slug === cleaned_paired_gem_id) return;
-
-      try {
-        await this.$api.updateMeta({
-          path: `${this.gems_path}/${cleaned_paired_gem_id}`,
-          new_meta: {
-            paired_gem: cleaned_new_gem_slug,
-          },
-        });
-      } catch {
-        // Do not block creation if reciprocal link update fails.
       }
     },
     normalizeGemFields(raw_fields) {

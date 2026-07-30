@@ -102,6 +102,7 @@
             :class="{
               _clickableRow: !selection_pick_column,
               _selected: is_gem_open && getGemId(gem) === selected_gem_id,
+              _pickSelected: isRowSinglePicked(gem),
               _rowPickerDisabled: isRowPickerDisabled(gem),
             }"
             @click="handleTableRowClick(gem)"
@@ -119,11 +120,11 @@
             </td>
             <td v-if="selection_pick_column" class="_pickColTd" @click.stop>
               <button
-                v-if="!isRowPickerDisabled(gem)"
+                v-if="!isRowPickerDisabled(gem) && !isRowSinglePicked(gem)"
                 type="button"
                 class="u-button u-button_icon _pickColAddBtn"
-                :title="$t('sg_gems_table_add_to_selection_aria')"
-                :aria-label="$t('sg_gems_table_add_to_selection_aria')"
+                :title="single_pick_pick_button_title"
+                :aria-label="single_pick_pick_button_title"
                 @click="onPickColumnAddClick(gem)"
               >
                 <b-icon icon="plus" scale="1.35" />
@@ -132,8 +133,8 @@
                 v-else
                 class="_pickColInSelection"
                 role="img"
-                :title="$t('sg_gems_table_already_in_selection_aria')"
-                :aria-label="$t('sg_gems_table_already_in_selection_aria')"
+                :title="pick_col_selected_title(gem)"
+                :aria-label="pick_col_selected_title(gem)"
               >
                 <b-icon icon="check-lg" />
               </span>
@@ -248,7 +249,7 @@
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
 import SGTablePager from "@/components/softgems/SGTablePager.vue";
-import { getFormatLocale } from "@/utils/format_locale.js";
+import { getFormatLocale, formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions, {
@@ -280,6 +281,8 @@ export default {
     selection_remove_column: { type: Boolean, default: false },
     /** When true, first column is add-to-selection (plus) / already added (check). */
     selection_pick_column: { type: Boolean, default: false },
+    /** When set, matching row shows picked (check) in the pick column. */
+    single_pick_selected_path: { type: String, default: "" },
     /** When true, adds a trailing column for slot appendCell (e.g. row actions). */
     append_column: { type: Boolean, default: false },
     append_column_label: { type: String, default: "" },
@@ -310,6 +313,12 @@ export default {
           .map((p) => String(p || "").trim())
           .filter(Boolean)
       );
+    },
+    single_pick_pick_button_title() {
+      if (String(this.single_pick_selected_path || "").trim()) {
+        return this.$t("sg_gems_table_paired_pick_select_aria");
+      }
+      return this.$t("sg_gems_table_add_to_selection_aria");
     },
     density_class() {
       if (this.view_density === "compact") return "_densityCompact";
@@ -505,23 +514,19 @@ export default {
     },
     formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";
-      if (typeof value === "number")
-        return Number.isFinite(value)
-          ? value.toLocaleString(getFormatLocale(this.$i18n?.locale), {
-              maximumFractionDigits: 3,
-            })
-          : "-";
+      const formatted = formatDisplayNumber(value, { maximumFractionDigits: 3 });
+      if (formatted !== null) return formatted;
       if (typeof value === "object") return JSON.stringify(value);
       return String(value);
     },
     formatPriceCellNumber(value) {
       if (value === null || value === undefined || value === "") return "-";
-      const n = Number(value);
-      if (!Number.isFinite(n)) return "-";
-      return n.toLocaleString(getFormatLocale(this.$i18n?.locale), {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      });
+      return (
+        formatDisplayNumber(value, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        }) ?? "-"
+      );
     },
     formatPricingPerCtLine(gem, total_key) {
       const w = this.toNumberOrDefault(gem?.weight_ct);
@@ -631,6 +636,17 @@ export default {
       const p = gem?.$path;
       if (!p) return false;
       return this.disabled_row_path_set.has(String(p));
+    },
+    isRowSinglePicked(gem) {
+      const selected_path = String(this.single_pick_selected_path || "").trim();
+      if (!selected_path) return false;
+      return String(gem?.$path || "").trim() === selected_path;
+    },
+    pick_col_selected_title(gem) {
+      if (this.isRowSinglePicked(gem)) {
+        return this.$t("sg_gems_table_paired_pick_selected_aria");
+      }
+      return this.$t("sg_gems_table_already_in_selection_aria");
     },
     handleTableRowClick(gem) {
       if (this.selection_pick_column) return;
@@ -1086,6 +1102,10 @@ export default {
 
   &._selected {
     background: var(--c-gris_clair);
+  }
+
+  &._pickSelected {
+    background: color-mix(in srgb, var(--c-bleuvert) 10%, transparent);
   }
 
   &._rowPickerDisabled {

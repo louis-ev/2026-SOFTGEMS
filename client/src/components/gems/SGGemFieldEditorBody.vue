@@ -1,7 +1,11 @@
 <template>
   <div class="_gemFieldEditorBody">
     <DLabel
-      v-if="!active_pricing_pair && !active_address_book_counterparty"
+      v-if="
+        !active_pricing_pair &&
+        !active_address_book_counterparty &&
+        !active_paired_gem_picker
+      "
       :str="field.label"
       :icon="field.icon"
     />
@@ -25,6 +29,13 @@
         ref="address_book_counterparty_editor_ref"
         :initial_value="address_book_counterparty_initial_value"
         @footerStateChange="onCounterpartyFooterStateChange"
+      />
+      <SGGemPairedGemEditor
+        v-else-if="field.type === 'paired_gem_picker'"
+        ref="paired_gem_editor_ref"
+        :initial_value="paired_gem_initial_value"
+        :current_gem_id="current_gem_id"
+        @footerStateChange="onPairedGemFooterStateChange"
       />
       <div v-else-if="active_pricing_pair" class="_pricingPairInputs">
         <p class="_pricingPairWeight" role="note">
@@ -144,7 +155,7 @@
     <div v-if="!meta_target_path" class="u-spacingBottom"></div>
 
     <SGFieldHistoryPanel
-      v-if="!active_dimensions_merged"
+      v-if="!active_dimensions_merged && !active_paired_gem_picker"
       :history_enabled="true"
       :show_history="show_history"
       :is_loading_history="is_loading_history"
@@ -157,6 +168,7 @@
 </template>
 
 <script>
+import SGGemPairedGemEditor from "@/components/gems/SGGemPairedGemEditor.vue";
 import SGSelectionCounterpartyEditor from "@/components/selections/SGSelectionCounterpartyEditor.vue";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import SGDateInput from "@/components/softgems/SGDateInput.vue";
@@ -166,13 +178,19 @@ import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { extract_field_entries } from "@/utils/field_history.js";
-import { getNumberFormatLocale } from "@/utils/format_locale.js";
+import { formatDisplayNumber } from "@/utils/format_locale.js";
 import { is_date_input_field, toDateInputValue } from "@/utils/date_input.js";
+import {
+  getGemIdFromPath,
+  getPairedGemDraftValue,
+  syncPairedGemLinks,
+} from "@/utils/gem_pairing.js";
 
 export default {
   name: "SGGemFieldEditorBody",
   mixins: [GemDimensions, GemPricing],
   components: {
+    SGGemPairedGemEditor,
     SGSelectionCounterpartyEditor,
     SGSelectField,
     SGDateInput,
@@ -219,6 +237,8 @@ export default {
       is_loading_history: false,
       field_history: [],
       counterparty_footer_save_disabled: false,
+      paired_gem_footer_save_disabled: false,
+      gems_path: "gems",
     };
   },
   created() {
@@ -246,6 +266,17 @@ export default {
     active_address_book_counterparty() {
       return this.field?.type === "address_book_counterparty";
     },
+    active_paired_gem_picker() {
+      return this.field?.type === "paired_gem_picker";
+    },
+    current_gem_id() {
+      return getGemIdFromPath(this.gem_path);
+    },
+    paired_gem_initial_value() {
+      const raw = this.current_value;
+      if (raw === null || raw === undefined) return "";
+      return String(raw).trim();
+    },
     address_book_counterparty_initial_value() {
       const raw = this.current_value;
       if (raw === null || raw === undefined) return "";
@@ -264,7 +295,7 @@ export default {
       return this.field?.type === "dimensions_merged";
     },
     axis_mm_configs() {
-      const cfgs = buildGemFieldConfigs(this.$t.bind(this), []);
+      const cfgs = buildGemFieldConfigs(this.$t.bind(this));
       return {
         length_mm: cfgs.length_mm,
         width_mm: cfgs.width_mm,
@@ -295,7 +326,7 @@ export default {
       if (!this.active_pricing_pair) {
         return { total: null, per: null };
       }
-      const configs = buildGemFieldConfigs(this.$t.bind(this), []);
+      const configs = buildGemFieldConfigs(this.$t.bind(this));
       const pair = this.active_pricing_pair;
       return {
         total: configs[pair.total_key],
@@ -313,9 +344,7 @@ export default {
     pair_editor_weight_display() {
       const w = this.toNumberOrNull(this.gem?.weight_ct);
       if (w === null || !Number.isFinite(w)) return "—";
-      return w.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
-        maximumFractionDigits: 3,
-      });
+      return formatDisplayNumber(w, { maximumFractionDigits: 3 }) ?? "—";
     },
     history_field_key() {
       if (this.active_dimensions_merged) return "length_mm";
@@ -371,6 +400,14 @@ export default {
           this.field.readonly ||
           this.is_committing ||
           this.counterparty_footer_save_disabled
+        );
+      }
+      if (this.active_paired_gem_picker) {
+        return (
+          this.auxiliary_disable ||
+          this.field.readonly ||
+          this.is_committing ||
+          this.paired_gem_footer_save_disabled
         );
       }
       return (
@@ -767,6 +804,15 @@ export default {
         this.emitFooterState();
       }
     },
+    onPairedGemFooterStateChange(payload) {
+      if (
+        payload &&
+        Object.prototype.hasOwnProperty.call(payload, "save_disabled")
+      ) {
+        this.paired_gem_footer_save_disabled = Boolean(payload.save_disabled);
+        this.emitFooterState();
+      }
+    },
     onEditorInput() {
       this.remote_update_notice = "";
     },
@@ -900,6 +946,11 @@ export default {
           this.pair_field_configs.total
         );
         meta_patch = { [field_key_saved]: norm };
+      } else if (this.active_paired_gem_picker && !targets_file_meta) {
+        field_key_saved = "paired_gem";
+        meta_patch = {
+          paired_gem: getPairedGemDraftValue(this.$refs.paired_gem_editor_ref),
+        };
       } else {
         field_key_saved = this.field.key;
         if (targets_file_meta) {
@@ -949,6 +1000,23 @@ export default {
         }
 
         const value_from_response = saved_changes[field_key_saved];
+        let paired_gem_partner_updates = [];
+        let paired_gem_sync_failed_paths = [];
+        if (field_key_saved === "paired_gem" && !targets_file_meta) {
+          const saved_paired_gem_id =
+            value_from_response !== undefined
+              ? value_from_response
+              : meta_patch.paired_gem;
+          const sync_result = await syncPairedGemLinks({
+            api: this.$api,
+            gems_path: this.gems_path,
+            source_gem_id: this.current_gem_id,
+            new_paired_gem_id: saved_paired_gem_id ?? "",
+            previous_paired_gem_id: this.paired_gem_initial_value,
+          });
+          paired_gem_partner_updates = sync_result.partner_updates || [];
+          paired_gem_sync_failed_paths = sync_result.failed_paths || [];
+        }
         this.$emit("saved", {
           changes: saved_changes,
           key: field_key_saved,
@@ -957,7 +1025,14 @@ export default {
               ? value_from_response
               : meta_patch[field_key_saved],
           update_response,
+          paired_gem_partner_updates,
+          paired_gem_sync_failed_paths,
         });
+        if (paired_gem_sync_failed_paths.length > 0) {
+          this.$alertify
+            .delay(5000)
+            .error(this.$t("sg_paired_gem_reciprocal_sync_failed"));
+        }
         return true;
       } catch ({ code }) {
         this.$alertify.delay(4000).error(code || this.$t("couldntbesaved"));
@@ -1053,7 +1128,11 @@ export default {
     formatHistoryValue(value) {
       if (this.active_pricing_pair) {
         if (value === null || value === undefined || value === "") return "—";
-        return this.formatAffectedFieldValue(this.toNumberOrDefault(value));
+        return (
+          formatDisplayNumber(this.toNumberOrDefault(value), {
+            maximumFractionDigits: 3,
+          }) ?? "—"
+        );
       }
       if (value === null || value === undefined || value === "") return "—";
       if (this.is_date_field) return toDateInputValue(value) || "—";
@@ -1063,9 +1142,11 @@ export default {
           total_value: this.toNumberOrDefault(value),
           weight_ct,
         });
-        return String(per_carat);
+        return (
+          formatDisplayNumber(per_carat, { maximumFractionDigits: 2 }) ?? "—"
+        );
       }
-      return String(value);
+      return formatDisplayNumber(value, { maximumFractionDigits: 3 }) ?? String(value);
     },
     copyHistoryValue(entry) {
       if (this.field.readonly || this.active_dimensions_merged) return;
@@ -1126,12 +1207,7 @@ export default {
     },
     formatAffectedFieldValue(value) {
       if (value === null || value === undefined || value === "") return "—";
-      if (typeof value === "number" && Number.isFinite(value)) {
-        return value.toLocaleString(getNumberFormatLocale(this.$i18n?.locale), {
-          maximumFractionDigits: 3,
-        });
-      }
-      return String(value);
+      return formatDisplayNumber(value, { maximumFractionDigits: 3 }) ?? String(value);
     },
     storedNumericValuesEqual(a, b) {
       return (
@@ -1152,6 +1228,12 @@ export default {
         const editor = this.$refs.address_book_counterparty_editor_ref;
         if (!editor) return false;
         this.edit_value = editor.draft_counterparty_path || "";
+        return await this.commitSave();
+      }
+      if (this.active_paired_gem_picker) {
+        const editor = this.$refs.paired_gem_editor_ref;
+        if (!editor) return false;
+        this.edit_value = getPairedGemDraftValue(editor);
         return await this.commitSave();
       }
       return await this.commitSave();

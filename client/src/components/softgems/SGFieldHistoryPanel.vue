@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import { getDateFormatLocale } from "@/utils/format_locale.js";
+import { getDateFormatLocale, formatDisplayNumber } from "@/utils/format_locale.js";
 
 export default {
   name: "SGFieldHistoryPanel",
@@ -97,7 +97,7 @@ export default {
         return this.format_value(value);
       }
       if (value === null || value === undefined || value === "") return "—";
-      return String(value);
+      return formatDisplayNumber(value, { maximumFractionDigits: 3 }) ?? String(value);
     },
     formatDate(iso_string) {
       if (!iso_string) return "";

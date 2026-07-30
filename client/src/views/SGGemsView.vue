@@ -107,6 +107,7 @@
 import DropDown from "@/adc-core/ui/DropDown.vue";
 import SGGemsInventoryTableSection from "@/components/gems/SGGemsInventoryTableSection.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
+import { applyPairedGemPartnerUpdates } from "@/utils/gem_pairing.js";
 import GemPricing, {
   gem_virtual_per_carat_column_keys,
 } from "@/mixins/GemPricing";
@@ -334,24 +335,8 @@ export default {
       if (!gem_id) return;
       this.$router.push(`/gems/${gem_id}`);
     },
-    getPairedGemOptions(excluded_gem_id) {
-      return (Array.isArray(this.gems) ? this.gems : [])
-        .filter((g) => g?.$path && !g.$path.endsWith(`/${excluded_gem_id}`))
-        .map((g) => {
-          const gem_id = this.getGemId(g);
-          const gem_label =
-            (g.reference_supplier && String(g.reference_supplier).trim()) ||
-            (g.reference_customer && String(g.reference_customer).trim()) ||
-            gem_id;
-          return { value: gem_id, label: gem_label };
-        });
-    },
     getFieldConfig(metadata_key, gem) {
-      const gem_id = this.getGemId(gem);
-      const configs = buildGemFieldConfigs(
-        this.$t.bind(this),
-        this.getPairedGemOptions(gem_id)
-      );
+      const configs = buildGemFieldConfigs(this.$t.bind(this));
       return configs[metadata_key] || null;
     },
     isFieldEditable(metadata_key) {
@@ -377,7 +362,7 @@ export default {
       this.editing_gem = gem;
       this.editing_field = field_config;
     },
-    onFieldSaved({ key, value, changes }) {
+    onFieldSaved({ key, value, changes, paired_gem_partner_updates }) {
       if (!this.editing_gem) return;
       const gem_path = this.editing_gem.$path;
       let scroll_metadata_key =
@@ -395,6 +380,11 @@ export default {
         });
         this.ensureGemPricingFields(target_gem);
       }
+      applyPairedGemPartnerUpdates(
+        this.gems,
+        paired_gem_partner_updates,
+        this.$set.bind(this)
+      );
       this.editing_gem = null;
       this.editing_field = null;
       if (gem_path && scroll_metadata_key) {

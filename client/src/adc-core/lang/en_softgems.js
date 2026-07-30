@@ -173,6 +173,23 @@ export default {
   sg_reference_customer: "Reference customer",
   sg_pair_single_indicator: "Pair / Single indicator",
   sg_paired_gem: "Paired gem",
+  sg_paired_gem_search_placeholder: "Search by gem ID…",
+  sg_paired_gem_clear: "No paired gem",
+  sg_paired_gem_none_yet: "No paired gem yet",
+  sg_paired_gem_no_results: "No gems match this search.",
+  sg_paired_gem_reciprocal_hint:
+    "Saving will also set the paired gem on gem {id}.",
+  sg_paired_gem_clear_reciprocal_hint:
+    "Saving will remove pairing on this gem and on gem {id}.",
+  sg_paired_gem_reciprocal_sync_failed:
+    "The paired gem was saved, but updating the partner gem failed. Please try again or edit the partner gem manually.",
+  sg_paired_gem_already_paired_warning:
+    "Gem {target_id} is already paired with gem {other_id}. Saving will re-pair it with this gem and unlink {other_id}.",
+  sg_paired_gem_open_preview: "Open gem {id}",
+  sg_paired_with_gem: "Paired with gem #{id}",
+  sg_paired_gem_replace_pair: "Replace",
+  sg_paired_gem_select_pair: "Select pair",
+  sg_paired_gem_remove_pairing: "Remove pairing",
   sg_number_of_pieces: "Number of pieces",
   sg_stone_type: "Stone type",
   sg_shape: "Shape",
@@ -370,6 +387,8 @@ export default {
   sg_gems_table_pick_column_header_aria: "Add to selection",
   sg_gems_table_add_to_selection_aria: "Add this gem to the selection",
   sg_gems_table_already_in_selection_aria: "Already in this selection",
+  sg_gems_table_paired_pick_select_aria: "Select this gem as the paired gem",
+  sg_gems_table_paired_pick_selected_aria: "Selected as paired gem",
   sg_gems_table_total_row_count: "Total ({count})",
   sg_selection_search_gems: "Search gems…",
   sg_selection_add_gems_from_database: "Add gems from the database…",

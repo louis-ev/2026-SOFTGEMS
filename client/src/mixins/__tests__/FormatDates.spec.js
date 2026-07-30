@@ -90,7 +90,7 @@ describe("FormatDates mixin", () => {
       vi.setSystemTime(new Date("2026-05-06T14:32:00"));
 
       const formatted = vm.formatRecentDateTime("2026-05-06T14:12:00");
-      expect(formatted).toBe("il y a 20 minutes");
+      expect(formatted).toBe("20 minutes ago");
     });
 
     it('formats very recent dates as "now" regardless of locale', () => {
