@@ -233,7 +233,7 @@
         <div class="_pricingGroups">
           <div class="_pricingPair">
             <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: "PCb" }) }}
+              {{ $t("sg_pricing_pair_caption", { line: $t("sg_gems_table_col_pcb") }) }}
             </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField

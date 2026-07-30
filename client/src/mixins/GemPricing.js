@@ -1,9 +1,12 @@
 import { parseEnglishNumber } from "@/utils/format_locale.js";
 
+/** Stored meta key for base acquisition cost (UI label: “Cost”; legacy name PCb). */
+export const gem_cost_total_field_key = "base_price_pcb";
+
 /** Persisted totals only; virtual_per_carat_key is UI / table display, not stored. */
 const price_field_pairs = [
   {
-    total_key: "base_price_pcb",
+    total_key: gem_cost_total_field_key,
     virtual_per_carat_key: "price_per_carat_pcb",
   },
   {

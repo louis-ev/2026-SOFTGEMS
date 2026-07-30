@@ -130,11 +130,13 @@ Multiplicity rule: can be multiple reports for one stone.
 | `cut_cost`               | manual             |                                                                                   |
 | `certification_cost`     | automatic          | From reports category.                                                            |
 | `treatment_cost`         | manual             | Hidden + purple in source. TODO for later (not V1).                               |
-| `base_price_pcb`         | manual             | **Total price only** (PCb). Per-carat (PCb/Ct) is **derived in the app** from `weight_ct`; see [Pricing logic](#pricing-pcb-pa-pv-pvd-pc-pf). |
-| `purchased_price_pa`     | manual             | **Total price only** (PA). Per-carat (PA/Ct) is **derived**; see [Pricing logic](#pricing-pcb-pa-pv-pvd-pc-pf). |
+| `base_price_pcb`         | manual             | **Base acquisition cost** (UI label: **Cost**; legacy notation PCb). **Total price only** — per-carat is **derived in the app** from `weight_ct`; see [Pricing logic](#pricing-cost-pa-pv-pvd-pc-pf). |
+| `purchased_price_pa`     | manual             | **Total price only** (PA). Per-carat (PA/Ct) is **derived**; see [Pricing logic](#pricing-cost-pa-pv-pvd-pc-pf). |
 | `total_cost`             | derived            | Purchase price (`T. Buy Px`). Hidden + purple in source. TODO for later (not V1). |
 
-## Pricing (PCb, PA, PV, PVD, PC, PF)
+## Pricing (Cost, PA, PV, PVD, PC, PF)
+
+`base_price_pcb` is the persisted meta key for **Cost** (legacy internal name PCb). The UI and exports use the label **Cost**; do not rename the meta key without a data migration.
 
 This section documents **how pricing works in the SoftGems client** (single source of truth per line = **total price** stored in gem meta; **per-carat** values are not persisted for these pairs).
 
@@ -151,7 +153,7 @@ This section documents **how pricing works in the SoftGems client** (single sour
 
 | Line | Stored total field (`settings_base` / meta) | Virtual per-carat key (UI / table only, **not** in schema as a persisted price) |
 | ---- | --------------------------------------------- | --------------------------------------------------------------------------------- |
-| PCb  | `base_price_pcb`                              | `price_per_carat_pcb`                                                             |
+| Cost (PCb) | `base_price_pcb`                          | `price_per_carat_pcb`                                                             |
 | PA   | `purchased_price_pa`                          | `price_per_carat_pa`                                                              |
 | PV   | `pv_selling_price`                            | `price_per_carat_pv`                                                              |
 | PC   | `pc_to`                                       | `price_per_carat_pc`                                                              |
@@ -166,7 +168,7 @@ This section documents **how pricing works in the SoftGems client** (single sour
 
 - Pair definitions: [`client/src/mixins/GemPricing.js`](../client/src/mixins/GemPricing.js)
 - Field labels, virtual `pricing_total_key`: [`client/src/components/gems/gem_field_configs.js`](../client/src/components/gems/gem_field_configs.js)
-- Gems list table ([`client/src/components/gems/SGGemsTable.vue`](../client/src/components/gems/SGGemsTable.vue)): one column per pricing line (PCb, PA, PV, PVD, PC, PF) — **total** on the first line, derived **per carat + `/ct`** on the second; virtual `price_per_carat_*` keys are not separate columns ([`gem_virtual_per_carat_column_keys`](../client/src/mixins/GemPricing.js)).
+- Gems list table ([`client/src/components/gems/SGGemsTable.vue`](../client/src/components/gems/SGGemsTable.vue)): one column per pricing line (Cost, PA, PV, PVD, PC, PF) — **total** on the first line, derived **per carat + `/ct`** on the second; virtual `price_per_carat_*` keys are not separate columns ([`gem_virtual_per_carat_column_keys`](../client/src/mixins/GemPricing.js)).
 - Column customizer ([`client/src/components/gems/SGGemColumnsModal.vue`](../client/src/components/gems/SGGemColumnsModal.vue)): same column keys as the table; legacy per-carat and `length_mm` / `width_mm` / `height_mm` selections are normalized via [`gems_table_metadata.js`](../client/src/utils/gems_table_metadata.js).
 - **Not shown in the gems table (V1):** `box_selection_path` (box membership is edited via selection flows and the open gem view; see [`docs/SELECTIONS.md`](SELECTIONS.md)). Removed from V1: `price_per_carat_all`.
 - Persisted gem fields: [`settings_base.json`](../settings_base.json) → `schema.$folders.gems.fields`
@@ -212,7 +214,7 @@ Multiplicity rule: can be multiple imports for one stone.
 | `import_type`                  | select from a list       | `importation definitive` / `temporaire`.                                             |
 | `import_number`                | manual                   |                                                                                      |
 | `import_date`                  | calendar                 | Default is today's date.                                                             |
-| `import_price`                 | automatic / manual       | Default `PCb` or `PA` cost; must remain manually editable.                           |
+| `import_price`                 | automatic / manual       | Default Cost (`base_price_pcb`) or PA cost; must remain manually editable.           |
 | `pdf`                          | link                     |                                                                                      |
 | `link`                         | link                     |                                                                                      |
 
