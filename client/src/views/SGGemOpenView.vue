@@ -270,36 +270,38 @@
           </div>
           <div class="_pricingPair">
             <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: "PA" }) }}
+              {{ $t("sg_pricing_pair_caption", { line: $t("sg_gems_table_col_import") }) }}
             </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
-                :label="$t('sg_purchased_price_pa')"
-                icon="tag"
+                :label="$t('sg_import_price')"
+                icon="globe"
                 :pill_text="$t('sg_pricing_cell_total')"
-                :value="gem.purchased_price_pa"
-                :is_flashing="isFieldFlashing('purchased_price_pa')"
-                :modal_open="editing_field === field_configs.purchased_price_pa"
-                :modal_title="
-                  gemFieldModalTitle(field_configs.purchased_price_pa)
-                "
-                :gem_edit="gemEditorProps(field_configs.purchased_price_pa)"
-                @presentClick="openEditModal(field_configs.purchased_price_pa)"
+                :value="gem.import_price"
+                :is_flashing="isFieldFlashing('import_price')"
+                :modal_open="editing_field === field_configs.import_price"
+                :modal_title="gemFieldModalTitle(field_configs.import_price)"
+                :gem_edit="gemEditorProps(field_configs.import_price)"
+                @presentClick="openEditModal(field_configs.import_price)"
                 @close="editing_field = null"
                 @saved="onFieldSaved"
               />
               <SGEditableMetaField
-                :label="$t('sg_price_per_carat_pa')"
+                :label="$t('sg_price_per_carat_import')"
                 icon="diagram2"
                 :pill_text="$t('sg_pricing_cell_per_carat')"
-                :value="displayGemFieldValue('price_per_carat_pa')"
-                :is_flashing="isFieldFlashing('price_per_carat_pa')"
-                :modal_open="editing_field === field_configs.price_per_carat_pa"
-                :modal_title="
-                  gemFieldModalTitle(field_configs.price_per_carat_pa)
+                :value="displayGemFieldValue('price_per_carat_import')"
+                :is_flashing="isFieldFlashing('price_per_carat_import')"
+                :modal_open="
+                  editing_field === field_configs.price_per_carat_import
                 "
-                :gem_edit="gemEditorProps(field_configs.price_per_carat_pa)"
-                @presentClick="openEditModal(field_configs.price_per_carat_pa)"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_import)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_import)"
+                @presentClick="
+                  openEditModal(field_configs.price_per_carat_import)
+                "
                 @close="editing_field = null"
                 @saved="onFieldSaved"
               />

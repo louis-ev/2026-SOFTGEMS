@@ -10,8 +10,8 @@ const price_field_pairs = [
     virtual_per_carat_key: "price_per_carat_pcb",
   },
   {
-    total_key: "purchased_price_pa",
-    virtual_per_carat_key: "price_per_carat_pa",
+    total_key: "import_price",
+    virtual_per_carat_key: "price_per_carat_import",
   },
   {
     total_key: "pv_selling_price",
@@ -69,8 +69,13 @@ export default {
       return pair ? pair.virtual_per_carat_key : null;
     },
     computeDisplayedPerCaratForGem(gem, total_key) {
+      const raw_total = gem?.[total_key];
+      if (raw_total === null || raw_total === undefined || raw_total === "") {
+        return null;
+      }
       const weight_ct = this.toNumberOrDefault(gem?.weight_ct);
-      const total_value = this.toNumberOrDefault(gem?.[total_key]);
+      const total_value = this.toNumberOrNull(raw_total);
+      if (total_value === null) return null;
       return this.computePerCarat({ total_value, weight_ct });
     },
     gemFieldDisplayValue(gem, field_config) {

@@ -1197,11 +1197,13 @@ export default {
       const field_to_i18n = {
         base_price_pcb: "sg_base_price_pcb",
         purchased_price_pa: "sg_purchased_price_pa",
+        import_price: "sg_import_price",
         pv_selling_price: "sg_pv_selling_price",
         pc_to: "sg_pc_to",
         pf_invoiced_price: "sg_pf_invoiced_price",
         price_per_carat_pcb: "sg_price_per_carat_pcb",
         price_per_carat_pa: "sg_price_per_carat_pa",
+        price_per_carat_import: "sg_price_per_carat_import",
         price_per_carat_pv: "sg_price_per_carat_pv",
         price_per_carat_pc: "sg_price_per_carat_pc",
         price_per_carat_pf: "sg_price_per_carat_pf",

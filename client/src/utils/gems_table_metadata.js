@@ -33,7 +33,7 @@ export const gems_table_catalog_column_keys = Object.freeze([
   "treatment_type",
   "dimensions_lwh",
   "base_price_pcb",
-  "purchased_price_pa",
+  "import_price",
   "pv_selling_price",
   "pvd_asking_price",
   "pc_to",
@@ -44,6 +44,8 @@ export const gems_table_gem_excluded_metadata_keys = Object.freeze([
   "internal_name",
   "price_per_carat_all",
   "box_selection_path",
+  "purchased_price_pa",
+  "price_per_carat_pa",
 ]);
 
 export const gems_table_discovery_ignored_keys = Object.freeze([

@@ -239,6 +239,7 @@ export default {
         height_mm: "aspect-ratio",
         base_price_pcb: "tag",
         purchased_price_pa: "tag",
+        import_price: "globe",
         pv_selling_price: "tag",
         pvd_asking_price: "diagram2",
         pc_to: "file-earmark-text",
@@ -251,6 +252,7 @@ export default {
       const pricing_table_header_i18n = {
         base_price_pcb: "sg_gems_table_col_pcb",
         purchased_price_pa: "sg_gems_table_col_pa",
+        import_price: "sg_gems_table_col_import",
         pv_selling_price: "sg_gems_table_col_pv",
         pvd_asking_price: "sg_gems_table_col_pvd",
         pc_to: "sg_gems_table_col_pc",
@@ -278,6 +280,7 @@ export default {
         width_mm: "sg_width_mm",
         height_mm: "sg_height_mm",
         pv_selling_price: "sg_pv_selling_price",
+        import_price: "sg_import_price",
         pvd_asking_price: "sg_pvd_asking_price",
         pc_to: "sg_pc_to",
         pf_invoiced_price: "sg_pf_invoiced_price",
