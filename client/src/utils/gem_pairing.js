@@ -47,7 +47,7 @@ export function buildPairedGemListLabel(gem) {
 
   return {
     gem_id,
-    secondary: secondary_parts.join(" · "),
+    secondary: secondary_parts.join(" Â· "),
   };
 }
 
@@ -128,13 +128,27 @@ function queuePartnerUpdate(updates_by_id, gem_id, paired_gem) {
   updates_by_id.set(normalized_id, next_paired_gem);
 }
 
+async function readPairedGemId(api, gems_path, gem_id) {
+  const normalized_id = normalizePairedGemId(gem_id);
+  if (!normalized_id || typeof api?.getFolder !== "function") return "";
+  try {
+    const gem = await api.getFolder({
+      path: `${gems_path}/${normalized_id}`,
+      no_files: true,
+    });
+    return sanitizePairedGemId(gem?.paired_gem, normalized_id);
+  } catch {
+    return "";
+  }
+}
+
 /**
  * Keep reciprocal pairing in sync after the source gem's `paired_gem` was saved.
  *
  * Example: source 30 paired with 326
  * - gems/326.paired_gem = "30"
- * - if 326 previously pointed at 99, clear gems/99.paired_gem
- * - if 30 previously pointed at 20, clear gems/20.paired_gem
+ * - if 326 previously pointed at 99, clear gems/99.paired_gem (only if 99 still points at 326)
+ * - if 30 previously pointed at 20, clear gems/20.paired_gem (only if 20 still points at 30)
  */
 export async function syncPairedGemLinks({
   api,
@@ -154,23 +168,9 @@ export async function syncPairedGemLinks({
   const updates_by_id = new Map();
 
   if (target_id) {
-    let target_previous_id = "";
-    if (typeof api.getFolder === "function") {
-      try {
-        const target_gem = await api.getFolder({
-          path: `${gems_path}/${target_id}`,
-          no_files: true,
-        });
-        target_previous_id = sanitizePairedGemId(
-          target_gem?.paired_gem,
-          target_id
-        );
-      } catch {
-        target_previous_id = "";
-      }
-    }
+    const target_previous_id = await readPairedGemId(api, gems_path, target_id);
 
-    // Target must point back at the source — never at itself.
+    // Target must point back at the source â€” never at itself.
     queuePartnerUpdate(updates_by_id, target_id, source_id);
 
     if (
@@ -178,12 +178,21 @@ export async function syncPairedGemLinks({
       target_previous_id !== source_id &&
       target_previous_id !== target_id
     ) {
-      queuePartnerUpdate(updates_by_id, target_previous_id, "");
+      const still_points_at_target =
+        (await readPairedGemId(api, gems_path, target_previous_id)) ===
+        target_id;
+      if (still_points_at_target) {
+        queuePartnerUpdate(updates_by_id, target_previous_id, "");
+      }
     }
   }
 
   if (previous_id && previous_id !== target_id && previous_id !== source_id) {
-    queuePartnerUpdate(updates_by_id, previous_id, "");
+    const still_points_at_source =
+      (await readPairedGemId(api, gems_path, previous_id)) === source_id;
+    if (still_points_at_source) {
+      queuePartnerUpdate(updates_by_id, previous_id, "");
+    }
   }
 
   const partner_updates = [];

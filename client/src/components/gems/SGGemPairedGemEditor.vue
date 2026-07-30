@@ -118,8 +118,14 @@ export default {
   },
   computed: {
     is_footer_save_disabled() {
-      const baseline = this.cleanString(this.initial_value);
-      const draft = this.cleanString(this.draft_paired_gem_id);
+      const baseline = sanitizePairedGemId(
+        this.initial_value,
+        this.current_gem_id
+      );
+      const draft = sanitizePairedGemId(
+        this.draft_paired_gem_id,
+        this.current_gem_id
+      );
       return draft === baseline;
     },
     replace_pair_button_label() {
