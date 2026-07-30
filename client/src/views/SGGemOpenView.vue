@@ -551,6 +551,12 @@ export default {
     },
   },
   watch: {
+    gem_id: {
+      handler(next_id, previous_id) {
+        if (!next_id || next_id === previous_id) return;
+        this.onGemIdChanged(previous_id);
+      },
+    },
     paired_gem_preview_id: {
       immediate: true,
       handler() {
@@ -567,10 +573,35 @@ export default {
     this.$api.leave({ room: this.gem_path });
   },
   methods: {
-    async fetchGem() {
+    async onGemIdChanged(previous_gem_id) {
+      this.editing_field = null;
+      this.show_remove_modal = false;
+      this.paired_gem_preview = null;
+      this.gem = null;
+      this.fetch_error = "";
+      if (previous_gem_id) {
+        this.$api.leave({
+          room: `${this.gems_path}/${previous_gem_id}`,
+        });
+      }
+      await this.fetchGem({ bypass_cache: true });
+      this.$api.join({ room: this.gem_path });
+    },
+    async fetchGem({ bypass_cache = false } = {}) {
       this.is_loading = true;
       this.fetch_error = "";
       try {
+        if (bypass_cache) {
+          // Ensure we don't reuse a stale cached folder after reciprocal pairing.
+          const store_meta = this.$api.store_meta;
+          if (store_meta && typeof store_meta === "object") {
+            if (store_meta[this.gem_path]) {
+              this.$set(store_meta[this.gem_path], "stale", true);
+            } else {
+              this.$set(store_meta, this.gem_path, { stale: true });
+            }
+          }
+        }
         this.gem = await this.$api.getFolder({ path: this.gem_path });
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_gem");
