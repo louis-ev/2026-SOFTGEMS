@@ -120,6 +120,15 @@ const routes = [
     component: () => import("@/views/ResetPasswordView.vue"),
   },
   {
+    path: "/_previewmedia",
+    name: "Preview media",
+    meta: {
+      static: true,
+      auth_exempt: true,
+    },
+    component: () => import("@/views/SGMediaViewerView.vue"),
+  },
+  {
     path: "/:type_slug/:rest(.*)",
     redirect: redirectShortSelectionPath,
   },

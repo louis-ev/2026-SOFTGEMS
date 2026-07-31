@@ -19,6 +19,7 @@
 </template>
 <script>
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
+import { makeGemMediaViewerAbsoluteUrl } from "@/utils/selection_pdf_gem_helpers.js";
 
 export default {
   props: {
@@ -36,15 +37,13 @@ export default {
   watch: {},
   computed: {
     preview_url() {
-      if (!this.file.$path) return false;
-      // const full_path = this.makeMediaFilePath({
-      //   $path: this.file.$path,
-      //   $media_filename: this.file.$media_filename,
-      // });
+      if (!this.file?.$path) return false;
+      const viewer_url = makeGemMediaViewerAbsoluteUrl(this.file);
+      if (viewer_url) return viewer_url;
       return (
         resolveAppPublicOrigin() +
         "/_previewmedia?path_to_meta=" +
-        this.file.$path
+        encodeURIComponent(this.file.$path)
       );
     },
   },

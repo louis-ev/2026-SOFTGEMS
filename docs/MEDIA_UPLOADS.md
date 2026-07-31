@@ -41,7 +41,7 @@ Preview and URLs follow **`makeMediaFileURL`** like other gem files (**`MediaCon
 
 ## PDF export
 
-Selection PDF links for gem photos and videos are built by [`selection_pdf_description.js`](../client/src/utils/selection_pdf_description.js) (`buildGemPdfMediaLinkBlocks` / `gemPdfMediaFiles`). Files with **`dont_link_in_pdf === true`** are omitted. Certificate links stay in the **Description** column (one per line). Photo/video links are rendered **under the cover preview** in the Photo column, inline (alphabetically by filename). See [SELECTIONS.md](SELECTIONS.md).
+Selection PDF links for gem photos and videos are built by [`selection_pdf_description.js`](../client/src/utils/selection_pdf_description.js) (`buildGemPdfMediaLinkBlocks` / `gemPdfMediaFiles`). Files with **`dont_link_in_pdf === true`** are omitted. Certificate links stay in the **Description** column (one per line). Photo/video links are rendered **under the cover preview** in the Photo column, inline (alphabetically by filename). Those links open the SoftGems HTML viewer at `/_previewmedia?path_to_media=…&type=image|video` ([`SGMediaViewerView.vue`](../client/src/views/SGMediaViewerView.vue)) — image or video only, fullscreen black page, video via plyr. The viewer loads the static media file (no API auth), so PDF recipients can open it. Clicking the cover thumbnail uses the same page with `meta_cover.jpeg`. See [SELECTIONS.md](SELECTIONS.md).
 
 ## References
 

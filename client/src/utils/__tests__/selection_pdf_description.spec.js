@@ -151,13 +151,13 @@ describe("buildGemPdfMediaLinkBlocks", () => {
       {
         type: "link",
         text: "face.jpg",
-        href: "https://app.example.com/gems/42/files/face.jpg",
+        href: "https://app.example.com/_previewmedia?path_to_media=%2Fgems%2F42%2Ffiles%2Fface.jpg&type=image",
         is_media_link: true,
       },
       {
         type: "link",
         text: "spin.mp4",
-        href: "https://app.example.com/gems/42/files/spin.mp4",
+        href: "https://app.example.com/_previewmedia?path_to_media=%2Fgems%2F42%2Ffiles%2Fspin.mp4&type=video",
         is_media_link: true,
       },
     ]);
@@ -196,7 +196,7 @@ describe("buildGemPdfMediaLinkBlocks", () => {
     expect(blocks).toHaveLength(1);
     expect(blocks[0]).toMatchObject({
       text: "visible.mp4",
-      href: "https://app.example.com/gems/42/files/visible.mp4",
+      href: "https://app.example.com/_previewmedia?path_to_media=%2Fgems%2F42%2Ffiles%2Fvisible.mp4&type=video",
       is_media_link: true,
     });
   });

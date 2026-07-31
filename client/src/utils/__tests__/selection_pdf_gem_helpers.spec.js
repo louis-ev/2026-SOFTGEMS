@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   makeGemMediaFileAbsoluteUrl,
+  makeGemMediaViewerAbsoluteUrl,
+  makeGemCoverViewerAbsoluteUrl,
   resolveGemCoverAbsoluteUrl,
   resolveGemCoverMediaRelative,
   resolveGemCoverThumbRelative,
@@ -92,6 +94,57 @@ describe("makeGemMediaFileAbsoluteUrl", () => {
         $media_filename: "cert.pdf",
       })
     ).toBe("https://softgems.example.com/gems/42/files/cert.pdf");
+  });
+});
+
+describe("makeGemMediaViewerAbsoluteUrl", () => {
+  it("builds the HTML viewer URL with path_to_media and type", () => {
+    expect(
+      makeGemMediaViewerAbsoluteUrl(
+        {
+          $path: "gems/42/files/photo-1",
+          $media_filename: "face.jpg",
+          $type: "image",
+        },
+        "https://app.example.com"
+      )
+    ).toBe(
+      "https://app.example.com/_previewmedia?path_to_media=%2Fgems%2F42%2Ffiles%2Fface.jpg&type=image"
+    );
+  });
+
+  it("returns empty when media path or type is missing", () => {
+    expect(
+      makeGemMediaViewerAbsoluteUrl(
+        { $path: "gems/42/files/photo-1" },
+        "https://app.example.com"
+      )
+    ).toBe("");
+    expect(makeGemMediaViewerAbsoluteUrl({}, "https://app.example.com")).toBe(
+      ""
+    );
+  });
+});
+
+describe("makeGemCoverViewerAbsoluteUrl", () => {
+  it("builds the HTML viewer URL for the gem cover image", () => {
+    expect(
+      makeGemCoverViewerAbsoluteUrl(
+        {
+          $path: "gems/42",
+          $cover: { 320: "cover-320.jpg" },
+        },
+        "https://app.example.com"
+      )
+    ).toBe(
+      "https://app.example.com/_previewmedia?path_to_media=%2Fgems%2F42%2Fmeta_cover.jpeg&type=image"
+    );
+  });
+
+  it("returns empty when cover is missing", () => {
+    expect(
+      makeGemCoverViewerAbsoluteUrl({ $path: "gems/42" }, "https://app.example.com")
+    ).toBe("");
   });
 });
 

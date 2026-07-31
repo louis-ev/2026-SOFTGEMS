@@ -1,6 +1,7 @@
 import { pdfShapeAbbreviation } from "@/suggestions/softgems/pdf_shape_abbreviations.js";
 import {
   makeGemMediaFileAbsoluteUrl,
+  makeGemMediaViewerAbsoluteUrl,
 } from "@/utils/selection_pdf_gem_helpers.js";
 
 /**
@@ -238,7 +239,7 @@ export function buildGemPdfMediaLinkBlocks(gem, origin = "") {
   const link_blocks = [];
 
   gemPdfMediaFiles(gem).forEach((media_file, index) => {
-    const href = makeGemMediaFileAbsoluteUrl(media_file, origin);
+    const href = makeGemMediaViewerAbsoluteUrl(media_file, origin);
     const text = formatMediaLinkLabel(media_file, index);
     if (href && /^https?:\/\//i.test(href)) {
       link_blocks.push({

@@ -95,6 +95,45 @@ export function makeGemMediaFileAbsoluteUrl(file, origin = "") {
 }
 
 /**
+ * Absolute URL to the SoftGems HTML media viewer (image/video only).
+ * Uses the static media file path (no API auth) so PDF recipients can open it.
+ * @param {{ $path?: string, $media_filename?: string, $type?: string }} file
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export function makeGemMediaViewerAbsoluteUrl(file, origin = "") {
+  const media_path = makeGemMediaFilePath(file);
+  const type = file?.$type === "video" || file?.$type === "image" ? file.$type : "";
+  if (!media_path || !type) return "";
+  const resolved_origin = origin || resolveAppPublicOrigin() || "";
+  const params = new URLSearchParams();
+  params.set("path_to_media", media_path);
+  params.set("type", type);
+  const query = params.toString();
+  if (!resolved_origin) return `/_previewmedia?${query}`;
+  return `${resolved_origin}/_previewmedia?${query}`;
+}
+
+/**
+ * Absolute URL to the HTML viewer for a gem folder cover image.
+ * Cover is `meta_cover.jpeg` (not a file meta), so the viewer uses `path_to_media`.
+ * @param {object} gem
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export function makeGemCoverViewerAbsoluteUrl(gem, origin = "") {
+  const media_path = resolveGemCoverMediaRelative(gem);
+  if (!media_path) return "";
+  const resolved_origin = origin || resolveAppPublicOrigin() || "";
+  const params = new URLSearchParams();
+  params.set("path_to_media", media_path);
+  params.set("type", "image");
+  const query = params.toString();
+  if (!resolved_origin) return `/_previewmedia?${query}`;
+  return `${resolved_origin}/_previewmedia?${query}`;
+}
+
+/**
  * @param {object[]} gems
  * @param {string} field_key
  * @returns {number|null}

@@ -216,7 +216,7 @@ import {
   formatPdfPerCarat,
   gemIdFromPath,
   resolveGemCoverThumbRelative,
-  resolveGemCoverAbsoluteUrl,
+  makeGemCoverViewerAbsoluteUrl,
   sumGemNumericField,
   sumGemPricingTotals,
   toAbsoluteAppUrl,
@@ -374,7 +374,7 @@ export default {
       return toAbsoluteAppUrl(relative, this.media_origin);
     },
     coverLinkUrl(gem) {
-      const href = resolveGemCoverAbsoluteUrl(gem, this.media_origin);
+      const href = makeGemCoverViewerAbsoluteUrl(gem, this.media_origin);
       if (!href || !/^https?:\/\//i.test(href)) return "";
       return href;
     },
@@ -472,7 +472,7 @@ $acf-pdf-table-line: #000;
 /*
   Metrics measured on the reference "ACF INV N°20265.pdf" (A4):
   side margins 17.8mm, single 8pt body size, ~1.4 line-height,
-  logo ~18mm wide centered, first text line at 34mm from the top.
+  logo ~27mm wide centered, first text line at 34mm from the top.
   Table: horizontal rules + outer left/right only (no column grid);
   VAT/Total is a separate right-aligned boxed grid.
 */
@@ -504,7 +504,7 @@ $acf-pdf-table-line: #000;
 }
 
 ._logoMark {
-  width: 18mm;
+  width: 27mm;
 }
 
 ._headerInfo {
