@@ -168,10 +168,13 @@ export function formatMediaLinkLabel(media_file, index = 0) {
 }
 
 /**
- * @typedef {{ type: 'text'|'link', text: string, href?: string, is_certificate_link?: boolean }} PdfDescriptionBlock
+ * @typedef {{ type: 'text'|'link', text: string, href?: string, is_certificate_link?: boolean, is_media_link?: boolean }} PdfDescriptionBlock
  */
 
 /**
+ * Description column: text fields + certificate links (one link block each).
+ * Photo/video links are built separately for the Photo column.
+ *
  * @param {object} gem
  * @param {string} [origin]
  * @param {{ provider_labels_by_path?: Record<string, string> }} [options]
@@ -185,8 +188,6 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
       : {};
   /** @type {PdfDescriptionBlock[]} */
   const blocks = [];
-  /** @type {PdfDescriptionBlock[]} */
-  const link_blocks = [];
 
   const title = formatGemPdfTitleLine(gem);
   if (title) blocks.push({ type: "text", text: title });
@@ -214,7 +215,7 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     );
     const href = makeGemMediaFileAbsoluteUrl(certificate_file, origin);
     if (!text || !href || !/^https?:\/\//i.test(href)) return;
-    link_blocks.push({
+    blocks.push({
       type: "link",
       text,
       href,
@@ -222,12 +223,34 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     });
   });
 
+  return blocks;
+}
+
+/**
+ * Photo/video links for under the cover preview in the PDF Photo column.
+ *
+ * @param {object} gem
+ * @param {string} [origin]
+ * @returns {PdfDescriptionBlock[]}
+ */
+export function buildGemPdfMediaLinkBlocks(gem, origin = "") {
+  /** @type {PdfDescriptionBlock[]} */
+  const link_blocks = [];
+
   gemPdfMediaFiles(gem).forEach((media_file, index) => {
     const href = makeGemMediaFileAbsoluteUrl(media_file, origin);
     const text = formatMediaLinkLabel(media_file, index);
-    if (href) link_blocks.push({ type: "link", text, href });
-    else if (text) link_blocks.push({ type: "text", text });
+    if (href && /^https?:\/\//i.test(href)) {
+      link_blocks.push({
+        type: "link",
+        text,
+        href,
+        is_media_link: true,
+      });
+    } else if (text) {
+      link_blocks.push({ type: "text", text, is_media_link: true });
+    }
   });
 
-  return [...blocks, ...link_blocks];
+  return link_blocks;
 }

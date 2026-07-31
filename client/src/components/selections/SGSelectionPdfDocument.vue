@@ -76,15 +76,49 @@
                 {{ block.text }}
               </div>
               <div
-                v-if="descriptionInlineLinks(gem).length"
-                class="_descriptionLine _descriptionLinksLine"
+                v-for="(link, link_index) in descriptionCertificateLinks(gem)"
+                :key="'description-cert-' + link_index"
+                class="_descriptionLine"
+              >
+                <a
+                  v-if="link.href"
+                  class="_descriptionLink"
+                  :href="link.href"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{ link.text }}</a>
+                <span v-else class="_descriptionLinkText">{{ link.text }}</span>
+              </div>
+            </div>
+            <div
+              v-else-if="metadata_key === photo_column_key"
+              class="_photoCell"
+            >
+              <a
+                v-if="coverUrl(gem) && coverLinkUrl(gem)"
+                class="_coverLink"
+                :href="coverLinkUrl(gem)"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img class="_coverImg" :src="coverUrl(gem)" alt="" />
+              </a>
+              <img
+                v-else-if="coverUrl(gem)"
+                class="_coverImg"
+                :src="coverUrl(gem)"
+                alt=""
+              />
+              <div
+                v-if="photoMediaLinks(gem).length"
+                class="_photoMediaLinks"
               >
                 <template
-                  v-for="(link, link_index) in descriptionInlineLinks(gem)"
+                  v-for="(link, link_index) in photoMediaLinks(gem)"
                 >
                   <a
                     v-if="link.href"
-                    :key="'description-link-' + link_index"
+                    :key="'photo-media-' + link_index"
                     class="_descriptionLink"
                     :href="link.href"
                     target="_blank"
@@ -92,35 +126,12 @@
                   >{{ link.text }}</a>
                   <span
                     v-else
-                    :key="'description-text-' + link_index"
+                    :key="'photo-media-text-' + link_index"
                     class="_descriptionLinkText"
                   >{{ link.text }}</span>
                 </template>
               </div>
             </div>
-            <a
-              v-else-if="
-                metadata_key === photo_column_key &&
-                coverUrl(gem) &&
-                coverLinkUrl(gem)
-              "
-              class="_coverLink"
-              :href="coverLinkUrl(gem)"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                class="_coverImg"
-                :src="coverUrl(gem)"
-                alt=""
-              />
-            </a>
-            <img
-              v-else-if="metadata_key === photo_column_key && coverUrl(gem)"
-              class="_coverImg"
-              :src="coverUrl(gem)"
-              alt=""
-            />
             <span v-else class="_cellText">{{
               formatCell(gem, metadata_key)
             }}</span>
@@ -218,7 +229,10 @@ import {
 } from "@/utils/selection_pdf_columns.js";
 import { numberToWordsEnCapitalized } from "@/utils/number_to_words_en.js";
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
-import { buildGemPdfDescriptionBlocks } from "@/utils/selection_pdf_description.js";
+import {
+  buildGemPdfDescriptionBlocks,
+  buildGemPdfMediaLinkBlocks,
+} from "@/utils/selection_pdf_description.js";
 import {
   formatPdfCurrencyTotal,
   formatPdfNumber,
@@ -395,8 +409,13 @@ export default {
     descriptionTextBlocks(gem) {
       return this.descriptionBlocks(gem).filter((block) => block.type === "text");
     },
-    descriptionInlineLinks(gem) {
-      return this.descriptionBlocks(gem).filter((block) => block.type === "link");
+    descriptionCertificateLinks(gem) {
+      return this.descriptionBlocks(gem).filter(
+        (block) => block.type === "link" && block.is_certificate_link
+      );
+    },
+    photoMediaLinks(gem) {
+      return buildGemPdfMediaLinkBlocks(gem, this.media_origin);
     },
     formatWeight(value) {
       return formatPdfNumber(value, {
@@ -608,6 +627,13 @@ $acf-brand-light: #7b95a6;
   text-align: right;
 }
 
+._photoCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8mm;
+}
+
 ._coverLink {
   display: block;
   line-height: 0;
@@ -619,6 +645,19 @@ $acf-brand-light: #7b95a6;
   height: 17mm;
   object-fit: cover;
   margin: 0 auto;
+}
+
+._photoMediaLinks {
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  font-size: 6.5pt;
+  line-height: 1.25;
+
+  > * + * {
+    margin-left: 0.35em;
+  }
 }
 
 ._descriptionCell {
@@ -636,15 +675,6 @@ $acf-brand-light: #7b95a6;
 ._descriptionLink {
   color: $acf-brand-primary;
   text-decoration: underline;
-}
-
-._descriptionLinksLine {
-  white-space: normal;
-  word-break: break-word;
-
-  > * + * {
-    margin-left: 0.4em;
-  }
 }
 
 ._cellText {

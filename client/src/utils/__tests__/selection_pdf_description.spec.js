@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildGemPdfDescriptionBlocks,
+  buildGemPdfMediaLinkBlocks,
   formatCertificateLinkLabel,
   selection_pdf_certificate_link_separator,
 } from "@/utils/selection_pdf_description.js";
@@ -55,23 +56,23 @@ describe("formatCertificateLinkLabel", () => {
 });
 
 describe("buildGemPdfDescriptionBlocks", () => {
-  it("places certificate links before media links, after text fields", () => {
+  it("keeps certificates in description and omits media links", () => {
     const blocks = buildGemPdfDescriptionBlocks(
       base_gem,
       "http://localhost:8080",
       { provider_labels_by_path: { "address_book/7": "GIA", "address_book/8": "SSEF" } }
     );
-    const cert_index = blocks.findIndex((block) => block.is_certificate_link);
-    const video_index = blocks.findIndex(
-      (block) => block.text === "spin.mp4" && block.type === "link"
-    );
+    const certificates = blocks.filter((block) => block.is_certificate_link);
+    const media = blocks.filter((block) => block.is_media_link);
     const origin_index = blocks.findIndex((block) =>
       block.text?.startsWith("Origin:")
     );
+    const cert_index = blocks.findIndex((block) => block.is_certificate_link);
 
+    expect(certificates).toHaveLength(2);
+    expect(media).toHaveLength(0);
     expect(cert_index).toBeGreaterThan(origin_index);
-    expect(video_index).toBeGreaterThan(cert_index);
-    expect(blocks[cert_index].type).toBe("link");
+    expect(blocks.some((block) => block.text === "spin.mp4")).toBe(false);
   });
 
   it("emits absolute certificate hyperlinks labeled Provider – ref", () => {
@@ -121,9 +122,11 @@ describe("buildGemPdfDescriptionBlocks", () => {
       "https://app.example.com/gems/42/files/cert.pdf"
     );
   });
+});
 
-  it("emits photo links for gem media images", () => {
-    const blocks = buildGemPdfDescriptionBlocks(
+describe("buildGemPdfMediaLinkBlocks", () => {
+  it("emits photo and video links for the photo column", () => {
+    const blocks = buildGemPdfMediaLinkBlocks(
       {
         ...base_gem,
         $files: [
@@ -133,23 +136,35 @@ describe("buildGemPdfDescriptionBlocks", () => {
             $media_filename: "face.jpg",
             $path: "gems/42/files/photo-1",
           },
+          {
+            is_gem_media: true,
+            $type: "video",
+            $media_filename: "spin.mp4",
+            $path: "gems/42/files/video-1",
+          },
         ],
       },
       "https://app.example.com"
     );
-    const photo = blocks.find(
-      (block) => block.type === "link" && block.text === "face.jpg"
-    );
 
-    expect(photo).toMatchObject({
-      type: "link",
-      text: "face.jpg",
-      href: "https://app.example.com/gems/42/files/face.jpg",
-    });
+    expect(blocks).toEqual([
+      {
+        type: "link",
+        text: "face.jpg",
+        href: "https://app.example.com/gems/42/files/face.jpg",
+        is_media_link: true,
+      },
+      {
+        type: "link",
+        text: "spin.mp4",
+        href: "https://app.example.com/gems/42/files/spin.mp4",
+        is_media_link: true,
+      },
+    ]);
   });
 
-  it("excludes media files with dont_link_in_pdf from description links", () => {
-    const blocks = buildGemPdfDescriptionBlocks(
+  it("excludes media files with dont_link_in_pdf", () => {
+    const blocks = buildGemPdfMediaLinkBlocks(
       {
         ...base_gem,
         $files: [
@@ -177,19 +192,17 @@ describe("buildGemPdfDescriptionBlocks", () => {
       },
       "https://app.example.com"
     );
-    const media_links = blocks.filter(
-      (block) => block.type === "link" && !block.is_certificate_link
-    );
 
-    expect(media_links).toHaveLength(1);
-    expect(media_links[0]).toMatchObject({
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toMatchObject({
       text: "visible.mp4",
       href: "https://app.example.com/gems/42/files/visible.mp4",
+      is_media_link: true,
     });
   });
 
   it("sorts media links alphabetically by filename", () => {
-    const blocks = buildGemPdfDescriptionBlocks(
+    const blocks = buildGemPdfMediaLinkBlocks(
       {
         ...base_gem,
         $files: [
@@ -215,10 +228,11 @@ describe("buildGemPdfDescriptionBlocks", () => {
       },
       "https://app.example.com"
     );
-    const media_links = blocks
-      .filter((block) => block.type === "link" && !block.is_certificate_link)
-      .map((block) => block.text);
 
-    expect(media_links).toEqual(["alpha.jpg", "middle.jpg", "zebra.mp4"]);
+    expect(blocks.map((block) => block.text)).toEqual([
+      "alpha.jpg",
+      "middle.jpg",
+      "zebra.mp4",
+    ]);
   });
 });
