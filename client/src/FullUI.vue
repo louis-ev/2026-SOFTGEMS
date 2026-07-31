@@ -148,13 +148,22 @@ export default {
 <style lang="scss" scoped>
 ._fullUI {
   position: relative;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+._mainWin {
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
 ._mainContent {
   position: relative;
-  height: calc(100dvh - 61px);
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: row nowrap;
 }
@@ -162,5 +171,7 @@ export default {
 ._routerView {
   overflow: auto;
   flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
 }
 </style>

@@ -54,6 +54,8 @@ export default {
 }
 
 .sg-icon-sidebar--primary {
+  align-self: stretch;
+  min-height: 0;
   background: var(--acf-brand-primary);
   z-index: 3;
 }
