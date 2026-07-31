@@ -132,6 +132,7 @@ import {
   filterMembershipRowsByType,
   membershipTypeFilterOptions,
 } from "@/utils/gem_selection_membership_rows.js";
+import { listGemIndexedSelectionPaths } from "@/utils/gem_selection_membership_paths.js";
 import {
   selectionFolderSlugFromPath,
   selectionMembershipTypeSlug,
@@ -140,7 +141,7 @@ import { findSelectionMainDocumentFile } from "@/utils/selection_documents.js";
 import { selectionTypeIconFromSlug } from "@/utils/selection_type_registry.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 import {
-  fetchAllSelectionFolders,
+  fetchSelectionFoldersByPaths,
   parseSelectionFolderPath,
   resolveSelectionType,
 } from "@/utils/selection_paths.js";
@@ -316,14 +317,16 @@ export default {
       });
     },
     async enrichMembershipRowsWithFiles(rows) {
+      const list = Array.isArray(rows) ? rows : [];
       const paths = [
         ...new Set(
-          (Array.isArray(rows) ? rows : [])
+          list
+            .filter((row) => !Array.isArray(row?.$files))
             .map((row) => String(row?.$path || "").trim())
             .filter(Boolean)
         ),
       ];
-      if (!paths.length) return rows;
+      if (!paths.length) return list;
 
       const folders = await Promise.all(
         paths.map((folder_path) =>
@@ -336,7 +339,8 @@ export default {
           .map((folder) => [String(folder?.$path || "").trim(), folder])
       );
 
-      return rows.map((row) => {
+      return list.map((row) => {
+        if (Array.isArray(row?.$files)) return row;
         const path = String(row?.$path || "").trim();
         const enriched = folder_by_path.get(path);
         if (!enriched) return row;
@@ -348,7 +352,14 @@ export default {
       this.is_loading = true;
       this.fetch_error = "";
       try {
-        this.selection_folders = await fetchAllSelectionFolders(this.$api);
+        // Index-driven: fetch only paths from selection_membership_paths +
+        // box_selection_path. Presence is still verified against each
+        // folder's selection_entries (source of truth).
+        const indexed_paths = listGemIndexedSelectionPaths(this.gem);
+        this.selection_folders = await fetchSelectionFoldersByPaths(
+          this.$api,
+          indexed_paths
+        );
         const rows = buildGemSelectionMembershipRows({
           gem_path: this.gem_path,
           gem: this.gem,

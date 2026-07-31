@@ -125,6 +125,31 @@ export async function fetchAllSelectionFolders(api) {
 }
 
 /**
+ * Fetch specific selection folders by path (targeted; no type-root scan).
+ *
+ * @param {object} api – Vue api plugin with `getFolder`
+ * @param {string[]} paths
+ * @returns {Promise<object[]>}
+ */
+export async function fetchSelectionFoldersByPaths(api, paths) {
+  const unique_paths = [
+    ...new Set(
+      (Array.isArray(paths) ? paths : [])
+        .map((path) => String(path || "").trim())
+        .filter(Boolean)
+    ),
+  ];
+  if (!unique_paths.length || !api?.getFolder) return [];
+
+  const folders = await Promise.all(
+    unique_paths.map((folder_path) =>
+      api.getFolder({ path: folder_path }).catch(() => null)
+    )
+  );
+  return folders.filter(Boolean);
+}
+
+/**
  * Enrich folder rows with derived `selection_type` for display/sorting.
  * @param {object} folder
  * @returns {object}

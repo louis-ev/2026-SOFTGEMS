@@ -1,7 +1,7 @@
 /**
- * Denormalized add dates on the gem: `selection_membership_paths[memo-in/n] → ISO`.
- * Which selections contain the gem is defined only by each selection’s `selection_entries`
- * (and `box_selection_path` for boxes).
+ * Denormalized index on the gem: `selection_membership_paths[memo-in/n] → ISO`.
+ * Selection `selection_entries` remain the source of truth for membership presence;
+ * this map (+ `box_selection_path`) is the fetch index for the gem open view.
  */
 
 /**
@@ -47,6 +47,24 @@ export function getGemMembershipAddedAt(gem, selection_path) {
     gem?.selection_gem_added_at
   );
   return map[cleaned_path] || "";
+}
+
+/**
+ * Candidate selection folder paths for a gem open view (index only — no full scan).
+ * Includes `selection_membership_paths` keys and `box_selection_path` when set.
+ *
+ * @param {object|null|undefined} gem
+ * @returns {string[]}
+ */
+export function listGemIndexedSelectionPaths(gem) {
+  const map = normalizeMembershipPathsMap(
+    gem?.selection_membership_paths,
+    gem?.selection_gem_added_at
+  );
+  const paths = new Set(Object.keys(map));
+  const box_path = String(gem?.box_selection_path || "").trim();
+  if (box_path) paths.add(box_path);
+  return [...paths];
 }
 
 /**

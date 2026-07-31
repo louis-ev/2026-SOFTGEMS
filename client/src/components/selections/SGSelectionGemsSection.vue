@@ -67,32 +67,6 @@
       </div>
     </div>
 
-    <div
-      v-if="show_index_heal_notice"
-      class="_indexHealNotice"
-      role="status"
-    >
-      <p class="_indexHealText">
-        {{
-          $t("sg_selection_gem_index_heal_notice", {
-            count: gems_needing_index_heal.length,
-          })
-        }}
-      </p>
-      <button
-        type="button"
-        class="u-button u-button_small u-button_bleuvert"
-        :disabled="index_heal_busy"
-        @click="healEntryGemIndexes"
-      >
-        {{
-          index_heal_busy
-            ? $t("sg_selection_gem_index_heal_busy")
-            : $t("sg_selection_gem_index_heal_action")
-        }}
-      </button>
-    </div>
-
     <SGSelectionAddGemsPicker
       v-if="can_edit"
       :selection_type="resolved_selection_type"
@@ -211,22 +185,12 @@ export default {
       editing_field: null,
       editing_current_value: "",
       index_heal_busy: false,
+      index_heal_seq: 0,
     };
   },
   computed: {
     gems() {
       return this.entry_gems_list;
-    },
-    gems_needing_index_heal() {
-      if (this.entry_gems_loading || !this.entry_gems_list.length) return [];
-      return gemsNeedingIndexHeal({
-        gems: this.entry_gems_list,
-        selection_path: this.selection_folder_path,
-        selection_folder: this.selection_folder,
-      });
-    },
-    show_index_heal_notice() {
-      return this.can_edit && this.gems_needing_index_heal.length > 0;
     },
     entries_field_editable_map() {
       const accumulator = this.metadata_keys.reduce((acc, metadata_key) => {
@@ -364,45 +328,68 @@ export default {
           this.entry_gems_loading = false;
         }
       }
+      if (request_seq === this.refresh_entry_gems_seq) {
+        this.silentHealEntryGemIndexes(request_seq);
+      }
     },
-    async healEntryGemIndexes() {
-      if (
-        this.index_heal_busy ||
-        !this.selection_folder_path ||
-        !this.gems_needing_index_heal.length
-      ) {
+    /**
+     * Best-effort: backfill denormalized gem indexes (membership dates /
+     * box_selection_path). Does not touch selection_entries.
+     */
+    async silentHealEntryGemIndexes(request_seq) {
+      if (!this.can_edit || this.index_heal_busy || !this.selection_folder_path) {
         return;
       }
+      if (!this.entry_gems_list.length) return;
+
+      const needing = gemsNeedingIndexHeal({
+        gems: this.entry_gems_list,
+        selection_path: this.selection_folder_path,
+        selection_folder: this.selection_folder,
+      });
+      if (!needing.length) return;
+
+      const heal_seq = ++this.index_heal_seq;
       this.index_heal_busy = true;
-      const request_seq = this.refresh_entry_gems_seq;
       try {
         const result = await healGemIndexesForSelection({
           api: this.$api,
           selection_path: this.selection_folder_path,
           selection_folder: this.selection_folder,
-          gems: this.gems_needing_index_heal,
+          gems: needing,
         });
-        if (request_seq !== this.refresh_entry_gems_seq) return;
-        if (result.healed.length > 0) {
-          this.$alertify
-            .delay(3000)
-            .success(
-              this.$t("sg_selection_gem_index_heal_done", {
-                count: result.healed.length,
-              })
-            );
+        if (
+          heal_seq !== this.index_heal_seq ||
+          request_seq !== this.refresh_entry_gems_seq
+        ) {
+          return;
         }
+        // Vue 2: Object.assign in the helper may add non-reactive keys.
+        needing.forEach((gem) => {
+          if (!gem || typeof gem !== "object") return;
+          if (gem.selection_membership_paths !== undefined) {
+            this.$set(gem, "selection_membership_paths", {
+              ...gem.selection_membership_paths,
+            });
+          }
+          if (
+            Object.prototype.hasOwnProperty.call(gem, "box_selection_path")
+          ) {
+            this.$set(gem, "box_selection_path", gem.box_selection_path);
+          }
+        });
         if (result.failed.length > 0) {
-          this.$alertify
-            .delay(4000)
-            .error(this.$t("sg_selection_gem_index_heal_failed"));
+          console.warn(
+            "silentHealEntryGemIndexes: failed paths",
+            result.failed
+          );
         }
-      } catch ({ code }) {
-        this.$alertify
-          .delay(4000)
-          .error(code || this.$t("sg_selection_gem_index_heal_failed"));
+      } catch (err) {
+        console.warn("silentHealEntryGemIndexes", err);
       } finally {
-        this.index_heal_busy = false;
+        if (heal_seq === this.index_heal_seq) {
+          this.index_heal_busy = false;
+        }
       }
     },
     prepareEntryGemsList(list) {
@@ -586,26 +573,6 @@ export default {
   font-size: var(--sl-font-size-small);
   font-weight: 600;
   color: var(--c-gris_fonce);
-}
-
-._indexHealNotice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--spacing) * 0.75);
-  margin: calc(var(--spacing) * 1) 0;
-  padding: calc(var(--spacing) * 0.75) calc(var(--spacing) * 1);
-  border: 1px solid color-mix(in srgb, var(--c-bleuvert) 35%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--c-bleuvert) 8%, var(--c-bodybg));
-}
-
-._indexHealText {
-  margin: 0;
-  flex: 1 1 16rem;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
-  line-height: 1.4;
 }
 
 ._hint {

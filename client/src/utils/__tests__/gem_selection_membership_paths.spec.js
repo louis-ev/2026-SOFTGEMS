@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   getGemMembershipAddedAt,
+  listGemIndexedSelectionPaths,
   normalizeMembershipPathsMap,
   recordGemSelectionMembership,
   clearGemSelectionMembership,
@@ -29,6 +30,29 @@ describe("getGemMembershipAddedAt", () => {
         "selections/5"
       )
     ).toBe("2026-01-15T12:00:00.000Z");
+  });
+});
+
+describe("listGemIndexedSelectionPaths", () => {
+  it("unions membership map keys with box_selection_path", () => {
+    expect(
+      listGemIndexedSelectionPaths({
+        box_selection_path: "box/2",
+        selection_membership_paths: {
+          "memo-in/3": "2026-01-01T00:00:00.000Z",
+          "box/2": "2026-02-01T00:00:00.000Z",
+        },
+      }).sort()
+    ).toEqual(["box/2", "memo-in/3"]);
+  });
+
+  it("includes box_selection_path even when membership map is empty", () => {
+    expect(
+      listGemIndexedSelectionPaths({
+        box_selection_path: "box/9",
+        selection_membership_paths: {},
+      })
+    ).toEqual(["box/9"]);
   });
 });
 

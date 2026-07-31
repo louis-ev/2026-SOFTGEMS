@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   enrichSelectionFolder,
   fetchAllSelectionFolders,
+  fetchSelectionFoldersByPaths,
   parseSelectionFolderPath,
   resolveSelectionType,
   selectionDocumentNumber,
@@ -75,5 +76,26 @@ describe("selection_paths", () => {
     const rows = await fetchAllSelectionFolders(api);
     const paths = rows.map((r) => r.$path).sort();
     expect(paths).toEqual(["box/1", "memo-in/2"]);
+  });
+
+  it("fetches selection folders by explicit paths only", async () => {
+    const api = {
+      getFolder({ path: folder_path }) {
+        if (folder_path === "box/2") {
+          return Promise.resolve({ $path: "box/2" });
+        }
+        if (folder_path === "missing/1") {
+          return Promise.reject(new Error("not_found"));
+        }
+        return Promise.resolve({ $path: folder_path });
+      },
+    };
+    const rows = await fetchSelectionFoldersByPaths(api, [
+      "box/2",
+      "box/2",
+      "missing/1",
+      "memo-in/3",
+    ]);
+    expect(rows.map((r) => r.$path).sort()).toEqual(["box/2", "memo-in/3"]);
   });
 });
