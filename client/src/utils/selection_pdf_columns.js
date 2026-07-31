@@ -26,17 +26,17 @@ export const selection_pdf_pricing_total_column_slot = "__pricing_total__";
 
 /**
  * Column width percentages for the standard priced invoice layout (sum = 100).
- * Measured on the ACF INV N°20265 reference PDF.
+ * Source of truth: `ACF Assets/column size.pdf` (Invoice N°20268 layout sheet).
  */
 export const selection_pdf_invoice_col_percents = Object.freeze({
-  __no__: 9,
-  id: 8,
-  [selection_pdf_virtual_column_keys.description]: 24,
-  [selection_pdf_virtual_column_keys.photo]: 11,
-  number_of_pieces: 9.5,
-  weight_ct: 10.5,
-  [selection_pdf_virtual_column_keys.per_carat]: 13,
-  [selection_pdf_pricing_total_column_slot]: 15,
+  __no__: 5,
+  id: 7.5,
+  [selection_pdf_virtual_column_keys.description]: 30,
+  [selection_pdf_virtual_column_keys.photo]: 15,
+  number_of_pieces: 7.5,
+  weight_ct: 10,
+  [selection_pdf_virtual_column_keys.per_carat]: 11,
+  [selection_pdf_pricing_total_column_slot]: 14,
 });
 
 /**
@@ -66,12 +66,12 @@ export function selectionPdfBaseColumnPercent(metadata_key) {
 export function selectionPdfColumnTextAlign(metadata_key) {
   if (metadata_key === "__no__") return "center";
   if (metadata_key === selection_pdf_photo_column_key) return "center";
-  if (metadata_key === "id") return "center";
-  if (metadata_key === "number_of_pieces") return "center";
-  if (metadata_key === "weight_ct") return "center";
-  if (metadata_key === selection_pdf_per_carat_column_key) return "center";
+  if (gem_pricing_total_column_keys.includes(metadata_key)) return "right";
+  if (metadata_key === "id") return "left";
+  if (metadata_key === "number_of_pieces") return "left";
+  if (metadata_key === "weight_ct") return "left";
+  if (metadata_key === selection_pdf_per_carat_column_key) return "left";
   if (metadata_key === selection_pdf_description_column_key) return "left";
-  if (gem_pricing_total_column_keys.includes(metadata_key)) return "center";
   return "left";
 }
 
@@ -228,16 +228,13 @@ export function resolveSelectionPdfPricingKey(selection_type, metadata_keys) {
  * @param {string} [_currency]
  * @returns {string}
  */
-export function selectionPdfColumnHeaderLabel(metadata_key, currency = "USD") {
+export function selectionPdfColumnHeaderLabel(metadata_key, _currency = "USD") {
   if (metadata_key === "id") return "REF";
   if (metadata_key === selection_pdf_description_column_key) return "Description";
   if (metadata_key === selection_pdf_photo_column_key) return "Photo";
-  if (metadata_key === "number_of_pieces") return "Quantity";
-  if (metadata_key === "weight_ct") return "Ct weight";
-  if (metadata_key === selection_pdf_per_carat_column_key) return "$/ct";
-  if (gem_pricing_total_column_keys.includes(metadata_key)) {
-    const code = String(currency || "USD").trim() || "USD";
-    return `Total ${code}`;
-  }
+  if (metadata_key === "number_of_pieces") return "Qty";
+  if (metadata_key === "weight_ct") return "weight";
+  if (metadata_key === selection_pdf_per_carat_column_key) return "price /ct";
+  if (gem_pricing_total_column_keys.includes(metadata_key)) return "Total";
   return metadata_key;
 }

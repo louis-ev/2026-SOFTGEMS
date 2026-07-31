@@ -66,36 +66,49 @@ describe("selection pdf fixed columns", () => {
     );
   });
 
-  it("labels columns in English for PDF export", () => {
+  it("labels columns from column size.pdf", () => {
     expect(selectionPdfColumnHeaderLabel("$description")).toBe("Description");
-    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("$/ct");
+    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("price /ct");
     expect(selectionPdfColumnHeaderLabel("pf_invoiced_price", "USD")).toBe(
-      "Total USD"
+      "Total"
     );
-    expect(selectionPdfColumnHeaderLabel("weight_ct")).toBe("Ct weight");
-    expect(selectionPdfColumnHeaderLabel("number_of_pieces")).toBe("Quantity");
+    expect(selectionPdfColumnHeaderLabel("weight_ct")).toBe("weight");
+    expect(selectionPdfColumnHeaderLabel("number_of_pieces")).toBe("Qty");
+    expect(selectionPdfColumnHeaderLabel("id")).toBe("REF");
   });
 
-  it("assigns table column percents that sum to 100", () => {
+  it("assigns table column percents from column size.pdf (sum 100)", () => {
     const priced = selectionPdfTableColPercents(
       selectionPdfExportColumnKeys("memo out")
     );
     const priced_sum = priced.reduce((sum, col) => sum + col.percent, 0);
     expect(priced_sum).toBeCloseTo(100, 5);
     expect(priced.find((col) => col.key === "__no__")?.percent).toBeCloseTo(
-      9,
+      5,
       5
     );
+    expect(priced.find((col) => col.key === "id")?.percent).toBeCloseTo(7.5, 5);
     expect(priced.find((col) => col.key === "$description")?.percent).toBeCloseTo(
-      24,
+      30,
       5
     );
     expect(priced.find((col) => col.key === "$cover")?.percent).toBeCloseTo(
+      15,
+      5
+    );
+    expect(
+      priced.find((col) => col.key === "number_of_pieces")?.percent
+    ).toBeCloseTo(7.5, 5);
+    expect(priced.find((col) => col.key === "weight_ct")?.percent).toBeCloseTo(
+      10,
+      5
+    );
+    expect(priced.find((col) => col.key === "$per_carat")?.percent).toBeCloseTo(
       11,
       5
     );
     expect(priced.find((col) => col.key === "pc_to")?.percent).toBeCloseTo(
-      15,
+      14,
       5
     );
 

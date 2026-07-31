@@ -374,3 +374,22 @@ export default {
   text-align: center;
 }
 </style>
+
+<style lang="scss">
+/* Puppeteer prints with printBackground: true — force pure white page chrome. */
+html,
+body,
+#app {
+  background: #fff !important;
+  background-color: #fff !important;
+}
+
+@media print {
+  html,
+  body,
+  #app {
+    background: #fff !important;
+    background-color: #fff !important;
+  }
+}
+</style>

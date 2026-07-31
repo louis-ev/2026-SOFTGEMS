@@ -154,43 +154,20 @@
             }}</span>
           </td>
         </tr>
-        <tr v-if="has_pricing" class="_vatRow">
-          <td :class="columnClass('__no__')" />
-          <td
-            v-for="metadata_key in metadata_keys"
-            :key="`vat-${metadata_key}`"
-            :class="columnClass(metadata_key)"
-          >
-            <span
-              v-if="metadata_key === 'weight_ct'"
-              class="_totalLabel"
-            >{{ $t("sg_pdf_vat") }}</span>
-            <span
-              v-else-if="metadata_key === per_carat_column_key"
-              class="_cellText"
-            >20%</span>
-            <span
-              v-else-if="metadata_key === pricing_total_key"
-              class="_cellText"
-            >{{ formatted_vat_amount }}</span>
-          </td>
+      </tbody>
+    </table>
+
+    <table v-if="has_pricing" class="_vatBox">
+      <tbody>
+        <tr>
+          <td class="_alignLeft">{{ $t("sg_pdf_vat") }}</td>
+          <td class="_alignCenter">20%</td>
+          <td class="_alignRight">{{ formatted_vat_amount }}</td>
         </tr>
-        <tr v-if="has_pricing" class="_grandTotalRow">
-          <td :class="columnClass('__no__')" />
-          <td
-            v-for="metadata_key in metadata_keys"
-            :key="`grand-${metadata_key}`"
-            :class="columnClass(metadata_key)"
-          >
-            <span
-              v-if="metadata_key === 'weight_ct'"
-              class="_totalLabel"
-            >{{ $t("sg_pdf_grand_total") }}</span>
-            <span
-              v-else-if="metadata_key === pricing_total_key"
-              class="_cellText"
-            >{{ formatted_grand_total }}</span>
-          </td>
+        <tr class="_grandTotalRow">
+          <td class="_alignLeft">{{ $t("sg_pdf_grand_total") }}</td>
+          <td />
+          <td class="_alignRight">{{ formatted_grand_total }}</td>
         </tr>
       </tbody>
     </table>
@@ -489,11 +466,15 @@ export default {
 <style lang="scss" scoped>
 $acf-brand-primary: #1c2b3a;
 $acf-brand-light: #7b95a6;
+/* Table chrome from ACF INV N°20265: black hairlines, white cells. */
+$acf-pdf-table-line: #000;
 
 /*
   Metrics measured on the reference "ACF INV N°20265.pdf" (A4):
   side margins 17.8mm, single 8pt body size, ~1.4 line-height,
   logo ~18mm wide centered, first text line at 34mm from the top.
+  Table: horizontal rules + outer left/right only (no column grid);
+  VAT/Total is a separate right-aligned boxed grid.
 */
 
 ._pdfDocument {
@@ -593,26 +574,57 @@ $acf-brand-light: #7b95a6;
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  margin-bottom: 4mm;
+  margin-bottom: 0;
+  border-left: 0.5pt solid $acf-pdf-table-line;
+  border-right: 0.5pt solid $acf-pdf-table-line;
+  background: #fff;
 }
 
 ._gemsTable th,
 ._gemsTable td {
-  border: 0.5pt solid $acf-brand-primary;
-  padding: 0.5mm 1mm;
+  border: none;
+  border-bottom: 0.5pt solid $acf-pdf-table-line;
+  padding: 1.2mm 1.4mm;
   vertical-align: top;
   word-break: break-word;
+  background: #fff;
+  color: #000;
 }
 
-._gemsTable th {
+._gemsTable thead th {
+  border-top: 0.5pt solid $acf-pdf-table-line;
   font-family: "Inter", Arial, sans-serif;
   font-size: 8pt;
   font-weight: 700;
+  background: #fff;
+  color: #000;
 }
 
 ._gemsTable tbody td {
   font-size: 8pt;
   font-weight: 400;
+}
+
+._vatBox {
+  width: 35%;
+  margin: 0 0 4mm auto;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #fff;
+}
+
+._vatBox td {
+  border: 0.5pt solid $acf-pdf-table-line;
+  padding: 1mm 1.4mm;
+  vertical-align: middle;
+  background: #fff;
+  color: #000;
+  font-size: 8pt;
+  font-weight: 400;
+}
+
+._vatBox ._grandTotalRow td {
+  font-weight: 700;
 }
 
 ._alignLeft {
@@ -683,9 +695,7 @@ $acf-brand-light: #7b95a6;
   font-weight: 400;
 }
 
-._totalRow td,
-._vatRow td,
-._grandTotalRow td {
+._totalRow td {
   font-weight: 700;
   font-size: 8pt;
 }
