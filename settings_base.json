@@ -8,27 +8,19 @@
   "bonjour_domain": false,
   "versioning": true,
   "tokenIsValidForXDays": 30,
-
   "contentPath": "softgems_content",
-
   "privateKeyPath": "",
   "certificatePath": "",
   "passphrase": "",
-
   "lruCacheMax": 10000,
   "lruCacheMaxSize": 25000000,
-
   "deletedFolderName": "_bin",
-
   "ffmpeg_options": {
     "priority": 0,
     "timeout": 600
   },
-
   "mediaThumbQuality": 90,
-
   "stadia_maps_api_key": "",
-
   "mailer": {
     "host": "",
     "port": "",
@@ -39,13 +31,17 @@
     },
     "from": ""
   },
-
   "schema": {
     "$cover": {
       "width": 2000,
       "height": 2000,
       "thumbs": {
-        "resolutions": [50, 320, 640, 2000]
+        "resolutions": [
+          50,
+          320,
+          640,
+          2000
+        ]
       }
     },
     "fields": {
@@ -124,7 +120,12 @@
     },
     "$files": {
       "thumbs": {
-        "resolutions": [50, 320, 640, 2000]
+        "resolutions": [
+          50,
+          320,
+          640,
+          2000
+        ]
       }
     },
     "$folders": {
@@ -135,7 +136,12 @@
           "width": 2000,
           "height": 2000,
           "thumbs": {
-            "resolutions": [50, 320, 640, 2000]
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
           }
         },
         "fields": {
@@ -220,7 +226,12 @@
         },
         "$files": {
           "thumbs": {
-            "resolutions": [50, 320, 640, 1600]
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
           },
           "fields": {
             "caption": {
@@ -256,7 +267,12 @@
           "width": 2000,
           "height": 2000,
           "thumbs": {
-            "resolutions": [50, 320, 640, 2000]
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
           }
         },
         "fields": {
@@ -326,7 +342,7 @@
           }
         }
       },
-      "selections": {
+      "simple": {
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
@@ -334,7 +350,12 @@
           "width": 2000,
           "height": 2000,
           "thumbs": {
-            "resolutions": [50, 320, 640, 2000]
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
           }
         },
         "fields": {
@@ -342,15 +363,268 @@
             "type": "string",
             "required": true
           },
-          "selection_type": {
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "box": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
             "type": "string",
             "required": true
           },
           "selection_date": {
             "type": "date"
           },
-          "document_number_name": {
+          "counterparty_path": {
             "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "memo-in": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "return-memo-in": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "buying-invoice": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
           },
           "counterparty_path": {
             "type": "string"
@@ -376,7 +650,467 @@
         },
         "$files": {
           "thumbs": {
-            "resolutions": [50, 320, 640, 1600]
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "memo-out": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "return-memo-out": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "sale-invoice": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "partner-invoice": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "credit-note": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "importation": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
+          },
+          "fields": {
+            "caption": {
+              "type": "string"
+            },
+            "is_selection_attachment": {
+              "type": "boolean"
+            },
+            "is_selection_main_document": {
+              "type": "boolean"
+            },
+            "is_selection_generated_pdf": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "importation-return": {
+        "$can_be_created_by": "everyone",
+        "slug_naming": "sequence",
+        "slug_sequence_start": 1,
+        "$cover": {
+          "width": 2000,
+          "height": 2000,
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
+          }
+        },
+        "fields": {
+          "internal_name": {
+            "type": "string",
+            "required": true
+          },
+          "selection_date": {
+            "type": "date"
+          },
+          "counterparty_path": {
+            "type": "string"
+          },
+          "reference_number": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "selection_entries": {
+            "type": "array"
+          }
+        },
+        "$files": {
+          "thumbs": {
+            "resolutions": [
+              50,
+              320,
+              640,
+              1600
+            ]
           },
           "fields": {
             "caption": {
@@ -400,7 +1134,12 @@
           "width": 2000,
           "height": 2000,
           "thumbs": {
-            "resolutions": [50, 320, 640, 2000]
+            "resolutions": [
+              50,
+              320,
+              640,
+              2000
+            ]
           }
         },
         "fields": {

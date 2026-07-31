@@ -7,17 +7,8 @@
       <SGEditableMetaField
         :label="$t('sg_selection_document_number_name')"
         icon="file-earmark-text"
-        :value="selection.document_number_name"
-        :readonly="!can_edit"
-        :modal_open="active_field === 'document_number_name'"
-        :modal_title="
-          field_modal_title($t('sg_selection_document_number_name'))
-        "
-        :modal_is_loading="is_saving_field === 'document_number_name'"
-        :meta_text="document_number_name_meta_text"
-        @presentClick="openField('document_number_name')"
-        @close="closeField"
-        @save="onMetaTextSave"
+        :value="display_document_number"
+        :readonly="true"
       />
 
       <SGEditableMetaField
@@ -89,6 +80,7 @@ import FormatDates from "@/mixins/FormatDates.js";
 import SGSelectionCounterpartyEditor from "@/components/selections/SGSelectionCounterpartyEditor.vue";
 import { resolveAddressBookPathLabel } from "@/utils/address_book_paths.js";
 import { toDateInputValue, toStoredCalendarDate } from "@/utils/date_input.js";
+import { selectionDocumentNumber } from "@/utils/selection_paths.js";
 
 export default {
   name: "SGSelectionHeaderFieldsSection",
@@ -125,6 +117,9 @@ export default {
     };
   },
   computed: {
+    display_document_number() {
+      return selectionDocumentNumber(this.selection) || "—";
+    },
     display_selection_date() {
       const raw = this.selection?.selection_date;
       if (!raw) return "";
@@ -158,9 +153,6 @@ export default {
             : "",
         label: this.$t("sg_selection_counterparty"),
       };
-    },
-    document_number_name_meta_text() {
-      return this.buildMetaText("document_number_name");
     },
     reference_meta_text() {
       return this.buildMetaText("reference_number");

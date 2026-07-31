@@ -7,7 +7,6 @@ import {
 } from "@/utils/selection_type_registry.js";
 import { SELECTION_TYPE_VALUES } from "@/utils/selection_types.js";
 import {
-  isLegacySelectionFolderParam,
   selectionDetailPath,
   selectionListPath,
 } from "@/utils/selection_urls.js";
@@ -22,7 +21,7 @@ describe("selection_type_registry", () => {
 
   it("maps slugs back to stored values", () => {
     expect(selectionTypeFromSlug("memo-in")).toBe("memo in");
-    expect(selectionTypeFromSlug("boite")).toBe("boîte");
+    expect(selectionTypeFromSlug("box")).toBe("boîte");
     expect(isValidSelectionTypeSlug("memo-in")).toBe(true);
     expect(isValidSelectionTypeSlug("42-acme")).toBe(false);
   });
@@ -37,11 +36,6 @@ describe("selection_urls typed paths", () => {
         folder_slug: "42",
         internal_name: "Acme Memo",
       })
-    ).toBe("/selections/memo-in/42-acme-memo");
-  });
-
-  it("detects legacy folder params", () => {
-    expect(isLegacySelectionFolderParam("42-acme")).toBe(true);
-    expect(isLegacySelectionFolderParam("memo-in")).toBe(false);
+    ).toBe("/selections/memo-in/42");
   });
 });

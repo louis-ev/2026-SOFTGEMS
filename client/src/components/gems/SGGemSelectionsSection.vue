@@ -48,6 +48,7 @@
         <table class="_table" :aria-label="$t('sg_section_gem_selections')">
           <thead>
             <tr>
+              <th scope="col" class="_colId">{{ $t("sg_id") }}</th>
               <th scope="col">{{ $t("sg_gem_selection_added_at") }}</th>
               <th scope="col">{{ $t("sg_selection_type_label") }}</th>
               <th scope="col">{{ $t("sg_selection_internal_name") }}</th>
@@ -67,6 +68,12 @@
               @click="openSelection(row)"
               @keydown.enter.prevent="openSelection(row)"
             >
+              <td class="_colId">
+                <span v-if="selectionId(row)" class="_idText">{{
+                  selectionId(row)
+                }}</span>
+                <span v-else>—</span>
+              </td>
               <td class="_addedAtCell">
                 {{ formatAddedAtCell(row.added_at) }}
               </td>
@@ -132,6 +139,11 @@ import {
 import { findSelectionMainDocumentFile } from "@/utils/selection_documents.js";
 import { selectionTypeIconFromSlug } from "@/utils/selection_type_registry.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
+import {
+  fetchAllSelectionFolders,
+  parseSelectionFolderPath,
+  resolveSelectionType,
+} from "@/utils/selection_paths.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
 import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
 
@@ -154,7 +166,6 @@ export default {
   },
   data() {
     return {
-      selections_root_path: "selections",
       selection_folders: [],
       membership_rows: [],
       counterparty_labels: {},
@@ -236,6 +247,16 @@ export default {
       const box_path = String(this.gem?.box_selection_path || "").trim();
       return Boolean(box_path && row?.$path === box_path);
     },
+    /**
+     * Per-type document/folder ID for migrated or new selections (`memo-in/12` → `12`).
+     * Empty for unparseable legacy flat paths.
+     */
+    selectionId(row) {
+      const parsed = parseSelectionFolderPath(row?.$path);
+      const slug = String(parsed.folder_slug || "").trim();
+      if (!slug || !/^\d+$/.test(slug)) return "";
+      return slug;
+    },
     selectionLabel(row) {
       const raw =
         typeof row?.internal_name === "string" ? row.internal_name.trim() : "";
@@ -246,13 +267,10 @@ export default {
       );
     },
     detailPath(row) {
-      const folder_slug = selectionFolderSlugFromPath(row?.$path);
-      const type_slug = selectionMembershipTypeSlug(row);
+      const parsed = parseSelectionFolderPath(row?.$path);
       return selectionDetailPath({
-        type_slug,
-        folder_slug,
-        internal_name: row?.internal_name,
-        selection_type: row?.selection_type,
+        type_slug: parsed.type_slug || selectionMembershipTypeSlug(row),
+        folder_slug: parsed.folder_slug || selectionFolderSlugFromPath(row?.$path),
       });
     },
     openSelection(row) {
@@ -298,18 +316,24 @@ export default {
       });
     },
     async enrichMembershipRowsWithFiles(rows) {
-      const slugs = (Array.isArray(rows) ? rows : [])
-        .map((row) => selectionFolderSlugFromPath(row?.$path))
-        .filter(Boolean);
-      if (!slugs.length) return rows;
+      const paths = [
+        ...new Set(
+          (Array.isArray(rows) ? rows : [])
+            .map((row) => String(row?.$path || "").trim())
+            .filter(Boolean)
+        ),
+      ];
+      if (!paths.length) return rows;
 
-      const { folders = [] } = await this.$api.getFoldersBySlugs({
-        path: this.selections_root_path,
-        folder_slugs: slugs,
-        no_files: false,
-      });
+      const folders = await Promise.all(
+        paths.map((folder_path) =>
+          this.$api.getFolder({ path: folder_path }).catch(() => null)
+        )
+      );
       const folder_by_path = new Map(
-        folders.map((folder) => [String(folder?.$path || "").trim(), folder])
+        folders
+          .filter(Boolean)
+          .map((folder) => [String(folder?.$path || "").trim(), folder])
       );
 
       return rows.map((row) => {
@@ -324,14 +348,14 @@ export default {
       this.is_loading = true;
       this.fetch_error = "";
       try {
-        const fetched = await this.$api.getFolders({
-          path: this.selections_root_path,
-        });
-        this.selection_folders = Array.isArray(fetched) ? fetched : [];
+        this.selection_folders = await fetchAllSelectionFolders(this.$api);
         const rows = buildGemSelectionMembershipRows({
           gem_path: this.gem_path,
           gem: this.gem,
-          selection_folders: this.selection_folders,
+          selection_folders: this.selection_folders.map((folder) => ({
+            ...folder,
+            selection_type: resolveSelectionType(folder),
+          })),
         });
         this.membership_rows = await this.enrichMembershipRowsWithFiles(rows);
         if (
@@ -441,6 +465,16 @@ export default {
 
 ._nameText {
   font-size: var(--sl-font-size-small);
+}
+
+._colId {
+  width: 4.5rem;
+  white-space: nowrap;
+}
+
+._idText {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 ._addedAtCell {

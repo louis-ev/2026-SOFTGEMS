@@ -23,6 +23,13 @@
     <template v-else>
       <!-- export publication as standalone webpage -->
       <PublicationView v-if="page_is_standalone_html" />
+      <!-- selection PDF print view (Puppeteer): same URL as detail + export query -->
+      <SGSelectionExportView
+        v-else-if="selection_pdf_export"
+        :key="`${selection_pdf_export.type_slug}/${selection_pdf_export.folder_slug}`"
+        :type_slug="selection_pdf_export.type_slug"
+        :folder_slug="selection_pdf_export.folder_slug"
+      />
       <!-- static UI, no live update -->
       <router-view
         v-else-if="$route.meta && $route.meta.static === true"
@@ -41,11 +48,13 @@
 </template>
 <script>
 import FullUI from "@/FullUI.vue";
+import { selectionPdfExportRouteMatch } from "@/utils/selection_urls.js";
 
 export default {
   components: {
     FullUI,
     PublicationView: () => import("@/views/PublicationView.vue"),
+    SGSelectionExportView: () => import("@/views/SGSelectionExportView.vue"),
   },
   data() {
     return {
@@ -62,6 +71,9 @@ export default {
   computed: {
     page_is_standalone_html() {
       return window.app_infos.page_is_standalone_html === true;
+    },
+    selection_pdf_export() {
+      return selectionPdfExportRouteMatch(this.$route);
     },
     custom_fonts_css() {
       const custom_fonts = this.$root.app_infos.custom_fonts;

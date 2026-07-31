@@ -25,6 +25,9 @@
             <table class="_table" :aria-label="page_title">
               <thead>
                 <tr>
+                  <th scope="col" class="_colId">
+                    {{ $t("sg_id") }}
+                  </th>
                   <th scope="col" class="_colName">
                     {{ $t("sg_selection_internal_name") }}
                   </th>
@@ -38,7 +41,7 @@
               </thead>
               <tbody>
                 <tr v-if="sorted_entries.length === 0" class="_emptyRow">
-                  <td colspan="3" class="_emptyCell">
+                  <td colspan="4" class="_emptyCell">
                     {{ $t("sg_selections_empty") }}
                   </td>
                 </tr>
@@ -57,6 +60,11 @@
                     @click="openSelection(row)"
                     @keydown.enter.prevent="openSelection(row)"
                   >
+                    <td class="_colId">
+                      <span class="_idText">{{
+                        selectionSlugFromPath(row.$path)
+                      }}</span>
+                    </td>
                     <td class="_colName">
                       <span class="_nameText">{{ selectionLabel(row) }}</span>
                     </td>
@@ -104,11 +112,15 @@ import FormatDates from "@/mixins/FormatDates.js";
 import { createTablePaginationMixin } from "@/mixins/TablePaginationMixin.js";
 import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
 import {
-  parseSelectionFolderParam,
+  parseSelectionUrlSegment,
   selectionDetailPath,
   selectionListPath,
   selectionNewPath,
 } from "@/utils/selection_urls.js";
+import {
+  selectionFolderSlugFromPath,
+  selectionTypeRootPath,
+} from "@/utils/selection_paths.js";
 import { selectionTypeListLabel as selectionTypeListLabelFn } from "@/utils/selection_types.js";
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 
@@ -127,7 +139,6 @@ export default {
   },
   data() {
     return {
-      selections_root_path: "selections",
       selection_entries: [],
       is_loading: false,
       fetch_error: "",
@@ -135,6 +146,9 @@ export default {
     };
   },
   computed: {
+    type_root_path() {
+      return selectionTypeRootPath(this.type_slug);
+    },
     active_selection_type() {
       return selectionTypeFromSlug(this.type_slug);
     },
@@ -152,12 +166,7 @@ export default {
       return ["Create selection", "Open selection"].includes(this.$route.name);
     },
     filtered_entries() {
-      if (!Array.isArray(this.selection_entries)) return [];
-      const active_type = this.active_selection_type;
-      if (!active_type) return [];
-      return this.selection_entries.filter(
-        (row) => String(row?.selection_type || "") === active_type
-      );
+      return Array.isArray(this.selection_entries) ? this.selection_entries : [];
     },
     sorted_entries() {
       return [...this.filtered_entries].sort((a, b) => {
@@ -194,17 +203,25 @@ export default {
     selected_folder_slug() {
       if (this.$route.name !== "Open selection") return "";
       const raw = this.cleanString(this.$route.params.selection_path);
-      const parsed = parseSelectionFolderParam(raw);
+      const parsed = parseSelectionUrlSegment(raw);
       return parsed.folder_slug || "";
     },
   },
   watch: {
     type_slug: {
       immediate: true,
-      handler() {
+      handler(new_type_slug, old_type_slug) {
         if (!this.active_selection_type) {
           this.$router.replace("/selections");
+          return;
         }
+        if (old_type_slug === undefined) return;
+        if (new_type_slug === old_type_slug) return;
+
+        const previous_room = selectionTypeRootPath(old_type_slug);
+        if (previous_room) this.$api.leave({ room: previous_room });
+        if (this.type_root_path) this.$api.join({ room: this.type_root_path });
+        this.fetchSelections();
       },
     },
     sorted_entries: {
@@ -221,10 +238,10 @@ export default {
   },
   mounted() {
     this.fetchSelections();
-    this.$api.join({ room: this.selections_root_path });
+    this.$api.join({ room: this.type_root_path });
   },
   beforeDestroy() {
-    this.$api.leave({ room: this.selections_root_path });
+    this.$api.leave({ room: this.type_root_path });
   },
   methods: {
     formatCreatedDate(raw) {
@@ -236,10 +253,7 @@ export default {
       });
     },
     selectionSlugFromPath(folder_path) {
-      const cleaned = this.cleanString(folder_path);
-      if (!cleaned) return "";
-      const segments = cleaned.split("/");
-      return segments[segments.length - 1] || "";
+      return selectionFolderSlugFromPath(folder_path);
     },
     selectionLabel(row) {
       const raw =
@@ -263,13 +277,9 @@ export default {
     openSelection(row) {
       const slug = this.selectionSlugFromPath(row?.$path);
       if (!slug) return;
-      const label =
-        typeof row?.internal_name === "string" ? row.internal_name : "";
       const path = selectionDetailPath({
         type_slug: this.type_slug,
         folder_slug: slug,
-        internal_name: label,
-        selection_type: row?.selection_type,
       });
       this.$router.push(path);
     },
@@ -278,7 +288,7 @@ export default {
       this.fetch_error = "";
       try {
         const fetched = await this.$api.getFolders({
-          path: this.selections_root_path,
+          path: this.type_root_path,
         });
         this.selection_entries = Array.isArray(fetched) ? fetched : [];
       } catch ({ code }) {
@@ -350,8 +360,13 @@ export default {
   }
 }
 
+._colId {
+  width: 4.5rem;
+  white-space: nowrap;
+}
+
 ._colName {
-  width: 46%;
+  width: 42%;
 }
 
 ._colCreated {
@@ -363,6 +378,11 @@ export default {
   width: 20%;
   white-space: nowrap;
   text-align: right;
+}
+
+._idText {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 ._createdText {

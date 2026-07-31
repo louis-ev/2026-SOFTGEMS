@@ -1,5 +1,11 @@
 import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
-import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
+import {
+  parseSelectionFolderPath,
+  resolveSelectionType,
+  selectionMembershipTypeSlug as selectionMembershipTypeSlugFromPath,
+} from "@/utils/selection_paths.js";
+
+export { selectionFolderSlugFromPath } from "@/utils/selection_paths.js";
 
 /**
  * @param {object} args
@@ -24,23 +30,33 @@ export function findGemSelectionMemberships({
     if (!folder_path) continue;
     const entries = normalizeSelectionGemPaths(folder.selection_entries);
     if (!entries.includes(normalized_gem_path)) continue;
-    by_path.set(folder_path, folder);
+    by_path.set(folder_path, enrichSelectionFolderRow(folder));
   }
 
   const box_path = String(gem?.box_selection_path || "").trim();
   if (box_path && !by_path.has(box_path)) {
     const from_list = folders.find((row) => row?.$path === box_path);
     if (from_list) {
-      by_path.set(box_path, from_list);
+      by_path.set(box_path, enrichSelectionFolderRow(from_list));
     } else {
       by_path.set(box_path, {
         $path: box_path,
-        selection_type: "boîte",
+        selection_type: resolveSelectionType({ $path: box_path }) || "boîte",
       });
     }
   }
 
   return [...by_path.values()].sort(compareSelectionMembershipRows);
+}
+
+/**
+ * @param {object} folder
+ * @returns {object}
+ */
+function enrichSelectionFolderRow(folder) {
+  const selection_type = resolveSelectionType(folder);
+  if (!selection_type || folder.selection_type === selection_type) return folder;
+  return { ...folder, selection_type };
 }
 
 /**
@@ -80,16 +96,13 @@ function parseSortableDate(raw) {
  * @returns {string}
  */
 export function selectionMembershipTypeSlug(folder) {
-  return selectionSlugFromType(folder?.selection_type);
+  return selectionMembershipTypeSlugFromPath(folder);
 }
 
 /**
  * @param {string} folder_path
- * @returns {string}
+ * @returns {boolean}
  */
-export function selectionFolderSlugFromPath(folder_path) {
-  const cleaned = String(folder_path || "").trim();
-  if (!cleaned) return "";
-  const parts = cleaned.split("/");
-  return parts[parts.length - 1] || "";
+export function isBoxSelectionPath(folder_path) {
+  return parseSelectionFolderPath(folder_path).type_slug === "box";
 }

@@ -370,6 +370,12 @@ export default {
   sg_selection_entries_reloading: "Reloading gems…",
   sg_selection_entries_sort_hint:
     "Gems are ordered by stone type (alphabetical), then by weight (lightest to heaviest) within each type. Order cannot be changed.",
+  sg_selection_gem_index_heal_notice:
+    "Notice: {count} gem(s) are missing shortcut membership info on the gem record. Fix now so gem pages stay in sync without scanning every selection.",
+  sg_selection_gem_index_heal_action: "Fix by adding shortcut info to the gems",
+  sg_selection_gem_index_heal_busy: "Fixing…",
+  sg_selection_gem_index_heal_done: "Updated shortcut info on {count} gem(s).",
+  sg_selection_gem_index_heal_failed: "Could not update gem shortcut info.",
   sg_selection_add_gems: "Add gems",
   sg_selection_add_gems_to_selection_button: "Add gems to this selection",
   sg_selection_add_gems_loading_background:

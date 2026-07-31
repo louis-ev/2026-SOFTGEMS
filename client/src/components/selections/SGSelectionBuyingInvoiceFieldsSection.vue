@@ -47,7 +47,9 @@ import {
   formatPartnershipPurchasedPercentageDisplay,
 } from "@/utils/selection_buying_invoice.js";
 
-const BUYING_INVOICE_TYPE = "buying invoice";
+import { parseSelectionFolderPath } from "@/utils/selection_paths.js";
+
+const BUYING_INVOICE_TYPE_SLUG = "buying-invoice";
 
 export default {
   name: "SGSelectionBuyingInvoiceFieldsSection",
@@ -84,7 +86,13 @@ export default {
   },
   computed: {
     is_buying_invoice() {
-      return String(this.selection?.selection_type || "") === BUYING_INVOICE_TYPE;
+      const from_path =
+        parseSelectionFolderPath(this.selection_folder_path).type_slug ===
+        BUYING_INVOICE_TYPE_SLUG;
+      if (from_path) return true;
+      return (
+        String(this.selection?.selection_type || "") === "buying invoice"
+      );
     },
     partnership_purchase_checked() {
       return Boolean(this.selection?.partnership_purchase);

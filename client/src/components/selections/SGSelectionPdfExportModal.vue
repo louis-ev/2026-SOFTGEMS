@@ -122,7 +122,7 @@ import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
-import { parseSelectionFolderParam } from "@/utils/selection_urls.js";
+import { selectionFolderSlugFromPath, resolveSelectionType } from "@/utils/selection_paths.js";
 
 export default {
   name: "SGSelectionPdfExportModal",
@@ -183,8 +183,7 @@ export default {
       );
     },
     folder_slug() {
-      const parsed = parseSelectionFolderParam(this.selection_path);
-      return parsed.folder_slug || "";
+      return selectionFolderSlugFromPath(this.selection_folder_path);
     },
     export_column_keys() {
       const pricing_key = String(this.selected_pricing_key || "").trim();
@@ -207,7 +206,7 @@ export default {
     show_main_document_option() {
       return (
         this.can_edit &&
-        selectionTypeHasMainDocument(this.selection?.selection_type)
+        selectionTypeHasMainDocument(resolveSelectionType(this.selection))
       );
     },
     has_main_document() {
@@ -249,7 +248,7 @@ export default {
   methods: {
     defaultPricingKeyValue() {
       const default_key = selectionPdfExportPricingKey(
-        this.selection?.selection_type
+        resolveSelectionType(this.selection)
       );
       return default_key ? String(default_key) : "";
     },

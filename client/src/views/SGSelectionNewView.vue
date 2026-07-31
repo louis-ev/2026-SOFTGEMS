@@ -56,6 +56,7 @@ import {
   selectionListPath,
 } from "@/utils/selection_urls.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import { selectionTypeRootPath } from "@/utils/selection_paths.js";
 import { todayDateInputValue } from "@/utils/date_input.js";
 
 export default {
@@ -71,7 +72,6 @@ export default {
   },
   data() {
     return {
-      selections_root_path: "selections",
       new_internal_name: "",
       name_touched: false,
       is_creating: false,
@@ -80,6 +80,9 @@ export default {
   computed: {
     new_selection_type() {
       return selectionTypeFromSlug(this.type_slug);
+    },
+    type_root_path() {
+      return selectionTypeRootPath(this.type_slug);
     },
     active_type_label() {
       if (!this.new_selection_type) return "";
@@ -123,13 +126,12 @@ export default {
       this.is_creating = true;
       try {
         const new_slug = await this.$api.createFolder({
-          path: this.selections_root_path,
+          path: this.type_root_path,
           additional_meta: {
             $status: "public",
             $admins: "everyone",
             $contributors: "everyone",
             internal_name: this.trimmed_name,
-            selection_type: this.new_selection_type,
             selection_date: todayDateInputValue(),
             selection_entries: [],
           },
@@ -138,8 +140,6 @@ export default {
           const path = selectionDetailPath({
             type_slug: this.type_slug,
             folder_slug: new_slug,
-            internal_name: this.trimmed_name,
-            selection_type: this.new_selection_type,
           });
           this.$router.push(path);
         } else {

@@ -8,6 +8,7 @@
 
 <script>
 import SGIconSidebarNav from "@/components/softgems/SGIconSidebarNav.vue";
+import { isSelectionAppPath } from "@/utils/selection_urls.js";
 
 export default {
   name: "SoftgemsSidebar",
@@ -23,7 +24,7 @@ export default {
           to: "/selections",
           title: "Selections",
           icon: "card-list",
-          match_type: "starts_with",
+          match_type: "selections",
         },
         {
           to: "/address-book",
@@ -47,6 +48,9 @@ export default {
   },
   methods: {
     isNavItemActive(nav_item) {
+      if (nav_item.match_type === "selections") {
+        return isSelectionAppPath(this.$route.path);
+      }
       if (nav_item.match_type === "exact")
         return this.$route.path === nav_item.to;
       return this.$route.path.startsWith(nav_item.to);

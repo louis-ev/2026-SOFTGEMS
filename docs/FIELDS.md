@@ -172,7 +172,7 @@ This section documents **how pricing works in the SoftGems client** (single sour
 - Field labels, virtual `pricing_total_key`: [`client/src/components/gems/gem_field_configs.js`](../client/src/components/gems/gem_field_configs.js)
 - Gems list table ([`client/src/components/gems/SGGemsTable.vue`](../client/src/components/gems/SGGemsTable.vue)): one column per pricing line (Cost, Import, PV, PVD, PC, PF) — **total** on the first line, derived **per carat + `/ct`** on the second; virtual `price_per_carat_*` keys are not separate columns ([`gem_virtual_per_carat_column_keys`](../client/src/mixins/GemPricing.js)).
 - Column customizer ([`client/src/components/gems/SGGemColumnsModal.vue`](../client/src/components/gems/SGGemColumnsModal.vue)): same column keys as the table; legacy per-carat and `length_mm` / `width_mm` / `height_mm` selections are normalized via [`gems_table_metadata.js`](../client/src/utils/gems_table_metadata.js).
-- **Not shown in the gems table (V1):** `box_selection_path` (box membership is edited via selection flows and the open gem view; see [`docs/SELECTIONS.md`](SELECTIONS.md)). Removed from V1: `price_per_carat_all`.
+- **Not shown in the gems table (V1):** `box_selection_path` (box membership is edited via selection flows and the open gem view; path format `box/{n}` — see [`docs/SELECTIONS.md`](SELECTIONS.md)). Removed from V1: `price_per_carat_all`.
 - Persisted gem fields: [`settings_base.json`](../settings_base.json) → `schema.$folders.gems.fields`
 
 ## Selection-Driven Entry Flows
@@ -300,7 +300,7 @@ Multiplicity rule: only one.
 | `pdf`              | link                     |                          |
 | `link_to_purchase` | link                     |                          |
 
-On the **selection folder** (`selection_type` = `buying invoice`), optional header fields (see [SGSelectionBuyingInvoiceFieldsSection.vue](../client/src/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue)):
+On the **buying invoice** selection folder (`buying-invoice/{n}`), optional header fields (see [SGSelectionBuyingInvoiceFieldsSection.vue](../client/src/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue)):
 
 | Field                             | Fill Method | Notes                                              |
 | --------------------------------- | ----------- | -------------------------------------------------- |

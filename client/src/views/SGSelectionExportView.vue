@@ -55,6 +55,11 @@ import {
   normalizeSelectionGemPaths,
   sortSelectionGems,
 } from "@/utils/selection_entries.js";
+import {
+  resolveSelectionType,
+  selectionDocumentNumber,
+  selectionFolderPath,
+} from "@/utils/selection_paths.js";
 
 export default {
   name: "SGSelectionExportView",
@@ -63,6 +68,10 @@ export default {
     SGSelectionPdfDocument,
   },
   props: {
+    type_slug: {
+      type: String,
+      required: true,
+    },
     folder_slug: {
       type: String,
       required: true,
@@ -70,7 +79,6 @@ export default {
   },
   data() {
     return {
-      selections_root_path: "selections",
       gems_root_path: "gems",
       is_loading: true,
       fetch_error: "",
@@ -85,8 +93,10 @@ export default {
   },
   computed: {
     selection_folder_path() {
-      const slug = this.cleanString(this.folder_slug);
-      return slug ? `${this.selections_root_path}/${slug}` : "";
+      return selectionFolderPath(this.type_slug, this.folder_slug);
+    },
+    resolved_selection_type() {
+      return resolveSelectionType(this.selection);
     },
     export_query() {
       return decodeSelectionPdfExportQuery(this.$route);
@@ -95,23 +105,25 @@ export default {
       const keys = this.export_query.metadata_keys;
       if (keys.length > 0) return keys;
       if (!this.selection) return [];
-      return selectionPdfExportColumnKeys(this.selection.selection_type);
+      return selectionPdfExportColumnKeys(this.resolved_selection_type);
     },
     pricing_total_key() {
       if (!this.selection) return "";
       return (
         resolveSelectionPdfPricingKey(
-          this.selection.selection_type,
+          this.resolved_selection_type,
           this.metadata_keys
         ) || ""
       );
     },
     document_title_prefix() {
       if (!this.selection) return "";
-      const defaults = selectionPdfExportDefaults(this.selection.selection_type);
+      const defaults = selectionPdfExportDefaults(this.resolved_selection_type);
       return this.$t(defaults.document_title_key, { number: "" }).trim();
     },
     document_number() {
+      const from_path = selectionDocumentNumber(this.selection);
+      if (from_path) return from_path;
       return this.cleanString(this.selection?.document_number_name) || "—";
     },
     date_line() {
@@ -141,7 +153,7 @@ export default {
     },
     legal_text() {
       if (!this.selection) return "";
-      const defaults = selectionPdfExportDefaults(this.selection.selection_type);
+      const defaults = selectionPdfExportDefaults(this.resolved_selection_type);
       return this.$t(defaults.legal_text_key);
     },
   },

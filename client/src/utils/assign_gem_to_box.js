@@ -7,15 +7,18 @@ import {
   applyGemMetaWhenAddedToSelection,
   restoreGemStatusWhenRemovedFromSelection,
 } from "@/utils/gem_selection_status.js";
-
-const _BOX_TYPE = "boîte";
+import { isBoxSelectionPath } from "@/utils/gem_selection_memberships.js";
+import { resolveSelectionType } from "@/utils/selection_paths.js";
 
 /**
  * @param {*} raw
  * @returns {boolean}
  */
 function isBoxSelection(folder_meta) {
-  return folder_meta && String(folder_meta.selection_type || "") === _BOX_TYPE;
+  if (!folder_meta) return false;
+  const path = String(folder_meta.$path || "").trim();
+  if (path && isBoxSelectionPath(path)) return true;
+  return String(folder_meta.selection_type || "") === "boîte";
 }
 
 /**
@@ -42,7 +45,7 @@ function membershipPathsWithAddedAt(gem, selection_path) {
  * @param {object} args
  * @param {object} args.api – Vue api plugin (`getFolder`, `updateMeta`)
  * @param {string} args.gem_path – e.g. `gems/12`
- * @param {string} args.new_box_folder_path – e.g. `selections/4` or `""` to clear
+ * @param {string} args.new_box_folder_path – e.g. `box/4` or `""` to clear
  */
 export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
   const gem = await api.getFolder({ path: gem_path });
@@ -122,7 +125,7 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
 /**
  * @param {object} args
  * @param {object} args.api
- * @param {string} args.selection_path – folder path `selections/n`
+ * @param {string} args.selection_path – folder path `box/n`
  * @param {object} args.selection_folder – cached folder meta
  * @param {string} args.gem_path
  */
@@ -140,7 +143,7 @@ export async function removeGemFromSelection({
     api,
     gem_path,
     selection_path,
-    selection_type: selection_folder?.selection_type,
+    selection_type: resolveSelectionType(selection_folder),
     selection_folders: [selection_folder],
   });
 
@@ -179,7 +182,7 @@ export async function addGemToSelectionEntries({
     api,
     gem_path,
     selection_path,
-    selection_type: selection_folder?.selection_type,
+    selection_type: resolveSelectionType(selection_folder),
   });
 
   await api.updateMeta({

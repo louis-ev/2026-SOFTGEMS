@@ -1,5 +1,6 @@
 import { extract_field_entries } from "@/utils/field_history.js";
 import { findGemSelectionMemberships } from "@/utils/gem_selection_memberships.js";
+import { fetchAllSelectionFolders, resolveSelectionType } from "@/utils/selection_paths.js";
 import { normalizeMembershipPathsMap } from "@/utils/gem_selection_membership_paths.js";
 import {
   GEM_STATUS_REFERENCE,
@@ -66,7 +67,9 @@ export function resolveGemStatusFromMemberships(
     .map((folder) => {
       const folder_path = String(folder?.$path || "").trim();
       if (!folder_path) return null;
-      const status = gemStatusSlugForSelectionType(folder.selection_type);
+      const status = gemStatusSlugForSelectionType(
+        resolveSelectionType(folder)
+      );
       if (!status) return null;
       const added_at =
         paths_map[folder_path] ||
@@ -193,8 +196,7 @@ export async function restoreGemStatusWhenRemovedFromSelection({
   let folders = Array.isArray(selection_folders) ? selection_folders : [];
   if (!folders.length) {
     try {
-      const rows = await api.getFolders({ path: "selections" });
-      folders = Array.isArray(rows) ? rows : [];
+      folders = await fetchAllSelectionFolders(api);
     } catch {
       folders = [];
     }

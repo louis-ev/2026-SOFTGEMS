@@ -21,8 +21,8 @@
           <b-icon :icon="type_def.icon" class="_cardIcon" />
         </span>
         <span class="_cardLabel">{{ typeLabel(type_def.value) }}</span>
-        <span v-if="countForType(type_def.value) > 0" class="_cardCount">
-          {{ countForType(type_def.value) }}
+        <span v-if="countForType(type_def.slug) > 0" class="_cardCount">
+          {{ countForType(type_def.slug) }}
         </span>
       </button>
     </div>
@@ -31,6 +31,10 @@
 
 <script>
 import { allSelectionTypes } from "@/utils/selection_type_registry.js";
+import {
+  fetchAllSelectionFolders,
+  selectionTypeRootPath,
+} from "@/utils/selection_paths.js";
 import { selectionListPath } from "@/utils/selection_urls.js";
 import { selectionTypeListLabel as selectionTypeListLabelFn } from "@/utils/selection_types.js";
 
@@ -38,7 +42,6 @@ export default {
   name: "SGSelectionsHubView",
   data() {
     return {
-      selections_root_path: "selections",
       selection_folders: [],
       is_loading: false,
       fetch_error: "",
@@ -51,24 +54,34 @@ export default {
   },
   mounted() {
     this.fetchSelections();
-    this.$api.join({ room: this.selections_root_path });
+    for (const type_def of allSelectionTypes()) {
+      const room = selectionTypeRootPath(type_def.slug);
+      if (room) this.$api.join({ room });
+    }
   },
   beforeDestroy() {
-    this.$api.leave({ room: this.selections_root_path });
+    for (const type_def of allSelectionTypes()) {
+      const room = selectionTypeRootPath(type_def.slug);
+      if (room) this.$api.leave({ room });
+    }
   },
   methods: {
     typeLabel(value) {
       return selectionTypeListLabelFn(this.$t.bind(this), value);
     },
-    countForType(selection_type) {
+    countForType(type_slug) {
       if (!Array.isArray(this.selection_folders)) return 0;
-      return this.selection_folders.filter(
-        (row) => String(row?.selection_type || "") === selection_type
-      ).length;
+      const slug = String(type_slug || "").trim();
+      return this.selection_folders.filter((row) => {
+        const parts = String(row?.$path || "")
+          .split("/")
+          .filter(Boolean);
+        return parts.length >= 2 && parts[0] === slug;
+      }).length;
     },
     cardAriaLabel(type_def) {
       const label = this.typeLabel(type_def.value);
-      const count = this.countForType(type_def.value);
+      const count = this.countForType(type_def.slug);
       if (count > 0) {
         return `${label} (${count})`;
       }
@@ -81,10 +94,7 @@ export default {
       this.is_loading = true;
       this.fetch_error = "";
       try {
-        const fetched = await this.$api.getFolders({
-          path: this.selections_root_path,
-        });
-        this.selection_folders = Array.isArray(fetched) ? fetched : [];
+        this.selection_folders = await fetchAllSelectionFolders(this.$api);
       } catch ({ code }) {
         this.fetch_error = code || this.$t("sg_could_not_load_selections");
         this.selection_folders = [];

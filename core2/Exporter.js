@@ -1120,12 +1120,44 @@ class Exporter {
   }
 
   _createURLFromPath(path_to_folder) {
+    const slash_path = path_to_folder.replace(/\\/g, "/");
+    const segments = slash_path.split("/").filter(Boolean);
+    const base_url = utils.getPublicUrl({ fallback_to_home_url: true });
+
+    // Storage is top-level `{type_slug}/{n}` (like gems); client URL keeps `/selections/`.
+    if (
+      segments.length === 2 &&
+      isValidSelectionTypeSlugForExport(segments[0]) &&
+      /^\d+$/.test(segments[1])
+    ) {
+      return `${base_url}/selections/${segments[0]}/${segments[1]}`;
+    }
+
     const path_without_space = path_to_folder
       .replace("spaces" + path.sep, "+")
       .replace("projects" + path.sep, "");
-    const base_url = utils.getPublicUrl({ fallback_to_home_url: true });
     return base_url + "/" + path_without_space;
   }
+}
+
+function isValidSelectionTypeSlugForExport(slug) {
+  const value = String(slug || "").trim();
+  if (!value) return false;
+  const known = new Set([
+    "simple",
+    "box",
+    "memo-in",
+    "return-memo-in",
+    "buying-invoice",
+    "memo-out",
+    "return-memo-out",
+    "sale-invoice",
+    "partner-invoice",
+    "credit-note",
+    "importation",
+    "importation-return",
+  ]);
+  return known.has(value);
 }
 
 module.exports = Exporter;

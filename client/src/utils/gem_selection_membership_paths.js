@@ -1,5 +1,5 @@
 /**
- * Denormalized add dates on the gem: `selection_membership_paths[selections/n] → ISO`.
+ * Denormalized add dates on the gem: `selection_membership_paths[memo-in/n] → ISO`.
  * Which selections contain the gem is defined only by each selection’s `selection_entries`
  * (and `box_selection_path` for boxes).
  */

@@ -1,6 +1,7 @@
 const cors = require("cors"),
   url = require("url"),
-  path = require("path");
+  path = require("path"),
+  fs = require("fs-extra");
 
 const folder = require("./folder"),
   file = require("./file"),
@@ -1476,9 +1477,23 @@ module.exports = (function () {
 
     const slash_path = utils.convertToSlashPath(path_to_folder);
     const segments = slash_path.split("/").filter(Boolean);
+    const known_selection_types = new Set([
+      "simple",
+      "box",
+      "memo-in",
+      "return-memo-in",
+      "buying-invoice",
+      "memo-out",
+      "return-memo-out",
+      "sale-invoice",
+      "partner-invoice",
+      "credit-note",
+      "importation",
+      "importation-return",
+    ]);
     if (
       segments.length !== 2 ||
-      segments[0] !== "selections" ||
+      !known_selection_types.has(segments[0]) ||
       !/^\d+$/.test(segments[1])
     ) {
       throw new Error("selection_pdf_export_invalid_folder");

@@ -26,7 +26,7 @@
                     {{ page_title }}
                   </h1>
                   <span class="_selectionType">{{
-                    formatSelectionType(selection.selection_type)
+                    formatSelectionType(resolved_selection_type)
                   }}</span>
                 </div>
                 <SGFolderModificationsHistory
@@ -184,14 +184,16 @@ import { selectionTypeHasMainDocument } from "@/utils/selection_documents.js";
 import SGOverlaySidePanelLayout from "@/components/softgems/SGOverlaySidePanelLayout.vue";
 import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
-import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
+import {
+  resolveSelectionType,
+  selectionFolderPath,
+} from "@/utils/selection_paths.js";
 import { selectionPdfExportEnabled } from "@/utils/selection_pdf_export_registry.js";
 import {
-  parseSelectionFolderParam,
+  parseSelectionUrlSegment,
   selectionDetailPath,
   selectionListPath,
-  selectionTitleSlugMatches,
 } from "@/utils/selection_urls.js";
 export default {
   name: "SGSelectionOpenView",
@@ -223,7 +225,6 @@ export default {
   },
   data() {
     return {
-      selections_root_path: "selections",
       is_loading: false,
       fetch_error: "",
       joined_selection_folder_path: "",
@@ -248,12 +249,15 @@ export default {
       return !!this.connected_as;
     },
     folder_slug() {
-      const parsed = parseSelectionFolderParam(this.selection_path);
+      const parsed = parseSelectionUrlSegment(this.selection_path);
       return parsed.folder_slug || "";
     },
     selection_folder_path() {
-      if (!this.folder_slug) return "";
-      return `${this.selections_root_path}/${this.folder_slug}`;
+      if (!this.folder_slug || !this.type_slug) return "";
+      return selectionFolderPath(this.type_slug, this.folder_slug);
+    },
+    resolved_selection_type() {
+      return resolveSelectionType(this.selection);
     },
     page_title() {
       if (!this.selection) return this.$t("sg_open_selection_title");
@@ -267,12 +271,12 @@ export default {
         : "";
     },
     show_main_document() {
-      return selectionTypeHasMainDocument(this.selection?.selection_type);
+      return selectionTypeHasMainDocument(this.resolved_selection_type);
     },
     show_pdf_export() {
       return (
         this.connected_as &&
-        selectionPdfExportEnabled(this.selection?.selection_type)
+        selectionPdfExportEnabled(this.resolved_selection_type)
       );
     },
     edit_modal_title() {
@@ -303,7 +307,6 @@ export default {
         if (!v) return;
         this.edited_internal_name =
           typeof v.internal_name === "string" ? v.internal_name : "";
-        this.replaceDetailUrlIfStale();
       },
       immediate: true,
     },
@@ -378,16 +381,9 @@ export default {
     },
     replaceDetailUrlIfStale() {
       if (!this.selection || !this.folder_slug) return;
-      const name = this.cleanString(this.selection.internal_name);
-      const parsed = parseSelectionFolderParam(this.selection_path);
-      if (selectionTitleSlugMatches(name, parsed.title_slug)) return;
-      const resolved_type_slug =
-        this.type_slug || selectionSlugFromType(this.selection.selection_type);
       const next_path = selectionDetailPath({
-        type_slug: resolved_type_slug,
+        type_slug: this.type_slug,
         folder_slug: this.folder_slug,
-        internal_name: name,
-        selection_type: this.selection.selection_type,
       });
       if (this.$route.path !== next_path) this.$router.replace(next_path);
     },

@@ -1,7 +1,10 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import { isValidSelectionTypeSlug } from "@/utils/selection_type_registry.js";
-import { isLegacySelectionFolderParam } from "@/utils/selection_urls.js";
+import {
+  isSelectionAppPath,
+  redirectShortSelectionPath,
+  validateSelectionTypeRoute,
+} from "@/utils/selection_urls.js";
 
 Vue.use(VueRouter);
 
@@ -56,30 +59,6 @@ const routes = [
     ],
   },
   {
-    path: "/selections/:folder_slug(\\d+)",
-    name: "Selection PDF export",
-    meta: {
-      static: true,
-    },
-    component: () => import("@/views/SGSelectionExportView.vue"),
-    props: (route) => ({
-      folder_slug: route.params.folder_slug,
-    }),
-    beforeEnter(to, _from, next) {
-      const has_export_query =
-        to.query.cols != null || to.query.superadmintoken != null;
-      if (has_export_query) {
-        next();
-        return;
-      }
-      next({
-        name: "Selection legacy redirect",
-        params: { selection_path: to.params.folder_slug },
-        replace: true,
-      });
-    },
-  },
-  {
     path: "/selections",
     component: () => import("@/layouts/SGSelectionsLayout.vue"),
     children: [
@@ -89,29 +68,8 @@ const routes = [
         component: () => import("@/views/SGSelectionsHubView.vue"),
       },
       {
-        path: "legacy/:selection_path",
-        name: "Selection legacy redirect",
-        component: () => import("@/views/SGSelectionLegacyRedirectView.vue"),
-        props: true,
-      },
-      {
         path: ":type_slug",
-        beforeEnter(to, _from, next) {
-          const type_slug = String(to.params.type_slug || "").trim();
-          if (isValidSelectionTypeSlug(type_slug)) {
-            next();
-            return;
-          }
-          if (isLegacySelectionFolderParam(type_slug)) {
-            next({
-              name: "Selection legacy redirect",
-              params: { selection_path: type_slug },
-              replace: true,
-            });
-            return;
-          }
-          next({ path: "/selections", replace: true });
-        },
+        beforeEnter: validateSelectionTypeRoute,
         component: () => import("@/views/SGSelectionsView.vue"),
         props: (route) => ({
           type_slug: route.params.type_slug,
@@ -126,7 +84,7 @@ const routes = [
             }),
           },
           {
-            path: ":selection_path",
+            path: ":selection_path(\\d+)",
             name: "Open selection",
             component: () => import("@/views/SGSelectionOpenView.vue"),
             props: (route) => ({
@@ -138,16 +96,6 @@ const routes = [
       },
     ],
   },
-  // {
-  //   path: "/+:space_slug/:project_slug/publications/:publication_slug",
-  //   alias: ["*/export.html"],
-  //   name: "Publication",
-  //   meta: {
-  //     /* do not load full UI */
-  //     static: true,
-  //   },
-  //   component: () => import("@/views/PublicationView.vue"),
-  // },
   {
     path: "/@",
     name: "Tous les auteurs",
@@ -163,17 +111,6 @@ const routes = [
     name: "UI (dev only)",
     component: () => import("@/views/UIView.vue"),
   },
-  // {
-  //   // route to display a single media with caption/credits and
-  //   // with qr scan option, and to generate preview for PDF and STL server-side
-  //   path: "/_previewmedia",
-  //   name: "Preview media",
-  //   meta: {
-  //     /* do not load full UI */
-  //     static: true,
-  //   },
-  //   component: () => import("@/views/PreviewMedia.vue"),
-  // },
   {
     path: "/reset-password",
     name: "Reset Password",
@@ -181,6 +118,14 @@ const routes = [
       auth_exempt: true,
     },
     component: () => import("@/views/ResetPasswordView.vue"),
+  },
+  {
+    path: "/:type_slug/:rest(.*)",
+    redirect: redirectShortSelectionPath,
+  },
+  {
+    path: "/:type_slug",
+    redirect: redirectShortSelectionPath,
   },
   {
     path: "/:pathMatch(.*)*",
@@ -204,8 +149,7 @@ const router = new VueRouter({
       to.path.startsWith("/address-book") &&
       from.path.startsWith("/address-book");
     const navigating_within_selections =
-      to.path.startsWith("/selections") &&
-      from.path.startsWith("/selections");
+      isSelectionAppPath(to.path) && isSelectionAppPath(from.path);
     if (
       navigating_within_gems ||
       navigating_within_address_book ||

@@ -67,9 +67,35 @@
       </div>
     </div>
 
+    <div
+      v-if="show_index_heal_notice"
+      class="_indexHealNotice"
+      role="status"
+    >
+      <p class="_indexHealText">
+        {{
+          $t("sg_selection_gem_index_heal_notice", {
+            count: gems_needing_index_heal.length,
+          })
+        }}
+      </p>
+      <button
+        type="button"
+        class="u-button u-button_small u-button_bleuvert"
+        :disabled="index_heal_busy"
+        @click="healEntryGemIndexes"
+      >
+        {{
+          index_heal_busy
+            ? $t("sg_selection_gem_index_heal_busy")
+            : $t("sg_selection_gem_index_heal_action")
+        }}
+      </button>
+    </div>
+
     <SGSelectionAddGemsPicker
       v-if="can_edit"
-      :selection_type="selection_folder?.selection_type"
+      :selection_type="resolved_selection_type"
       :disabled_row_paths="selection_gem_paths"
       :busy="picker_busy"
       @pick="pickGem"
@@ -120,6 +146,10 @@ import {
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
 import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
+import {
+  parseSelectionFolderPath,
+  resolveSelectionType,
+} from "@/utils/selection_paths.js";
 import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import {
   areSelectionGemPathsEqual,
@@ -131,6 +161,7 @@ import {
   addGemToSelectionEntries,
   removeGemFromSelection,
 } from "@/utils/assign_gem_to_box.js";
+import { healGemIndexesForSelection, gemsNeedingIndexHeal } from "@/utils/heal_gem_selection_indexes.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 
 export default {
@@ -179,11 +210,23 @@ export default {
       editing_gem: null,
       editing_field: null,
       editing_current_value: "",
+      index_heal_busy: false,
     };
   },
   computed: {
     gems() {
       return this.entry_gems_list;
+    },
+    gems_needing_index_heal() {
+      if (this.entry_gems_loading || !this.entry_gems_list.length) return [];
+      return gemsNeedingIndexHeal({
+        gems: this.entry_gems_list,
+        selection_path: this.selection_folder_path,
+        selection_folder: this.selection_folder,
+      });
+    },
+    show_index_heal_notice() {
+      return this.can_edit && this.gems_needing_index_heal.length > 0;
     },
     entries_field_editable_map() {
       const accumulator = this.metadata_keys.reduce((acc, metadata_key) => {
@@ -197,8 +240,14 @@ export default {
       });
       return accumulator;
     },
+    resolved_selection_type() {
+      return resolveSelectionType(this.selection_folder);
+    },
     is_box_type() {
-      return String(this.selection_folder?.selection_type || "") === "boîte";
+      return (
+        parseSelectionFolderPath(this.selection_folder_path).type_slug ===
+        "box"
+      );
     },
     selection_gem_paths() {
       return normalizeSelectionGemPaths(
@@ -230,8 +279,9 @@ export default {
   },
   methods: {
     getGemsMetadataKeysStorageScope() {
-      const selection_type = String(this.selection_folder?.selection_type || "");
-      const type_slug = selectionSlugFromType(selection_type);
+      const parsed = parseSelectionFolderPath(this.selection_folder_path);
+      if (parsed.type_slug) return `selection:${parsed.type_slug}`;
+      const type_slug = selectionSlugFromType(this.resolved_selection_type);
       if (!type_slug) return "selection:unknown";
       return `selection:${type_slug}`;
     },
@@ -313,6 +363,46 @@ export default {
         if (request_seq === this.refresh_entry_gems_seq) {
           this.entry_gems_loading = false;
         }
+      }
+    },
+    async healEntryGemIndexes() {
+      if (
+        this.index_heal_busy ||
+        !this.selection_folder_path ||
+        !this.gems_needing_index_heal.length
+      ) {
+        return;
+      }
+      this.index_heal_busy = true;
+      const request_seq = this.refresh_entry_gems_seq;
+      try {
+        const result = await healGemIndexesForSelection({
+          api: this.$api,
+          selection_path: this.selection_folder_path,
+          selection_folder: this.selection_folder,
+          gems: this.gems_needing_index_heal,
+        });
+        if (request_seq !== this.refresh_entry_gems_seq) return;
+        if (result.healed.length > 0) {
+          this.$alertify
+            .delay(3000)
+            .success(
+              this.$t("sg_selection_gem_index_heal_done", {
+                count: result.healed.length,
+              })
+            );
+        }
+        if (result.failed.length > 0) {
+          this.$alertify
+            .delay(4000)
+            .error(this.$t("sg_selection_gem_index_heal_failed"));
+        }
+      } catch ({ code }) {
+        this.$alertify
+          .delay(4000)
+          .error(code || this.$t("sg_selection_gem_index_heal_failed"));
+      } finally {
+        this.index_heal_busy = false;
       }
     },
     prepareEntryGemsList(list) {
@@ -496,6 +586,26 @@ export default {
   font-size: var(--sl-font-size-small);
   font-weight: 600;
   color: var(--c-gris_fonce);
+}
+
+._indexHealNotice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 0.75);
+  margin: calc(var(--spacing) * 1) 0;
+  padding: calc(var(--spacing) * 0.75) calc(var(--spacing) * 1);
+  border: 1px solid color-mix(in srgb, var(--c-bleuvert) 35%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-bleuvert) 8%, var(--c-bodybg));
+}
+
+._indexHealText {
+  margin: 0;
+  flex: 1 1 16rem;
+  font-size: var(--sl-font-size-small);
+  color: var(--c-gris_fonce);
+  line-height: 1.4;
 }
 
 ._hint {
