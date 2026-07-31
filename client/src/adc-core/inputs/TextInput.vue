@@ -8,6 +8,8 @@
           :id="label_str"
           :type="field_input_type_prop"
           :step="input_step_prop"
+          :inputmode="number_inputmode"
+          :lang="is_number_input ? 'en' : undefined"
           :name="label_str"
           :autocomplete="autocomplete"
           :size="size"
@@ -183,15 +185,24 @@ export default {
         return false;
       return true;
     },
+    is_number_input() {
+      return this.input_type === "number";
+    },
     field_input_type_prop() {
       if (this.input_type === "password")
         if (this.show_password_in_clear) return "text";
         else return "password";
+      // Avoid native <input type="number"> locale display (e.g. fr_FR → "5,62").
+      // Use text + inputmode so the value stays with a dot decimal.
+      if (this.is_number_input) return "text";
       return this.input_type;
     },
+    number_inputmode() {
+      return this.is_number_input ? "decimal" : undefined;
+    },
     input_step_prop() {
-      if (this.field_input_type_prop !== "number") return undefined;
-      return this.input_step;
+      // step only applies to native type=number; unused once we force text.
+      return undefined;
     },
     content_txt() {
       // Create a temporary div to parse HTML and get plain text
@@ -203,7 +214,7 @@ export default {
   methods: {
     onInput(event) {
       const raw_value = event?.target?.value ?? "";
-      if (this.field_input_type_prop !== "number") {
+      if (!this.is_number_input) {
         this.$emit("update:content", raw_value);
         return;
       }
@@ -215,7 +226,7 @@ export default {
       this.$emit("update:content", sanitized_value);
     },
     onKeydown(event) {
-      if (this.field_input_type_prop !== "number") return;
+      if (!this.is_number_input) return;
       if (!event) return;
 
       const key = event.key;
@@ -249,13 +260,16 @@ export default {
       sanitized_value = sanitized_value.replace(/[^\d,.\-]/g, "");
       sanitized_value = sanitized_value.replace(/(?!^)-/g, "");
 
-      const first_decimal_index = sanitized_value.search(/[.,]/);
+      // Homogeneous decimal separator: always "." (FR keyboards often send ",").
+      sanitized_value = sanitized_value.replace(/,/g, ".");
+
+      const first_decimal_index = sanitized_value.indexOf(".");
       if (first_decimal_index === -1) return sanitized_value;
 
       const before_decimal = sanitized_value.slice(0, first_decimal_index + 1);
       const after_decimal = sanitized_value
         .slice(first_decimal_index + 1)
-        .replace(/[.,]/g, "");
+        .replace(/\./g, "");
       return `${before_decimal}${after_decimal}`;
     },
     initInput() {

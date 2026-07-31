@@ -1,5 +1,8 @@
-/** BCP 47 locale for Intl date/number formatting (English-style regardless of browser UI language). */
+/** BCP 47 locale for Intl date formatting (English-style regardless of browser UI language). */
 export const format_locale = "en-US";
+
+/** Non-breaking space used as thousands grouping separator in display (`1 234.56`). */
+export const number_group_separator = "\u00a0";
 
 /**
  * @param {string} [_i18n_locale] — UI language; reserved for future mapping
@@ -21,7 +24,8 @@ export function getNumberFormatLocale(_i18n_locale) {
 
 /**
  * Parse a stored or displayed value as an English-style number.
- * Commas are thousands separators; dot is the decimal separator.
+ * Dot is the decimal separator. Spaces (incl. NBSP) and commas are
+ * treated as thousands separators and stripped.
  *
  * @param {unknown} value
  * @returns {number | null}
@@ -42,7 +46,9 @@ export function parseEnglishNumber(value) {
 }
 
 /**
- * Format a number (or numeric string) for display using English locale rules.
+ * Format a number (or numeric string) for display.
+ * Uses a non-breaking space as thousands separator and a dot as decimal
+ * (`1 234.56`) — readable in both English and French contexts.
  *
  * @param {unknown} value
  * @param {{ maximumFractionDigits?: number, minimumFractionDigits?: number }} [options]
@@ -58,5 +64,7 @@ export function formatDisplayNumber(value, options = {}) {
     locale_options.minimumFractionDigits = minimumFractionDigits;
   }
 
-  return n.toLocaleString(format_locale, locale_options);
+  return n
+    .toLocaleString(format_locale, locale_options)
+    .replace(/,/g, number_group_separator);
 }

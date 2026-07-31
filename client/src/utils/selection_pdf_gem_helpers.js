@@ -167,7 +167,8 @@ export function sumGemPricingTotals(gems, pricing_key) {
 
 /**
  * Number formatting used across the PDF: decimal dot, optional
- * non-breaking-space thousands separator (`424 476.00`) — no commas.
+ * non-breaking-space thousands separator (`424 476.00`) — no commas
+ * (same convention as UI `formatDisplayNumber`).
  * @param {number} value
  * @param {{ minimumFractionDigits?: number, maximumFractionDigits?: number, useGrouping?: boolean }} [options]
  * @returns {string}
