@@ -1,6 +1,10 @@
 <template>
   <div class="_folderMetaPeek">
-    <button type="button" class="u-buttonLink" @click="toggleMetaPeek">
+    <button
+      type="button"
+      class="_folderMetaPeekButton u-buttonLink"
+      @click="toggleMetaPeek"
+    >
       {{
         show_meta_peek ? $t("sg_hide_folder_meta") : $t("sg_show_folder_meta")
       }}
@@ -51,6 +55,10 @@ export default {
 <style lang="scss" scoped>
 ._folderMetaPeek {
   margin-top: calc(var(--spacing) * 8);
+
+  ._folderMetaPeekButton {
+    color: var(--c-gris);
+  }
 }
 
 ._folderMetaPeekPanel {
