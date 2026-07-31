@@ -17,8 +17,10 @@
           <b-icon icon="x-lg" :label="$t('close')" />
         </button>
         <div class="_baseModal--content">
-          <header v-if="title">
-            <h2>{{ title }}</h2>
+          <header v-if="title || $slots.title">
+            <slot name="title">
+              <h2>{{ title }}</h2>
+            </slot>
           </header>
           <div
             class="_content"

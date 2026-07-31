@@ -3,6 +3,8 @@ export default {
     "Sign in with an author account to edit this field.",
   sg_action_requires_account:
     "Sign in with an author account to use this action.",
+  general_password_modal_text: `A password is required to access.
+    If you do not have a password, contact us here:`,
   sg_inventory: "Inventory",
   sg_all_gems: "All gems",
   sg_gems_search_placeholder:

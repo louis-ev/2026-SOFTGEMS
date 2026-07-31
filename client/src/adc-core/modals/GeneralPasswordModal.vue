@@ -1,9 +1,9 @@
 <template>
-  <BaseModal2
-    :title="$root.app_infos.instance_meta.name || $t('home')"
-    :is_closable="false"
-    @close="$emit('close')"
-  >
+  <BaseModal2 :is_closable="false" @close="$emit('close')">
+    <template slot="title">
+      <AcfLogoMark class="_modalLogo" />
+    </template>
+
     <p class="u-spacingBottom">
       {{ $t("general_password_modal_text") }}
       <template v-if="$root.app_infos.instance_meta.contactmail">
@@ -51,9 +51,13 @@
   </BaseModal2>
 </template>
 <script>
+import AcfLogoMark from "@/components/selections/AcfLogoMark.vue";
+
 export default {
   props: {},
-  components: {},
+  components: {
+    AcfLogoMark,
+  },
   data() {
     return {
       password_to_submit: "",
@@ -92,4 +96,10 @@ export default {
   },
 };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+._modalLogo {
+  --acf-logo-fill: var(--acf-brand-primary, #1c2b3a);
+  height: 2rem;
+  width: 4.5rem;
+}
+</style>
