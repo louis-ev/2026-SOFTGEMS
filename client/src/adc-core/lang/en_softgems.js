@@ -258,6 +258,7 @@ export default {
     "{weight_label} will update from {from_weight} to {to_weight}. Per-carat amounts everywhere will use each stored total ÷ this weight.",
   sg_pricing_pair_caption: "{line}",
   sg_pricing_pair_caption_from_pv: "{line} · computed from PV (read-only pair)",
+  sg_sync_pvd_from_pv: "Also update PVD automatically (PV + 15%)",
   sg_pricing_cell_total: "Total",
   sg_pricing_cell_per_carat: "Per carat",
   sg_pricing_pair_editor_save_hint:

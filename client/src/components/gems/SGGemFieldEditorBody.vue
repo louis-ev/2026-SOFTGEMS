@@ -154,6 +154,11 @@
 
     <div v-if="!meta_target_path" class="u-spacingBottom"></div>
 
+    <label v-if="show_sync_pvd_checkbox" class="_syncPvdCheckbox">
+      <input v-model="sync_pvd_from_pv" type="checkbox" />
+      <span>{{ $t("sg_sync_pvd_from_pv") }}</span>
+    </label>
+
     <SGFieldHistoryPanel
       v-if="!active_dimensions_merged && !active_paired_gem_picker"
       :history_enabled="true"
@@ -240,6 +245,7 @@ export default {
       counterparty_footer_save_disabled: false,
       paired_gem_footer_save_disabled: false,
       gems_path: "gems",
+      sync_pvd_from_pv: true,
     };
   },
   created() {
@@ -247,6 +253,7 @@ export default {
       this.initializeDimensionsStateFromGem();
       this.server_edit_baseline = this.serializeDimensionsBaselineFromGem();
     } else if (this.active_pricing_pair) {
+      this.sync_pvd_from_pv = true;
       this.initializePricingPairStateFromGem();
       const pair = this.active_pricing_pair;
       this.server_edit_baseline = this.normalizeFieldValueWithConfig(
@@ -322,6 +329,12 @@ export default {
         return null;
       }
       return pair;
+    },
+    show_sync_pvd_checkbox() {
+      return (
+        this.active_pricing_pair &&
+        this.active_pricing_pair.total_key === "pv_selling_price"
+      );
     },
     pair_field_configs() {
       if (!this.active_pricing_pair) {
@@ -960,6 +973,12 @@ export default {
           this.pair_field_configs.total
         );
         meta_patch = { [field_key_saved]: norm };
+        if (
+          field_key_saved === "pv_selling_price" &&
+          this.sync_pvd_from_pv
+        ) {
+          meta_patch.pvd_asking_price = this.computePvdFromPv(norm);
+        }
       } else if (this.active_paired_gem_picker && !targets_file_meta) {
         field_key_saved = "paired_gem";
         meta_patch = {
@@ -1014,6 +1033,17 @@ export default {
             : {};
         if (targets_file_meta && Object.keys(saved_changes).length === 0) {
           saved_changes = meta_patch;
+        }
+        // Ensure synced PVD is present for local gem merge + flash even if
+        // the API omits an unchanged-looking sibling key.
+        if (
+          meta_patch.pvd_asking_price !== undefined &&
+          saved_changes.pvd_asking_price === undefined
+        ) {
+          saved_changes = {
+            ...saved_changes,
+            pvd_asking_price: meta_patch.pvd_asking_price,
+          };
         }
 
         const value_from_response = saved_changes[field_key_saved];
@@ -1337,5 +1367,20 @@ export default {
   font-size: var(--sl-font-size-x-small);
   font-weight: 600;
   color: color-mix(in srgb, var(--c-gris_fonce) 92%, transparent);
+}
+
+._syncPvdCheckbox {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) / 4);
+  margin: 0 0 calc(var(--spacing) / 2);
+  font-size: var(--sl-font-size-x-small);
+  color: var(--c-gris_fonce);
+  cursor: pointer;
+
+  input {
+    margin-top: 0.15em;
+    flex-shrink: 0;
+  }
 }
 </style>

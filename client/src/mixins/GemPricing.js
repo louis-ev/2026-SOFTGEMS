@@ -3,6 +3,16 @@ import { parseEnglishNumber } from "@/utils/format_locale.js";
 /** Stored meta key for base acquisition cost (UI label: “Cost”; legacy name PCb). */
 export const gem_cost_total_field_key = "base_price_pcb";
 
+/** Markup factor applied when syncing PVD from PV (PV + 15%). */
+export const PVD_FROM_PV_FACTOR = 1.15;
+
+/** Derive persisted PVD total from PV (`PV × 1.15`, 2 decimals). */
+export function computePvdFromPv(pv) {
+  const n = Number(pv);
+  if (!Number.isFinite(n)) return 0;
+  return Number((n * PVD_FROM_PV_FACTOR).toFixed(2));
+}
+
 /** Persisted totals only; virtual_per_carat_key is UI / table display, not stored. */
 const price_field_pairs = [
   {
@@ -18,6 +28,10 @@ const price_field_pairs = [
     virtual_per_carat_key: "price_per_carat_pv",
   },
   {
+    total_key: "pvd_asking_price",
+    virtual_per_carat_key: "price_per_carat_pvd",
+  },
+  {
     total_key: "pc_to",
     virtual_per_carat_key: "price_per_carat_pc",
   },
@@ -27,17 +41,18 @@ const price_field_pairs = [
   },
 ];
 
-export const gem_virtual_per_carat_column_keys = price_field_pairs
-  .map((p) => p.virtual_per_carat_key)
-  .concat(["price_per_carat_pvd"]);
+export const gem_virtual_per_carat_column_keys = price_field_pairs.map(
+  (p) => p.virtual_per_carat_key
+);
 
-/** One table column per line: total + derived /ct (includes read-only PVD). */
-export const gem_pricing_total_column_keys = price_field_pairs
-  .map((p) => p.total_key)
-  .concat(["pvd_asking_price"]);
+/** One table column per line: total + derived /ct. */
+export const gem_pricing_total_column_keys = price_field_pairs.map(
+  (p) => p.total_key
+);
 
 export default {
   methods: {
+    computePvdFromPv,
     getPriceFieldPairs() {
       return price_field_pairs;
     },

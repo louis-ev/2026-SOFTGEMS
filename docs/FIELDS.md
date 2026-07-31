@@ -158,13 +158,16 @@ This section documents **how pricing works in the SoftGems client** (single sour
 | Cost (PCb) | `base_price_pcb`                          | `price_per_carat_pcb`                                                             |
 | Import | `import_price`                              | `price_per_carat_import`                                                          |
 | PV   | `pv_selling_price`                            | `price_per_carat_pv`                                                              |
+| PVD  | `pvd_asking_price`                            | `price_per_carat_pvd`                                                             |
 | PC   | `pc_to`                                       | `price_per_carat_pc`                                                              |
 | PF   | `pf_invoiced_price`                           | `price_per_carat_pf`                                                              |
 
 ### PVD (asking price)
 
-- **PVD** and **PVD/Ct** in the open gem view are **read-only**: they are **derived from PV** (e.g. `PV × 1.15`) for display.
-- **`price_per_carat_pvd`**: same derivation, expressed per carat (display-only).
+- **PVD** is a full editable pricing pair (Total + /ct), persisted as `pvd_asking_price`.
+- When editing **PV**, a checkbox (checked by default) offers to also update PVD to **`PV × 1.15`**. Uncheck to save PV only.
+- PVD can always be edited independently; editing PVD never changes PV.
+- Helper: `computePvdFromPv` in [`GemPricing.js`](../client/src/mixins/GemPricing.js).
 
 ### Implementation pointers
 

@@ -346,22 +346,38 @@
           </div>
           <div class="_pricingPair">
             <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption_from_pv", { line: "PVD" }) }}
+              {{ $t("sg_pricing_pair_caption", { line: "PVD" }) }}
             </p>
             <div class="_pricingPairGrid">
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_pvd_asking_price')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_total')"
-                :value="pvd_asking_price_computed"
-                :readonly="true"
+                :pill_text="$t('sg_pricing_cell_total')"
+                :value="gem.pvd_asking_price"
+                :is_flashing="isFieldFlashing('pvd_asking_price')"
+                :modal_open="editing_field === field_configs.pvd_asking_price"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.pvd_asking_price)
+                "
+                :gem_edit="gemEditorProps(field_configs.pvd_asking_price)"
+                @presentClick="openEditModal(field_configs.pvd_asking_price)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
-              <SGGemFieldCard
+              <SGEditableMetaField
                 :label="$t('sg_price_per_carat_pvd')"
                 icon="diagram2"
-                :link_role="$t('sg_pricing_cell_per_carat')"
-                :value="pvd_per_carat_computed"
-                :readonly="true"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_pvd')"
+                :is_flashing="isFieldFlashing('price_per_carat_pvd')"
+                :modal_open="editing_field === field_configs.price_per_carat_pvd"
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_pvd)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_pvd)"
+                @presentClick="openEditModal(field_configs.price_per_carat_pvd)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
               />
             </div>
           </div>
@@ -483,7 +499,6 @@ export default {
     SGFolderModificationsHistory,
     SGSectionPanel,
     SGGemSelectionsSection,
-    SGGemFieldCard: () => import("@/components/gems/SGGemFieldCard.vue"),
     SGGemCertificatesSection: () =>
       import("@/components/gems/SGGemCertificatesSection.vue"),
     SGGemMediaSection: () => import("@/components/gems/SGGemMediaSection.vue"),
@@ -520,17 +535,6 @@ export default {
     gem_title() {
       if (!this.gem) return this.$t("sg_open_gem_title");
       return this.$t("sg_gem_title", { id: this.gem_id });
-    },
-    pvd_asking_price_computed() {
-      const pv = Number(this.gem?.pv_selling_price);
-      if (!Number.isFinite(pv)) return 0;
-      return Number((pv * 1.15).toFixed(2));
-    },
-    pvd_per_carat_computed() {
-      return this.computePerCarat({
-        total_value: this.toNumberOrDefault(this.pvd_asking_price_computed),
-        weight_ct: this.toNumberOrDefault(this.gem?.weight_ct),
-      });
     },
     field_configs() {
       return buildGemFieldConfigs(this.$t.bind(this));

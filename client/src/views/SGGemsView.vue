@@ -109,6 +109,7 @@ import SGGemsInventoryTableSection from "@/components/gems/SGGemsInventoryTableS
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { applyPairedGemPartnerUpdates } from "@/utils/gem_pairing.js";
 import GemPricing, {
+  computePvdFromPv,
   gem_virtual_per_carat_column_keys,
 } from "@/mixins/GemPricing";
 import GemDimensions, {
@@ -246,7 +247,7 @@ export default {
           const pv_selling_price = Number(
             (Math.random() * 2400 + 300).toFixed(2)
           );
-          const pvd_asking_price = Number((pv_selling_price * 1.15).toFixed(2));
+          const pvd_asking_price = computePvdFromPv(pv_selling_price);
 
           await this.$api.createFolder({
             path: this.gems_path,

@@ -24,15 +24,8 @@
               :str="gem_field_configs[field_key].label"
               :icon="gem_field_configs[field_key].icon"
             />
-            <input
-              v-if="field_key === 'pvd_asking_price'"
-              :value="pvd_asking_price_preview"
-              type="number"
-              class="u-input"
-              readonly
-            />
             <SGSelectField
-              v-else-if="gem_field_configs[field_key].type === 'select'"
+              v-if="gem_field_configs[field_key].type === 'select'"
               :value="new_gem_fields[field_key]"
               :options="gem_field_configs[field_key].options || []"
               :allow_empty="true"
@@ -179,11 +172,6 @@ export default {
           ],
         },
       ];
-    },
-    pvd_asking_price_preview() {
-      const pv_selling_price = Number(this.new_gem_fields.pv_selling_price);
-      if (!Number.isFinite(pv_selling_price)) return 0;
-      return Number((pv_selling_price * 1.15).toFixed(2));
     },
     flat_form_field_keys() {
       return this.form_sections.flatMap(
@@ -373,7 +361,7 @@ export default {
       if (!field_config) return { is_valid: true, error_message: "" };
       if (this.isFieldDisabled(field_key))
         return { is_valid: true, error_message: "" };
-      if (field_key === "pvd_asking_price" || field_config.readonly)
+      if (field_config.readonly)
         return { is_valid: true, error_message: "" };
       if (field_config.type !== "number")
         return { is_valid: true, error_message: "" };
