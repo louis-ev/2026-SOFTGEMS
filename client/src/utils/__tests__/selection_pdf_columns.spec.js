@@ -4,12 +4,14 @@ import {
   decodeSelectionPdfExportQuery,
   encodeSelectionPdfExportQuery,
   resolveSelectionPdfExportPrefs,
+  resolveSelectionPdfShowPaymentLine,
   resolveSelectionPdfShowVat,
   selectionPdfColumnHeaderLabel,
   selectionPdfTableColPercents,
   selection_pdf_max_column_units,
 } from "@/utils/selection_pdf_columns.js";
 import {
+  defaultSelectionPdfShowPaymentLine,
   defaultSelectionPdfShowVat,
   selectionPdfExportColumnKeys,
   selectionPdfExportEnabled,
@@ -38,6 +40,19 @@ describe("defaultSelectionPdfShowVat", () => {
     expect(resolveSelectionPdfShowVat(null, "sale invoice")).toBe(true);
     expect(resolveSelectionPdfShowVat(true, "memo out")).toBe(true);
     expect(resolveSelectionPdfShowVat(false, "sale invoice")).toBe(false);
+  });
+});
+
+describe("defaultSelectionPdfShowPaymentLine", () => {
+  it("is on only for sale invoice and partner invoice", () => {
+    expect(defaultSelectionPdfShowPaymentLine("sale invoice")).toBe(true);
+    expect(defaultSelectionPdfShowPaymentLine("partner invoice")).toBe(true);
+    expect(defaultSelectionPdfShowPaymentLine("memo out")).toBe(false);
+    expect(defaultSelectionPdfShowPaymentLine("buying invoice")).toBe(false);
+    expect(defaultSelectionPdfShowPaymentLine("credit note")).toBe(false);
+    expect(resolveSelectionPdfShowPaymentLine(null, "sale invoice")).toBe(true);
+    expect(resolveSelectionPdfShowPaymentLine(null, "memo out")).toBe(false);
+    expect(resolveSelectionPdfShowPaymentLine(true, "memo out")).toBe(true);
   });
 });
 
@@ -211,6 +226,34 @@ describe("selection pdf fixed columns", () => {
     expect(
       decodeSelectionPdfExportQuery({ query: { cols: "id" } }).vat_percent
     ).toBe(20);
+  });
+
+  it("encodes and decodes show_payment_line in export query", () => {
+    const enabled = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      show_payment_line: true,
+    });
+    expect(enabled).toContain("show_payment_line=1");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(enabled)),
+      }).show_payment_line
+    ).toBe(true);
+
+    const disabled = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      show_payment_line: false,
+    });
+    expect(disabled).toContain("show_payment_line=0");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(disabled)),
+      }).show_payment_line
+    ).toBe(false);
+
+    expect(
+      decodeSelectionPdfExportQuery({ query: { cols: "id" } }).show_payment_line
+    ).toBeNull();
   });
 
   it("decodes bank_footer_en from export query", () => {

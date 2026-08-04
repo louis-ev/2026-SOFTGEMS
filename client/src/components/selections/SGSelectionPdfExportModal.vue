@@ -1,6 +1,6 @@
 <template>
   <BaseModal2
-    :title="$t('sg_pdf_export_modal_title')"
+    :title="modal_title"
     :size="modal_size"
     @close="onClose"
   >
@@ -76,6 +76,14 @@
         </label>
       </div>
 
+      <div v-if="has_pricing_selected" class="_pricingSection">
+        <ToggleInput
+          :label="$t('sg_pdf_export_show_payment_line')"
+          :content="selected_show_payment_line"
+          @update:content="selected_show_payment_line = $event"
+        />
+      </div>
+
       <SGSelectionPdfBankFootersEditor
         v-if="has_pricing_selected"
         :presets="bank_footer_presets_draft"
@@ -142,6 +150,7 @@ import Medias from "@/mixins/Medias.js";
 import Authors from "@/mixins/Authors.js";
 import {
   buildSelectionPdfColumnKeys,
+  defaultSelectionPdfShowPaymentLine,
   defaultSelectionPdfShowVat,
   normalizeSelectionPdfVatPercent,
   selection_pdf_default_vat_percent,
@@ -164,6 +173,7 @@ import {
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
 import { selectionFolderSlugFromPath, resolveSelectionType } from "@/utils/selection_paths.js";
+import { selectionTypeLabel } from "@/utils/selection_types.js";
 import {
   SELECTION_PDF_DEFAULT_LANG,
   normalizeSelectionPdfLang,
@@ -219,9 +229,20 @@ export default {
       selected_export_lang: SELECTION_PDF_DEFAULT_LANG,
       selected_show_vat: false,
       selected_vat_percent: selection_pdf_default_vat_percent,
+      selected_show_payment_line: true,
     };
   },
   computed: {
+    modal_title() {
+      const type_label = selectionTypeLabel(
+        this.$t.bind(this),
+        resolveSelectionType(this.selection)
+      );
+      if (!type_label || type_label === "—") {
+        return this.$t("sg_pdf_export_modal_title_fallback");
+      }
+      return this.$t("sg_pdf_export_modal_title", { type: type_label });
+    },
     language_select_options() {
       return [
         {
@@ -316,10 +337,16 @@ export default {
     defaultShowVatValue() {
       return defaultSelectionPdfShowVat(resolveSelectionType(this.selection));
     },
+    defaultShowPaymentLineValue() {
+      return defaultSelectionPdfShowPaymentLine(
+        resolveSelectionType(this.selection)
+      );
+    },
     resetExportOptions() {
       this.selected_pricing_key = this.defaultPricingKeyValue();
       this.selected_show_vat = this.defaultShowVatValue();
       this.selected_vat_percent = selection_pdf_default_vat_percent;
+      this.selected_show_payment_line = this.defaultShowPaymentLineValue();
     },
     onVatPercentChange() {
       this.selected_vat_percent = normalizeSelectionPdfVatPercent(
@@ -448,6 +475,9 @@ export default {
           vat_percent: normalizeSelectionPdfVatPercent(
             this.selected_vat_percent
           ),
+          show_payment_line:
+            this.has_pricing_selected &&
+            this.selected_show_payment_line === true,
         },
         additional_meta: {
           is_selection_generated_pdf: true,

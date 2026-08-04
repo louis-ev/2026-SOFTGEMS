@@ -1523,11 +1523,18 @@ module.exports = (function () {
     let vat_percent = Number(opts.vat_percent);
     if (!Number.isFinite(vat_percent)) vat_percent = 20;
     vat_percent = Math.min(100, Math.max(0, vat_percent));
+    // Default on when omitted (legacy / accidental omit).
+    const show_payment_line =
+      opts.show_payment_line !== false &&
+      opts.show_payment_line !== 0 &&
+      opts.show_payment_line !== "0" &&
+      opts.show_payment_line !== "false";
     const export_query = {
       cols: metadata_keys.join(","),
       lang: export_lang,
       show_vat: show_vat ? "1" : "0",
       vat_percent: String(vat_percent),
+      show_payment_line: show_payment_line ? "1" : "0",
     };
     if (bank_footer_id && /^[a-zA-Z0-9_-]+$/.test(bank_footer_id)) {
       export_query.bank_footer_id = bank_footer_id;

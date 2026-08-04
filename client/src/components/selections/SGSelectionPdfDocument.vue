@@ -175,7 +175,7 @@
       </tbody>
     </table>
 
-    <p v-if="has_pricing && payment_line" class="_paymentLine">
+    <p v-if="has_pricing && show_payment_line && payment_line" class="_paymentLine">
       {{ payment_line }}
     </p>
 
@@ -306,6 +306,10 @@ export default {
     vat_percent: {
       type: Number,
       default: selection_pdf_default_vat_percent,
+    },
+    show_payment_line: {
+      type: Boolean,
+      default: true,
     },
   },
   data() {

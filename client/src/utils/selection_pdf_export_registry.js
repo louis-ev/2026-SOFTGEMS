@@ -48,6 +48,17 @@ export function defaultSelectionPdfShowVat(selection_type) {
   return String(selection_type || "").trim() !== "memo out";
 }
 
+/**
+ * Whether the “Please kindly transfer…” payment line is shown by default.
+ * On only for sale invoice and partner invoice; off for all other types.
+ * @param {string|null|undefined} selection_type
+ * @returns {boolean}
+ */
+export function defaultSelectionPdfShowPaymentLine(selection_type) {
+  const type = String(selection_type || "").trim();
+  return type === "sale invoice" || type === "partner invoice";
+}
+
 /** Total price fields offered in the PDF export pricing select. */
 export const SELECTION_PDF_PRICING_OPTION_KEYS = Object.freeze([
   ...gem_pricing_total_column_keys,

@@ -438,14 +438,17 @@ export default {
   sg_hide_folder_meta: "Hide meta",
   sg_folder_meta_peek_title: "Folder meta",
   sg_pdf_export_button: "Export PDF",
-  sg_pdf_export_modal_title: "Export selection to PDF",
+  sg_pdf_export_modal_title: "Export {type} to PDF",
+  sg_pdf_export_modal_title_fallback: "Export selection to PDF",
   sg_pdf_export_language: "PDF language",
   sg_pdf_export_language_en: "English",
   sg_pdf_export_language_fr: "Français",
   sg_pdf_export_modal_instructions:
-    "The PDF layout is fixed for this selection type. Review the columns below, then generate.",
+    "The PDF layout is fixed for this selection type. Review the options below, then generate.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_show_vat: "Show VAT and total including VAT",
+  sg_pdf_export_show_payment_line:
+    "Show “Please kindly transfer…” payment line",
   sg_pdf_export_no_pricing: "No price column",
   sg_pdf_export_set_as_main_document: "Set as main document",
   sg_pdf_export_main_document_set:
@@ -457,7 +460,8 @@ export default {
   sg_pdf_export_bank_footer_hint:
     "Shown under the table in the exported PDF when a price line is selected. The first footer is selected by default; choose “No footer” to omit it.",
   sg_pdf_export_bank_footer_none: "No footer",
-  sg_pdf_export_bank_footer_none_hint: "Do not include a bank / payment footer in this PDF.",
+  sg_pdf_export_bank_footer_none_hint:
+    "Do not include a bank / payment footer in this PDF.",
   sg_pdf_export_bank_footer_internal_name_placeholder: "Internal name",
   sg_pdf_export_bank_footer_untitled: "Untitled footer",
   sg_pdf_export_bank_footer_placeholder:

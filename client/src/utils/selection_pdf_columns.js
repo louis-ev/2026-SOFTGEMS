@@ -1,4 +1,5 @@
 import {
+  defaultSelectionPdfShowPaymentLine,
   defaultSelectionPdfShowVat,
   isSelectionPdfPricingTotalKey,
   normalizeSelectionPdfVatPercent,
@@ -174,7 +175,20 @@ export function encodeSelectionPdfExportQueryForType(selection_type) {
 }
 
 /**
- * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string, show_vat?: boolean, vat_percent?: number }} options
+ * @param {unknown} raw
+ * @returns {boolean|null}
+ */
+function decodeQueryBooleanFlag(raw) {
+  const value = String(raw ?? "")
+    .trim()
+    .toLowerCase();
+  if (value === "1" || value === "true") return true;
+  if (value === "0" || value === "false") return false;
+  return null;
+}
+
+/**
+ * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string, show_vat?: boolean, vat_percent?: number, show_payment_line?: boolean }} options
  * @returns {string}
  */
 export function encodeSelectionPdfExportQuery(options) {
@@ -194,12 +208,16 @@ export function encodeSelectionPdfExportQuery(options) {
     "vat_percent",
     String(normalizeSelectionPdfVatPercent(options?.vat_percent))
   );
+  params.set(
+    "show_payment_line",
+    options?.show_payment_line === false ? "0" : "1"
+  );
   return params.toString();
 }
 
 /**
  * @param {import('vue-router').Route} route
- * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr", show_vat: boolean|null, vat_percent: number }}
+ * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr", show_vat: boolean|null, vat_percent: number, show_payment_line: boolean|null }}
  */
 export function decodeSelectionPdfExportQuery(route) {
   const raw_cols = String(route?.query?.cols || "").trim();
@@ -212,11 +230,11 @@ export function decodeSelectionPdfExportQuery(route) {
   const bank_footer_id = String(route?.query?.bank_footer_id || "").trim();
   const bank_footer_en = String(route?.query?.bank_footer_en || "");
   const lang = normalizeSelectionPdfLang(route?.query?.lang);
-  const show_vat_raw = String(route?.query?.show_vat ?? "").trim().toLowerCase();
-  let show_vat = null;
-  if (show_vat_raw === "1" || show_vat_raw === "true") show_vat = true;
-  else if (show_vat_raw === "0" || show_vat_raw === "false") show_vat = false;
+  const show_vat = decodeQueryBooleanFlag(route?.query?.show_vat);
   const vat_percent = normalizeSelectionPdfVatPercent(route?.query?.vat_percent);
+  const show_payment_line = decodeQueryBooleanFlag(
+    route?.query?.show_payment_line
+  );
   return {
     metadata_keys,
     bank_footer_id,
@@ -224,6 +242,7 @@ export function decodeSelectionPdfExportQuery(route) {
     lang,
     show_vat,
     vat_percent,
+    show_payment_line,
   };
 }
 
@@ -236,6 +255,20 @@ export function decodeSelectionPdfExportQuery(route) {
 export function resolveSelectionPdfShowVat(show_vat, selection_type) {
   if (typeof show_vat === "boolean") return show_vat;
   return defaultSelectionPdfShowVat(selection_type);
+}
+
+/**
+ * Resolve whether to show the payment transfer line.
+ * @param {boolean|null|undefined} show_payment_line
+ * @param {string|null|undefined} selection_type
+ * @returns {boolean}
+ */
+export function resolveSelectionPdfShowPaymentLine(
+  show_payment_line,
+  selection_type
+) {
+  if (typeof show_payment_line === "boolean") return show_payment_line;
+  return defaultSelectionPdfShowPaymentLine(selection_type);
 }
 
 /**

@@ -24,6 +24,7 @@
       :export_lang="export_lang"
       :show_vat="show_vat"
       :vat_percent="vat_percent"
+      :show_payment_line="show_payment_line"
     />
   </div>
 </template>
@@ -40,6 +41,7 @@ import {
 import {
   decodeSelectionPdfExportQuery,
   resolveSelectionPdfPricingKey,
+  resolveSelectionPdfShowPaymentLine,
   resolveSelectionPdfShowVat,
 } from "@/utils/selection_pdf_columns.js";
 import {
@@ -110,6 +112,12 @@ export default {
     },
     vat_percent() {
       return this.export_query.vat_percent;
+    },
+    show_payment_line() {
+      return resolveSelectionPdfShowPaymentLine(
+        this.export_query.show_payment_line,
+        this.resolved_selection_type
+      );
     },
     selection_folder_path() {
       return selectionFolderPath(this.type_slug, this.folder_slug);
