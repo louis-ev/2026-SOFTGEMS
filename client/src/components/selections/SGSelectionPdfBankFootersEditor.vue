@@ -18,6 +18,31 @@
       :aria-label="$t('sg_pdf_export_bank_footer_title')"
     >
       <article
+        class="_card"
+        :class="{ _card_selected: is_none_selected }"
+      >
+        <label class="_radioCol">
+          <input
+            type="radio"
+            name="bank_footer_preset"
+            :value="none_id"
+            :checked="is_none_selected"
+            @change="selectPreset(none_id)"
+          />
+        </label>
+        <div class="_cardContent">
+          <button
+            type="button"
+            class="_internalNameLabel _internalNameLabel_button"
+            @click="selectPreset(none_id)"
+          >
+            {{ $t("sg_pdf_export_bank_footer_none") }}
+          </button>
+          <p class="_noneHint">{{ $t("sg_pdf_export_bank_footer_none_hint") }}</p>
+        </div>
+      </article>
+
+      <article
         v-for="(preset, index) in local_presets"
         :key="preset.id"
         class="_card"
@@ -63,9 +88,15 @@
           </template>
 
           <template v-else>
-            <span class="_internalNameLabel">{{
-              preset.internal_name || $t("sg_pdf_export_bank_footer_untitled")
-            }}</span>
+            <button
+              type="button"
+              class="_internalNameLabel _internalNameLabel_button"
+              @click="selectPreset(preset.id)"
+            >
+              {{
+                preset.internal_name || $t("sg_pdf_export_bank_footer_untitled")
+              }}
+            </button>
             <pre class="_bodyPre">{{ preset.body || "—" }}</pre>
             <div v-if="can_edit" class="_cardActions">
               <button
@@ -120,7 +151,11 @@
 </template>
 
 <script>
-import { createEmptySelectionPdfBankFooterPreset } from "@/utils/selection_pdf_instance_settings.js";
+import {
+  SELECTION_PDF_BANK_FOOTER_NONE_ID,
+  createEmptySelectionPdfBankFooterPreset,
+  isSelectionPdfBankFooterNoneId,
+} from "@/utils/selection_pdf_instance_settings.js";
 
 export default {
   name: "SGSelectionPdfBankFootersEditor",
@@ -140,6 +175,7 @@ export default {
   },
   data() {
     return {
+      none_id: SELECTION_PDF_BANK_FOOTER_NONE_ID,
       local_presets: [],
       editing_preset_id: null,
       edit_draft: {
@@ -147,6 +183,11 @@ export default {
         body: "",
       },
     };
+  },
+  computed: {
+    is_none_selected() {
+      return isSelectionPdfBankFooterNoneId(this.selected_id);
+    },
   },
   watch: {
     presets: {
@@ -264,6 +305,12 @@ export default {
   // font-style: italic;
 }
 
+._noneHint {
+  margin: calc(var(--spacing) / 4) 0 0;
+  color: var(--c-gris_fonce);
+  font-size: var(--sl-font-size-x-small);
+}
+
 ._list {
   display: flex;
   flex-direction: column;
@@ -316,6 +363,22 @@ export default {
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1.3;
+}
+
+._internalNameLabel_button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 ._internalNameInput {

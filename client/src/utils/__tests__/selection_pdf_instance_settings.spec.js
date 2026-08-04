@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   SELECTION_PDF_BANK_FOOTER_EN,
+  SELECTION_PDF_BANK_FOOTER_NONE_ID,
   coerceSelectionPdfBankFooterSelection,
   createEmptySelectionPdfBankFooterPreset,
   defaultSelectionPdfBankFooterId,
@@ -34,7 +35,7 @@ describe("selection pdf instance settings", () => {
     ).toEqual([{ id: "bf_a", internal_name: "A", body: "Line 1" }]);
   });
 
-  it("resolves body by id with fallback to first preset", () => {
+  it("resolves body by id and supports no footer", () => {
     const presets = [
       { id: "bf_a", internal_name: "A", body: "First" },
       { id: "bf_b", internal_name: "B", body: "Second" },
@@ -43,8 +44,14 @@ describe("selection pdf instance settings", () => {
       "Second"
     );
     expect(resolveSelectionPdfBankFooterBody(presets, { id: "missing" })).toBe(
-      "First"
+      ""
     );
+    expect(resolveSelectionPdfBankFooterBody(presets, { id: "" })).toBe("");
+    expect(
+      resolveSelectionPdfBankFooterBody(presets, {
+        id: SELECTION_PDF_BANK_FOOTER_NONE_ID,
+      })
+    ).toBe("");
     expect(defaultSelectionPdfBankFooterId(presets)).toBe("bf_a");
   });
 
@@ -57,6 +64,12 @@ describe("selection pdf instance settings", () => {
     expect(coerceSelectionPdfBankFooterSelection(presets, "missing")).toBe(
       "bf_a"
     );
+    expect(
+      coerceSelectionPdfBankFooterSelection(
+        presets,
+        SELECTION_PDF_BANK_FOOTER_NONE_ID
+      )
+    ).toBe(SELECTION_PDF_BANK_FOOTER_NONE_ID);
   });
 
   it("creates empty presets with ids", () => {

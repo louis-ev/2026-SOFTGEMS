@@ -1586,12 +1586,11 @@ module.exports = (function () {
     if (!presets.length) return "";
 
     const requested_id = String(bank_footer_id || "").trim();
-    if (requested_id) {
-      const match = presets.find((preset) => preset.id === requested_id);
-      if (match) return match.body;
-    }
+    // Empty / __none__ = explicitly no footer (do not fall back to first).
+    if (!requested_id || requested_id === "__none__") return "";
 
-    return presets[0]?.body || "";
+    const match = presets.find((preset) => preset.id === requested_id);
+    return match?.body || "";
   }
 
   async function _export(req, res, next) {

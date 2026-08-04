@@ -1,6 +1,9 @@
 /** Instance meta key for English PDF bank / payment footer presets. */
 export const SELECTION_PDF_BANK_FOOTER_EN = "selection_pdf_bank_footer_en";
 
+/** Sentinel selected_id meaning no bank footer in the exported PDF. */
+export const SELECTION_PDF_BANK_FOOTER_NONE_ID = "__none__";
+
 /**
  * @typedef {{ id: string, internal_name: string, body: string }} SelectionPdfBankFooterPreset
  */
@@ -58,6 +61,15 @@ export function defaultSelectionPdfBankFooterId(presets) {
 }
 
 /**
+ * @param {string|null|undefined} raw_id
+ * @returns {boolean}
+ */
+export function isSelectionPdfBankFooterNoneId(raw_id) {
+  const id = String(raw_id || "").trim();
+  return !id || id === SELECTION_PDF_BANK_FOOTER_NONE_ID;
+}
+
+/**
  * @param {SelectionPdfBankFooterPreset[]} presets
  * @param {{ id?: string }} [options]
  * @returns {string}
@@ -67,12 +79,10 @@ export function resolveSelectionPdfBankFooterBody(presets, options = {}) {
   if (list.length === 0) return "";
 
   const requested_id = String(options.id || "").trim();
-  if (requested_id) {
-    const match = list.find((preset) => preset.id === requested_id);
-    if (match) return match.body;
-  }
+  if (isSelectionPdfBankFooterNoneId(requested_id)) return "";
 
-  return list[0]?.body || "";
+  const match = list.find((preset) => preset.id === requested_id);
+  return match?.body || "";
 }
 
 /**
@@ -83,6 +93,9 @@ export function resolveSelectionPdfBankFooterBody(presets, options = {}) {
 export function coerceSelectionPdfBankFooterSelection(presets, selected_id) {
   const list = Array.isArray(presets) ? presets : [];
   const id = String(selected_id || "").trim();
+  if (id === SELECTION_PDF_BANK_FOOTER_NONE_ID) {
+    return SELECTION_PDF_BANK_FOOTER_NONE_ID;
+  }
   if (id && list.some((preset) => preset.id === id)) return id;
   return defaultSelectionPdfBankFooterId(list);
 }

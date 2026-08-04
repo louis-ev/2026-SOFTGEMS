@@ -128,7 +128,9 @@ import SGSelectionPdfBankFootersEditor from "@/components/selections/SGSelection
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
 import {
   SELECTION_PDF_BANK_FOOTER_EN,
+  SELECTION_PDF_BANK_FOOTER_NONE_ID,
   coerceSelectionPdfBankFooterSelection,
+  isSelectionPdfBankFooterNoneId,
   readSelectionPdfBankFootersEn,
 } from "@/utils/selection_pdf_instance_settings.js";
 import {
@@ -393,9 +395,11 @@ export default {
         suggested_file_name: this.buildSuggestedFilename(),
         selection_pdf_export: {
           metadata_keys: this.export_column_keys,
-          bank_footer_id: this.has_pricing_selected
-            ? this.selected_bank_footer_id
-            : "",
+          bank_footer_id:
+            this.has_pricing_selected &&
+            !isSelectionPdfBankFooterNoneId(this.selected_bank_footer_id)
+              ? this.selected_bank_footer_id
+              : SELECTION_PDF_BANK_FOOTER_NONE_ID,
           lang: normalizeSelectionPdfLang(this.selected_export_lang),
         },
         additional_meta: {
