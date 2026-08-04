@@ -141,17 +141,15 @@
           </td>
         </tr>
         <tr v-if="has_pricing" class="_totalRow">
-          <td :class="columnClass('__no__')">
+          <td :colspan="total_label_colspan" class="_alignLeft">
             <span class="_totalLabel">{{ pdfT("total") }}</span>
           </td>
           <td
-            v-for="metadata_key in metadata_keys"
+            v-for="metadata_key in total_row_trailing_keys"
             :key="`total-${metadata_key}`"
             :class="columnClass(metadata_key)"
           >
-            <span v-if="metadata_key === description_column_key" />
-            <span v-else-if="metadata_key === photo_column_key" />
-            <span v-else-if="metadata_key === 'id'" />
+            <span v-if="metadata_key === photo_column_key" />
             <span v-else class="_cellText">{{
               formatTotalCell(metadata_key)
             }}</span>
@@ -322,6 +320,14 @@ export default {
   computed: {
     table_col_widths() {
       return selectionPdfTableColPercents(this.metadata_keys);
+    },
+    total_label_colspan() {
+      const keys = Array.isArray(this.metadata_keys) ? this.metadata_keys : [];
+      return 1 + Math.min(2, keys.length);
+    },
+    total_row_trailing_keys() {
+      const keys = Array.isArray(this.metadata_keys) ? this.metadata_keys : [];
+      return keys.slice(Math.min(2, keys.length));
     },
     counterparty_address_lines() {
       const block = this.counterparty_block;
