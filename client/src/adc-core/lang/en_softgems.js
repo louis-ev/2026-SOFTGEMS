@@ -485,27 +485,4 @@ export default {
   sg_pdf_generated_section: "Generated PDFs",
   sg_pdf_generated_empty: "No PDFs generated for this selection yet.",
   sg_pdf_generated_on: "Generated on {date}",
-  sg_pdf_col_no: "No",
-  sg_pdf_total: "TOTAL",
-  sg_pdf_vat: "VAT",
-  sg_pdf_grand_total: "Total",
-  sg_pdf_order_number: "N° Commande :",
-  sg_pdf_supplier_account_number: "N° Compte Fournisseur:",
-  sg_pdf_bank_intro: "On our bank account in US dollars:",
-  sg_pdf_payment_line:
-    "Please kindly transfer {amount_words} dollars ({amount}$US)",
-  sg_pdf_title_generic: "Document N°{number}",
-  sg_pdf_title_box: "Boîte N°{number}",
-  sg_pdf_title_memo_out: "Consignation N°{number}",
-  sg_pdf_title_return_memo_out: "Retour consignation N°{number}",
-  sg_pdf_title_return_memo_in: "Retour memo in N°{number}",
-  sg_pdf_title_buying_invoice: "Invoice N°{number}",
-  sg_pdf_title_sale_invoice: "Invoice N°{number}",
-  sg_pdf_title_partner_invoice: "Invoice N°{number}",
-  sg_pdf_title_credit_note: "Credit note N°{number}",
-  sg_pdf_title_importation_return: "Retour importation N° {number}",
-  sg_pdf_legal_memo_out:
-    "Il est expressément convenu que les marchandises sont remises à titre de dépôt (consignation) et ne font pas l’objet d’une vente. En aucun cas le dépositaire ne pourra se dessaisir de la possession ou du contrôle des marchandises, notamment au profit d’un tiers, et il devra à tout moment être en mesure de les présenter et de les restituer à première demande. Les marchandises sont remises et confiées au dépositaire aux fins soit de leur présentation à la clientèle, soit de l’exécution de travaux ou d’opérations de transformation les concernant. Le dépôt ne prendra fin qu’au moment de la restitution effective des marchandises. Le défaut de restitution des marchandises constituera le délit pénal d’abus de confiance. Le dépositaire s’engage à assurer lesdites marchandises, pour le compte du déposant, contre tous risques de perte ou de dommage, pour leur valeur totale et toutes taxes comprises. La réception des marchandises emporte acceptation irrévocable des présentes stipulations et conditions.",
-  sg_pdf_legal_generic:
-    "Le présent document est établi à titre informatif et contractuel entre les parties. Les marchandises listées demeurent la propriété du déposant jusqu’à règlement intégral et accord écrit des parties. Toute contestation relative à l’authenticité, à la conformité ou à la valeur des pierres devra être formulée par écrit dans les délais convenus entre les parties.",
 };

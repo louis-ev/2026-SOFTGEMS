@@ -15,6 +15,7 @@
       :date_line="date_line"
       :counterparty_block="counterparty_block"
       :legal_text="legal_text"
+      :always_show_legal="always_show_legal"
       :pricing_total_key="pricing_total_key"
       :order_number_line="order_number_line"
       :supplier_account_line="supplier_account_line"
@@ -171,6 +172,9 @@ export default {
       if (!this.selection) return "";
       const defaults = selectionPdfExportDefaults(this.resolved_selection_type);
       return selectionPdfT(this.export_lang, defaults.legal_text_key);
+    },
+    always_show_legal() {
+      return this.resolved_selection_type === "memo out";
     },
   },
   async mounted() {

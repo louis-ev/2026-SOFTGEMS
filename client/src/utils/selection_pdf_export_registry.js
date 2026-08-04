@@ -132,7 +132,7 @@ const _defaults_by_slug = Object.freeze({
   },
   "return-memo-out": {
     document_title_key: "title_return_memo_out",
-    legal_text_key: "legal_memo_out",
+    legal_text_key: "legal_generic",
     default_pricing_key: "pc_to",
     column_keys: buildSelectionPdfColumnKeys("pc_to"),
   },

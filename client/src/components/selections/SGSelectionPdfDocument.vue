@@ -184,7 +184,7 @@
     </p>
     <div v-if="bank_footer_en" class="_bankBlock">{{ bank_footer_en }}</div>
 
-    <p v-if="legal_text && !has_pricing" class="_legal">{{ legal_text }}</p>
+    <p v-if="show_legal_text" class="_legal">{{ legal_text }}</p>
 
     <footer class="_footer">
       <p v-for="(line, index) in footer_lines" :key="index">{{ line }}</p>
@@ -271,6 +271,10 @@ export default {
       type: String,
       default: "",
     },
+    always_show_legal: {
+      type: Boolean,
+      default: false,
+    },
     pricing_total_key: {
       type: String,
       default: "",
@@ -354,6 +358,11 @@ export default {
     },
     has_pricing() {
       return Boolean(this.pricing_total_key);
+    },
+    show_legal_text() {
+      if (!this.legal_text) return false;
+      if (this.always_show_legal) return true;
+      return !this.has_pricing;
     },
     pricing_sum() {
       return sumGemPricingTotals(this.gems, this.pricing_total_key);
