@@ -1,5 +1,5 @@
-import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
 import {
+  isSelectionPdfPricingTotalKey,
   selection_pdf_virtual_column_keys,
   selectionPdfExportColumnKeys,
   selectionPdfExportPricingKey,
@@ -48,7 +48,7 @@ export const selection_pdf_invoice_col_percents = Object.freeze({
  * @returns {string}
  */
 export function selectionPdfColumnPercentSlotKey(metadata_key) {
-  if (gem_pricing_total_column_keys.includes(metadata_key)) {
+  if (isSelectionPdfPricingTotalKey(metadata_key)) {
     return selection_pdf_pricing_total_column_slot;
   }
   return metadata_key;
@@ -70,7 +70,7 @@ export function selectionPdfBaseColumnPercent(metadata_key) {
 export function selectionPdfColumnTextAlign(metadata_key) {
   if (metadata_key === "__no__") return "center";
   if (metadata_key === selection_pdf_photo_column_key) return "center";
-  if (gem_pricing_total_column_keys.includes(metadata_key)) return "right";
+  if (isSelectionPdfPricingTotalKey(metadata_key)) return "right";
   if (metadata_key === "id") return "left";
   if (metadata_key === "number_of_pieces") return "left";
   if (metadata_key === "weight_ct") return "left";
@@ -214,7 +214,7 @@ export function decodeSelectionPdfExportQuery(route) {
  */
 export function activeSelectionPdfPricingKey(metadata_keys) {
   const keys = Array.isArray(metadata_keys) ? metadata_keys : [];
-  const match = keys.find((key) => gem_pricing_total_column_keys.includes(key));
+  const match = keys.find((key) => isSelectionPdfPricingTotalKey(key));
   return match || null;
 }
 
@@ -260,7 +260,7 @@ export function selectionPdfColumnHeaderLabel(
   if (metadata_key === selection_pdf_per_carat_column_key) {
     return selectionPdfT(resolved_lang, "col_price_per_ct");
   }
-  if (gem_pricing_total_column_keys.includes(metadata_key)) {
+  if (isSelectionPdfPricingTotalKey(metadata_key)) {
     return selectionPdfT(resolved_lang, "col_total");
   }
   return metadata_key;

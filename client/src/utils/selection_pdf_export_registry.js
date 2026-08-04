@@ -1,4 +1,7 @@
-import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
+import {
+  gem_cost_total_field_key,
+  gem_pricing_total_column_keys,
+} from "@/mixins/GemPricing.js";
 import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import { SELECTION_TYPE_VALUES } from "@/utils/selection_types.js";
 import { selectionPdfFooterLines } from "@/utils/selection_pdf_strings.js";
@@ -22,12 +25,18 @@ export const SELECTION_PDF_PRICING_OPTION_KEYS = Object.freeze([
 export const selection_pdf_pricing_label_keys = Object.freeze({
   base_price_pcb: "sg_base_price_pcb",
   import_price: "sg_import_price",
-  purchased_price_pa: "sg_purchased_price_pa",
   pv_selling_price: "sg_pv_selling_price",
   pvd_asking_price: "sg_pvd_asking_price",
   pc_to: "sg_pc_to",
   pf_invoiced_price: "sg_pf_invoiced_price",
 });
+
+/** @param {string|null|undefined} metadata_key */
+export function isSelectionPdfPricingTotalKey(metadata_key) {
+  return SELECTION_PDF_PRICING_OPTION_KEYS.includes(
+    String(metadata_key || "").trim()
+  );
+}
 
 /** Stored `selection_type` values that support PDF export. */
 export const SELECTION_PDF_EXPORT_ENABLED_TYPES = SELECTION_TYPE_VALUES;
@@ -74,14 +83,14 @@ const _defaults_by_slug = Object.freeze({
   "return-memo-in": {
     document_title_key: "title_return_memo_in",
     legal_text_key: "legal_generic",
-    default_pricing_key: "purchased_price_pa",
-    column_keys: buildSelectionPdfColumnKeys("purchased_price_pa"),
+    default_pricing_key: gem_cost_total_field_key,
+    column_keys: buildSelectionPdfColumnKeys(gem_cost_total_field_key),
   },
   "buying-invoice": {
     document_title_key: "title_buying_invoice",
     legal_text_key: "legal_generic",
-    default_pricing_key: "purchased_price_pa",
-    column_keys: buildSelectionPdfColumnKeys("purchased_price_pa"),
+    default_pricing_key: gem_cost_total_field_key,
+    column_keys: buildSelectionPdfColumnKeys(gem_cost_total_field_key),
   },
   "memo-out": {
     document_title_key: "title_memo_out",
@@ -122,8 +131,8 @@ const _defaults_by_slug = Object.freeze({
   "importation-return": {
     document_title_key: "title_importation_return",
     legal_text_key: "legal_generic",
-    default_pricing_key: "purchased_price_pa",
-    column_keys: buildSelectionPdfColumnKeys("purchased_price_pa"),
+    default_pricing_key: gem_cost_total_field_key,
+    column_keys: buildSelectionPdfColumnKeys(gem_cost_total_field_key),
   },
 });
 

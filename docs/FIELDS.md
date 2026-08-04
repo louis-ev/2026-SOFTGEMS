@@ -138,7 +138,7 @@ Multiplicity rule: can be multiple reports for one stone.
 
 `base_price_pcb` is the persisted meta key for **Cost** (legacy internal name PCb). The UI and exports use the label **Cost**; do not rename the meta key without a data migration.
 
-**PA (`purchased_price_pa`)** was removed from the V1 gem UI (open gem pricing section, inventory table, column customizer). The field remains in `settings_base.json` and on existing gem meta for backward compatibility.
+**PA (`purchased_price_pa`)** was removed from the V1 gem UI (open gem pricing section, inventory table, column customizer) and from selection PDF export price-line options. Buying invoice, return memo in, and importation return PDF defaults use **Cost** (`base_price_pcb`) instead. The field remains in `settings_base.json` and on existing gem meta for backward compatibility.
 
 This section documents **how pricing works in the SoftGems client** (single source of truth per line = **total price** stored in gem meta; **per-carat** values are not persisted for these pairs).
 

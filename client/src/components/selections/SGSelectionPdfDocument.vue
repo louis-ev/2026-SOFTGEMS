@@ -25,16 +25,16 @@
       </div>
 
       <div
-        v-if="order_number_line || supplier_account_line"
+        v-if="show_order_number_line || show_supplier_account_line"
         class="_referenceLines"
       >
-        <p v-if="order_number_line" class="_orderLine">
+        <p v-if="show_order_number_line" class="_orderLine">
           <span class="_refLabel">{{ pdfT("order_number") }}</span>
-          {{ order_number_line }}
+          {{ order_number_display }}
         </p>
-        <p v-if="supplier_account_line" class="_supplierLine">
+        <p v-if="show_supplier_account_line" class="_supplierLine">
           <span class="_refLabel">{{ pdfT("supplier_account_number") }}</span>
-          {{ supplier_account_line }}
+          {{ supplier_account_display }}
         </p>
       </div>
     </header>
@@ -277,7 +277,7 @@ export default {
     },
     supplier_account_line: {
       type: String,
-      default: "—",
+      default: "",
     },
     bank_footer_en: {
       type: String,
@@ -321,6 +321,18 @@ export default {
     },
     resolved_export_lang() {
       return normalizeSelectionPdfLang(this.export_lang);
+    },
+    order_number_display() {
+      return this.cleanReferenceLine(this.order_number_line);
+    },
+    supplier_account_display() {
+      return this.cleanReferenceLine(this.supplier_account_line);
+    },
+    show_order_number_line() {
+      return Boolean(this.order_number_display);
+    },
+    show_supplier_account_line() {
+      return Boolean(this.supplier_account_display);
     },
     footer_lines() {
       return selectionPdfFooterLines(this.resolved_export_lang);
@@ -377,6 +389,11 @@ export default {
   methods: {
     pdfT(key, params = {}) {
       return selectionPdfT(this.resolved_export_lang, key, params);
+    },
+    cleanReferenceLine(value) {
+      const trimmed = String(value || "").trim();
+      if (!trimmed || trimmed === "—" || trimmed === "-") return "";
+      return trimmed;
     },
     columnLabel(metadata_key) {
       return selectionPdfColumnHeaderLabel(

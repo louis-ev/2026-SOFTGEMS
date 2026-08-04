@@ -1,4 +1,4 @@
-import { gem_pricing_total_column_keys } from "@/mixins/GemPricing.js";
+import { isSelectionPdfPricingTotalKey } from "@/utils/selection_pdf_export_registry.js";
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 
 /**
@@ -161,7 +161,7 @@ export function sumGemNumericField(gems, field_key) {
  */
 export function sumGemPricingTotals(gems, pricing_key) {
   const key = String(pricing_key || "").trim();
-  if (!key || !gem_pricing_total_column_keys.includes(key)) return null;
+  if (!key || !isSelectionPdfPricingTotalKey(key)) return null;
   return sumGemNumericField(gems, key);
 }
 
