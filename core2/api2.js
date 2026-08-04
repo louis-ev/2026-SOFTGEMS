@@ -1509,8 +1509,15 @@ module.exports = (function () {
           .filter((key) => /^[\$a-zA-Z][\w$]*$/.test(key))
       : [];
     const bank_footer_id = String(opts.bank_footer_id || "").trim();
+    const export_lang =
+      String(opts.lang || "")
+        .trim()
+        .toLowerCase() === "fr"
+        ? "fr"
+        : "en";
     const export_query = {
       cols: metadata_keys.join(","),
+      lang: export_lang,
     };
     if (bank_footer_id && /^[a-zA-Z0-9_-]+$/.test(bank_footer_id)) {
       export_query.bank_footer_id = bank_footer_id;
@@ -1535,12 +1542,18 @@ module.exports = (function () {
     delete data.selection_pdf_export;
 
     // Repeated on every PDF page via the print engine's footer template
-    // (kept in sync with SELECTION_PDF_ACF_FOOTER_LINES in
-    // client/src/utils/selection_pdf_export_registry.js).
-    data.pdf_footer_lines = [
-      "SIEGE SOCIAL: 10, rue Place Vendôme - 75001 PARIS - TEL: 33(6)69 24 14 89 - info@acfinegems.com",
-      "SAS AU CAPITAL DE 50 000 EUROS-SIRET 994 099 448 00015",
-    ];
+    // (kept in sync with selectionPdfFooterLines in
+    // client/src/utils/selection_pdf_strings.js).
+    data.pdf_footer_lines =
+      export_lang === "en"
+        ? [
+            "Registered Office : 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
+            "SAS with a share capital of EUR 50,000 • SIRET N° 994 099 448 00015",
+          ]
+        : [
+            "SIÈGE SOCIAL: 10, rue Place Vendôme - 75001 PARIS - TEL: 33(6)69 24 14 89 - info@acfinegems.com",
+            "SAS AU CAPITAL DE 50 000 EUROS-SIRET 994 099 448 00015",
+          ];
     // Per-page margins so content clears the footer zone and following
     // pages keep a top margin (sides are handled by the document itself).
     // Bottom must fit the 2-line ACF footer (~12mm) with breathing room.

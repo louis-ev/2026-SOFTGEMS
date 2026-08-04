@@ -68,13 +68,19 @@ describe("selection pdf fixed columns", () => {
 
   it("labels columns from column size.pdf", () => {
     expect(selectionPdfColumnHeaderLabel("$description")).toBe("Description");
-    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("price /ct");
+    expect(selectionPdfColumnHeaderLabel("$per_carat")).toBe("Price /ct");
     expect(selectionPdfColumnHeaderLabel("pf_invoiced_price", "USD")).toBe(
       "Total"
     );
-    expect(selectionPdfColumnHeaderLabel("weight_ct")).toBe("weight");
+    expect(selectionPdfColumnHeaderLabel("weight_ct")).toBe("Weight");
     expect(selectionPdfColumnHeaderLabel("number_of_pieces")).toBe("Qty");
     expect(selectionPdfColumnHeaderLabel("id")).toBe("REF");
+  });
+
+  it("labels columns in French when lang is fr", () => {
+    expect(selectionPdfColumnHeaderLabel("number_of_pieces", "fr")).toBe("Qté");
+    expect(selectionPdfColumnHeaderLabel("weight_ct", "fr")).toBe("Poids");
+    expect(selectionPdfColumnHeaderLabel("$per_carat", "fr")).toBe("Prix /ct");
   });
 
   it("assigns table column percents from column size.pdf (sum 100)", () => {
@@ -128,10 +134,24 @@ describe("selection pdf fixed columns", () => {
       bank_footer_id: "bf_abc123",
     });
     expect(query).toContain("bank_footer_id=bf_abc123");
+    expect(query).toContain("lang=en");
     const decoded = decodeSelectionPdfExportQuery({
       query: Object.fromEntries(new URLSearchParams(query)),
     });
     expect(decoded.bank_footer_id).toBe("bf_abc123");
+    expect(decoded.lang).toBe("en");
+  });
+
+  it("encodes and decodes export language", () => {
+    const query = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      lang: "fr",
+    });
+    expect(query).toContain("lang=fr");
+    const decoded = decodeSelectionPdfExportQuery({
+      query: Object.fromEntries(new URLSearchParams(query)),
+    });
+    expect(decoded.lang).toBe("fr");
   });
 
   it("decodes bank_footer_en from export query", () => {
@@ -142,6 +162,7 @@ describe("selection pdf fixed columns", () => {
       },
     });
     expect(decoded.bank_footer_en).toBe("Bank: Example\nIBAN: FR76…");
+    expect(decoded.lang).toBe("en");
   });
 });
 
@@ -152,7 +173,7 @@ describe("pdf shape abbreviations", () => {
     expect(pdfShapeAbbreviation("Cushion")).toBe("CN");
     expect(pdfShapeAbbreviation("Square Cushion")).toBe("SQ CN");
     expect(pdfShapeAbbreviation("Octagonal")).toBe("OCT");
-    expect(pdfShapeAbbreviation("Octogonal")).toBe("OC");
+    expect(pdfShapeAbbreviation("Octogonal")).toBe("OCT");
     expect(pdfShapeAbbreviation("Cabochon")).toBe("CAB");
     expect(pdfShapeAbbreviation("Custom Fancy")).toBe("CF");
   });

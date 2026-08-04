@@ -215,6 +215,29 @@
               @save="onContactEditModalSave"
             />
           </div>
+          <div v-if="is_company">
+            <SGEditableMetaField
+              :label="$t('sg_supplier_account_number')"
+              icon="hash"
+              :value="edited_supplier_account_number"
+              :is_flashing="
+                isFieldFlashing(flashCompanyFieldKey('supplier_account_number'))
+              "
+              :modal_open="
+                company_detail_modal_open('supplier_account_number')
+              "
+              :modal_title="contact_edit_modal_title"
+              :modal_is_loading="
+                company_detail_modal_saving('supplier_account_number')
+              "
+              :meta_text="company_field_meta_text('supplier_account_number')"
+              @presentClick="
+                openCompanyDetailModal('supplier_account_number')
+              "
+              @close="closeContactEditModal"
+              @save="onContactEditModalSave"
+            />
+          </div>
         </div>
       </SGSectionPanel>
 
@@ -594,6 +617,7 @@ export default {
       edited_company_email: "",
       edited_tva_number: "",
       edited_tva_attestation: "",
+      edited_supplier_account_number: "",
       is_loading: false,
       is_saving_name: false,
       saving_company_field_key: "",
@@ -837,9 +861,12 @@ export default {
       ];
       if (shared_fields.includes(meta_key)) return true;
       if (!this.is_company) return false;
-      return ["company_email", "tva_number", "tva_attestation"].includes(
-        meta_key
-      );
+      return [
+        "company_email",
+        "tva_number",
+        "tva_attestation",
+        "supplier_account_number",
+      ].includes(meta_key);
     },
     openPersonDetailModal(person, field_key) {
       if (!this.connected_as) return;
@@ -889,6 +916,7 @@ export default {
         company_email: this.$t("sg_company_email"),
         tva_number: this.$t("sg_company_tva_number"),
         tva_attestation: this.$t("sg_company_tva_attestation"),
+        supplier_account_number: this.$t("sg_supplier_account_number"),
       };
       return labels[meta_key] || "";
     },
@@ -934,6 +962,8 @@ export default {
       else if (meta_key === "tva_number") this.edited_tva_number = v;
       else if (meta_key === "tva_attestation")
         this.edited_tva_attestation = v;
+      else if (meta_key === "supplier_account_number")
+        this.edited_supplier_account_number = v;
     },
     company_detail_edited_value(meta_key) {
       if (meta_key === "address_street") return this.edited_address_street;
@@ -944,6 +974,8 @@ export default {
       if (meta_key === "company_email") return this.edited_company_email;
       if (meta_key === "tva_number") return this.edited_tva_number;
       if (meta_key === "tva_attestation") return this.edited_tva_attestation;
+      if (meta_key === "supplier_account_number")
+        return this.edited_supplier_account_number;
       return "";
     },
     company_field_matches_stored(meta_key) {
@@ -990,6 +1022,10 @@ export default {
       this.edited_company_email = this.string_from_contact(c, "company_email");
       this.edited_tva_number = this.string_from_contact(c, "tva_number");
       this.edited_tva_attestation = this.string_from_contact(c, "tva_attestation");
+      this.edited_supplier_account_number = this.string_from_contact(
+        c,
+        "supplier_account_number"
+      );
     },
     async fetchContact() {
       this.closeContactEditModal();

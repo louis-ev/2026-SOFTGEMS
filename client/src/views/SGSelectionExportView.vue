@@ -20,6 +20,7 @@
       :supplier_account_line="supplier_account_line"
       :bank_footer_en="bank_footer_en"
       :certificate_provider_labels="certificate_provider_labels"
+      :export_lang="export_lang"
     />
   </div>
 </template>
@@ -60,6 +61,7 @@ import {
   selectionDocumentNumber,
   selectionFolderPath,
 } from "@/utils/selection_paths.js";
+import { selectionPdfT } from "@/utils/selection_pdf_strings.js";
 
 export default {
   name: "SGSelectionExportView",
@@ -89,9 +91,13 @@ export default {
       is_serversidepreview: false,
       images_loaded: false,
       certificate_provider_labels: {},
+      supplier_account_line: "",
     };
   },
   computed: {
+    export_lang() {
+      return this.export_query.lang;
+    },
     selection_folder_path() {
       return selectionFolderPath(this.type_slug, this.folder_slug);
     },
@@ -119,7 +125,9 @@ export default {
     document_title_prefix() {
       if (!this.selection) return "";
       const defaults = selectionPdfExportDefaults(this.resolved_selection_type);
-      return this.$t(defaults.document_title_key, { number: "" }).trim();
+      return selectionPdfT(this.export_lang, defaults.document_title_key, {
+        number: "",
+      }).trim();
     },
     document_number() {
       const from_path = selectionDocumentNumber(this.selection);
@@ -134,14 +142,10 @@ export default {
         month: "2-digit",
         day: "2-digit",
       });
-      return `Paris, ${formatted}`;
+      return selectionPdfT(this.export_lang, "date_line", { date: formatted });
     },
     order_number_line() {
-      const value = this.cleanString(this.selection?.reference_number);
-      return value || "—";
-    },
-    supplier_account_line() {
-      return "—";
+      return this.cleanString(this.selection?.reference_number);
     },
     bank_footer_en() {
       const from_query = this.export_query.bank_footer_en;
@@ -154,7 +158,7 @@ export default {
     legal_text() {
       if (!this.selection) return "";
       const defaults = selectionPdfExportDefaults(this.resolved_selection_type);
-      return this.$t(defaults.legal_text_key);
+      return selectionPdfT(this.export_lang, defaults.legal_text_key);
     },
   },
   async mounted() {
@@ -270,6 +274,7 @@ export default {
       const path = this.cleanString(this.selection?.counterparty_path);
       if (!path) {
         this.counterparty_block = null;
+        this.supplier_account_line = "";
         return;
       }
       const { contact_path, person_path } = splitCounterpartyPath(path);
@@ -307,6 +312,9 @@ export default {
         address: address_lines.join("\n"),
         address_lines,
       };
+      this.supplier_account_line = this.cleanString(
+        contact_folder?.supplier_account_number
+      );
     },
     async waitForBrandFonts() {
       if (typeof document === "undefined") return;

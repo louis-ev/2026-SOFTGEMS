@@ -328,7 +328,8 @@ export default {
   sg_selection_counterparty_company_contact_optional:
     "Optional — select a contact person at this company.",
   sg_selection_counterparty_loading_contacts: "Loading contacts…",
-  sg_selection_reference_number: "Reference",
+  sg_selection_reference_number: "Purchase order N°",
+  sg_supplier_account_number: "Supplier account N°",
   sg_selection_currency: "Currency",
   sg_section_selection_buying_invoice: "Purchase",
   sg_selection_partnership_purchase: "Partnership purchase",
@@ -438,6 +439,9 @@ export default {
   sg_folder_meta_peek_title: "Folder meta",
   sg_pdf_export_button: "Export PDF",
   sg_pdf_export_modal_title: "Export selection to PDF",
+  sg_pdf_export_language: "PDF language",
+  sg_pdf_export_language_en: "English",
+  sg_pdf_export_language_fr: "Français",
   sg_pdf_export_modal_instructions:
     "The PDF layout is fixed for this selection type. Review the columns below, then generate.",
   sg_pdf_export_pricing_line: "Price line",

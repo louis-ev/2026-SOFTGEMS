@@ -357,6 +357,15 @@ Multiplicity rule: only one.
 | `cutting_price`    | TBD         |                         |
 | `photo_type`       | select      | Values: `Rough`, `Cut`. |
 
+## Address book (companies)
+
+Company folders under `address_book/{slug}` may store:
+
+| Field                     | Fill Method | Notes                                                                 |
+| ------------------------- | ----------- | --------------------------------------------------------------------- |
+| `supplier_account_number` | manual      | Optional. Shown on selection PDFs as supplier account N° when the company is the selection counterparty (or parent company of a person counterparty). Omitted from the PDF when empty. UI: [SGContactOpenView.vue](../client/src/views/SGContactOpenView.vue). |
+
 ## Related specification
 
 Certificate PDF uploads and `@file`-level fields (`is_gem_certificate`, provider, etc.) are documented in **[`CERTIFICATES.md`](./CERTIFICATES.md)**.
+Selection PDF bilingual strings: [selection_pdf_strings.js](../client/src/utils/selection_pdf_strings.js) (see [SELECTIONS.md](./SELECTIONS.md)).

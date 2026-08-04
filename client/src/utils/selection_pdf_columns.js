@@ -4,6 +4,10 @@ import {
   selectionPdfExportColumnKeys,
   selectionPdfExportPricingKey,
 } from "@/utils/selection_pdf_export_registry.js";
+import {
+  normalizeSelectionPdfLang,
+  selectionPdfT,
+} from "@/utils/selection_pdf_strings.js";
 
 export const selection_pdf_max_column_units = 8;
 
@@ -168,7 +172,7 @@ export function encodeSelectionPdfExportQueryForType(selection_type) {
 }
 
 /**
- * @param {{ metadata_keys?: string[], bank_footer_id?: string }} options
+ * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string }} options
  * @returns {string}
  */
 export function encodeSelectionPdfExportQuery(options) {
@@ -181,12 +185,14 @@ export function encodeSelectionPdfExportQuery(options) {
   params.set("cols", keys.join(","));
   const bank_footer_id = String(options?.bank_footer_id || "").trim();
   if (bank_footer_id) params.set("bank_footer_id", bank_footer_id);
+  const lang = normalizeSelectionPdfLang(options?.lang);
+  params.set("lang", lang);
   return params.toString();
 }
 
 /**
  * @param {import('vue-router').Route} route
- * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string }}
+ * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr" }}
  */
 export function decodeSelectionPdfExportQuery(route) {
   const raw_cols = String(route?.query?.cols || "").trim();
@@ -198,7 +204,8 @@ export function decodeSelectionPdfExportQuery(route) {
     : [];
   const bank_footer_id = String(route?.query?.bank_footer_id || "").trim();
   const bank_footer_en = String(route?.query?.bank_footer_en || "");
-  return { metadata_keys, bank_footer_id, bank_footer_en };
+  const lang = normalizeSelectionPdfLang(route?.query?.lang);
+  return { metadata_keys, bank_footer_id, bank_footer_en, lang };
 }
 
 /**
@@ -225,16 +232,36 @@ export function resolveSelectionPdfPricingKey(selection_type, metadata_keys) {
 
 /**
  * @param {string} metadata_key
- * @param {string} [_currency]
+ * @param {string} [lang_or_currency="en"] Export lang (`en`|`fr`), or legacy currency arg ignored when a 3rd lang is passed.
+ * @param {string} [lang]
  * @returns {string}
  */
-export function selectionPdfColumnHeaderLabel(metadata_key, _currency = "USD") {
-  if (metadata_key === "id") return "REF";
-  if (metadata_key === selection_pdf_description_column_key) return "Description";
-  if (metadata_key === selection_pdf_photo_column_key) return "Photo";
-  if (metadata_key === "number_of_pieces") return "Qty";
-  if (metadata_key === "weight_ct") return "weight";
-  if (metadata_key === selection_pdf_per_carat_column_key) return "price /ct";
-  if (gem_pricing_total_column_keys.includes(metadata_key)) return "Total";
+export function selectionPdfColumnHeaderLabel(
+  metadata_key,
+  lang_or_currency = "en",
+  lang
+) {
+  const resolved_lang = normalizeSelectionPdfLang(
+    lang !== undefined ? lang : lang_or_currency
+  );
+  if (metadata_key === "id") return selectionPdfT(resolved_lang, "col_ref");
+  if (metadata_key === selection_pdf_description_column_key) {
+    return selectionPdfT(resolved_lang, "col_description");
+  }
+  if (metadata_key === selection_pdf_photo_column_key) {
+    return selectionPdfT(resolved_lang, "col_photo");
+  }
+  if (metadata_key === "number_of_pieces") {
+    return selectionPdfT(resolved_lang, "col_qty");
+  }
+  if (metadata_key === "weight_ct") {
+    return selectionPdfT(resolved_lang, "col_weight");
+  }
+  if (metadata_key === selection_pdf_per_carat_column_key) {
+    return selectionPdfT(resolved_lang, "col_price_per_ct");
+  }
+  if (gem_pricing_total_column_keys.includes(metadata_key)) {
+    return selectionPdfT(resolved_lang, "col_total");
+  }
   return metadata_key;
 }

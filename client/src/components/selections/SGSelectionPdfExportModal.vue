@@ -28,6 +28,19 @@
       <p class="_instructions">{{ $t("sg_pdf_export_modal_instructions") }}</p>
 
       <div class="_pricingSection">
+        <label class="_pricingLabel" for="pdf-export-language-select">
+          {{ $t("sg_pdf_export_language") }}
+        </label>
+        <SGSelectField
+          id="pdf-export-language-select"
+          :value="selected_export_lang"
+          :options="language_select_options"
+          :allow_empty="false"
+          @input="selected_export_lang = $event"
+        />
+      </div>
+
+      <div class="_pricingSection">
         <label class="_pricingLabel" for="pdf-export-pricing-select">
           {{ $t("sg_pdf_export_pricing_line") }}
         </label>
@@ -123,6 +136,10 @@ import {
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
 import { selectionFolderSlugFromPath, resolveSelectionType } from "@/utils/selection_paths.js";
+import {
+  SELECTION_PDF_DEFAULT_LANG,
+  normalizeSelectionPdfLang,
+} from "@/utils/selection_pdf_strings.js";
 
 export default {
   name: "SGSelectionPdfExportModal",
@@ -170,9 +187,22 @@ export default {
       is_saving_bank_footer: false,
       bank_footer_save_pending: false,
       selected_pricing_key: "",
+      selected_export_lang: SELECTION_PDF_DEFAULT_LANG,
     };
   },
   computed: {
+    language_select_options() {
+      return [
+        {
+          value: "en",
+          label: this.$t("sg_pdf_export_language_en"),
+        },
+        {
+          value: "fr",
+          label: this.$t("sg_pdf_export_language_fr"),
+        },
+      ];
+    },
     can_edit_bank_footer() {
       return this.is_instance_admin;
     },
@@ -347,7 +377,8 @@ export default {
       const slug = this.folder_slug || "selection";
       const date = new Date().toISOString().slice(0, 10);
       const type_part = this.type_slug || "export";
-      return `${type_part}-${slug}-${date}`;
+      const lang = normalizeSelectionPdfLang(this.selected_export_lang);
+      return `${type_part}-${slug}-${lang}-${date}`;
     },
     async startExport() {
       if (!this.folder_slug || this.is_exporting) return;
@@ -365,6 +396,7 @@ export default {
           bank_footer_id: this.has_pricing_selected
             ? this.selected_bank_footer_id
             : "",
+          lang: normalizeSelectionPdfLang(this.selected_export_lang),
         },
         additional_meta: {
           is_selection_generated_pdf: true,

@@ -3,6 +3,10 @@ import {
   makeGemMediaFileAbsoluteUrl,
   makeGemMediaViewerAbsoluteUrl,
 } from "@/utils/selection_pdf_gem_helpers.js";
+import {
+  normalizeSelectionPdfLang,
+  selectionPdfT,
+} from "@/utils/selection_pdf_strings.js";
 
 /**
  * @param {object} gem
@@ -124,11 +128,13 @@ export function resolveCertificateProviderLabel(
 /**
  * @param {object} certificate_file
  * @param {Record<string, string>} [provider_labels_by_path]
+ * @param {string} [lang="en"]
  * @returns {string}
  */
 export function formatCertificateLinkLabel(
   certificate_file,
-  provider_labels_by_path = {}
+  provider_labels_by_path = {},
+  lang = "en"
 ) {
   const provider_label = resolveCertificateProviderLabel(
     certificate_file?.provider_path,
@@ -143,28 +149,33 @@ export function formatCertificateLinkLabel(
   if (reference) return reference;
   if (provider_label) return provider_label;
   const filename = String(certificate_file?.$media_filename || "").trim();
-  return filename || "Certificate";
+  return filename || selectionPdfT(lang, "certificate_fallback");
 }
 
 /**
  * @param {object} video_file
  * @param {number} index
+ * @param {string} [lang="en"]
  * @returns {string}
  */
-export function formatVideoLinkLabel(video_file, index = 0) {
-  return formatMediaLinkLabel(video_file, index);
+export function formatVideoLinkLabel(video_file, index = 0, lang = "en") {
+  return formatMediaLinkLabel(video_file, index, lang);
 }
 
 /**
  * @param {object} media_file
  * @param {number} index
+ * @param {string} [lang="en"]
  * @returns {string}
  */
-export function formatMediaLinkLabel(media_file, index = 0) {
+export function formatMediaLinkLabel(media_file, index = 0, lang = "en") {
   const filename = String(media_file?.$media_filename || "").trim();
   if (filename) return filename;
   const is_video = media_file?.$type === "video";
-  const fallback = is_video ? "Video" : "Photo";
+  const fallback = selectionPdfT(
+    lang,
+    is_video ? "video_fallback" : "photo_fallback"
+  );
   return index === 0 ? fallback : `${fallback} ${index + 1}`;
 }
 
@@ -178,7 +189,7 @@ export function formatMediaLinkLabel(media_file, index = 0) {
  *
  * @param {object} gem
  * @param {string} [origin]
- * @param {{ provider_labels_by_path?: Record<string, string> }} [options]
+ * @param {{ provider_labels_by_path?: Record<string, string>, lang?: string }} [options]
  * @returns {PdfDescriptionBlock[]}
  */
 export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
@@ -187,6 +198,7 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     typeof options.provider_labels_by_path === "object"
       ? options.provider_labels_by_path
       : {};
+  const lang = normalizeSelectionPdfLang(options?.lang);
   /** @type {PdfDescriptionBlock[]} */
   const blocks = [];
 
@@ -201,18 +213,27 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
 
   const origin_country = String(gem?.origin_country || "").trim();
   if (origin_country) {
-    blocks.push({ type: "text", text: `Origin: ${origin_country}` });
+    blocks.push({
+      type: "text",
+      text: selectionPdfT(lang, "origin_prefix", { value: origin_country }),
+    });
   }
 
   const country_of_cut = String(gem?.country_of_cut || "").trim();
   if (country_of_cut) {
-    blocks.push({ type: "text", text: `Country of cut: ${country_of_cut}` });
+    blocks.push({
+      type: "text",
+      text: selectionPdfT(lang, "country_of_cut_prefix", {
+        value: country_of_cut,
+      }),
+    });
   }
 
   gemCertificateFiles(gem).forEach((certificate_file) => {
     const text = formatCertificateLinkLabel(
       certificate_file,
-      provider_labels_by_path
+      provider_labels_by_path,
+      lang
     );
     const href = makeGemMediaFileAbsoluteUrl(certificate_file, origin);
     if (!text || !href || !/^https?:\/\//i.test(href)) return;
@@ -232,15 +253,17 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
  *
  * @param {object} gem
  * @param {string} [origin]
+ * @param {{ lang?: string }} [options]
  * @returns {PdfDescriptionBlock[]}
  */
-export function buildGemPdfMediaLinkBlocks(gem, origin = "") {
+export function buildGemPdfMediaLinkBlocks(gem, origin = "", options = {}) {
+  const lang = normalizeSelectionPdfLang(options?.lang);
   /** @type {PdfDescriptionBlock[]} */
   const link_blocks = [];
 
   gemPdfMediaFiles(gem).forEach((media_file, index) => {
     const href = makeGemMediaViewerAbsoluteUrl(media_file, origin);
-    const text = formatMediaLinkLabel(media_file, index);
+    const text = formatMediaLinkLabel(media_file, index, lang);
     if (href && /^https?:\/\//i.test(href)) {
       link_blocks.push({
         type: "link",

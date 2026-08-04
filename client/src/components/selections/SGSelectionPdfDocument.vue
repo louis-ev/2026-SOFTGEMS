@@ -24,14 +24,17 @@
         </div>
       </div>
 
-      <div class="_referenceLines">
-        <p class="_orderLine">
-          <span class="_refLabel">{{ $t("sg_pdf_order_number") }}</span>
-          {{ order_number_line || "—" }}
+      <div
+        v-if="order_number_line || supplier_account_line"
+        class="_referenceLines"
+      >
+        <p v-if="order_number_line" class="_orderLine">
+          <span class="_refLabel">{{ pdfT("order_number") }}</span>
+          {{ order_number_line }}
         </p>
-        <p class="_supplierLine">
-          <span class="_refLabel">{{ $t("sg_pdf_supplier_account_number") }}</span>
-          {{ supplier_account_line || "—" }}
+        <p v-if="supplier_account_line" class="_supplierLine">
+          <span class="_refLabel">{{ pdfT("supplier_account_number") }}</span>
+          {{ supplier_account_line }}
         </p>
       </div>
     </header>
@@ -46,7 +49,7 @@
       </colgroup>
       <thead>
         <tr>
-          <th :class="columnClass('__no__')">{{ $t("sg_pdf_col_no") }}</th>
+          <th :class="columnClass('__no__')">{{ pdfT("col_no") }}</th>
           <th
             v-for="metadata_key in metadata_keys"
             :key="metadata_key"
@@ -139,7 +142,7 @@
         </tr>
         <tr v-if="has_pricing" class="_totalRow">
           <td :class="columnClass('__no__')">
-            <span class="_totalLabel">{{ $t("sg_pdf_total") }}</span>
+            <span class="_totalLabel">{{ pdfT("total") }}</span>
           </td>
           <td
             v-for="metadata_key in metadata_keys"
@@ -160,12 +163,12 @@
     <table v-if="has_pricing" class="_vatBox">
       <tbody>
         <tr>
-          <td class="_alignLeft">{{ $t("sg_pdf_vat") }}</td>
+          <td class="_alignLeft">{{ pdfT("vat") }}</td>
           <td class="_alignCenter">20%</td>
           <td class="_alignRight">{{ formatted_vat_amount }}</td>
         </tr>
         <tr class="_grandTotalRow">
-          <td class="_alignLeft">{{ $t("sg_pdf_grand_total") }}</td>
+          <td class="_alignLeft">{{ pdfT("grand_total") }}</td>
           <td />
           <td class="_alignRight">{{ formatted_grand_total }}</td>
         </tr>
@@ -177,7 +180,7 @@
     </p>
 
     <p v-if="has_pricing && bank_footer_en" class="_bankIntro">
-      {{ $t("sg_pdf_bank_intro") }}
+      {{ pdfT("bank_intro") }}
     </p>
     <div v-if="bank_footer_en" class="_bankBlock">{{ bank_footer_en }}</div>
 
@@ -192,10 +195,7 @@
 <script>
 import AcfLogoMark from "@/components/selections/AcfLogoMark.vue";
 import GemPricing from "@/mixins/GemPricing";
-import {
-  SELECTION_PDF_ACF_FOOTER_LINES,
-  selection_pdf_vat_rate,
-} from "@/utils/selection_pdf_export_registry.js";
+import { selection_pdf_vat_rate } from "@/utils/selection_pdf_export_registry.js";
 import {
   selection_pdf_description_column_key,
   selection_pdf_per_carat_column_key,
@@ -205,11 +205,17 @@ import {
   selectionPdfTableColPercents,
 } from "@/utils/selection_pdf_columns.js";
 import { numberToWordsEnCapitalized } from "@/utils/number_to_words_en.js";
+import { numberToWordsFrCapitalized } from "@/utils/number_to_words_fr.js";
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 import {
   buildGemPdfDescriptionBlocks,
   buildGemPdfMediaLinkBlocks,
 } from "@/utils/selection_pdf_description.js";
+import {
+  normalizeSelectionPdfLang,
+  selectionPdfFooterLines,
+  selectionPdfT,
+} from "@/utils/selection_pdf_strings.js";
 import {
   formatPdfCurrencyTotal,
   formatPdfNumber,
@@ -281,6 +287,10 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    export_lang: {
+      type: String,
+      default: "en",
+    },
   },
   data() {
     return {
@@ -309,8 +319,11 @@ export default {
         .map((line) => line.trim())
         .filter(Boolean);
     },
+    resolved_export_lang() {
+      return normalizeSelectionPdfLang(this.export_lang);
+    },
     footer_lines() {
-      return SELECTION_PDF_ACF_FOOTER_LINES;
+      return selectionPdfFooterLines(this.resolved_export_lang);
     },
     currency() {
       return String(this.selection?.currency || "USD").trim() || "USD";
@@ -350,8 +363,11 @@ export default {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       });
-      const amount_words = numberToWordsEnCapitalized(this.grand_total_amount);
-      return this.$t("sg_pdf_payment_line", { amount, amount_words });
+      const amount_words =
+        this.resolved_export_lang === "fr"
+          ? numberToWordsFrCapitalized(this.grand_total_amount)
+          : numberToWordsEnCapitalized(this.grand_total_amount);
+      return this.pdfT("payment_line", { amount, amount_words });
     },
     media_origin() {
       if (typeof window === "undefined") return "";
@@ -359,8 +375,14 @@ export default {
     },
   },
   methods: {
+    pdfT(key, params = {}) {
+      return selectionPdfT(this.resolved_export_lang, key, params);
+    },
     columnLabel(metadata_key) {
-      return selectionPdfColumnHeaderLabel(metadata_key, this.currency);
+      return selectionPdfColumnHeaderLabel(
+        metadata_key,
+        this.resolved_export_lang
+      );
     },
     columnClass(metadata_key) {
       const align = selectionPdfColumnTextAlign(metadata_key);
@@ -381,6 +403,7 @@ export default {
     descriptionBlocks(gem) {
       return buildGemPdfDescriptionBlocks(gem, this.media_origin, {
         provider_labels_by_path: this.certificate_provider_labels,
+        lang: this.resolved_export_lang,
       });
     },
     descriptionTextBlocks(gem) {
@@ -392,7 +415,9 @@ export default {
       );
     },
     photoMediaLinks(gem) {
-      return buildGemPdfMediaLinkBlocks(gem, this.media_origin);
+      return buildGemPdfMediaLinkBlocks(gem, this.media_origin, {
+        lang: this.resolved_export_lang,
+      });
     },
     formatWeight(value) {
       return formatPdfNumber(value, {
