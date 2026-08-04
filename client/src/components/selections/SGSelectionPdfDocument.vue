@@ -548,6 +548,8 @@ export default {
 <style lang="scss" scoped>
 $acf-brand-primary: #1c2b3a;
 $acf-brand-light: #7b95a6;
+/* Link blue: clearer than brand light, still navy-adjacent. */
+$acf-pdf-link: #3a6fa0;
 /* Table chrome from ACF INV N°20265: black hairlines, white cells. */
 $acf-pdf-table-line: #000;
 
@@ -767,7 +769,7 @@ $acf-pdf-table-line: #000;
 }
 
 ._descriptionLink {
-  color: $acf-brand-primary;
+  color: $acf-pdf-link;
   text-decoration: underline;
 }
 

@@ -233,15 +233,29 @@ export default {
     };
   },
   computed: {
+    selection_display_name() {
+      if (!this.selection || this.selection.internal_name == null) return "";
+      return String(this.selection.internal_name).trim();
+    },
     modal_title() {
       const type_label = selectionTypeLabel(
         this.$t.bind(this),
         resolveSelectionType(this.selection)
       );
-      if (!type_label || type_label === "—") {
-        return this.$t("sg_pdf_export_modal_title_fallback");
+      const has_type = Boolean(type_label && type_label !== "—");
+      const selection_name = this.selection_display_name;
+      if (selection_name && has_type) {
+        return this.$t("sg_pdf_export_modal_title", {
+          selection_name,
+          type: type_label,
+        });
       }
-      return this.$t("sg_pdf_export_modal_title", { type: type_label });
+      if (has_type) {
+        return this.$t("sg_pdf_export_modal_title_type_only", {
+          type: type_label,
+        });
+      }
+      return this.$t("sg_pdf_export_modal_title_fallback");
     },
     language_select_options() {
       return [
