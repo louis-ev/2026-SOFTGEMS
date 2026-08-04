@@ -119,10 +119,11 @@ export function resolveCertificateProviderLabel(
 ) {
   const path = String(provider_path || "").trim();
   if (!path) return "";
-  const mapped = provider_labels_by_path[path];
-  if (mapped) return String(mapped).trim();
+  const mapped = String(provider_labels_by_path[path] || "").trim();
+  // Prefer resolved company/contact name; never show a raw address_book path.
+  if (mapped && !mapped.startsWith("address_book/")) return mapped;
   const segments = path.split("/").filter(Boolean);
-  return segments[segments.length - 1] || path;
+  return segments[segments.length - 1] || "";
 }
 
 /**

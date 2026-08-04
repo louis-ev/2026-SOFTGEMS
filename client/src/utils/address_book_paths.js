@@ -147,9 +147,11 @@ export async function resolveAddressBookPathLabel(api, path_raw) {
     if (cached?.name) return String(cached.name).trim();
     try {
       const folder = await api.getFolder({ path });
-      return formatAddressBookContactLabel(folder) || path;
+      return (
+        formatAddressBookContactLabel(folder) || parsed.contact_slug || ""
+      );
     } catch {
-      return path;
+      return parsed.contact_slug || "";
     }
   }
 

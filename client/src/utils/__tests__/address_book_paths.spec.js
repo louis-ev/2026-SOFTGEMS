@@ -107,6 +107,16 @@ describe("resolveAddressBookPathLabel", () => {
     );
   });
 
+  it("falls back to contact slug instead of full path when fetch fails", async () => {
+    const api = {
+      store: {},
+      getFolder: vi.fn().mockRejectedValue(new Error("denied")),
+    };
+    await expect(
+      resolveAddressBookPathLabel(api, "address_book/bellerophon")
+    ).resolves.toBe("bellerophon");
+  });
+
   it("resolves person labels with contact context", async () => {
     const api = {
       store: {

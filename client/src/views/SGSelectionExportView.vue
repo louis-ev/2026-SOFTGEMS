@@ -274,8 +274,14 @@ export default {
         return;
       }
       try {
+        // Use the same public/token fetch path as gems/counterparty so labels
+        // resolve during Puppeteer export (authenticated getFolder is unavailable).
+        const api = {
+          store: this.$api?.store,
+          getFolder: ({ path }) => this.getFolderPublic(path),
+        };
         this.certificate_provider_labels = await resolveAddressBookPathLabels(
-          this.$api,
+          api,
           paths
         );
       } catch {

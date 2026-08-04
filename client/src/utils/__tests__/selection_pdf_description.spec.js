@@ -53,6 +53,28 @@ describe("formatCertificateLinkLabel", () => {
       )
     ).toBe(`SSEF${selection_pdf_certificate_link_separator}4310`);
   });
+
+  it("never uses a raw address_book path as the provider label", () => {
+    expect(
+      formatCertificateLinkLabel(
+        {
+          provider_path: "address_book/bellerophon",
+          certificate_reference: "A5834",
+        },
+        { "address_book/bellerophon": "address_book/bellerophon" }
+      )
+    ).toBe(`bellerophon${selection_pdf_certificate_link_separator}A5834`);
+
+    expect(
+      formatCertificateLinkLabel(
+        {
+          provider_path: "address_book/bellerophon",
+          certificate_reference: "A5834",
+        },
+        { "address_book/bellerophon": "Bellerophon" }
+      )
+    ).toBe(`Bellerophon${selection_pdf_certificate_link_separator}A5834`);
+  });
 });
 
 describe("buildGemPdfDescriptionBlocks", () => {
