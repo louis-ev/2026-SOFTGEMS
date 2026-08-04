@@ -160,11 +160,11 @@
       </tbody>
     </table>
 
-    <table v-if="has_pricing" class="_vatBox">
+    <table v-if="has_pricing && show_vat" class="_vatBox">
       <tbody>
         <tr>
           <td class="_alignLeft">{{ pdfT("vat") }}</td>
-          <td class="_alignCenter">20%</td>
+          <td class="_alignCenter">{{ formatted_vat_percent }}</td>
           <td class="_alignRight">{{ formatted_vat_amount }}</td>
         </tr>
         <tr class="_grandTotalRow">
@@ -195,7 +195,11 @@
 <script>
 import AcfLogoMark from "@/components/selections/AcfLogoMark.vue";
 import GemPricing from "@/mixins/GemPricing";
-import { selection_pdf_vat_rate } from "@/utils/selection_pdf_export_registry.js";
+import {
+  normalizeSelectionPdfVatPercent,
+  selection_pdf_default_vat_percent,
+  selectionPdfVatRateFromPercent,
+} from "@/utils/selection_pdf_export_registry.js";
 import {
   selection_pdf_description_column_key,
   selection_pdf_per_carat_column_key,
@@ -291,6 +295,14 @@ export default {
       type: String,
       default: "en",
     },
+    show_vat: {
+      type: Boolean,
+      default: false,
+    },
+    vat_percent: {
+      type: Number,
+      default: selection_pdf_default_vat_percent,
+    },
   },
   data() {
     return {
@@ -355,9 +367,20 @@ export default {
     formatted_subtotal() {
       return formatPdfCurrencyTotal(this.pricing_sum, this.currency);
     },
+    resolved_vat_percent() {
+      return normalizeSelectionPdfVatPercent(this.vat_percent);
+    },
+    formatted_vat_percent() {
+      const percent = this.resolved_vat_percent;
+      const text =
+        Number.isInteger(percent) || Math.abs(percent % 1) < 1e-9
+          ? String(Math.round(percent))
+          : String(percent);
+      return `${text}%`;
+    },
     vat_amount() {
       if (!Number.isFinite(this.pricing_sum)) return null;
-      return this.pricing_sum * selection_pdf_vat_rate;
+      return this.pricing_sum * selectionPdfVatRateFromPercent(this.resolved_vat_percent);
     },
     formatted_vat_amount() {
       return formatPdfCurrencyTotal(this.vat_amount, this.currency);
@@ -369,16 +392,20 @@ export default {
     formatted_grand_total() {
       return formatPdfCurrencyTotal(this.grand_total_amount, this.currency);
     },
+    payment_amount() {
+      if (this.show_vat) return this.grand_total_amount;
+      return this.pricing_sum;
+    },
     payment_line() {
-      if (!Number.isFinite(this.grand_total_amount)) return "";
-      const amount = formatPdfNumber(this.grand_total_amount, {
+      if (!Number.isFinite(this.payment_amount)) return "";
+      const amount = formatPdfNumber(this.payment_amount, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       });
       const amount_words =
         this.resolved_export_lang === "fr"
-          ? numberToWordsFrCapitalized(this.grand_total_amount)
-          : numberToWordsEnCapitalized(this.grand_total_amount);
+          ? numberToWordsFrCapitalized(this.payment_amount)
+          : numberToWordsEnCapitalized(this.payment_amount);
       return this.pdfT("payment_line", { amount, amount_words });
     },
     media_origin() {

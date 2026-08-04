@@ -54,6 +54,28 @@
         />
       </div>
 
+      <div v-if="has_pricing_selected" class="_vatRow">
+        <ToggleInput
+          :label="$t('sg_pdf_export_show_vat')"
+          :content="selected_show_vat"
+          @update:content="selected_show_vat = $event"
+        />
+        <label class="_vatPercentField" for="pdf-export-vat-percent">
+          <input
+            id="pdf-export-vat-percent"
+            v-model.number="selected_vat_percent"
+            class="u-input _vatPercentInput"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            :disabled="!selected_show_vat"
+            @change="onVatPercentChange"
+          />
+          <span aria-hidden="true">%</span>
+        </label>
+      </div>
+
       <SGSelectionPdfBankFootersEditor
         v-if="has_pricing_selected"
         :presets="bank_footer_presets_draft"
@@ -120,12 +142,16 @@ import Medias from "@/mixins/Medias.js";
 import Authors from "@/mixins/Authors.js";
 import {
   buildSelectionPdfColumnKeys,
+  defaultSelectionPdfShowVat,
+  normalizeSelectionPdfVatPercent,
+  selection_pdf_default_vat_percent,
   selection_pdf_pricing_label_keys,
   SELECTION_PDF_PRICING_OPTION_KEYS,
   selectionPdfExportPricingKey,
 } from "@/utils/selection_pdf_export_registry.js";
 import SGSelectionPdfBankFootersEditor from "@/components/selections/SGSelectionPdfBankFootersEditor.vue";
 import SGSelectField from "@/components/softgems/SGSelectField.vue";
+import ToggleInput from "@/adc-core/inputs/ToggleInput.vue";
 import {
   SELECTION_PDF_BANK_FOOTER_EN,
   SELECTION_PDF_BANK_FOOTER_NONE_ID,
@@ -149,6 +175,7 @@ export default {
   components: {
     SGSelectionPdfBankFootersEditor,
     SGSelectField,
+    ToggleInput,
   },
   props: {
     selection_folder_path: {
@@ -190,6 +217,8 @@ export default {
       bank_footer_save_pending: false,
       selected_pricing_key: "",
       selected_export_lang: SELECTION_PDF_DEFAULT_LANG,
+      selected_show_vat: false,
+      selected_vat_percent: selection_pdf_default_vat_percent,
     };
   },
   computed: {
@@ -272,7 +301,7 @@ export default {
     },
   },
   async created() {
-    this.resetPricingSelection();
+    this.resetExportOptions();
     this.previous_main_document_path =
       findSelectionMainDocumentFile(this.selection)?.$path || "";
     await this.loadInstanceSettings();
@@ -284,8 +313,21 @@ export default {
       );
       return default_key ? String(default_key) : "";
     },
-    resetPricingSelection() {
+    defaultShowVatValue() {
+      return defaultSelectionPdfShowVat(resolveSelectionType(this.selection));
+    },
+    resetExportOptions() {
       this.selected_pricing_key = this.defaultPricingKeyValue();
+      this.selected_show_vat = this.defaultShowVatValue();
+      this.selected_vat_percent = selection_pdf_default_vat_percent;
+    },
+    onVatPercentChange() {
+      this.selected_vat_percent = normalizeSelectionPdfVatPercent(
+        this.selected_vat_percent
+      );
+    },
+    resetPricingSelection() {
+      this.resetExportOptions();
     },
     async loadInstanceSettings() {
       let presets = readSelectionPdfBankFootersEn(
@@ -401,6 +443,11 @@ export default {
               ? this.selected_bank_footer_id
               : SELECTION_PDF_BANK_FOOTER_NONE_ID,
           lang: normalizeSelectionPdfLang(this.selected_export_lang),
+          show_vat:
+            this.has_pricing_selected && this.selected_show_vat === true,
+          vat_percent: normalizeSelectionPdfVatPercent(
+            this.selected_vat_percent
+          ),
         },
         additional_meta: {
           is_selection_generated_pdf: true,
@@ -547,6 +594,27 @@ export default {
 
 ._pricingLabel {
   font-weight: 600;
+}
+
+._vatRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 0.5);
+}
+
+._vatPercentField {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+._vatPercentInput {
+  width: 4.5rem;
+  padding: 0.2rem 0.35rem;
+  text-align: right;
 }
 
 ._exporting,

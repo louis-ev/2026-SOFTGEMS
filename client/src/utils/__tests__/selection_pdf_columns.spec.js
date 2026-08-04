@@ -4,11 +4,13 @@ import {
   decodeSelectionPdfExportQuery,
   encodeSelectionPdfExportQuery,
   resolveSelectionPdfExportPrefs,
+  resolveSelectionPdfShowVat,
   selectionPdfColumnHeaderLabel,
   selectionPdfTableColPercents,
   selection_pdf_max_column_units,
 } from "@/utils/selection_pdf_columns.js";
 import {
+  defaultSelectionPdfShowVat,
   selectionPdfExportColumnKeys,
   selectionPdfExportEnabled,
   selectionPdfExportPricingKey,
@@ -24,6 +26,18 @@ describe("selectionPdfExportEnabled", () => {
     expect(selectionPdfExportEnabled("memo in")).toBe(true);
     expect(selectionPdfExportEnabled("importation")).toBe(true);
     expect(selectionPdfExportEnabled("")).toBe(false);
+  });
+});
+
+describe("defaultSelectionPdfShowVat", () => {
+  it("is on by default except memo out (off by default)", () => {
+    expect(defaultSelectionPdfShowVat("memo out")).toBe(false);
+    expect(defaultSelectionPdfShowVat("sale invoice")).toBe(true);
+    expect(defaultSelectionPdfShowVat("return memo out")).toBe(true);
+    expect(resolveSelectionPdfShowVat(null, "memo out")).toBe(false);
+    expect(resolveSelectionPdfShowVat(null, "sale invoice")).toBe(true);
+    expect(resolveSelectionPdfShowVat(true, "memo out")).toBe(true);
+    expect(resolveSelectionPdfShowVat(false, "sale invoice")).toBe(false);
   });
 });
 
@@ -152,6 +166,51 @@ describe("selection pdf fixed columns", () => {
       query: Object.fromEntries(new URLSearchParams(query)),
     });
     expect(decoded.lang).toBe("fr");
+  });
+
+  it("encodes and decodes show_vat in export query", () => {
+    const with_vat = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      show_vat: true,
+    });
+    expect(with_vat).toContain("show_vat=1");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(with_vat)),
+      }).show_vat
+    ).toBe(true);
+
+    const without_vat = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      show_vat: false,
+    });
+    expect(without_vat).toContain("show_vat=0");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(without_vat)),
+      }).show_vat
+    ).toBe(false);
+
+    expect(
+      decodeSelectionPdfExportQuery({ query: { cols: "id" } }).show_vat
+    ).toBeNull();
+  });
+
+  it("encodes and decodes vat_percent in export query", () => {
+    const query = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      vat_percent: 5.5,
+    });
+    expect(query).toContain("vat_percent=5.5");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(query)),
+      }).vat_percent
+    ).toBe(5.5);
+
+    expect(
+      decodeSelectionPdfExportQuery({ query: { cols: "id" } }).vat_percent
+    ).toBe(20);
   });
 
   it("decodes bank_footer_en from export query", () => {

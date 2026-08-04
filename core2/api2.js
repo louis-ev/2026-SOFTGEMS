@@ -1515,9 +1515,19 @@ module.exports = (function () {
         .toLowerCase() === "fr"
         ? "fr"
         : "en";
+    const show_vat =
+      opts.show_vat === true ||
+      opts.show_vat === 1 ||
+      opts.show_vat === "1" ||
+      opts.show_vat === "true";
+    let vat_percent = Number(opts.vat_percent);
+    if (!Number.isFinite(vat_percent)) vat_percent = 20;
+    vat_percent = Math.min(100, Math.max(0, vat_percent));
     const export_query = {
       cols: metadata_keys.join(","),
       lang: export_lang,
+      show_vat: show_vat ? "1" : "0",
+      vat_percent: String(vat_percent),
     };
     if (bank_footer_id && /^[a-zA-Z0-9_-]+$/.test(bank_footer_id)) {
       export_query.bank_footer_id = bank_footer_id;

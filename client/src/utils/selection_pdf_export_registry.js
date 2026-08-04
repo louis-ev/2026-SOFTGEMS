@@ -13,8 +13,40 @@ export const selection_pdf_virtual_column_keys = Object.freeze({
   per_carat: "$per_carat",
 });
 
-/** VAT rate applied to the pricing subtotal when a total column is present. */
-export const selection_pdf_vat_rate = 0.2;
+/** Default VAT percent shown in the export modal and PDF (e.g. 20 → 20%). */
+export const selection_pdf_default_vat_percent = 20;
+
+/** @deprecated Prefer {@link selectionPdfVatRateFromPercent}. */
+export const selection_pdf_vat_rate = selection_pdf_default_vat_percent / 100;
+
+/**
+ * Clamp / coerce a VAT percent for PDF export (0–100).
+ * @param {unknown} value
+ * @returns {number}
+ */
+export function normalizeSelectionPdfVatPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return selection_pdf_default_vat_percent;
+  return Math.min(100, Math.max(0, n));
+}
+
+/**
+ * @param {unknown} percent
+ * @returns {number} Fractional rate (e.g. 20 → 0.2).
+ */
+export function selectionPdfVatRateFromPercent(percent) {
+  return normalizeSelectionPdfVatPercent(percent) / 100;
+}
+
+/**
+ * Whether the VAT / total-including-VAT block is shown by default.
+ * On by default for all types; off by default for memo out.
+ * @param {string|null|undefined} selection_type
+ * @returns {boolean}
+ */
+export function defaultSelectionPdfShowVat(selection_type) {
+  return String(selection_type || "").trim() !== "memo out";
+}
 
 /** Total price fields offered in the PDF export pricing select. */
 export const SELECTION_PDF_PRICING_OPTION_KEYS = Object.freeze([

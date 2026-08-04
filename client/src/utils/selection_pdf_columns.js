@@ -1,5 +1,7 @@
 import {
+  defaultSelectionPdfShowVat,
   isSelectionPdfPricingTotalKey,
+  normalizeSelectionPdfVatPercent,
   selection_pdf_virtual_column_keys,
   selectionPdfExportColumnKeys,
   selectionPdfExportPricingKey,
@@ -172,7 +174,7 @@ export function encodeSelectionPdfExportQueryForType(selection_type) {
 }
 
 /**
- * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string }} options
+ * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string, show_vat?: boolean, vat_percent?: number }} options
  * @returns {string}
  */
 export function encodeSelectionPdfExportQuery(options) {
@@ -187,12 +189,17 @@ export function encodeSelectionPdfExportQuery(options) {
   if (bank_footer_id) params.set("bank_footer_id", bank_footer_id);
   const lang = normalizeSelectionPdfLang(options?.lang);
   params.set("lang", lang);
+  params.set("show_vat", options?.show_vat === true ? "1" : "0");
+  params.set(
+    "vat_percent",
+    String(normalizeSelectionPdfVatPercent(options?.vat_percent))
+  );
   return params.toString();
 }
 
 /**
  * @param {import('vue-router').Route} route
- * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr" }}
+ * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr", show_vat: boolean|null, vat_percent: number }}
  */
 export function decodeSelectionPdfExportQuery(route) {
   const raw_cols = String(route?.query?.cols || "").trim();
@@ -205,7 +212,30 @@ export function decodeSelectionPdfExportQuery(route) {
   const bank_footer_id = String(route?.query?.bank_footer_id || "").trim();
   const bank_footer_en = String(route?.query?.bank_footer_en || "");
   const lang = normalizeSelectionPdfLang(route?.query?.lang);
-  return { metadata_keys, bank_footer_id, bank_footer_en, lang };
+  const show_vat_raw = String(route?.query?.show_vat ?? "").trim().toLowerCase();
+  let show_vat = null;
+  if (show_vat_raw === "1" || show_vat_raw === "true") show_vat = true;
+  else if (show_vat_raw === "0" || show_vat_raw === "false") show_vat = false;
+  const vat_percent = normalizeSelectionPdfVatPercent(route?.query?.vat_percent);
+  return {
+    metadata_keys,
+    bank_footer_id,
+    bank_footer_en,
+    lang,
+    show_vat,
+    vat_percent,
+  };
+}
+
+/**
+ * Resolve whether to show VAT given an explicit query flag or selection-type default.
+ * @param {boolean|null|undefined} show_vat
+ * @param {string|null|undefined} selection_type
+ * @returns {boolean}
+ */
+export function resolveSelectionPdfShowVat(show_vat, selection_type) {
+  if (typeof show_vat === "boolean") return show_vat;
+  return defaultSelectionPdfShowVat(selection_type);
 }
 
 /**

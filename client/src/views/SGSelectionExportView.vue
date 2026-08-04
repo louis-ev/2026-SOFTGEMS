@@ -21,6 +21,8 @@
       :bank_footer_en="bank_footer_en"
       :certificate_provider_labels="certificate_provider_labels"
       :export_lang="export_lang"
+      :show_vat="show_vat"
+      :vat_percent="vat_percent"
     />
   </div>
 </template>
@@ -37,6 +39,7 @@ import {
 import {
   decodeSelectionPdfExportQuery,
   resolveSelectionPdfPricingKey,
+  resolveSelectionPdfShowVat,
 } from "@/utils/selection_pdf_columns.js";
 import {
   selectionPdfExportColumnKeys,
@@ -97,6 +100,15 @@ export default {
   computed: {
     export_lang() {
       return this.export_query.lang;
+    },
+    show_vat() {
+      return resolveSelectionPdfShowVat(
+        this.export_query.show_vat,
+        this.resolved_selection_type
+      );
+    },
+    vat_percent() {
+      return this.export_query.vat_percent;
     },
     selection_folder_path() {
       return selectionFolderPath(this.type_slug, this.folder_slug);
