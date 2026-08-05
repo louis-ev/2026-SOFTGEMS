@@ -1,9 +1,23 @@
 <template>
   <BaseModal2
-    :title="modal_title"
     :size="modal_size"
     @close="onClose"
   >
+    <template slot="title">
+      <h2>
+        <template v-if="selection_display_name && export_type_slug">
+          {{ selection_display_name }} ({{ export_type_slug }})
+          {{ $t("sg_pdf_export_modal_title_export_suffix") }}
+        </template>
+        <template v-else-if="export_type_slug">
+          ({{ export_type_slug }})
+          {{ $t("sg_pdf_export_modal_title_export_suffix") }}
+        </template>
+        <template v-else>
+          {{ $t("sg_pdf_export_modal_title_fallback") }}
+        </template>
+      </h2>
+    </template>
     <div v-if="is_exporting" class="_exporting">
       <p>{{ $t("sg_pdf_export_in_progress") }}</p>
       <AnimatedCounter :value="task_progress" />
@@ -172,8 +186,7 @@ import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
-import { selectionFolderSlugFromPath, resolveSelectionType } from "@/utils/selection_paths.js";
-import { selectionTypeLabel } from "@/utils/selection_types.js";
+import { selectionFolderSlugFromPath, resolveSelectionType, selectionMembershipTypeSlug } from "@/utils/selection_paths.js";
 import {
   SELECTION_PDF_DEFAULT_LANG,
   normalizeSelectionPdfLang,
@@ -237,25 +250,11 @@ export default {
       if (!this.selection || this.selection.internal_name == null) return "";
       return String(this.selection.internal_name).trim();
     },
-    modal_title() {
-      const type_label = selectionTypeLabel(
-        this.$t.bind(this),
-        resolveSelectionType(this.selection)
-      );
-      const has_type = Boolean(type_label && type_label !== "—");
-      const selection_name = this.selection_display_name;
-      if (selection_name && has_type) {
-        return this.$t("sg_pdf_export_modal_title", {
-          selection_name,
-          type: type_label,
-        });
-      }
-      if (has_type) {
-        return this.$t("sg_pdf_export_modal_title_type_only", {
-          type: type_label,
-        });
-      }
-      return this.$t("sg_pdf_export_modal_title_fallback");
+    /** Type path slug (e.g. `memo-in`), shown in the modal title. */
+    export_type_slug() {
+      const from_prop = String(this.type_slug || "").trim();
+      if (from_prop) return from_prop;
+      return selectionMembershipTypeSlug(this.selection) || "";
     },
     language_select_options() {
       return [

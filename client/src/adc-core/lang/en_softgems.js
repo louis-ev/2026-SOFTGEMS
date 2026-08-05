@@ -440,14 +440,15 @@ export default {
   sg_hide_folder_meta: "Hide meta",
   sg_folder_meta_peek_title: "Folder meta",
   sg_pdf_export_button: "Export PDF",
-  sg_pdf_export_modal_title: "Export {selection_name} ({type}) to PDF",
-  sg_pdf_export_modal_title_type_only: "Export {type} to PDF",
+  sg_pdf_export_modal_title: "{selection_name} ({type}) – export to PDF",
+  sg_pdf_export_modal_title_type_only: "({type}) – export to PDF",
   sg_pdf_export_modal_title_fallback: "Export selection to PDF",
+  sg_pdf_export_modal_title_export_suffix: "– export to PDF",
   sg_pdf_export_language: "PDF language",
   sg_pdf_export_language_en: "English",
   sg_pdf_export_language_fr: "Français",
   sg_pdf_export_modal_instructions:
-    "The PDF layout is fixed for this selection type. Review the options below, then generate.",
+    "Choose the PDF language and price line. With a price line, you can also set VAT, the payment line, and the bank footer. Notes and document details come from this selection.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_show_vat: "Show VAT and total including VAT",
   sg_pdf_export_show_payment_line:
