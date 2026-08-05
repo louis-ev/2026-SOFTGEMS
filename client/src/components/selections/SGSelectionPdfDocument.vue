@@ -89,7 +89,8 @@
                   :href="link.href"
                   target="_blank"
                   rel="noopener noreferrer"
-                >{{ link.text }}</a>
+                  >{{ link.text }}</a
+                >
                 <span v-else class="_descriptionLinkText">{{ link.text }}</span>
               </div>
             </div>
@@ -112,13 +113,8 @@
                 :src="coverUrl(gem)"
                 alt=""
               />
-              <div
-                v-if="photoMediaLinks(gem).length"
-                class="_photoMediaLinks"
-              >
-                <template
-                  v-for="(link, link_index) in photoMediaLinks(gem)"
-                >
+              <div v-if="photoMediaLinks(gem).length" class="_photoMediaLinks">
+                <template v-for="(link, link_index) in photoMediaLinks(gem)">
                   <a
                     v-if="link.href"
                     :key="'photo-media-' + link_index"
@@ -126,12 +122,14 @@
                     :href="link.href"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >{{ link.text }}</a>
+                    >{{ link.text }}</a
+                  >
                   <span
                     v-else
                     :key="'photo-media-text-' + link_index"
                     class="_descriptionLinkText"
-                  >{{ link.text }}</span>
+                    >{{ link.text }}</span
+                  >
                 </template>
               </div>
             </div>
@@ -173,7 +171,10 @@
       </tbody>
     </table>
 
-    <p v-if="has_pricing && show_payment_line && payment_line" class="_paymentLine">
+    <p
+      v-if="has_pricing && show_payment_line && payment_line"
+      class="_paymentLine"
+    >
       {{ payment_line }}
     </p>
 
@@ -404,7 +405,10 @@ export default {
     },
     vat_amount() {
       if (!Number.isFinite(this.pricing_sum)) return null;
-      return this.pricing_sum * selectionPdfVatRateFromPercent(this.resolved_vat_percent);
+      return (
+        this.pricing_sum *
+        selectionPdfVatRateFromPercent(this.resolved_vat_percent)
+      );
     },
     formatted_vat_amount() {
       return formatPdfCurrencyTotal(this.vat_amount, this.currency);
@@ -483,7 +487,9 @@ export default {
       });
     },
     descriptionTextBlocks(gem) {
-      return this.descriptionBlocks(gem).filter((block) => block.type === "text");
+      return this.descriptionBlocks(gem).filter(
+        (block) => block.type === "text"
+      );
     },
     descriptionCertificateLinks(gem) {
       return this.descriptionBlocks(gem).filter(
@@ -677,7 +683,7 @@ $acf-pdf-table-line: #000;
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  margin-bottom: 0;
+  margin-bottom: 0.25cm;
   border-left: 0.5pt solid $acf-pdf-table-line;
   border-right: 0.5pt solid $acf-pdf-table-line;
   background: #fff;
