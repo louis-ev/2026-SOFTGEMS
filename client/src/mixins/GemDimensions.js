@@ -15,17 +15,18 @@ export default {
       return field_key === gem_dimensions_merged_column_key;
     },
     formatGemDimensionsInline(gem) {
-      const fmt = (raw) => {
-        return (
-          formatDisplayNumber(raw, {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
-          }) ?? "—"
-        );
+      const fmt_part = (raw) => {
+        if (raw === null || raw === undefined || raw === "") return null;
+        return formatDisplayNumber(raw, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
       };
-      return `${fmt(gem?.length_mm)} × ${fmt(gem?.width_mm)} × ${fmt(
-        gem?.height_mm
-      )} mm`;
+      const length = fmt_part(gem?.length_mm);
+      const width = fmt_part(gem?.width_mm);
+      const height = fmt_part(gem?.height_mm);
+      if (length === null && width === null && height === null) return "-";
+      return `${length ?? "-"}×${width ?? "-"}×${height ?? "-"}`;
     },
     expandLinearDimensionFlashKeys(field_keys) {
       if (!Array.isArray(field_keys)) return [];
