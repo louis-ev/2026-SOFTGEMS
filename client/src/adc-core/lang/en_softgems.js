@@ -400,7 +400,6 @@ export default {
   sg_gems_table_paired_pick_select_aria: "Select this gem as the paired gem",
   sg_gems_table_paired_pick_selected_aria: "Selected as paired gem",
   sg_gems_table_total_row_count: "Total ({count})",
-  sg_selection_search_gems: "Search gems…",
   sg_selection_add_gems_from_database: "Add gems from the database…",
   sg_selection_add_gems_search_limit:
     "Showing the first {shown} of {total} matches.",

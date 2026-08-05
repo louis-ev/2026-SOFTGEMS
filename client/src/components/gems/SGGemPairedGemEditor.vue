@@ -63,10 +63,8 @@
         v-else
         ref="gems_inventory_table"
         :gems="pairable_gems"
-        :search_placeholder="$t('sg_selection_search_gems')"
         search_name="paired_gem_picker_search"
         :search_disabled="is_loading"
-        show_search_how_to
         read_only_cells
         use_sorted_gems
         selection_pick_column

@@ -39,10 +39,8 @@
         v-else-if="inventory_loaded"
         ref="gems_inventory_table"
         :gems="gems_inventory"
-        :search_placeholder="$t('sg_selection_search_gems')"
         search_name="selection_add_gems_search"
         :search_disabled="busy"
-        show_search_how_to
         read_only_cells
         use_sorted_gems
         selection_pick_column
@@ -195,13 +193,6 @@ export default {
 
 ._panelCloseBtn {
   flex-shrink: 0;
-}
-
-._pickHowTo {
-  margin: 0 0 calc(var(--spacing) * 0.85);
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
-  line-height: 1.4;
 }
 
 ._pickStatusHint {

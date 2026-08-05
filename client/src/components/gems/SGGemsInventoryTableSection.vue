@@ -2,10 +2,6 @@
   <div class="_gemsInventoryTableSection">
     <slot name="before_search" />
 
-    <p v-if="show_search_how_to" class="_searchHowTo">
-      {{ $t("sg_gems_search_placeholder") }}
-    </p>
-
     <div class="_gemsSearchBar">
       <SearchInput
         ref="search_input"
@@ -141,10 +137,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    show_search_how_to: {
-      type: Boolean,
-      default: false,
-    },
     enable_column_customizer: {
       type: Boolean,
       default: false,
@@ -257,13 +249,6 @@ export default {
   flex-direction: column;
   gap: var(--spacing);
   min-height: 0;
-}
-
-._searchHowTo {
-  margin: 0;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
-  line-height: 1.45;
 }
 
 ._gemsSearchBar {
