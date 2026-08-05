@@ -250,7 +250,8 @@ export default {
       return metadata_to_icon[metadata_key] || null;
     },
     getGemsMetadataLabel(metadata_key) {
-      const pricing_table_header_i18n = {
+      // Short headers for the gems inventory table only (forms keep long labels).
+      const table_header_i18n = {
         base_price_pcb: "sg_gems_table_col_pcb",
         purchased_price_pa: "sg_gems_table_col_pa",
         import_price: "sg_gems_table_col_import",
@@ -258,9 +259,20 @@ export default {
         pvd_asking_price: "sg_gems_table_col_pvd",
         pc_to: "sg_gems_table_col_pc",
         pf_invoiced_price: "sg_gems_table_col_pf",
+        reference_supplier: "sg_gems_table_col_ref_supplier",
+        reference_customer: "sg_gems_table_col_ref_customer",
+        number_of_pieces: "sg_gems_table_col_pcs",
+        stone_type: "sg_gems_table_col_stone_type",
+        weight_ct: "sg_gems_table_col_weight_ct",
+        origin_country: "sg_gems_table_col_origin",
+        country_of_cut: "sg_gems_table_col_coc",
+        treatment_type: "sg_gems_table_col_treatment",
+        dimensions_lwh: "sg_gems_table_col_dimensions_lwh",
+        $date_modified: "sg_gems_table_col_edited",
+        paired_gem: "sg_gems_table_col_paired_gem",
       };
-      const pricing_header = pricing_table_header_i18n[metadata_key];
-      if (pricing_header) return this.$t(pricing_header);
+      const table_header = table_header_i18n[metadata_key];
+      if (table_header) return this.$t(table_header);
 
       const metadata_to_translation_key = {
         id: "sg_id",
