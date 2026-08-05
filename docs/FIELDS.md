@@ -48,7 +48,7 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 | `quality_grade`    | select from a list | Hidden + purple in source. TODO for later (not V1).                                          |
 | `shape`            | select from a list | See options below.                                                                           |
 | `origin_country`   | select from a list | See options below.                                                                           |
-| `treatment_type`   | select from a list | See options below.                                                                           |
+| `treatment_type`   | select from a list | See options below. Inventory table shows compact codes (N, TE, O Min…) with the full stored label on hover; editor keeps the full lab-style string. Display map: [treatment_type_display.js](../client/src/utils/treatment_type_display.js). |
 | `cut_quality`      | select from a list | Purple-highlighted in source. TODO for later (not V1). Example values: `flat/good/deep/...`. |
 | `length_mm`        | manual             | Stone length in mm.                                                                          |
 | `width_mm`         | manual             | Stone width in mm.                                                                           |

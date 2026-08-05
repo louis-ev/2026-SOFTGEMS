@@ -14,6 +14,8 @@
           v-for="option in options"
           :key="option.value"
           class="_optionRow"
+          :title="option.title || undefined"
+          :data-title-popper="option.title ? true : null"
         >
           <input
             v-model="draft_values"

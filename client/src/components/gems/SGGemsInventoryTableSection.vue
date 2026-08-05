@@ -308,7 +308,7 @@ export default {
           this.gems_column_field_filters?.[meta_key]?.values || []
         ).map((v) => String(v).trim().toLowerCase()),
       );
-      const push_option = (value, label) => {
+      const push_option = (value, label, title = "") => {
         const v = String(value ?? "").trim();
         if (!v) return;
         const key = v.toLowerCase();
@@ -319,6 +319,7 @@ export default {
         options.push({
           value: v,
           label: label || v,
+          title: title || "",
         });
       };
 

@@ -78,7 +78,14 @@ function get_tooltip_target(node) {
   if (!(node instanceof Element)) return null;
 
   const target_el = node.closest(
-    `a[title], button[title], a[${TITLE_STASH_ATTR}], button[${TITLE_STASH_ATTR}]`,
+    [
+      "a[title]",
+      "button[title]",
+      `a[${TITLE_STASH_ATTR}]`,
+      `button[${TITLE_STASH_ATTR}]`,
+      "[data-title-popper][title]",
+      `[data-title-popper][${TITLE_STASH_ATTR}]`,
+    ].join(", "),
   );
   if (!target_el) return null;
   if (target_el.hasAttribute("disabled")) return null;

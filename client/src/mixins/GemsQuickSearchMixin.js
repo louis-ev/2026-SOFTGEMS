@@ -2,6 +2,7 @@
 
 import { formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
+import { gemTreatmentTypeCode } from "@/utils/treatment_type_display.js";
 import {
   parseGemsQuickSearchInput,
   gemMatchesQuickSearch,
@@ -204,10 +205,12 @@ export default {
 
       if (filter?.mode === "enum") {
         const values = Array.isArray(filter.values) ? filter.values : [];
-        const display =
-          meta_key === "status"
-            ? values.map((v) => gemStatusLabel(this.$t.bind(this), v))
-            : values;
+        let display = values;
+        if (meta_key === "status") {
+          display = values.map((v) => gemStatusLabel(this.$t.bind(this), v));
+        } else if (meta_key === "treatment_type") {
+          display = values.map((v) => gemTreatmentTypeCode(v));
+        }
         return `${field_label}: ${display.join(", ")}`;
       }
       if (filter?.mode === "number") {

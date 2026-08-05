@@ -34,6 +34,7 @@
                   _filterableHeader: isColumnFilterable(metadata_key),
                   _filterActive: isColumnFilterActive(metadata_key),
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
+                  _treatmentCol: metadata_key === 'treatment_type',
                 },
               ]"
               :aria-sort="getAriaSort(metadata_key)"
@@ -189,6 +190,7 @@
                   _editableCell: isMetadataCellEditable(metadata_key),
                   _flashCell: isCellFlashing(gem, metadata_key),
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
+                  _treatmentCol: metadata_key === 'treatment_type',
                 },
               ]"
               :data-cell-key="getCellFlashKey(gem, metadata_key)"
@@ -228,9 +230,17 @@
                   formatPricingPerCtLine(gem, metadata_key)
                 }}</span>
               </div>
-              <span v-else class="_gemMetadataValue">{{
-                formatValue(formatMetadataCellDisplay(gem, metadata_key))
-              }}</span>
+              <span
+                v-else
+                class="_gemMetadataValue"
+                :title="metadataCellTitle(gem, metadata_key) || undefined"
+                :data-title-popper="
+                  metadataCellTitle(gem, metadata_key) ? true : null
+                "
+                >{{
+                  formatValue(formatMetadataCellDisplay(gem, metadata_key))
+                }}</span
+              >
             </td>
             <td v-if="show_append_column" class="_appendColTd" @click.stop>
               <slot name="appendCell" :gem="gem" />
@@ -248,6 +258,7 @@
                 getStickyColumnClass(metadata_key),
                 {
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
+                  _treatmentCol: metadata_key === 'treatment_type',
                 },
               ]"
               :data-metadata-key="metadata_key"
@@ -293,6 +304,10 @@ import SGTablePager from "@/components/softgems/SGTablePager.vue";
 import SGGemsColumnFilterMenu from "@/components/gems/SGGemsColumnFilterMenu.vue";
 import { getFormatLocale, formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
+import {
+  gemTreatmentTypeCode,
+  gemTreatmentTypeTitle,
+} from "@/utils/treatment_type_display.js";
 import {
   GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
   GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY,
@@ -548,6 +563,11 @@ export default {
       if (metadata_key === "status") {
         return gemStatusLabel(this.$t.bind(this), gem?.status);
       }
+      if (metadata_key === "treatment_type") {
+        return gemTreatmentTypeCode(
+          this.resolveMetadataValue(gem, metadata_key)
+        );
+      }
       if (metadata_key === "$date_modified") {
         const raw = gem?.$date_modified;
         if (raw === null || raw === undefined || raw === "") return "";
@@ -562,6 +582,12 @@ export default {
         );
       }
       return this.resolveMetadataValue(gem, metadata_key);
+    },
+    metadataCellTitle(gem, metadata_key) {
+      if (metadata_key !== "treatment_type") return "";
+      return gemTreatmentTypeTitle(
+        this.resolveMetadataValue(gem, metadata_key)
+      );
     },
     resolveMetadataValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
@@ -672,7 +698,7 @@ export default {
       if (!this.isColumnFilterable(metadata_key)) return false;
       if (metadata_key === GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY) {
         return GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.some(
-          (axis_key) => this.column_field_filters?.[axis_key],
+          (axis_key) => this.column_field_filters?.[axis_key]
         );
       }
       const filter = this.column_field_filters?.[metadata_key];
@@ -1163,6 +1189,21 @@ export default {
 
   th._pricingCol ._thContent {
     gap: calc(var(--spacing) / 6);
+  }
+
+  th._treatmentCol,
+  td._treatmentCol {
+    width: 18ch;
+    min-width: 18ch;
+    max-width: 18ch;
+    box-sizing: border-box;
+  }
+
+  td._treatmentCol ._gemMetadataValue {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
