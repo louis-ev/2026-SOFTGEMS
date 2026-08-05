@@ -21,12 +21,12 @@ export const selection_pdf_strings = Object.freeze({
     total: "TOTAL",
     vat: "VAT",
     grand_total: "Total",
-    order_number: "Purchase order N° :",
-    supplier_account_number: "Supplier account N° :",
+    order_number: "Purchase order N°:",
+    supplier_account_number: "Supplier account N°:",
     date_line: "Paris, {date}",
     bank_intro: "On our bank account in US dollars:",
     payment_line:
-      "Please kindly transfer {amount_words} dollars ({amount}$US)",
+      "Please kindly transfer {amount_words} dollars ({amount} $US)",
     title_generic: "Document N°{number}",
     title_box: "Box N°{number}",
     title_memo_out: "Consignment N°{number}",
@@ -38,7 +38,7 @@ export const selection_pdf_strings = Object.freeze({
     title_credit_note: "Credit note N°{number}",
     title_importation_return: "Importation return N°{number}",
     legal_memo_out:
-      "It is expressly agreed that the Goods are delivered on a consignment (deposit) basis and do not constitute a sale. Under no circumstances may the Consignee relinquish possession or control of the Goods, including to any third party, and the Consignee shall at all times be able to produce and return the Goods immediately upon first demand.  The Goods are delivered to and entrusted to the Consignee solely for the purpose of either presenting them to customers or carrying out work, processing, or other operations relating to them. The consignment shall terminate only upon the actual return of the Goods. Any failure to return the Goods shall constitute the criminal offence of criminal breach of trust, as provided under applicable law. The Consignee undertakes to insure the Goods, on behalf of the Consignor, against all risks of loss or damage for their full value, inclusive of all applicable taxes. Receipt of the Goods shall constitute the Consignee's irrevocable acceptance of these terms and conditions.",
+      "It is expressly agreed that the Goods are delivered on a consignment (deposit) basis and do not constitute a sale. Under no circumstances may the Consignee relinquish possession or control of the Goods, including to any third party, and the Consignee shall at all times be able to produce and return the Goods immediately upon first demand. The Goods are delivered to and entrusted to the Consignee solely for the purpose of either presenting them to customers or carrying out work, processing, or other operations relating to them. The consignment shall terminate only upon the actual return of the Goods. Any failure to return the Goods shall constitute the criminal offence of criminal breach of trust, as provided under applicable law. The Consignee undertakes to insure the Goods, on behalf of the Consignor, against all risks of loss or damage for their full value, inclusive of all applicable taxes. Receipt of the Goods shall constitute the Consignee's irrevocable acceptance of these terms and conditions.",
     legal_generic:
       "This document is issued for informational and contractual purposes between the parties. The listed goods remain the property of the depositor until full payment and written agreement of the parties. Any dispute relating to the authenticity, conformity or value of the stones must be submitted in writing within the time limits agreed between the parties.",
     origin_prefix: "Origin: {value}",
@@ -47,7 +47,7 @@ export const selection_pdf_strings = Object.freeze({
     photo_fallback: "Photo",
     video_fallback: "Video",
     footer_line_1:
-      "Registered Office : 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
+      "Registered Office: 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
       "SAS with a share capital of EUR 50,000 • SIRET N° 994 099 448 00015",
   }),
@@ -68,12 +68,12 @@ export const selection_pdf_strings = Object.freeze({
     date_line: "Paris, {date}",
     bank_intro: "Sur notre compte bancaire en dollars US :",
     payment_line:
-      "Merci de bien vouloir virer {amount_words} dollars ({amount}$US)",
+      "Merci de bien vouloir virer {amount_words} dollars ({amount} $US)",
     title_generic: "Document N°{number}",
     title_box: "Boîte N°{number}",
     title_memo_out: "Consignation N°{number}",
     title_return_memo_out: "Retour consignation N°{number}",
-    title_return_memo_in: "Retour memo in N°{number}",
+    title_return_memo_in: "Retour mémo in N°{number}",
     title_buying_invoice: "Facture d’achat N°{number}",
     title_sale_invoice: "Facture de vente N°{number}",
     title_partner_invoice: "Facture partenaire N°{number}",
@@ -89,9 +89,9 @@ export const selection_pdf_strings = Object.freeze({
     photo_fallback: "Photo",
     video_fallback: "Vidéo",
     footer_line_1:
-      "SIÈGE SOCIAL: 10, rue Place Vendôme - 75001 PARIS - TEL: 33(6)69 24 14 89 - info@acfinegems.com",
+      "SIÈGE SOCIAL : 10 Place Vendôme, 75001 Paris, France • Tél. : +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
-      "SAS AU CAPITAL DE 50 000 EUROS-SIRET 994 099 448 00015",
+      "SAS AU CAPITAL DE 50 000 EUROS • SIRET 994 099 448 00015",
   }),
 });
 

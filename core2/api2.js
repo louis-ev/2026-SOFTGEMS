@@ -1564,12 +1564,12 @@ module.exports = (function () {
     data.pdf_footer_lines =
       export_lang === "en"
         ? [
-            "Registered Office : 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
+            "Registered Office: 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
             "SAS with a share capital of EUR 50,000 • SIRET N° 994 099 448 00015",
           ]
         : [
-            "SIÈGE SOCIAL: 10, rue Place Vendôme - 75001 PARIS - TEL: 33(6)69 24 14 89 - info@acfinegems.com",
-            "SAS AU CAPITAL DE 50 000 EUROS-SIRET 994 099 448 00015",
+            "SIÈGE SOCIAL : 10 Place Vendôme, 75001 Paris, France • Tél. : +33 (0)6 69 24 14 89 • info@acfinegems.com",
+            "SAS AU CAPITAL DE 50 000 EUROS • SIRET 994 099 448 00015",
           ];
     // Per-page margins so content clears the footer zone and following
     // pages keep a top margin (sides are handled by the document itself).
