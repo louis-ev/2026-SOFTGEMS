@@ -448,7 +448,7 @@ export default {
   sg_pdf_export_language_en: "English",
   sg_pdf_export_language_fr: "Français",
   sg_pdf_export_modal_instructions:
-    "Choose the PDF language and price line. With a price line, you can also set VAT, the payment line, and the bank footer. Notes and document details come from this selection.",
+    "Language, price line, VAT and bank footer are set here — header fields and notes come from the selection.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_show_vat: "Show VAT and total including VAT",
   sg_pdf_export_show_payment_line:
