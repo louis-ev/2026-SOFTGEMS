@@ -8,8 +8,10 @@ import {
 const t = (key) => {
   const map = {
     sg_status_value_reference: "Reference",
-    sg_selection_type_memo_in: "Memo in",
-    sg_selection_type_buying_invoice: "Buying invoice",
+    sg_status_value_memo_in: "Memo in",
+    sg_status_value_purchased: "Purchased",
+    sg_status_value_sold: "Sold",
+    sg_status_value_returned: "Returned",
   };
   return map[key] || key;
 };
@@ -28,9 +30,13 @@ describe("normalizeGemStatusSlug", () => {
 });
 
 describe("gemStatusLabel", () => {
-  it("translates slugs via selection type labels", () => {
+  it("uses inventory-oriented status labels", () => {
+    expect(gemStatusLabel(t, "reference")).toBe("Reference");
     expect(gemStatusLabel(t, "memo-in")).toBe("Memo in");
-    expect(gemStatusLabel(t, "buying-invoice")).toBe("Buying invoice");
+    expect(gemStatusLabel(t, "buying-invoice")).toBe("Purchased");
+    expect(gemStatusLabel(t, "sale-invoice")).toBe("Sold");
+    expect(gemStatusLabel(t, "return-memo-in")).toBe("Returned");
+    expect(gemStatusLabel(t, "return-memo-out")).toBe("Returned");
   });
 
   it("returns unknown stored values unchanged", () => {

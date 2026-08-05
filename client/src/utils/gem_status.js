@@ -1,6 +1,3 @@
-import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
-import { selectionTypeLabel } from "@/utils/selection_types.js";
-
 /** Stored slug when a gem has no selection-driven status. */
 export const GEM_STATUS_REFERENCE = "reference";
 
@@ -13,6 +10,16 @@ export const GEM_STATUS_MANUAL_SLUGS = Object.freeze([
   "return-memo-in",
   "return-memo-out",
 ]);
+
+/** Inventory-oriented display labels (stored slugs stay selection-type based). */
+const GEM_STATUS_LABEL_KEYS = Object.freeze({
+  [GEM_STATUS_REFERENCE]: "sg_status_value_reference",
+  "memo-in": "sg_status_value_memo_in",
+  "buying-invoice": "sg_status_value_purchased",
+  "sale-invoice": "sg_status_value_sold",
+  "return-memo-in": "sg_status_value_returned",
+  "return-memo-out": "sg_status_value_returned",
+});
 
 const VALID_GEM_STATUS_SLUGS = new Set(GEM_STATUS_MANUAL_SLUGS);
 
@@ -34,10 +41,7 @@ export function normalizeGemStatusSlug(raw) {
  */
 export function gemStatusLabel(t, raw_status) {
   const slug = normalizeGemStatusSlug(raw_status);
-  if (slug === GEM_STATUS_REFERENCE) return t("sg_status_value_reference");
-
-  const selection_value = selectionTypeFromSlug(slug);
-  if (selection_value) return selectionTypeLabel(t, selection_value);
-
+  const label_key = GEM_STATUS_LABEL_KEYS[slug];
+  if (label_key) return t(label_key);
   return slug;
 }
