@@ -71,12 +71,9 @@
                       :icon="metadata_icons[metadata_key]"
                       class="_thIcon"
                     />
-                    <span
-                      v-if="metadata_key !== '$cover'"
-                      >{{
-                        metadata_labels[metadata_key] || metadata_key
-                      }}</span
-                    >
+                    <span v-if="metadata_key !== '$cover'">{{
+                      metadata_labels[metadata_key] || metadata_key
+                    }}</span>
                     <span v-else class="_srOnly">{{
                       metadata_labels[metadata_key] || metadata_key
                     }}</span>
@@ -1183,6 +1180,35 @@ export default {
     font-family: var(--sl-font-mono);
   }
 
+  // Compact default column width; sticky id/cover + pricing keep their own sizes.
+  th:not(._stickyIdCol):not(._stickyCoverCol):not(._pricingCol):not(
+      ._pickColTh
+    ):not(._removeColTh),
+  td:not(._stickyIdCol):not(._stickyCoverCol):not(._pricingCol):not(
+      ._pickColTd
+    ):not(._removeColTd) {
+    max-width: 18ch;
+    box-sizing: border-box;
+  }
+
+  td ._gemMetadataValue,
+  td ._dimensionsCellValue {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  th ._thContent {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  th ._thContent > span:not(._srOnly) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   th._pricingCol,
   td._pricingCol {
     width: 5rem;
@@ -1195,21 +1221,6 @@ export default {
 
   th._pricingCol ._thContent {
     gap: calc(var(--spacing) / 6);
-  }
-
-  th._treatmentCol,
-  td._treatmentCol {
-    width: 18ch;
-    min-width: 18ch;
-    max-width: 18ch;
-    box-sizing: border-box;
-  }
-
-  td._treatmentCol ._gemMetadataValue {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 }
 
