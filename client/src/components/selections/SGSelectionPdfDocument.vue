@@ -177,6 +177,10 @@
       {{ payment_line }}
     </p>
 
+    <section v-if="has_notes" class="_notesBlock">
+      <div class="_notesBody" v-html="notes_html" />
+    </section>
+
     <p v-if="has_pricing && bank_footer_en" class="_bankIntro">
       {{ pdfT("bank_intro") }}
     </p>
@@ -218,6 +222,7 @@ import {
   selectionPdfFooterLines,
   selectionPdfT,
 } from "@/utils/selection_pdf_strings.js";
+import { isEmptyRichText } from "@/utils/rich_text.js";
 import {
   formatPdfCurrencyTotal,
   formatPdfNumber,
@@ -430,6 +435,14 @@ export default {
     media_origin() {
       if (typeof window === "undefined") return "";
       return resolveAppPublicOrigin();
+    },
+    notes_html() {
+      return typeof this.selection?.notes === "string"
+        ? this.selection.notes
+        : "";
+    },
+    has_notes() {
+      return !isEmptyRichText(this.notes_html);
     },
   },
   methods: {
@@ -799,6 +812,43 @@ $acf-pdf-table-line: #000;
   font-size: 8pt;
   line-height: 1.4;
   font-weight: 400;
+}
+
+._notesBlock {
+  margin: 4mm 0 5mm;
+  font-size: 8pt;
+  line-height: 1.4;
+  font-weight: 400;
+  color: $acf-brand-primary;
+}
+
+._notesBody {
+  font-size: 8pt;
+  line-height: 1.4;
+  font-weight: 400;
+
+  :deep(p) {
+    margin: 0 0 1.5mm;
+  }
+
+  :deep(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  :deep(strong),
+  :deep(b) {
+    font-weight: 700;
+  }
+
+  :deep(em),
+  :deep(i) {
+    font-style: italic;
+  }
+
+  :deep(a) {
+    color: $acf-pdf-link;
+    text-decoration: underline;
+  }
 }
 
 ._bankIntro {

@@ -12,6 +12,7 @@ import {
   BIconBuilding,
   BIconCalendar3,
   BIconCardList,
+  BIconCardText,
   BIconCaretDownFill,
   BIconCaretUpFill,
   BIconChevronDown,
@@ -70,6 +71,7 @@ Vue.component("BIconBag", BIconBag);
 Vue.component("BIconBuilding", BIconBuilding);
 Vue.component("BIconCalendar3", BIconCalendar3);
 Vue.component("BIconCardList", BIconCardList);
+Vue.component("BIconCardText", BIconCardText);
 Vue.component("BIconCaretDownFill", BIconCaretDownFill);
 Vue.component("BIconCaretUpFill", BIconCaretUpFill);
 Vue.component("BIconChevronDown", BIconChevronDown);

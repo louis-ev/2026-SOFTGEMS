@@ -107,6 +107,14 @@
             :page_title="page_title"
           />
 
+          <SGSelectionNotesSection
+            v-if="selection_folder_path && selection"
+            :selection_folder_path="selection_folder_path"
+            :selection="selection"
+            :can_edit="can_edit"
+            :page_title="page_title"
+          />
+
           <SGSelectionBuyingInvoiceFieldsSection
             v-if="selection_folder_path && selection"
             :selection_folder_path="selection_folder_path"
@@ -178,6 +186,7 @@ import SGSelectionGeneratedPdfsSection from "@/components/selections/SGSelection
 import SGSelectionPdfExportModal from "@/components/selections/SGSelectionPdfExportModal.vue";
 import SGSelectionGemsSection from "@/components/selections/SGSelectionGemsSection.vue";
 import SGSelectionHeaderFieldsSection from "@/components/selections/SGSelectionHeaderFieldsSection.vue";
+import SGSelectionNotesSection from "@/components/selections/SGSelectionNotesSection.vue";
 import SGSelectionBuyingInvoiceFieldsSection from "@/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue";
 import SGSelectionMainDocumentSection from "@/components/selections/SGSelectionMainDocumentSection.vue";
 import { selectionTypeHasMainDocument } from "@/utils/selection_documents.js";
@@ -208,6 +217,7 @@ export default {
     SGSelectionPdfExportModal,
     SGSelectionGemsSection,
     SGSelectionHeaderFieldsSection,
+    SGSelectionNotesSection,
     SGSelectionBuyingInvoiceFieldsSection,
     SGSelectionMainDocumentSection,
     SGOverlaySidePanelLayout,

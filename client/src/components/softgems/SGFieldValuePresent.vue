@@ -9,11 +9,20 @@
       v-if="!readonly"
       type="button"
       class="u-input _value"
-      :class="{ _empty: is_empty, _hasTrailing: has_value_trailing }"
+      :class="{
+        _empty: is_empty,
+        _hasTrailing: has_value_trailing,
+        _richText: is_rich_text,
+      }"
       :title="hint_title || undefined"
       @click="$emit('click')"
     >
-      <span class="_valueText">{{ display_value }}</span>
+      <span
+        v-if="is_rich_text && !is_empty"
+        class="_valueText _valueRichText"
+        v-html="rich_text_html"
+      />
+      <span v-else class="_valueText">{{ display_value }}</span>
       <div v-if="has_value_trailing" class="_valueTrailing" @click.stop>
         <slot name="value_trailing" />
       </div>
@@ -21,10 +30,19 @@
     <div
       v-else
       class="u-input _value _valueReadonly"
-      :class="{ _empty: is_empty, _hasTrailing: has_value_trailing }"
+      :class="{
+        _empty: is_empty,
+        _hasTrailing: has_value_trailing,
+        _richText: is_rich_text,
+      }"
       :title="hint_title || undefined"
     >
-      <span class="_valueText">{{ display_value }}</span>
+      <span
+        v-if="is_rich_text && !is_empty"
+        class="_valueText _valueRichText"
+        v-html="rich_text_html"
+      />
+      <span v-else class="_valueText">{{ display_value }}</span>
       <div v-if="has_value_trailing" class="_valueTrailing">
         <slot name="value_trailing" />
       </div>
@@ -35,6 +53,7 @@
 <script>
 import { formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
+import { htmlToPlainText } from "@/utils/rich_text.js";
 
 export default {
   name: "SGFieldValuePresent",
@@ -66,7 +85,7 @@ export default {
       type: String,
       default: "",
     },
-    /** When `"date"`, formats ISO / stored dates for display. */
+    /** When `"date"`, formats ISO / stored dates. When `"rich_text"`, renders HTML preview. */
     value_type: {
       type: String,
       default: "",
@@ -76,9 +95,20 @@ export default {
     has_value_trailing() {
       return Boolean(this.$slots.value_trailing);
     },
+    is_rich_text() {
+      return this.value_type === "rich_text";
+    },
     is_empty() {
       const v = this.value;
-      return v === null || v === undefined || v === "";
+      if (v === null || v === undefined || v === "") return true;
+      if (this.is_rich_text) {
+        return htmlToPlainText(v) === "";
+      }
+      return false;
+    },
+    rich_text_html() {
+      if (!this.is_rich_text || this.is_empty) return "";
+      return typeof this.value === "string" ? this.value : String(this.value);
     },
     display_value() {
       if (this.is_empty) return "—";
@@ -92,6 +122,9 @@ export default {
           day: "2-digit",
         });
         return formatted || String(this.value);
+      }
+      if (this.is_rich_text) {
+        return htmlToPlainText(this.value) || "—";
       }
       if (typeof this.value === "number" || typeof this.value === "string") {
         const formatted = formatDisplayNumber(this.value, {
@@ -154,6 +187,45 @@ button._value {
   flex: 1 1 auto;
   min-width: 0;
   font-weight: 400;
+}
+
+._value._richText {
+  align-items: flex-start;
+  min-height: calc(var(--spacing) * 2.5);
+  height: auto;
+  white-space: normal;
+}
+
+._valueRichText {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+  line-height: 1.45;
+  pointer-events: none;
+
+  :deep(p) {
+    margin: 0 0 0.35em;
+  }
+
+  :deep(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  :deep(strong),
+  :deep(b) {
+    font-weight: 700;
+  }
+
+  :deep(em),
+  :deep(i) {
+    font-style: italic;
+  }
+
+  :deep(a) {
+    color: var(--c-bleuvert, #2a6f7a);
+    text-decoration: underline;
+  }
 }
 
 ._valueTrailing {

@@ -18,6 +18,8 @@
       :content.sync="draft"
       :required="required"
       :autofocus="true"
+      :input_type="input_type"
+      :custom_formats="custom_formats"
       @update:content="onDraftInput"
       @onEnter="onSingleLineEnter"
     />
@@ -103,6 +105,15 @@ export default {
       type: Boolean,
       default: false,
     },
+    /** TextInput `input_type` — use `"editor"` for bold/italic/link rich text. */
+    input_type: {
+      type: String,
+      default: "text",
+    },
+    custom_formats: {
+      type: [Array, Boolean],
+      default: () => ["bold", "italic", "link"],
+    },
     options: {
       type: Array,
       default: () => [],
@@ -122,6 +133,12 @@ export default {
   computed: {
     has_select_options() {
       return Array.isArray(this.options) && this.options.length > 0;
+    },
+    uses_editor() {
+      return this.input_type === "editor";
+    },
+    enter_submits() {
+      return !this.multiline && !this.uses_editor;
     },
     has_field_history() {
       return (
@@ -259,7 +276,7 @@ export default {
       this.onDraftInput();
     },
     onSingleLineEnter() {
-      if (this.multiline) return;
+      if (!this.enter_submits) return;
       this.tryEmitSave();
     },
     tryEmitSave() {
@@ -287,6 +304,14 @@ export default {
         const select_ref = this.$refs.primary_field_ref;
         if (select_ref && typeof select_ref.focusSelect === "function") {
           select_ref.focusSelect();
+          return;
+        }
+        if (this.uses_editor) {
+          const editor_el =
+            this.$el && this.$el.querySelector(".ql-editor");
+          if (editor_el && typeof editor_el.focus === "function") {
+            editor_el.focus();
+          }
           return;
         }
         const el =

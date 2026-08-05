@@ -1,5 +1,6 @@
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { formatSelectionEntriesHistoryValue } from "@/utils/selection_entries.js";
+import { htmlToPlainText } from "@/utils/rich_text.js";
 
 /**
  * @param {Function} t
@@ -33,6 +34,9 @@ function formatHistoryEntryValue(entry, { history_kind }) {
 
   const value = entry?.value;
   if (value === null || value === undefined || value === "") return "—";
+  if (history_kind === "selection" && entry?.field === "notes") {
+    return htmlToPlainText(value) || "—";
+  }
   if (history_kind === "selection" && typeof value === "boolean") {
     return value ? "✓" : "—";
   }

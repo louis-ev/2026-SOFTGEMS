@@ -112,7 +112,7 @@ export default {
     /**
      * Simple text + history editor. When set, `editor_component` / `editor_props` are ignored.
      * Shape: { meta_path, field_key, stored_value, is_saving, required?, required_empty_hint?,
-     *   external_warning?, history_field_key?, label_icon? }
+     *   external_warning?, history_field_key?, label_icon?, input_type?, custom_formats?, multiline?, options? }
      */
     meta_text: {
       type: Object,
@@ -201,10 +201,15 @@ export default {
           mt.field_key != null ? String(mt.field_key) : "";
         const history_field_key_raw =
           mt.history_field_key != null ? String(mt.history_field_key).trim() : "";
+        const input_type =
+          mt.input_type != null && String(mt.input_type).trim() !== ""
+            ? String(mt.input_type)
+            : "text";
         return {
           label: this.label,
           label_icon,
-          initial_value: this.value,
+          initial_value:
+            mt.stored_value != null ? String(mt.stored_value) : this.value,
           stored_comparison_value:
             mt.stored_value != null ? String(mt.stored_value) : "",
           history_path: mt.meta_path != null ? String(mt.meta_path) : "",
@@ -215,6 +220,13 @@ export default {
           is_saving: !!mt.is_saving,
           external_warning: mt.external_warning || "",
           options: Array.isArray(mt.options) ? mt.options : [],
+          input_type,
+          custom_formats: Array.isArray(mt.custom_formats)
+            ? mt.custom_formats
+            : mt.custom_formats === false
+              ? false
+              : ["bold", "italic", "link"],
+          multiline: !!mt.multiline || input_type === "editor",
         };
       }
       return this.editor_props;
