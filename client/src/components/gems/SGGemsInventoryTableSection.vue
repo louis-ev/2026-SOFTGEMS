@@ -15,13 +15,30 @@
     <div v-if="is_loading" class="_loading">{{ $t("sg_loading_gems") }}</div>
     <p v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</p>
     <template v-else>
-      <p
-        v-if="gems_quick_search_filter_caption"
+      <div
+        v-if="gems_quick_search_has_active_filters"
         class="_gemsActiveFilters"
         role="status"
       >
-        {{ gems_quick_search_filter_caption }}
-      </p>
+        <span class="_filteredPrefix">{{ $t("sg_gems_filtered_prefix") }}</span>
+        <button
+          v-for="chip in gems_active_filter_chips"
+          :key="chip.chip_key"
+          type="button"
+          class="_filterChip"
+          :title="$t('sg_gems_filter_chip_remove_title')"
+          :aria-label="
+            $t('sg_gems_filter_chip_remove_aria', { filter: chip.label })
+          "
+          @click="removeGemsFilterChip(chip)"
+        >
+          <span class="_filterChipLabel">{{ chip.label }}</span>
+          <span class="_filterChipRemove" aria-hidden="true">×</span>
+        </button>
+        <span class="_filteredCount">{{
+          gems_quick_search_filter_count_caption
+        }}</span>
+      </div>
       <div class="_tableShell" :class="table_shell_class">
         <SGGemsTable
           ref="gems_table"
@@ -41,8 +58,13 @@
           :gems_page_size="gems_page_size"
           :fixed_gem_order="fixed_gem_order"
           :append_column="append_column"
+          :enable_column_filters="true"
+          :column_field_filters="gems_column_field_filters"
+          :column_filter_options="gems_column_filter_options"
           @rowClick="$emit('rowClick', $event)"
           @editCell="$emit('editCell', $event)"
+          @applyColumnFilter="onApplyColumnFilter"
+          @clearColumnFilter="onClearColumnFilter"
         />
       </div>
     </template>
@@ -67,6 +89,18 @@ import GemsQuickSearchMixin from "@/mixins/GemsQuickSearchMixin.js";
 import GemsInventoryTableMixin, {
   gems_table_columns_storage_scopes,
 } from "@/mixins/GemsInventoryTableMixin.js";
+import {
+  color_suggestions,
+  shape_suggestions,
+  stone_type_suggestions,
+  origin_country_suggestions,
+  status_suggestions,
+} from "@/suggestions/softgems";
+import { gemStatusLabel } from "@/utils/gem_status.js";
+import {
+  GEMS_COLUMN_FILTER_ENUM_KEYS,
+  getGemsColumnFilterMode,
+} from "@/utils/gems_quick_search.js";
 
 export default {
   name: "SGGemsInventoryTableSection",
@@ -195,6 +229,13 @@ export default {
         return acc;
       }, {});
     },
+    gems_column_filter_options() {
+      const options = {};
+      GEMS_COLUMN_FILTER_ENUM_KEYS.forEach((meta_key) => {
+        options[meta_key] = this.buildColumnFilterOptions(meta_key);
+      });
+      return options;
+    },
   },
   watch: {
     gems: {
@@ -239,6 +280,63 @@ export default {
         table.scrollGemCellIntoView(payload);
       }
     },
+    suggestionListForFilterKey(meta_key) {
+      if (meta_key === "stone_type") return stone_type_suggestions;
+      if (meta_key === "color") return color_suggestions;
+      if (meta_key === "shape") return shape_suggestions;
+      if (meta_key === "origin_country") return origin_country_suggestions;
+      if (meta_key === "status") return status_suggestions;
+      // reference_supplier / reference_customer: distinct values from gems only
+      return [];
+    },
+    buildColumnFilterOptions(meta_key) {
+      if (getGemsColumnFilterMode(meta_key) !== "enum") return [];
+      const seen = new Set();
+      const options = [];
+      const push_option = (value, label) => {
+        const v = String(value ?? "").trim();
+        if (!v) return;
+        const key = v.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        options.push({
+          value: v,
+          label: label || v,
+        });
+      };
+
+      this.suggestionListForFilterKey(meta_key).forEach((value) => {
+        if (meta_key === "status") {
+          push_option(value, gemStatusLabel(this.$t.bind(this), value));
+          return;
+        }
+        push_option(value, value);
+      });
+
+      (Array.isArray(this.gems) ? this.gems : []).forEach((gem) => {
+        const raw = gem?.[meta_key];
+        if (raw === undefined || raw === null || raw === "") return;
+        if (meta_key === "status") {
+          push_option(raw, gemStatusLabel(this.$t.bind(this), raw));
+          return;
+        }
+        push_option(raw, String(raw));
+      });
+
+      options.sort((a, b) =>
+        a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+      );
+      return options;
+    },
+    onApplyColumnFilter(payload) {
+      const meta_key = payload?.metadata_key;
+      const filter = payload?.filter;
+      if (!meta_key || !filter) return;
+      this.applyGemsColumnFilter(meta_key, filter);
+    },
+    onClearColumnFilter(meta_key) {
+      this.removeGemsColumnFilter(meta_key);
+    },
   },
 };
 </script>
@@ -272,12 +370,58 @@ export default {
   max-width: 100%;
   margin: 0;
   padding: 0;
-  border: 0;
-  background: transparent;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.4rem;
   font-size: var(--sl-font-size-x-small);
   line-height: 1.4;
   color: color-mix(in srgb, var(--c-gris_fonce) 82%, transparent);
   font-weight: 400;
+}
+
+._filteredPrefix {
+  flex-shrink: 0;
+}
+
+._filteredCount {
+  flex-shrink: 0;
+  margin-left: 0.15rem;
+}
+
+._filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.1rem 0.4rem 0.1rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--c-gris_fonce) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-gris_clair) 70%, transparent);
+  color: var(--c-noir, inherit);
+  font: inherit;
+  font-size: inherit;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+._filterChip:hover {
+  border-color: var(--c-bleuvert);
+  color: var(--c-bleuvert);
+}
+
+._filterChipLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+._filterChipRemove {
+  flex-shrink: 0;
+  font-size: 0.95em;
+  line-height: 1;
+  opacity: 0.7;
 }
 
 ._tableShell {

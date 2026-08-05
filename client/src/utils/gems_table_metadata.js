@@ -44,6 +44,7 @@ export const gems_table_gem_excluded_metadata_keys = Object.freeze([
   "internal_name",
   "price_per_carat_all",
   "box_selection_path",
+  "selection_membership_paths",
   "purchased_price_pa",
   "price_per_carat_pa",
 ]);

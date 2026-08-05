@@ -1,6 +1,18 @@
 /** Shared quick search for gems inventory (same rules as SGGemsView). Host must expose `gems` (array). */
 
-import { formatDisplayNumber, parseEnglishNumber } from "@/utils/format_locale.js";
+import { formatDisplayNumber } from "@/utils/format_locale.js";
+import { gemStatusLabel } from "@/utils/gem_status.js";
+import {
+  parseGemsQuickSearchInput,
+  gemMatchesQuickSearch,
+  getGemIdFromPath,
+  upsertFieldFilterInSearch,
+  removeFieldFilterFromSearch,
+  removeLegacyFilterFromSearch,
+  getGemsColumnFilterMode,
+  isGemsColumnFilterableKey,
+  GEMS_COLUMN_FILTER_SERIALIZE_ALIAS,
+} from "@/utils/gems_quick_search.js";
 
 const gems_quick_search_debounce_ms = 200;
 
@@ -26,93 +38,133 @@ export default {
     },
   },
   computed: {
+    gems_quick_search_parsed() {
+      return parseGemsQuickSearchInput(this.gems_quick_search_debounced);
+    },
     filtered_gems() {
       if (!Array.isArray(this.gems)) return [];
-      const parsed = this.parseGemsQuickSearchInput(
-        this.gems_quick_search_debounced,
-      );
-      return this.gems.filter((gem) => this.gemMatchesQuickSearch(gem, parsed));
+      const parsed = this.gems_quick_search_parsed;
+      return this.gems.filter((gem) => gemMatchesQuickSearch(gem, parsed));
     },
-    gems_quick_search_filter_lines() {
-      const raw = this.gems_quick_search_debounced;
-      if (!raw || !String(raw).trim()) return [];
-
-      const parsed = this.parseGemsQuickSearchInput(raw);
-      const lines = [];
-      const fmt_weight = (n) =>
+    gems_active_filter_chips() {
+      const parsed = this.gems_quick_search_parsed;
+      const chips = [];
+      const fmt = (n) =>
         formatDisplayNumber(n, {
           minimumFractionDigits: 0,
           maximumFractionDigits: 6,
-        }) ?? "";
+        }) ?? String(n);
 
       if (parsed.id_needle) {
-        lines.push(
-          this.$t("sg_gems_filter_id_exact", {
-            needle: parsed.id_needle,
+        chips.push({
+          chip_key: "legacy:id",
+          kind: "legacy",
+          legacy_kind: "id",
+          meta_key: "",
+          label: this.$t("sg_gems_filter_chip_id", {
+            value: parsed.id_needle,
           }),
-        );
+        });
       }
 
       if (parsed.stone_families.length === 1) {
-        if (parsed.stone_families[0] === "sapphire") {
-          lines.push(this.$t("sg_gems_filter_stone_sapphire"));
-        } else {
-          lines.push(this.$t("sg_gems_filter_stone_ruby"));
-        }
+        chips.push({
+          chip_key: "legacy:stone_families",
+          kind: "legacy",
+          legacy_kind: "stone_families",
+          meta_key: "",
+          label:
+            parsed.stone_families[0] === "sapphire"
+              ? this.$t("sg_gems_filter_stone_sapphire")
+              : this.$t("sg_gems_filter_stone_ruby"),
+        });
       } else if (parsed.stone_families.length >= 2) {
-        lines.push(this.$t("sg_gems_filter_stone_sapphire_or_ruby"));
+        chips.push({
+          chip_key: "legacy:stone_families",
+          kind: "legacy",
+          legacy_kind: "stone_families",
+          meta_key: "",
+          label: this.$t("sg_gems_filter_stone_sapphire_or_ruby"),
+        });
       }
 
       if (parsed.stone_type_needle) {
-        const matching_labels = this.collectDistinctStoneTypesMatchingNeedle(
-          parsed.stone_type_needle,
-        );
-        lines.push(
-          this.$t("sg_gems_filter_stone_text", {
-            needle: parsed.stone_type_needle,
-            matches:
-              this.formatStoneTypeMatchesForFilterCaption(matching_labels),
+        chips.push({
+          chip_key: "legacy:stone_type_needle",
+          kind: "legacy",
+          legacy_kind: "stone_type_needle",
+          meta_key: "",
+          label: this.$t("sg_gems_filter_chip_stone_text", {
+            value: parsed.stone_type_needle,
           }),
-        );
+        });
       }
 
-      const ws = parsed.weight_spec;
-      if (ws) {
+      if (parsed.weight_spec) {
+        const ws = parsed.weight_spec;
+        let value_label = "";
         if (ws.type === "exact") {
-          lines.push(
-            this.$t("sg_gems_filter_weight_exact", {
-              value: fmt_weight(ws.value),
-            }),
-          );
+          value_label = this.$t("sg_gems_filter_weight_exact", {
+            value: fmt(ws.value),
+          });
+        } else if (ws.type === "range" && ws.max_exclusive) {
+          value_label = this.$t("sg_gems_filter_weight_half_open", {
+            min: fmt(ws.min),
+            max: fmt(ws.max),
+          });
         } else if (ws.type === "range") {
-          if (ws.max_exclusive) {
-            lines.push(
-              this.$t("sg_gems_filter_weight_half_open", {
-                min: fmt_weight(ws.min),
-                max: fmt_weight(ws.max),
-              }),
-            );
-          } else {
-            lines.push(
-              this.$t("sg_gems_filter_weight_range", {
-                min: fmt_weight(ws.min),
-                max: fmt_weight(ws.max),
-              }),
-            );
-          }
+          value_label = this.$t("sg_gems_filter_weight_range", {
+            min: fmt(ws.min),
+            max: fmt(ws.max),
+          });
         }
+        chips.push({
+          chip_key: "legacy:weight_legacy",
+          kind: "legacy",
+          legacy_kind: "weight_legacy",
+          meta_key: "",
+          label: value_label,
+        });
       }
 
-      return lines;
+      Object.entries(parsed.field_filters || {}).forEach(
+        ([meta_key, filter]) => {
+          chips.push({
+            chip_key: `field:${meta_key}`,
+            kind: "field",
+            legacy_kind: "",
+            meta_key,
+            label: this.formatGemsFieldFilterChipLabel(meta_key, filter),
+          });
+        },
+      );
+
+      return chips;
     },
-    gems_quick_search_filter_caption() {
-      const lines = this.gems_quick_search_filter_lines;
-      if (!lines.length) return "";
-      return this.$t("sg_gems_filter_caption", {
-        clauses: lines.join(" · "),
+    gems_quick_search_has_active_filters() {
+      return this.gems_active_filter_chips.length > 0;
+    },
+    gems_quick_search_filter_count_caption() {
+      if (!this.gems_quick_search_has_active_filters) return "";
+      return this.$t("sg_gems_filter_count", {
         shown: this.filtered_gems.length,
         total: Array.isArray(this.gems) ? this.gems.length : 0,
       });
+    },
+    /** @deprecated prose caption — prefer chips + count */
+    gems_quick_search_filter_caption() {
+      if (!this.gems_quick_search_has_active_filters) return "";
+      const clauses = this.gems_active_filter_chips
+        .map((chip) => chip.label)
+        .join(" · ");
+      return this.$t("sg_gems_filter_caption", {
+        clauses,
+        shown: this.filtered_gems.length,
+        total: Array.isArray(this.gems) ? this.gems.length : 0,
+      });
+    },
+    gems_column_field_filters() {
+      return this.gems_quick_search_parsed.field_filters || {};
     },
   },
   beforeDestroy() {
@@ -122,214 +174,89 @@ export default {
     }
   },
   methods: {
+    isGemsColumnFilterableKey,
+    getGemsColumnFilterMode,
     getGemId(gem) {
-      const gem_path = gem?.$path || "";
-      if (!gem_path) return "";
-      const path_parts = gem_path.split("/");
-      return path_parts[path_parts.length - 1] || "";
-    },
-    normalizeGemsSearchNumber(str) {
-      const n = parseEnglishNumber(str);
-      return n === null ? NaN : n;
-    },
-    inferWeightSpecFromPlainNumberToken(token) {
-      const normalized_token = String(token).trim();
-      const with_dot = normalized_token.replace(",", ".");
-      if (!/^\d+\.\d+$/.test(with_dot)) return null;
-      const v = parseFloat(with_dot);
-      if (!Number.isFinite(v)) return null;
-      const frac = with_dot.split(".")[1] || "";
-      const frac_len = frac.length;
-      const tol = Math.pow(10, -frac_len);
-      return {
-        type: "range",
-        min: v - tol,
-        max: v + tol,
-      };
+      return getGemIdFromPath(gem);
     },
     parseGemsQuickSearchInput(raw) {
-      const base = {
-        id_needle: "",
-        weight_spec: null,
-        stone_families: [],
-        stone_type_needle: "",
-      };
-      if (!raw || typeof raw !== "string") return { ...base };
-
-      let s = raw.trim();
-      if (!s) return { ...base };
-
-      const stone_families = [];
-      const addStone = (key) => {
-        if (!stone_families.includes(key)) stone_families.push(key);
-      };
-      if (/\bsap\b/i.test(s)) {
-        addStone("sapphire");
-        s = s.replace(/\bsap\b/gi, " ");
-      }
-      if (/\brub\b/i.test(s)) {
-        addStone("ruby");
-        s = s.replace(/\brub\b/gi, " ");
-      }
-      s = s.replace(/\s+/g, " ").trim();
-
-      const result = {
-        id_needle: "",
-        weight_spec: null,
-        stone_families,
-        stone_type_needle: "",
-      };
-
-      if (!s) return result;
-
-      let m = s.match(/^=\s*(\d+(?:[.,]\d+)?)\s*$/);
-      if (m) {
-        const v = this.normalizeGemsSearchNumber(m[1]);
-        if (Number.isFinite(v)) {
-          result.weight_spec = { type: "exact", value: v };
-          return result;
-        }
-      }
-
-      m = s.match(/^(\d+[.,]\d+)\s*$/);
-      if (m) {
-        const spec = this.inferWeightSpecFromPlainNumberToken(m[1]);
-        if (spec) {
-          result.weight_spec = spec;
-          return result;
-        }
-      }
-
-      m = s.match(/^(\d+)[.,]\s*$/);
-      if (m) {
-        const n = parseInt(m[1], 10);
-        if (Number.isFinite(n) && n >= 0) {
-          result.weight_spec = {
-            type: "range",
-            min: n,
-            max: n + 1,
-            max_exclusive: true,
-          };
-          return result;
-        }
-      }
-
-      m = s.match(/^(\d+)\s*$/);
-      if (m) {
-        result.id_needle = m[1];
-        return result;
-      }
-
-      const tokens = s.split(" ").filter(Boolean);
-      const text_parts = [];
-      const id_digit_parts = [];
-      const weight_specs = [];
-
-      tokens.forEach((token) => {
-        if (/^=\s*\d+(?:[.,]\d+)?$/i.test(token)) {
-          const v = this.normalizeGemsSearchNumber(token.replace(/^=\s*/i, ""));
-          if (Number.isFinite(v)) {
-            weight_specs.push({ type: "exact", value: v });
-          }
-          return;
-        }
-        if (/^\d+$/.test(token)) {
-          id_digit_parts.push(token);
-          return;
-        }
-        const trunc_weight = token.match(/^(\d+)[.,]\s*$/);
-        if (trunc_weight) {
-          const n = parseInt(trunc_weight[1], 10);
-          if (Number.isFinite(n) && n >= 0) {
-            weight_specs.push({
-              type: "range",
-              min: n,
-              max: n + 1,
-              max_exclusive: true,
-            });
-          }
-          return;
-        }
-        if (/^\d+[.,]\d+$/.test(token)) {
-          const spec = this.inferWeightSpecFromPlainNumberToken(token);
-          if (spec) weight_specs.push(spec);
-          return;
-        }
-        text_parts.push(token);
-      });
-
-      if (weight_specs.length > 0) {
-        result.weight_spec = weight_specs[weight_specs.length - 1];
-      }
-      if (id_digit_parts.length > 0) {
-        result.id_needle = id_digit_parts.join("");
-      }
-      const stone_text = text_parts.join(" ").trim();
-      if (stone_text) {
-        result.stone_type_needle = stone_text;
-      }
-
-      return result;
-    },
-    gemStoneMatchesTextNeedle(stone_type, needle) {
-      if (!needle || typeof needle !== "string") return true;
-      const n = needle.trim().toLowerCase();
-      if (!n) return true;
-      const st = String(stone_type || "").toLowerCase();
-      return st.includes(n);
-    },
-    gemStoneMatchesQuickFamilies(stone_type, stone_families) {
-      if (!stone_families || stone_families.length === 0) return true;
-      const st = String(stone_type || "").toLowerCase();
-      return stone_families.some((fam) => {
-        if (fam === "sapphire") return st.includes("sapphire");
-        if (fam === "ruby") return st.includes("ruby");
-        return false;
-      });
-    },
-    gemMatchesWeightQuickSpec(gem, weight_spec) {
-      if (!weight_spec) return true;
-      const w = Number(gem.weight_ct);
-      if (!Number.isFinite(w)) return false;
-      if (weight_spec.type === "exact") {
-        return Math.abs(w - weight_spec.value) <= 1e-6;
-      }
-      if (weight_spec.type === "range") {
-        const eps = 1e-9;
-        if (weight_spec.max_exclusive) {
-          return w >= weight_spec.min - eps && w < weight_spec.max - eps;
-        }
-        return w >= weight_spec.min - eps && w <= weight_spec.max + eps;
-      }
-      return false;
+      return parseGemsQuickSearchInput(raw);
     },
     gemMatchesQuickSearch(gem, parsed) {
+      return gemMatchesQuickSearch(gem, parsed);
+    },
+    formatGemsFieldFilterChipLabel(meta_key, filter) {
+      const field_label = this.resolveGemsFilterFieldLabel(meta_key);
+      const fmt = (n) =>
+        formatDisplayNumber(n, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 6,
+        }) ?? String(n);
+
+      if (filter?.mode === "enum") {
+        const values = Array.isArray(filter.values) ? filter.values : [];
+        const display =
+          meta_key === "status"
+            ? values.map((v) => gemStatusLabel(this.$t.bind(this), v))
+            : values;
+        return `${field_label}: ${display.join(", ")}`;
+      }
+      if (filter?.mode === "number") {
+        if (Number.isFinite(filter.exact)) {
+          return `${field_label}: ${fmt(filter.exact)}`;
+        }
+        const has_min = Number.isFinite(filter.min);
+        const has_max = Number.isFinite(filter.max);
+        if (has_min && has_max) {
+          return `${field_label}: ${fmt(filter.min)}–${fmt(filter.max)}`;
+        }
+        if (has_min) return `${field_label}: ≥${fmt(filter.min)}`;
+        if (has_max) return `${field_label}: ≤${fmt(filter.max)}`;
+      }
+      return field_label;
+    },
+    resolveGemsFilterFieldLabel(meta_key) {
       if (
-        parsed.id_needle &&
-        this.getGemId(gem).toLowerCase() !== parsed.id_needle.toLowerCase()
+        this.metadata_labels &&
+        typeof this.metadata_labels === "object" &&
+        this.metadata_labels[meta_key]
       ) {
-        return false;
+        return this.metadata_labels[meta_key];
       }
-      if (
-        !this.gemStoneMatchesTextNeedle(
-          gem.stone_type,
-          parsed.stone_type_needle,
-        )
-      ) {
-        return false;
+      const alias = GEMS_COLUMN_FILTER_SERIALIZE_ALIAS[meta_key] || meta_key;
+      return alias;
+    },
+    applyGemsColumnFilter(meta_key, filter) {
+      if (!isGemsColumnFilterableKey(meta_key)) return;
+      this.gems_quick_search = upsertFieldFilterInSearch(
+        this.gems_quick_search,
+        meta_key,
+        filter,
+      );
+      // Apply immediately (skip debounce lag for UI apply).
+      this.gems_quick_search_debounced = this.gems_quick_search;
+    },
+    removeGemsColumnFilter(meta_key) {
+      if (!meta_key) return;
+      this.gems_quick_search = removeFieldFilterFromSearch(
+        this.gems_quick_search,
+        meta_key,
+      );
+      this.gems_quick_search_debounced = this.gems_quick_search;
+    },
+    removeGemsFilterChip(chip) {
+      if (!chip) return;
+      if (chip.kind === "field" && chip.meta_key) {
+        this.removeGemsColumnFilter(chip.meta_key);
+        return;
       }
-      if (
-        !this.gemStoneMatchesQuickFamilies(
-          gem.stone_type,
-          parsed.stone_families,
-        )
-      ) {
-        return false;
+      if (chip.kind === "legacy" && chip.legacy_kind) {
+        this.gems_quick_search = removeLegacyFilterFromSearch(
+          this.gems_quick_search,
+          chip.legacy_kind,
+        );
+        this.gems_quick_search_debounced = this.gems_quick_search;
       }
-      if (!this.gemMatchesWeightQuickSpec(gem, parsed.weight_spec)) {
-        return false;
-      }
-      return true;
     },
     collectDistinctStoneTypesMatchingNeedle(needle) {
       if (!needle || typeof needle !== "string") return [];
@@ -350,21 +277,6 @@ export default {
         a.localeCompare(b, undefined, { sensitivity: "base" }),
       );
       return labels;
-    },
-    formatStoneTypeMatchesForFilterCaption(labels) {
-      const max_shown = 6;
-      if (!labels.length) {
-        return this.$t("sg_gems_filter_stone_match_none");
-      }
-      const head = labels.slice(0, max_shown);
-      const rest = labels.length - max_shown;
-      if (rest > 0) {
-        return `${head.join(", ")} ${this.$t(
-          "sg_gems_filter_stone_match_more",
-          { n: rest },
-        )}`;
-      }
-      return head.join(", ");
     },
   },
 };

@@ -31,34 +31,61 @@
                 getStickyColumnClass(metadata_key),
                 {
                   _sortableHeader: isSortableColumn(metadata_key),
+                  _filterableHeader: isColumnFilterable(metadata_key),
+                  _filterActive: isColumnFilterActive(metadata_key),
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
                 },
               ]"
               :aria-sort="getAriaSort(metadata_key)"
             >
-              <button
-                type="button"
-                class="_thButton"
-                :disabled="!isSortableColumn(metadata_key)"
-                @click="onHeaderClick(metadata_key)"
-              >
-                <span class="_thContent">
-                  <b-icon
-                    v-if="
-                      metadata_icons[metadata_key] &&
-                      !isGemPricingTotalColumnKey(metadata_key)
-                    "
-                    :icon="metadata_icons[metadata_key]"
-                    class="_thIcon"
-                  />
-                  <span>{{
-                    metadata_labels[metadata_key] || metadata_key
-                  }}</span>
-                </span>
-                <span
+              <div class="_thInner">
+                <button
+                  type="button"
+                  class="_thLabelBtn"
+                  :data-column-filter-trigger="
+                    isColumnFilterable(metadata_key) ? metadata_key : null
+                  "
+                  :disabled="!canInteractHeaderLabel(metadata_key)"
+                  :aria-haspopup="
+                    isColumnFilterable(metadata_key) ? 'dialog' : null
+                  "
+                  :aria-expanded="
+                    isColumnFilterable(metadata_key)
+                      ? column_filter_menu_key === metadata_key
+                      : null
+                  "
+                  :title="
+                    isColumnFilterable(metadata_key)
+                      ? $t('sg_gems_column_filter_trigger_title')
+                      : null
+                  "
+                  @click="onHeaderLabelClick(metadata_key)"
+                >
+                  <span class="_thContent">
+                    <b-icon
+                      v-if="
+                        metadata_icons[metadata_key] &&
+                        !isGemPricingTotalColumnKey(metadata_key)
+                      "
+                      :icon="metadata_icons[metadata_key]"
+                      class="_thIcon"
+                    />
+                    <span>{{
+                      metadata_labels[metadata_key] || metadata_key
+                    }}</span>
+                  </span>
+                </button>
+                <button
                   v-if="isSortableColumn(metadata_key)"
+                  type="button"
                   class="_sortArrows"
                   :class="{ _activeSort: sort_key === metadata_key }"
+                  :aria-label="
+                    $t('sg_gems_column_sort_aria', {
+                      column: metadata_labels[metadata_key] || metadata_key,
+                    })
+                  "
+                  @click.stop="onHeaderClick(metadata_key)"
                 >
                   <b-icon
                     icon="caret-up-fill"
@@ -76,8 +103,22 @@
                         sort_key === metadata_key && sort_direction === 'desc',
                     }"
                   />
-                </span>
-              </button>
+                </button>
+              </div>
+              <SGGemsColumnFilterMenu
+                v-if="
+                  enable_column_filters &&
+                  column_filter_menu_key === metadata_key
+                "
+                :metadata_key="metadata_key"
+                :mode="getColumnFilterMode(metadata_key)"
+                :column_label="metadata_labels[metadata_key] || metadata_key"
+                :options="column_filter_options[metadata_key] || []"
+                :current_filter="column_field_filters[metadata_key] || null"
+                @apply="onColumnFilterApply"
+                @clear="onColumnFilterClear"
+                @cancel="closeColumnFilterMenu"
+              />
             </th>
             <th v-if="show_append_column" scope="col" class="_appendColTh">
               <span v-if="append_column_label" class="_appendColThText">{{
@@ -249,8 +290,13 @@
 <script>
 import CoverField from "@/adc-core/fields/CoverField.vue";
 import SGTablePager from "@/components/softgems/SGTablePager.vue";
+import SGGemsColumnFilterMenu from "@/components/gems/SGGemsColumnFilterMenu.vue";
 import { getFormatLocale, formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
+import {
+  getGemsColumnFilterMode,
+  isGemsColumnFilterableKey,
+} from "@/utils/gems_quick_search.js";
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions, {
   gem_linear_dimension_keys,
@@ -265,7 +311,7 @@ import {
 export default {
   name: "SGGemsTable",
   mixins: [GemPricing, GemDimensions],
-  components: { CoverField, SGTablePager },
+  components: { CoverField, SGTablePager, SGGemsColumnFilterMenu },
   props: {
     gems: { type: Array, default: () => [] },
     metadata_keys: { type: Array, default: () => [] },
@@ -292,6 +338,12 @@ export default {
     gems_page_size: { type: [Number, String], default: 100 },
     /** When true, shows a totals row for the current table rows (incl. search/filter). */
     show_totals_row: { type: Boolean, default: true },
+    /** When true, icon/label opens a column filter menu. */
+    enable_column_filters: { type: Boolean, default: false },
+    /** Active structured field filters keyed by metadata key. */
+    column_field_filters: { type: Object, default: () => ({}) },
+    /** Enum options per filterable column: { [meta_key]: [{ value, label }] }. */
+    column_filter_options: { type: Object, default: () => ({}) },
   },
   data() {
     return {
@@ -304,6 +356,7 @@ export default {
       previous_cell_values: {},
       flashing_cells: {},
       flash_timeouts: {},
+      column_filter_menu_key: "",
     };
   },
   computed: {
@@ -514,7 +567,9 @@ export default {
     },
     formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";
-      const formatted = formatDisplayNumber(value, { maximumFractionDigits: 3 });
+      const formatted = formatDisplayNumber(value, {
+        maximumFractionDigits: 3,
+      });
       if (formatted !== null) return formatted;
       if (typeof value === "object") return JSON.stringify(value);
       return String(value);
@@ -603,6 +658,49 @@ export default {
     isSortableColumn(metadata_key) {
       if (this.fixed_gem_order) return false;
       return metadata_key !== "$cover";
+    },
+    isColumnFilterable(metadata_key) {
+      if (!this.enable_column_filters) return false;
+      return isGemsColumnFilterableKey(metadata_key);
+    },
+    getColumnFilterMode(metadata_key) {
+      return getGemsColumnFilterMode(metadata_key);
+    },
+    isColumnFilterActive(metadata_key) {
+      if (!this.isColumnFilterable(metadata_key)) return false;
+      const filter = this.column_field_filters?.[metadata_key];
+      return Boolean(filter);
+    },
+    canInteractHeaderLabel(metadata_key) {
+      return (
+        this.isColumnFilterable(metadata_key) ||
+        this.isSortableColumn(metadata_key)
+      );
+    },
+    onHeaderLabelClick(metadata_key) {
+      if (this.isColumnFilterable(metadata_key)) {
+        this.toggleColumnFilterMenu(metadata_key);
+        return;
+      }
+      this.onHeaderClick(metadata_key);
+    },
+    toggleColumnFilterMenu(metadata_key) {
+      if (this.column_filter_menu_key === metadata_key) {
+        this.column_filter_menu_key = "";
+        return;
+      }
+      this.column_filter_menu_key = metadata_key;
+    },
+    closeColumnFilterMenu() {
+      this.column_filter_menu_key = "";
+    },
+    onColumnFilterApply(payload) {
+      this.$emit("applyColumnFilter", payload);
+      this.closeColumnFilterMenu();
+    },
+    onColumnFilterClear(metadata_key) {
+      this.$emit("clearColumnFilter", metadata_key);
+      this.closeColumnFilterMenu();
     },
     onHeaderClick(metadata_key) {
       if (this.fixed_gem_order || !this.isSortableColumn(metadata_key)) return;
@@ -1051,23 +1149,49 @@ export default {
   }
 }
 
-._thButton {
+thead th._filterableHeader {
+  position: relative;
+}
+
+._thInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 3);
+  width: 100%;
+}
+
+._thLabelBtn {
   border: 0;
   background: transparent;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 0;
   margin: 0;
   text-align: left;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: calc(var(--spacing) / 3);
   cursor: pointer;
   color: inherit;
 }
 
-._thButton:disabled {
+._thLabelBtn:disabled {
   cursor: default;
+}
+
+th._filterActive ._thContent {
+  color: var(--c-bleuvert);
+  font-weight: 600;
+}
+
+/* Filterable: hovering the name/icon highlights the filter target. */
+th._filterableHeader ._thLabelBtn:hover ._thContent {
+  color: var(--c-bleuvert);
+}
+
+th._filterableHeader ._thLabelBtn:hover ._thIcon {
+  opacity: 1;
+  color: var(--c-bleuvert);
 }
 
 ._sortArrows {
@@ -1078,11 +1202,18 @@ export default {
   flex-shrink: 0;
   margin-top: -12px;
   margin-bottom: -12px;
-  // display: none;
+  border: 0;
+  background: transparent;
+  padding: 0.1rem 0.15rem;
+  border-radius: 3px;
+  cursor: pointer;
+  color: inherit;
 }
 
 ._sortArrow {
-  font-size: 0.52rem;
+  min-width: 0.9rem;
+  min-height: 0.9rem;
+  font-size: 0.32rem;
   opacity: 0.28;
   color: var(--c-gris_fonce);
   transition: opacity 120ms ease, color 120ms ease;
@@ -1095,6 +1226,31 @@ export default {
 
 ._sortArrows._activeSort {
   opacity: 1;
+}
+
+/* Sort: hovering the arrows highlights the sort target. */
+._sortArrows:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--c-bleuvert) 12%, transparent);
+}
+
+._sortArrows:hover ._sortArrow {
+  opacity: 0.9;
+  color: var(--c-bleuvert);
+}
+
+/* Sortable-only columns: label click sorts → highlight arrows on label hover. */
+th._sortableHeader:not(._filterableHeader) ._thLabelBtn:hover + ._sortArrows {
+  opacity: 1;
+  background: color-mix(in srgb, var(--c-bleuvert) 12%, transparent);
+}
+
+th._sortableHeader:not(._filterableHeader)
+  ._thLabelBtn:hover
+  + ._sortArrows
+  ._sortArrow {
+  opacity: 0.9;
+  color: var(--c-bleuvert);
 }
 
 ._clickableRow {
