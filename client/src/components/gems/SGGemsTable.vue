@@ -1033,7 +1033,7 @@ export default {
 
   ._table th._pricingCol,
   ._table td._pricingCol {
-    --pricing-col-width: 5.5rem;
+    --pricing-col-width: 7rem;
     width: var(--pricing-col-width);
     min-width: var(--pricing-col-width);
     max-width: var(--pricing-col-width);
@@ -1183,11 +1183,16 @@ export default {
   // Compact default column width; sticky id/cover + pricing keep their own sizes.
   th:not(._stickyIdCol):not(._stickyCoverCol):not(._pricingCol):not(
       ._pickColTh
-    ):not(._removeColTh),
+    ):not(._removeColTh) {
+    min-width: 14ch;
+    max-width: 22ch;
+    box-sizing: border-box;
+  }
+
   td:not(._stickyIdCol):not(._stickyCoverCol):not(._pricingCol):not(
       ._pickColTd
     ):not(._removeColTd) {
-    max-width: 18ch;
+    max-width: 22ch;
     box-sizing: border-box;
   }
 
@@ -1211,9 +1216,10 @@ export default {
 
   th._pricingCol,
   td._pricingCol {
-    width: 5rem;
-    min-width: 5rem;
-    max-width: 5rem;
+    --pricing-col-width: 7rem;
+    width: var(--pricing-col-width);
+    min-width: var(--pricing-col-width);
+    max-width: var(--pricing-col-width);
     padding-left: calc(var(--sg-cell-padding) * 0.55);
     padding-right: calc(var(--sg-cell-padding) * 0.55);
     box-sizing: border-box;
