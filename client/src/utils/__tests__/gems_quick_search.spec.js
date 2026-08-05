@@ -127,16 +127,20 @@ describe("gems_quick_search field filters", () => {
       exact: 3,
     });
 
-    const range = parseGemsQuickSearchInput("weight=1-3 dimensions=5-7");
+    const range = parseGemsQuickSearchInput("weight=1-3 l=5-7 w=3");
     expect(range.field_filters.weight_ct).toEqual({
       mode: "number",
       min: 1,
       max: 3,
     });
-    expect(range.field_filters.dimensions_lwh).toEqual({
+    expect(range.field_filters.length_mm).toEqual({
       mode: "number",
       min: 5,
       max: 7,
+    });
+    expect(range.field_filters.width_mm).toEqual({
+      mode: "number",
+      exact: 3,
     });
   });
 
@@ -208,17 +212,23 @@ describe("gems_quick_search field filters", () => {
     expect(gemMatchesQuickSearch(red_round, color_only)).toBe(true);
   });
 
-  it("matches dimensions on any axis", () => {
-    const parsed = parseGemsQuickSearchInput("dimensions=5-7");
+  it("ANDs per-axis dimension filters", () => {
+    const parsed = parseGemsQuickSearchInput("l=5-7 w=3");
     expect(
       gemMatchesQuickSearch(
-        { $path: "gems/1", length_mm: 6, width_mm: 2, height_mm: 1 },
+        { $path: "gems/1", length_mm: 6, width_mm: 3, height_mm: 1 },
         parsed,
       ),
     ).toBe(true);
     expect(
       gemMatchesQuickSearch(
-        { $path: "gems/2", length_mm: 2, width_mm: 2, height_mm: 1 },
+        { $path: "gems/2", length_mm: 6, width_mm: 2, height_mm: 1 },
+        parsed,
+      ),
+    ).toBe(false);
+    expect(
+      gemMatchesQuickSearch(
+        { $path: "gems/3", length_mm: 2, width_mm: 3, height_mm: 1 },
         parsed,
       ),
     ).toBe(false);

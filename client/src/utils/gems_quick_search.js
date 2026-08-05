@@ -14,12 +14,22 @@ export const GEMS_COLUMN_FILTER_ENUM_KEYS = Object.freeze([
   "treatment_type",
 ]);
 
+/** Per-axis dimension filters (mm). UI is on the merged `dimensions_lwh` column. */
+export const GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS = Object.freeze([
+  "length_mm",
+  "width_mm",
+  "height_mm",
+]);
+
+/** Merged dimensions column — opens the L/W/H filter UI (not a search token itself). */
+export const GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY = "dimensions_lwh";
+
 /** Numeric (exact / range) column filters. */
 export const GEMS_COLUMN_FILTER_NUMBER_KEYS = Object.freeze([
   "id",
   "number_of_pieces",
   "weight_ct",
-  "dimensions_lwh",
+  ...GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
   ...gem_pricing_total_column_keys,
 ]);
 
@@ -30,9 +40,10 @@ export const GEMS_COLUMN_FILTERABLE_KEYS = Object.freeze([
   ...GEMS_COLUMN_FILTER_ENUM_KEYS,
   ...GEMS_COLUMN_FILTER_NUMBER_KEYS,
   ...GEMS_COLUMN_FILTER_DATE_KEYS,
+  GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY,
 ]);
 
-/** Alias (search token) ? metadata key. */
+/** Alias (search token) → metadata key. */
 export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   id: "id",
   status: "status",
@@ -57,8 +68,15 @@ export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   number_of_pieces: "number_of_pieces",
   weight: "weight_ct",
   weight_ct: "weight_ct",
-  dimensions: "dimensions_lwh",
-  dimensions_lwh: "dimensions_lwh",
+  l: "length_mm",
+  length: "length_mm",
+  length_mm: "length_mm",
+  w: "width_mm",
+  width: "width_mm",
+  width_mm: "width_mm",
+  h: "height_mm",
+  height: "height_mm",
+  height_mm: "height_mm",
   ...Object.fromEntries(
     gem_pricing_total_column_keys.map((key) => [key, key]),
   ),
@@ -79,7 +97,9 @@ export const GEMS_COLUMN_FILTER_SERIALIZE_ALIAS = Object.freeze({
   $date_modified: "edited",
   number_of_pieces: "pieces",
   weight_ct: "weight",
-  dimensions_lwh: "dimensions",
+  length_mm: "l",
+  width_mm: "w",
+  height_mm: "h",
   ...Object.fromEntries(
     gem_pricing_total_column_keys.map((key) => [key, key]),
   ),
@@ -89,13 +109,22 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * @param {string} meta_key
- * @returns {"enum"|"number"|"date"|null}
+ * @returns {"enum"|"number"|"date"|"dimensions"|null}
  */
 export function getGemsColumnFilterMode(meta_key) {
+  if (meta_key === GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY) return "dimensions";
   if (GEMS_COLUMN_FILTER_ENUM_KEYS.includes(meta_key)) return "enum";
   if (GEMS_COLUMN_FILTER_NUMBER_KEYS.includes(meta_key)) return "number";
   if (GEMS_COLUMN_FILTER_DATE_KEYS.includes(meta_key)) return "date";
   return null;
+}
+
+/**
+ * @param {string} meta_key
+ * @returns {boolean}
+ */
+export function isGemsDimensionAxisFilterKey(meta_key) {
+  return GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.includes(meta_key);
 }
 
 /**
@@ -671,13 +700,6 @@ export function gemMatchesFieldFilter(gem, meta_key, filter) {
   }
 
   if (filter.mode === "number") {
-    if (meta_key === "dimensions_lwh") {
-      const axes = [gem?.length_mm, gem?.width_mm, gem?.height_mm]
-        .map((v) => Number(v))
-        .filter((n) => Number.isFinite(n));
-      if (!axes.length) return false;
-      return axes.some((n) => numberMatchesFilter(n, filter));
-    }
     if (meta_key === "id") {
       const gem_id = getGemIdFromPath(gem);
       const n = Number(gem_id);
@@ -837,7 +859,7 @@ export function removeLegacyFilterFromSearch(raw, legacy_kind) {
     } else if (ws.type === "range" && ws.max_exclusive) {
       remainder_parts.push(`${ws.min}.`);
     } else if (ws.type === "range") {
-      // Band around a decimal � rebuild midpoint-ish token poorly; keep min if equal band
+      // Band around a decimal — rebuild midpoint-ish token poorly; keep min if equal band
       const mid = (ws.min + ws.max) / 2;
       remainder_parts.push(String(mid));
     }

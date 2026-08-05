@@ -114,7 +114,7 @@
                 :mode="getColumnFilterMode(metadata_key)"
                 :column_label="metadata_labels[metadata_key] || metadata_key"
                 :options="column_filter_options[metadata_key] || []"
-                :current_filter="column_field_filters[metadata_key] || null"
+                :current_filter="getColumnCurrentFilter(metadata_key)"
                 @apply="onColumnFilterApply"
                 @clear="onColumnFilterClear"
                 @cancel="closeColumnFilterMenu"
@@ -294,6 +294,8 @@ import SGGemsColumnFilterMenu from "@/components/gems/SGGemsColumnFilterMenu.vue
 import { getFormatLocale, formatDisplayNumber } from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import {
+  GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
+  GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY,
   getGemsColumnFilterMode,
   isGemsColumnFilterableKey,
 } from "@/utils/gems_quick_search.js";
@@ -668,8 +670,23 @@ export default {
     },
     isColumnFilterActive(metadata_key) {
       if (!this.isColumnFilterable(metadata_key)) return false;
+      if (metadata_key === GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY) {
+        return GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.some(
+          (axis_key) => this.column_field_filters?.[axis_key],
+        );
+      }
       const filter = this.column_field_filters?.[metadata_key];
       return Boolean(filter);
+    },
+    getColumnCurrentFilter(metadata_key) {
+      if (metadata_key === GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY) {
+        const axes = {};
+        GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.forEach((axis_key) => {
+          axes[axis_key] = this.column_field_filters?.[axis_key] || null;
+        });
+        return { mode: "dimensions", axes };
+      }
+      return this.column_field_filters?.[metadata_key] || null;
     },
     canInteractHeaderLabel(metadata_key) {
       return (

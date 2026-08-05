@@ -14,13 +14,11 @@
           v-for="option in options"
           :key="option.value"
           class="_optionRow"
-          :class="{ _disabled: option.disabled }"
         >
           <input
             v-model="draft_values"
             type="checkbox"
             :value="option.value"
-            :disabled="Boolean(option.disabled)"
           />
           <span>{{ option.label }}</span>
         </label>
@@ -58,7 +56,83 @@
       </div>
     </template>
 
-    <template v-else>
+    <template v-else-if="mode === 'dimensions'">
+      <div class="_dimensionsAxes">
+        <div
+          v-for="axis in dimension_axis_defs"
+          :key="axis.key"
+          class="_dimensionAxis"
+        >
+          <div class="_dimensionAxisHeader">
+            <span class="_dimensionAxisLetter">{{ axis.letter }}</span>
+            <span class="_dimensionAxisName">{{ axis.label }}</span>
+          </div>
+          <div class="_numberModeTabs" role="tablist">
+            <button
+              type="button"
+              class="_modeTab"
+              :class="{ _active: draft_axes[axis.key].mode === 'exact' }"
+              @click="draft_axes[axis.key].mode = 'exact'"
+            >
+              {{ $t("sg_gems_column_filter_exact") }}
+            </button>
+            <button
+              type="button"
+              class="_modeTab"
+              :class="{ _active: draft_axes[axis.key].mode === 'range' }"
+              @click="draft_axes[axis.key].mode = 'range'"
+            >
+              {{ $t("sg_gems_column_filter_between") }}
+            </button>
+          </div>
+          <div
+            v-if="draft_axes[axis.key].mode === 'exact'"
+            class="_numberFields"
+          >
+            <label class="_field">
+              <span class="_fieldLabel">{{
+                $t("sg_gems_column_filter_exact_mm")
+              }}</span>
+              <input
+                v-model="draft_axes[axis.key].exact"
+                type="text"
+                inputmode="decimal"
+                class="_input"
+                @keydown.enter.prevent="onApply"
+              />
+            </label>
+          </div>
+          <div v-else class="_numberFields _rangeFields">
+            <label class="_field">
+              <span class="_fieldLabel">{{
+                $t("sg_gems_column_filter_min")
+              }}</span>
+              <input
+                v-model="draft_axes[axis.key].min"
+                type="text"
+                inputmode="decimal"
+                class="_input"
+                @keydown.enter.prevent="onApply"
+              />
+            </label>
+            <label class="_field">
+              <span class="_fieldLabel">{{
+                $t("sg_gems_column_filter_max")
+              }}</span>
+              <input
+                v-model="draft_axes[axis.key].max"
+                type="text"
+                inputmode="decimal"
+                class="_input"
+                @keydown.enter.prevent="onApply"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="mode === 'number'">
       <div class="_numberModeTabs" role="tablist">
         <button
           type="button"
@@ -134,9 +208,22 @@
 
 <script>
 import {
+  GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
   isIsoDateString,
   normalizeGemsSearchNumber,
 } from "@/utils/gems_quick_search.js";
+
+function emptyAxisDraft() {
+  return { mode: "exact", exact: "", min: "", max: "" };
+}
+
+function emptyAxesDraft() {
+  return {
+    length_mm: emptyAxisDraft(),
+    width_mm: emptyAxisDraft(),
+    height_mm: emptyAxisDraft(),
+  };
+}
 
 export default {
   name: "SGGemsColumnFilterMenu",
@@ -148,7 +235,8 @@ export default {
     mode: {
       type: String,
       required: true,
-      validator: (v) => v === "enum" || v === "number" || v === "date",
+      validator: (v) =>
+        v === "enum" || v === "number" || v === "date" || v === "dimensions",
     },
     column_label: {
       type: String,
@@ -172,8 +260,30 @@ export default {
       draft_max: "",
       draft_date_from: "",
       draft_date_to: "",
+      draft_axes: emptyAxesDraft(),
       menu_style: {},
     };
+  },
+  computed: {
+    dimension_axis_defs() {
+      return [
+        {
+          key: "length_mm",
+          letter: "L",
+          label: this.$t("sg_gems_column_filter_axis_length"),
+        },
+        {
+          key: "width_mm",
+          letter: "W",
+          label: this.$t("sg_gems_column_filter_axis_width"),
+        },
+        {
+          key: "height_mm",
+          letter: "H",
+          label: this.$t("sg_gems_column_filter_axis_height"),
+        },
+      ];
+    },
   },
   watch: {
     current_filter: {
@@ -225,6 +335,39 @@ export default {
         zIndex: 80,
       };
     },
+    syncAxisDraftFromFilter(axis_key, filter) {
+      const draft = emptyAxisDraft();
+      if (filter?.mode === "number" && Number.isFinite(filter.exact)) {
+        draft.mode = "exact";
+        draft.exact = String(filter.exact);
+      } else if (
+        filter?.mode === "number" &&
+        (Number.isFinite(filter.min) || Number.isFinite(filter.max))
+      ) {
+        draft.mode = "range";
+        draft.min = Number.isFinite(filter.min) ? String(filter.min) : "";
+        draft.max = Number.isFinite(filter.max) ? String(filter.max) : "";
+      }
+      this.$set(this.draft_axes, axis_key, draft);
+    },
+    buildNumberFilterFromAxisDraft(draft) {
+      if (!draft) return null;
+      if (draft.mode === "exact") {
+        const exact = normalizeGemsSearchNumber(draft.exact);
+        if (!Number.isFinite(exact)) return null;
+        return { mode: "number", exact };
+      }
+      const min = normalizeGemsSearchNumber(draft.min);
+      const max = normalizeGemsSearchNumber(draft.max);
+      const has_min = Number.isFinite(min);
+      const has_max = Number.isFinite(max);
+      if (!has_min || !has_max) return null;
+      return {
+        mode: "number",
+        min: Math.min(min, max),
+        max: Math.max(min, max),
+      };
+    },
     syncDraftFromCurrent() {
       const filter = this.current_filter;
       if (this.mode === "enum") {
@@ -243,6 +386,13 @@ export default {
           filter?.mode === "date" && filter.min ? filter.min : "";
         this.draft_date_to =
           filter?.mode === "date" && filter.max ? filter.max : "";
+        return;
+      }
+      if (this.mode === "dimensions") {
+        const axes = filter?.mode === "dimensions" ? filter.axes || {} : {};
+        GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.forEach((axis_key) => {
+          this.syncAxisDraftFromFilter(axis_key, axes[axis_key] || null);
+        });
         return;
       }
       if (filter?.mode === "number" && Number.isFinite(filter.exact)) {
@@ -285,14 +435,12 @@ export default {
     },
     onApply() {
       if (this.mode === "enum") {
-        const disabled_values = new Set(
-          (this.options || [])
-            .filter((option) => option?.disabled)
-            .map((option) => String(option.value)),
+        const offered_values = new Set(
+          (this.options || []).map((option) => String(option.value)),
         );
         const values = (this.draft_values || [])
           .map((v) => String(v).trim())
-          .filter((v) => v && !disabled_values.has(v));
+          .filter((v) => v && offered_values.has(v));
         if (!values.length) {
           this.$emit("clear", this.metadata_key);
           return;
@@ -332,6 +480,27 @@ export default {
             ...(has_from ? { min: from } : {}),
             ...(has_to ? { max: to } : {}),
           },
+        });
+        return;
+      }
+
+      if (this.mode === "dimensions") {
+        const axes = {};
+        let has_any = false;
+        GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.forEach((axis_key) => {
+          const built = this.buildNumberFilterFromAxisDraft(
+            this.draft_axes[axis_key],
+          );
+          axes[axis_key] = built;
+          if (built) has_any = true;
+        });
+        if (!has_any) {
+          this.$emit("clear", this.metadata_key);
+          return;
+        }
+        this.$emit("apply", {
+          metadata_key: this.metadata_key,
+          filter: { mode: "dimensions", axes },
         });
         return;
       }
@@ -376,8 +545,8 @@ export default {
 <style lang="scss" scoped>
 ._filterMenu {
   min-width: 14rem;
-  max-width: min(20rem, 78vw);
-  max-height: min(28rem, 70vh);
+  max-width: min(22rem, 82vw);
+  max-height: min(32rem, 75vh);
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 2);
@@ -415,13 +584,8 @@ export default {
   border-radius: 4px;
 }
 
-._optionRow:hover:not(._disabled) {
+._optionRow:hover {
   background: color-mix(in srgb, var(--c-gris_clair) 70%, transparent);
-}
-
-._optionRow._disabled {
-  opacity: 0.42;
-  cursor: not-allowed;
 }
 
 ._optionRow input[type="checkbox"] {
@@ -438,12 +602,6 @@ export default {
   cursor: pointer;
   display: grid;
   place-content: center;
-}
-
-._optionRow input[type="checkbox"]:disabled {
-  cursor: not-allowed;
-  background: color-mix(in srgb, var(--c-gris_clair) 80%, transparent);
-  border-color: color-mix(in srgb, var(--c-gris_fonce) 28%, transparent);
 }
 
 ._optionRow input[type="checkbox"]::before {
@@ -478,6 +636,50 @@ export default {
 ._empty {
   margin: 0;
   color: var(--c-gris_fonce);
+}
+
+._dimensionsAxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 20rem;
+  overflow: auto;
+}
+
+._dimensionAxis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--c-gris_clair);
+}
+
+._dimensionAxis:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+._dimensionAxisHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+._dimensionAxisLetter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c-bleuvert) 14%, transparent);
+  color: var(--c-bleuvert);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+._dimensionAxisName {
+  font-weight: 500;
 }
 
 ._numberModeTabs {

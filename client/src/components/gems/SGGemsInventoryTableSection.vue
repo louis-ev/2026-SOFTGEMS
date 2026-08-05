@@ -313,13 +313,12 @@ export default {
         if (!v) return;
         const key = v.toLowerCase();
         if (seen.has(key)) return;
+        // Only offer values that still match other filters (or are already selected).
+        if (!available.has(key) && !selected.has(key)) return;
         seen.add(key);
-        const is_available = available.has(key);
         options.push({
           value: v,
           label: label || v,
-          // Keep currently selected values enabled so they can be unchecked.
-          disabled: !is_available && !selected.has(key),
         });
       };
 

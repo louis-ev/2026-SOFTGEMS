@@ -11,29 +11,38 @@ import {
   removeLegacyFilterFromSearch,
   getGemsColumnFilterMode,
   isGemsColumnFilterableKey,
+  isGemsDimensionAxisFilterKey,
+  GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
+  GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY,
   GEMS_COLUMN_FILTER_SERIALIZE_ALIAS,
 } from "@/utils/gems_quick_search.js";
+import {
+  loadGemsQuickSearchFromStorage,
+  persistGemsQuickSearchToStorage,
+} from "@/utils/gems_quick_search_storage.js";
 
 const gems_quick_search_debounce_ms = 200;
 
 export default {
   data() {
+    const initial_search = loadGemsQuickSearchFromStorage();
     return {
-      gems_quick_search: "",
-      gems_quick_search_debounced: "",
+      gems_quick_search: initial_search,
+      gems_quick_search_debounced: initial_search,
       gems_quick_search_debounce_timer_id: null,
     };
   },
   watch: {
     gems_quick_search(next_value) {
+      const value = typeof next_value === "string" ? next_value : "";
+      persistGemsQuickSearchToStorage(value);
       if (this.gems_quick_search_debounce_timer_id !== null) {
         clearTimeout(this.gems_quick_search_debounce_timer_id);
         this.gems_quick_search_debounce_timer_id = null;
       }
       this.gems_quick_search_debounce_timer_id = setTimeout(() => {
         this.gems_quick_search_debounce_timer_id = null;
-        this.gems_quick_search_debounced =
-          typeof next_value === "string" ? next_value : "";
+        this.gems_quick_search_debounced = value;
       }, gems_quick_search_debounce_ms);
     },
   },
@@ -226,6 +235,15 @@ export default {
       return field_label;
     },
     resolveGemsFilterFieldLabel(meta_key) {
+      if (meta_key === "length_mm") {
+        return this.$t("sg_gems_column_filter_axis_length_short");
+      }
+      if (meta_key === "width_mm") {
+        return this.$t("sg_gems_column_filter_axis_width_short");
+      }
+      if (meta_key === "height_mm") {
+        return this.$t("sg_gems_column_filter_axis_height_short");
+      }
       if (
         this.metadata_labels &&
         typeof this.metadata_labels === "object" &&
@@ -237,7 +255,16 @@ export default {
       return alias;
     },
     applyGemsColumnFilter(meta_key, filter) {
-      if (!isGemsColumnFilterableKey(meta_key)) return;
+      if (meta_key === GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY) {
+        this.applyGemsDimensionFilters(filter?.axes || {});
+        return;
+      }
+      if (
+        !isGemsColumnFilterableKey(meta_key) &&
+        !isGemsDimensionAxisFilterKey(meta_key)
+      ) {
+        return;
+      }
       this.gems_quick_search = upsertFieldFilterInSearch(
         this.gems_quick_search,
         meta_key,
@@ -246,8 +273,21 @@ export default {
       // Apply immediately (skip debounce lag for UI apply).
       this.gems_quick_search_debounced = this.gems_quick_search;
     },
+    applyGemsDimensionFilters(axes) {
+      let next = this.gems_quick_search;
+      GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS.forEach((axis_key) => {
+        const axis_filter = axes?.[axis_key] || null;
+        next = upsertFieldFilterInSearch(next, axis_key, axis_filter);
+      });
+      this.gems_quick_search = next;
+      this.gems_quick_search_debounced = next;
+    },
     removeGemsColumnFilter(meta_key) {
       if (!meta_key) return;
+      if (meta_key === GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY) {
+        this.applyGemsDimensionFilters({});
+        return;
+      }
       this.gems_quick_search = removeFieldFilterFromSearch(
         this.gems_quick_search,
         meta_key,
