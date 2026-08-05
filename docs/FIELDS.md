@@ -310,6 +310,8 @@ On the **buying invoice** selection folder (`buying-invoice/{n}`), optional head
 | `partnership_purchase`            | manual      | Checkbox — partnership purchase (`achat en partenariat`). |
 | `partnership_purchased_percentage`| manual      | Shown when checkbox is checked; integer **0–100** (`Pourcentage acheté`). |
 
+On the **partner invoice** selection folder (`partner-invoice/{n}`), partnership is always on (`partnership_purchase: true` at create). The percentage field is always shown (empty by default) and uses the same `partnership_purchased_percentage` meta (integer **0–100**).
+
 ### Sale
 
 Multiplicity rule: only one.

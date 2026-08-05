@@ -904,6 +904,12 @@
           "currency": {
             "type": "string"
           },
+          "partnership_purchase": {
+            "type": "boolean"
+          },
+          "partnership_purchased_percentage": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },

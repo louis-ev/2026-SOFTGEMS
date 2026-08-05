@@ -357,6 +357,7 @@ export default {
   sg_supplier_account_number: "Supplier account N°",
   sg_selection_currency: "Currency",
   sg_section_selection_buying_invoice: "Purchase",
+  sg_section_selection_partner_invoice: "Partnership",
   sg_selection_partnership_purchase: "Partnership purchase",
   sg_selection_purchased_percentage: "Percentage purchased",
   sg_selection_purchased_percentage_hint: "Enter a value from 0 to 100.",

@@ -1,11 +1,11 @@
 <template>
   <SGSectionPanel
-    v-if="is_buying_invoice"
+    v-if="show_section"
     section_id="selection_buying_invoice_fields"
-    :title="$t('sg_section_selection_buying_invoice')"
+    :title="section_title"
   >
     <div class="_fieldsGrid">
-      <div class="_checkboxField">
+      <div v-if="is_buying_invoice" class="_checkboxField">
         <ToggleInput
           :label="$t('sg_selection_partnership_purchase')"
           :content="partnership_purchase_checked"
@@ -15,7 +15,7 @@
       </div>
 
       <SGEditableMetaField
-        v-if="partnership_purchase_checked"
+        v-if="show_percentage_field"
         :label="$t('sg_selection_purchased_percentage')"
         icon="percent"
         :value="purchased_percentage_display"
@@ -50,6 +50,7 @@ import {
 import { parseSelectionFolderPath } from "@/utils/selection_paths.js";
 
 const BUYING_INVOICE_TYPE_SLUG = "buying-invoice";
+const PARTNER_INVOICE_TYPE_SLUG = "partner-invoice";
 
 export default {
   name: "SGSelectionBuyingInvoiceFieldsSection",
@@ -85,17 +86,35 @@ export default {
     };
   },
   computed: {
+    selection_type_slug() {
+      return parseSelectionFolderPath(this.selection_folder_path).type_slug;
+    },
+    selection_type_value() {
+      return String(this.selection?.selection_type || "").trim();
+    },
     is_buying_invoice() {
-      const from_path =
-        parseSelectionFolderPath(this.selection_folder_path).type_slug ===
-        BUYING_INVOICE_TYPE_SLUG;
-      if (from_path) return true;
-      return (
-        String(this.selection?.selection_type || "") === "buying invoice"
-      );
+      if (this.selection_type_slug === BUYING_INVOICE_TYPE_SLUG) return true;
+      return this.selection_type_value === "buying invoice";
+    },
+    is_partner_invoice() {
+      if (this.selection_type_slug === PARTNER_INVOICE_TYPE_SLUG) return true;
+      return this.selection_type_value === "partner invoice";
+    },
+    show_section() {
+      return this.is_buying_invoice || this.is_partner_invoice;
+    },
+    section_title() {
+      if (this.is_partner_invoice) {
+        return this.$t("sg_section_selection_partner_invoice");
+      }
+      return this.$t("sg_section_selection_buying_invoice");
     },
     partnership_purchase_checked() {
       return Boolean(this.selection?.partnership_purchase);
+    },
+    show_percentage_field() {
+      if (this.is_partner_invoice) return true;
+      return this.partnership_purchase_checked;
     },
     purchased_percentage_display() {
       return formatPartnershipPurchasedPercentageDisplay(
@@ -145,15 +164,29 @@ export default {
     },
     async onPurchasedPercentageSave({ value }) {
       const clamped = clampPartnershipPurchasedPercentage(value);
-      await this.persistField("partnership_purchased_percentage", clamped);
+      const new_meta = { partnership_purchased_percentage: clamped };
+      // Partner invoice is always a partnership.
+      if (this.is_partner_invoice) {
+        new_meta.partnership_purchase = true;
+      }
+      await this.persistFields(new_meta);
     },
     async persistField(field_key, raw_value) {
-      if (!field_key || this.is_saving_field) return;
-      this.is_saving_field = field_key;
+      await this.persistFields({ [field_key]: raw_value });
+    },
+    async persistFields(new_meta) {
+      if (!new_meta || typeof new_meta !== "object" || this.is_saving_field) {
+        return;
+      }
+      const saving_key =
+        Object.keys(new_meta).find(
+          (key) => key === "partnership_purchased_percentage",
+        ) || Object.keys(new_meta)[0] || "fields";
+      this.is_saving_field = saving_key;
       try {
         await this.$api.updateMeta({
           path: this.selection_folder_path,
-          new_meta: { [field_key]: raw_value },
+          new_meta,
         });
         this.closeField();
         this.$alertify
