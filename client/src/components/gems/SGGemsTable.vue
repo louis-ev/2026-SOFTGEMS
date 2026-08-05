@@ -71,7 +71,13 @@
                       :icon="metadata_icons[metadata_key]"
                       class="_thIcon"
                     />
-                    <span>{{
+                    <span
+                      v-if="metadata_key !== '$cover'"
+                      >{{
+                        metadata_labels[metadata_key] || metadata_key
+                      }}</span
+                    >
+                    <span v-else class="_srOnly">{{
                       metadata_labels[metadata_key] || metadata_key
                     }}</span>
                   </span>
