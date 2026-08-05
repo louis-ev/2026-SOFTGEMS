@@ -1166,10 +1166,6 @@ export default {
   }
 }
 
-thead th._filterableHeader {
-  position: relative;
-}
-
 ._thInner {
   display: flex;
   align-items: center;
