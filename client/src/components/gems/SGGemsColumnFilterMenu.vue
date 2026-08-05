@@ -14,17 +14,47 @@
           v-for="option in options"
           :key="option.value"
           class="_optionRow"
+          :class="{ _disabled: option.disabled }"
         >
           <input
             v-model="draft_values"
             type="checkbox"
             :value="option.value"
+            :disabled="Boolean(option.disabled)"
           />
           <span>{{ option.label }}</span>
         </label>
         <p v-if="!options.length" class="_empty">
           {{ $t("sg_gems_column_filter_no_options") }}
         </p>
+      </div>
+    </template>
+
+    <template v-else-if="mode === 'date'">
+      <div class="_numberFields _rangeFields">
+        <label class="_field">
+          <span class="_fieldLabel">{{
+            $t("sg_gems_column_filter_date_from")
+          }}</span>
+          <input
+            ref="date_from_input"
+            v-model="draft_date_from"
+            type="date"
+            class="_input"
+            @keydown.enter.prevent="onApply"
+          />
+        </label>
+        <label class="_field">
+          <span class="_fieldLabel">{{
+            $t("sg_gems_column_filter_date_to")
+          }}</span>
+          <input
+            v-model="draft_date_to"
+            type="date"
+            class="_input"
+            @keydown.enter.prevent="onApply"
+          />
+        </label>
       </div>
     </template>
 
@@ -103,7 +133,10 @@
 </template>
 
 <script>
-import { normalizeGemsSearchNumber } from "@/utils/gems_quick_search.js";
+import {
+  isIsoDateString,
+  normalizeGemsSearchNumber,
+} from "@/utils/gems_quick_search.js";
 
 export default {
   name: "SGGemsColumnFilterMenu",
@@ -115,7 +148,7 @@ export default {
     mode: {
       type: String,
       required: true,
-      validator: (v) => v === "enum" || v === "number",
+      validator: (v) => v === "enum" || v === "number" || v === "date",
     },
     column_label: {
       type: String,
@@ -137,6 +170,8 @@ export default {
       draft_exact: "",
       draft_min: "",
       draft_max: "",
+      draft_date_from: "",
+      draft_date_to: "",
       menu_style: {},
     };
   },
@@ -158,7 +193,7 @@ export default {
     window.addEventListener("scroll", this.updateMenuPosition, true);
     this.$nextTick(() => {
       this.updateMenuPosition();
-      const el = this.$refs.exact_input;
+      const el = this.$refs.date_from_input || this.$refs.exact_input;
       if (el && typeof el.focus === "function") el.focus();
     });
   },
@@ -196,6 +231,18 @@ export default {
         this.draft_values = Array.isArray(filter?.values)
           ? [...filter.values]
           : [];
+        return;
+      }
+      if (this.mode === "date") {
+        if (filter?.mode === "date" && filter.exact) {
+          this.draft_date_from = filter.exact;
+          this.draft_date_to = filter.exact;
+          return;
+        }
+        this.draft_date_from =
+          filter?.mode === "date" && filter.min ? filter.min : "";
+        this.draft_date_to =
+          filter?.mode === "date" && filter.max ? filter.max : "";
         return;
       }
       if (filter?.mode === "number" && Number.isFinite(filter.exact)) {
@@ -238,9 +285,14 @@ export default {
     },
     onApply() {
       if (this.mode === "enum") {
+        const disabled_values = new Set(
+          (this.options || [])
+            .filter((option) => option?.disabled)
+            .map((option) => String(option.value)),
+        );
         const values = (this.draft_values || [])
           .map((v) => String(v).trim())
-          .filter(Boolean);
+          .filter((v) => v && !disabled_values.has(v));
         if (!values.length) {
           this.$emit("clear", this.metadata_key);
           return;
@@ -248,6 +300,38 @@ export default {
         this.$emit("apply", {
           metadata_key: this.metadata_key,
           filter: { mode: "enum", values },
+        });
+        return;
+      }
+
+      if (this.mode === "date") {
+        const from = String(this.draft_date_from || "").trim();
+        const to = String(this.draft_date_to || "").trim();
+        const has_from = isIsoDateString(from);
+        const has_to = isIsoDateString(to);
+        if (!has_from && !has_to) {
+          this.$emit("clear", this.metadata_key);
+          return;
+        }
+        if (has_from && has_to) {
+          const min = from <= to ? from : to;
+          const max = from <= to ? to : from;
+          this.$emit("apply", {
+            metadata_key: this.metadata_key,
+            filter:
+              min === max
+                ? { mode: "date", exact: min }
+                : { mode: "date", min, max },
+          });
+          return;
+        }
+        this.$emit("apply", {
+          metadata_key: this.metadata_key,
+          filter: {
+            mode: "date",
+            ...(has_from ? { min: from } : {}),
+            ...(has_to ? { max: to } : {}),
+          },
         });
         return;
       }
@@ -291,19 +375,19 @@ export default {
 
 <style lang="scss" scoped>
 ._filterMenu {
-  min-width: 12.5rem;
-  max-width: min(18rem, 70vw);
-  max-height: min(22rem, 60vh);
+  min-width: 14rem;
+  max-width: min(20rem, 78vw);
+  max-height: min(28rem, 70vh);
   display: flex;
   flex-direction: column;
   gap: calc(var(--spacing) / 2);
-  padding: calc(var(--spacing) / 2);
+  padding: 0.55rem 0.6rem;
   border: 1px solid var(--c-gris_clair);
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--c-blanc, #fff);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   color: var(--c-noir, #111);
-  font-size: var(--sl-font-size-x-small);
+  font-size: var(--sl-font-size-small, 0.875rem);
   font-weight: 400;
   text-align: left;
 }
@@ -312,8 +396,8 @@ export default {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-height: 14rem;
+  gap: 1px;
+  max-height: 18rem;
   margin: 0;
   padding: 0;
 }
@@ -321,20 +405,69 @@ export default {
 ._optionRow {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.55rem;
   margin: 0;
-  padding: 0.2rem 0.15rem;
+  padding: 0.28rem 0.2rem;
   cursor: pointer;
   line-height: 1.35;
   font-weight: 400;
   text-align: left;
+  border-radius: 4px;
 }
 
-._optionRow input {
+._optionRow:hover:not(._disabled) {
+  background: color-mix(in srgb, var(--c-gris_clair) 70%, transparent);
+}
+
+._optionRow._disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+._optionRow input[type="checkbox"] {
   flex-shrink: 0;
   margin: 0;
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 1rem;
+  height: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, var(--c-gris_fonce) 55%, transparent);
+  border-radius: 3px;
+  background: var(--c-blanc, #fff);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+}
+
+._optionRow input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--c-gris_clair) 80%, transparent);
+  border-color: color-mix(in srgb, var(--c-gris_fonce) 28%, transparent);
+}
+
+._optionRow input[type="checkbox"]::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  transform: scale(0);
+  transition: transform 80ms ease-in-out;
+  box-shadow: inset 1em 1em var(--c-blanc, #fff);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+}
+
+._optionRow input[type="checkbox"]:checked {
+  border-color: var(--c-bleuvert);
+  background: var(--c-bleuvert);
+}
+
+._optionRow input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+._optionRow input[type="checkbox"]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-bleuvert) 55%, transparent);
+  outline-offset: 1px;
 }
 
 ._optionRow span {

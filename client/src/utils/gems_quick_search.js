@@ -10,6 +10,8 @@ export const GEMS_COLUMN_FILTER_ENUM_KEYS = Object.freeze([
   "color",
   "shape",
   "origin_country",
+  "country_of_cut",
+  "treatment_type",
 ]);
 
 /** Numeric (exact / range) column filters. */
@@ -21,9 +23,13 @@ export const GEMS_COLUMN_FILTER_NUMBER_KEYS = Object.freeze([
   ...gem_pricing_total_column_keys,
 ]);
 
+/** Date (from / to) column filters. Stored as ISO `YYYY-MM-DD`. */
+export const GEMS_COLUMN_FILTER_DATE_KEYS = Object.freeze(["$date_modified"]);
+
 export const GEMS_COLUMN_FILTERABLE_KEYS = Object.freeze([
   ...GEMS_COLUMN_FILTER_ENUM_KEYS,
   ...GEMS_COLUMN_FILTER_NUMBER_KEYS,
+  ...GEMS_COLUMN_FILTER_DATE_KEYS,
 ]);
 
 /** Alias (search token) ? metadata key. */
@@ -40,6 +46,13 @@ export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   shape: "shape",
   origin: "origin_country",
   origin_country: "origin_country",
+  coc: "country_of_cut",
+  country_of_cut: "country_of_cut",
+  treatment: "treatment_type",
+  treatment_type: "treatment_type",
+  edited: "$date_modified",
+  last_edited: "$date_modified",
+  date_modified: "$date_modified",
   pieces: "number_of_pieces",
   number_of_pieces: "number_of_pieces",
   weight: "weight_ct",
@@ -61,6 +74,9 @@ export const GEMS_COLUMN_FILTER_SERIALIZE_ALIAS = Object.freeze({
   color: "color",
   shape: "shape",
   origin_country: "origin",
+  country_of_cut: "coc",
+  treatment_type: "treatment",
+  $date_modified: "edited",
   number_of_pieces: "pieces",
   weight_ct: "weight",
   dimensions_lwh: "dimensions",
@@ -69,14 +85,27 @@ export const GEMS_COLUMN_FILTER_SERIALIZE_ALIAS = Object.freeze({
   ),
 });
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
  * @param {string} meta_key
- * @returns {"enum"|"number"|null}
+ * @returns {"enum"|"number"|"date"|null}
  */
 export function getGemsColumnFilterMode(meta_key) {
   if (GEMS_COLUMN_FILTER_ENUM_KEYS.includes(meta_key)) return "enum";
   if (GEMS_COLUMN_FILTER_NUMBER_KEYS.includes(meta_key)) return "number";
+  if (GEMS_COLUMN_FILTER_DATE_KEYS.includes(meta_key)) return "date";
   return null;
+}
+
+/**
+ * @param {string} raw
+ * @returns {boolean}
+ */
+export function isIsoDateString(raw) {
+  if (!ISO_DATE_RE.test(String(raw || "").trim())) return false;
+  const t = Date.parse(`${String(raw).trim()}T00:00:00`);
+  return Number.isFinite(t);
 }
 
 /**
@@ -222,6 +251,40 @@ export function parseNumberFilterValue(raw_value) {
 }
 
 /**
+ * Date filter syntax: `2026-08-05` or `2026-01-01..2026-08-05`
+ * (also `2026-01-01..` / `..2026-08-05` for open bounds).
+ * @param {string} raw_value
+ * @returns {{ mode: "date", exact?: string, min?: string, max?: string } | null}
+ */
+export function parseDateFilterValue(raw_value) {
+  const s = String(raw_value ?? "").trim();
+  if (!s) return null;
+
+  const range_m = s.match(
+    /^(\d{4}-\d{2}-\d{2})?\.\.(\d{4}-\d{2}-\d{2})?$/,
+  );
+  if (range_m && (range_m[1] || range_m[2])) {
+    const min = range_m[1] || undefined;
+    const max = range_m[2] || undefined;
+    if (min && !isIsoDateString(min)) return null;
+    if (max && !isIsoDateString(max)) return null;
+    if (min && max && min > max) {
+      return { mode: "date", min: max, max: min };
+    }
+    return {
+      mode: "date",
+      ...(min ? { min } : {}),
+      ...(max ? { max } : {}),
+    };
+  }
+
+  if (isIsoDateString(s)) {
+    return { mode: "date", exact: s };
+  }
+  return null;
+}
+
+/**
  * @param {string} value
  * @returns {string}
  */
@@ -257,6 +320,19 @@ export function serializeFieldFilter(meta_key, filter) {
     if (has_min && has_max) return `${alias}=${filter.min}-${filter.max}`;
     if (has_min) return `${alias}=${filter.min}-${filter.min}`;
     if (has_max) return `${alias}=${filter.max}-${filter.max}`;
+  }
+  if (filter.mode === "date") {
+    if (filter.exact && isIsoDateString(filter.exact)) {
+      return `${alias}=${filter.exact}`;
+    }
+    const min = filter.min && isIsoDateString(filter.min) ? filter.min : "";
+    const max = filter.max && isIsoDateString(filter.max) ? filter.max : "";
+    if (min && max) {
+      if (min === max) return `${alias}=${min}`;
+      return `${alias}=${min}..${max}`;
+    }
+    if (min) return `${alias}=${min}..`;
+    if (max) return `${alias}=..${max}`;
   }
   return "";
 }
@@ -326,6 +402,10 @@ export function extractFieldFiltersFromSearch(raw) {
       const values = parseEnumFilterValues(span.value);
       if (!values.length) return;
       field_filters[meta_key] = { mode: "enum", values };
+    } else if (mode === "date") {
+      const parsed = parseDateFilterValue(span.value);
+      if (!parsed) return;
+      field_filters[meta_key] = parsed;
     } else {
       const parsed = parseNumberFilterValue(span.value);
       if (!parsed) return;
@@ -561,6 +641,23 @@ function numberMatchesFilter(value, filter) {
  * @param {{ mode: "enum"|"number", values?: string[], exact?: number, min?: number, max?: number }} filter
  * @returns {boolean}
  */
+/**
+ * @param {*} gem
+ * @param {string} meta_key
+ * @returns {string} local calendar day `YYYY-MM-DD`, or ""
+ */
+function gemFieldLocalIsoDate(gem, meta_key) {
+  const raw = gem?.[meta_key];
+  if (!raw) return "";
+  const t = Date.parse(raw);
+  if (!Number.isFinite(t)) return "";
+  const d = new Date(t);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function gemMatchesFieldFilter(gem, meta_key, filter) {
   if (!filter) return true;
 
@@ -595,6 +692,24 @@ export function gemMatchesFieldFilter(gem, meta_key, filter) {
     }
     const n = Number(gem?.[meta_key]);
     return numberMatchesFilter(n, filter);
+  }
+
+  if (filter.mode === "date") {
+    const gem_day = gemFieldLocalIsoDate(gem, meta_key);
+    if (!gem_day) return false;
+    if (filter.exact && isIsoDateString(filter.exact)) {
+      return gem_day === filter.exact;
+    }
+    if (filter.min && isIsoDateString(filter.min) && gem_day < filter.min) {
+      return false;
+    }
+    if (filter.max && isIsoDateString(filter.max) && gem_day > filter.max) {
+      return false;
+    }
+    return Boolean(
+      (filter.min && isIsoDateString(filter.min)) ||
+        (filter.max && isIsoDateString(filter.max)),
+    );
   }
 
   return true;
@@ -634,6 +749,59 @@ export function gemMatchesQuickSearch(gem, parsed) {
     if (!gemMatchesFieldFilter(gem, meta_key, filter)) return false;
   }
   return true;
+}
+
+/**
+ * Clone a parsed search with one field (and related legacy clauses) removed,
+ * for faceted option availability.
+ * @param {ReturnType<typeof parseGemsQuickSearchInput>} parsed
+ * @param {string} except_meta_key
+ * @returns {ReturnType<typeof parseGemsQuickSearchInput>}
+ */
+export function parsedQuickSearchExceptField(parsed, except_meta_key) {
+  const base = parsed || parseGemsQuickSearchInput("");
+  const next = {
+    id_needle: base.id_needle || "",
+    weight_spec: base.weight_spec || null,
+    stone_families: Array.isArray(base.stone_families)
+      ? [...base.stone_families]
+      : [],
+    stone_type_needle: base.stone_type_needle || "",
+    field_filters: { ...(base.field_filters || {}) },
+  };
+  delete next.field_filters[except_meta_key];
+  if (except_meta_key === "id") next.id_needle = "";
+  if (except_meta_key === "weight_ct") next.weight_spec = null;
+  if (except_meta_key === "stone_type") {
+    next.stone_type_needle = "";
+    next.stone_families = [];
+  }
+  return next;
+}
+
+/**
+ * Lowercased field values present on gems that match all filters except
+ * `except_meta_key` (used to disable zero-result checkbox options).
+ * @param {object[]} gems
+ * @param {ReturnType<typeof parseGemsQuickSearchInput>} parsed
+ * @param {string} except_meta_key
+ * @returns {Set<string>}
+ */
+export function collectAvailableEnumFilterValues(
+  gems,
+  parsed,
+  except_meta_key,
+) {
+  const available = new Set();
+  if (!except_meta_key || !Array.isArray(gems)) return available;
+  const facet_parsed = parsedQuickSearchExceptField(parsed, except_meta_key);
+  gems.forEach((gem) => {
+    if (!gemMatchesQuickSearch(gem, facet_parsed)) return;
+    const raw = gem?.[except_meta_key];
+    if (raw === undefined || raw === null || raw === "") return;
+    available.add(String(raw).trim().toLowerCase());
+  });
+  return available;
 }
 
 /**

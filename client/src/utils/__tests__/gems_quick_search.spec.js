@@ -7,6 +7,7 @@ import {
   removeFieldFilterFromSearch,
   removeLegacyFilterFromSearch,
   isGemsColumnFilterableKey,
+  collectAvailableEnumFilterValues,
 } from "@/utils/gems_quick_search.js";
 
 describe("gems_quick_search field filters", () => {
@@ -18,8 +19,46 @@ describe("gems_quick_search field filters", () => {
     expect(isGemsColumnFilterableKey("status")).toBe(true);
     expect(isGemsColumnFilterableKey("reference_supplier")).toBe(true);
     expect(isGemsColumnFilterableKey("reference_customer")).toBe(true);
+    expect(isGemsColumnFilterableKey("country_of_cut")).toBe(true);
+    expect(isGemsColumnFilterableKey("treatment_type")).toBe(true);
+    expect(isGemsColumnFilterableKey("$date_modified")).toBe(true);
     expect(isGemsColumnFilterableKey("paired_gem")).toBe(false);
-    expect(isGemsColumnFilterableKey("$date_modified")).toBe(false);
+  });
+
+  it("parses and matches edited date range and coc / treatment enums", () => {
+    const parsed = parseGemsQuickSearchInput(
+      "edited=2026-03-01..2026-03-31 coc=Thailand treatment=Natural",
+    );
+    expect(parsed.field_filters.$date_modified).toEqual({
+      mode: "date",
+      min: "2026-03-01",
+      max: "2026-03-31",
+    });
+    expect(parsed.field_filters.country_of_cut.values).toEqual(["Thailand"]);
+    expect(parsed.field_filters.treatment_type.values).toEqual(["Natural"]);
+
+    expect(
+      gemMatchesQuickSearch(
+        {
+          $path: "gems/1",
+          $date_modified: "2026-03-15T12:00:00.000Z",
+          country_of_cut: "Thailand",
+          treatment_type: "Natural",
+        },
+        parsed,
+      ),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch(
+        {
+          $path: "gems/2",
+          $date_modified: "2026-04-01T12:00:00.000Z",
+          country_of_cut: "Thailand",
+          treatment_type: "Natural",
+        },
+        parsed,
+      ),
+    ).toBe(false);
   });
 
   it("parses and matches id / ref supplier field filters", () => {
@@ -188,5 +227,31 @@ describe("gems_quick_search field filters", () => {
   it("removes legacy id chip from search while keeping field filters", () => {
     const next = removeLegacyFilterFromSearch("42 color=Blue", "id");
     expect(next).toBe("color=Blue");
+  });
+
+  it("collects enum values available under other active filters", () => {
+    const gems = [
+      { $path: "gems/1", color: "Blue", shape: "Oval" },
+      { $path: "gems/2", color: "Red", shape: "Round" },
+      { $path: "gems/3", color: "Blue", shape: "Round" },
+    ];
+    const parsed = parseGemsQuickSearchInput("color=Blue");
+    const shapes = collectAvailableEnumFilterValues(gems, parsed, "shape");
+    expect(shapes.has("oval")).toBe(true);
+    expect(shapes.has("round")).toBe(true);
+    // Red is excluded by color=Blue, so only Blue gems' shapes count ù both present.
+    const colors = collectAvailableEnumFilterValues(gems, parsed, "color");
+    // Excepting color, all colors in inventory remain available for faceting.
+    expect(colors.has("blue")).toBe(true);
+    expect(colors.has("red")).toBe(true);
+
+    const shape_filtered = parseGemsQuickSearchInput("shape=Oval");
+    const colors_under_oval = collectAvailableEnumFilterValues(
+      gems,
+      shape_filtered,
+      "color",
+    );
+    expect(colors_under_oval.has("blue")).toBe(true);
+    expect(colors_under_oval.has("red")).toBe(false);
   });
 });

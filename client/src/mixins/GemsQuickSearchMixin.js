@@ -213,6 +213,16 @@ export default {
         if (has_min) return `${field_label}: ≥${fmt(filter.min)}`;
         if (has_max) return `${field_label}: ≤${fmt(filter.max)}`;
       }
+      if (filter?.mode === "date") {
+        if (filter.exact) return `${field_label}: ${filter.exact}`;
+        const has_min = Boolean(filter.min);
+        const has_max = Boolean(filter.max);
+        if (has_min && has_max) {
+          return `${field_label}: ${filter.min}–${filter.max}`;
+        }
+        if (has_min) return `${field_label}: ≥${filter.min}`;
+        if (has_max) return `${field_label}: ≤${filter.max}`;
+      }
       return field_label;
     },
     resolveGemsFilterFieldLabel(meta_key) {

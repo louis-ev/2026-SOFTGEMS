@@ -94,12 +94,15 @@ import {
   shape_suggestions,
   stone_type_suggestions,
   origin_country_suggestions,
+  country_of_cut_suggestions,
+  treatment_type_suggestions,
   status_suggestions,
 } from "@/suggestions/softgems";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import {
   GEMS_COLUMN_FILTER_ENUM_KEYS,
   getGemsColumnFilterMode,
+  collectAvailableEnumFilterValues,
 } from "@/utils/gems_quick_search.js";
 
 export default {
@@ -285,6 +288,8 @@ export default {
       if (meta_key === "color") return color_suggestions;
       if (meta_key === "shape") return shape_suggestions;
       if (meta_key === "origin_country") return origin_country_suggestions;
+      if (meta_key === "country_of_cut") return country_of_cut_suggestions;
+      if (meta_key === "treatment_type") return treatment_type_suggestions;
       if (meta_key === "status") return status_suggestions;
       // reference_supplier / reference_customer: distinct values from gems only
       return [];
@@ -293,15 +298,28 @@ export default {
       if (getGemsColumnFilterMode(meta_key) !== "enum") return [];
       const seen = new Set();
       const options = [];
+      const available = collectAvailableEnumFilterValues(
+        this.gems,
+        this.gems_quick_search_parsed,
+        meta_key,
+      );
+      const selected = new Set(
+        (
+          this.gems_column_field_filters?.[meta_key]?.values || []
+        ).map((v) => String(v).trim().toLowerCase()),
+      );
       const push_option = (value, label) => {
         const v = String(value ?? "").trim();
         if (!v) return;
         const key = v.toLowerCase();
         if (seen.has(key)) return;
         seen.add(key);
+        const is_available = available.has(key);
         options.push({
           value: v,
           label: label || v,
+          // Keep currently selected values enabled so they can be unchecked.
+          disabled: !is_available && !selected.has(key),
         });
       };
 

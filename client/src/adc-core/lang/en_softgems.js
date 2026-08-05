@@ -8,7 +8,7 @@ export default {
   sg_inventory: "Inventory",
   sg_all_gems: "All gems",
   sg_gems_search_placeholder:
-    "Search: id=12; status=reference; ref_supplier=ABC; color=Blue; weight=1-3; or legacy ID/weight/stone shortcuts",
+    "Search: id=12; color=Blue; coc=Thailand; treatment=Natural; edited=2026-01-01..2026-08-05; weight=1-3",
   sg_gems_filter_caption: "Filtered: {clauses} · {shown} of {total} gems",
   sg_gems_filtered_prefix: "Filtered:",
   sg_gems_filter_count: "· {shown} of {total} gems",
@@ -32,6 +32,8 @@ export default {
   sg_gems_column_filter_between: "Between",
   sg_gems_column_filter_min: "Min",
   sg_gems_column_filter_max: "Max",
+  sg_gems_column_filter_date_from: "From",
+  sg_gems_column_filter_date_to: "To",
   sg_gems_column_filter_apply: "Apply",
   sg_gems_column_filter_clear: "Clear",
   sg_gems_column_filter_no_options: "No values available",
