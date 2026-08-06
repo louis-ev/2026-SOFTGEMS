@@ -622,6 +622,50 @@ export default function () {
         this.markStoreFresh(normalized_path);
         return this.store[normalized_path];
       },
+      /**
+       * Count folders under a type path without loading their metas.
+       * @returns {Promise<{ count: number }>}
+       */
+      async countFolders({ path }) {
+        const normalized_path = this.normalizeRoomPath(path);
+        const response = await this.$axios
+          .get(`${normalized_path}/_count`)
+          .catch((err) => {
+            throw this.processError(err);
+          });
+        return response.data;
+      },
+      /**
+       * Recently modified folders for a type path (server-side sort + limit).
+       * @param {{ path: string, limit?: number, fields?: string[] }} opts
+       */
+      async getRecentFolders({ path, limit = 10, fields } = {}) {
+        const normalized_path = this.normalizeRoomPath(path);
+        const params = { limit };
+        if (fields && fields.length) params.fields = fields.join(",");
+        const response = await this.$axios
+          .get(`${normalized_path}/_recent`, { params })
+          .catch((err) => {
+            throw this.processError(err);
+          });
+        return response.data;
+      },
+      /**
+       * Aggregate folder counts by a meta field.
+       * @param {{ path: string, group_by: string }} opts
+       * @returns {Promise<{ total: number, group_by: string, by_value: Object }>}
+       */
+      async getFoldersStats({ path, group_by }) {
+        const normalized_path = this.normalizeRoomPath(path);
+        const response = await this.$axios
+          .get(`${normalized_path}/_stats`, {
+            params: { group_by },
+          })
+          .catch((err) => {
+            throw this.processError(err);
+          });
+        return response.data;
+      },
       async getFolder({ path, no_files = false, detailed_infos = false }) {
         const store_path = this.normalizeFolderStorePath(path);
         const use_store = detailed_infos === false && no_files === false;

@@ -229,6 +229,38 @@ module.exports = (function () {
       _restrictToLocalAdmins,
       _downloadFolder
     );
+    // Lightweight folder-type queries (must use reserved `_…` segments so they
+    // are not captured as folder slugs by GET /:folder_type/:folder_slug).
+    app.get(
+      [
+        "/_api2/:folder_type/_count",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/_count",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/_count",
+      ],
+      _generalPasswordCheck,
+      _restrictIfPrivate,
+      _countFolders
+    );
+    app.get(
+      [
+        "/_api2/:folder_type/_recent",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/_recent",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/_recent",
+      ],
+      _generalPasswordCheck,
+      _restrictIfPrivate,
+      _getRecentFolders
+    );
+    app.get(
+      [
+        "/_api2/:folder_type/_stats",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/_stats",
+        "/_api2/:folder_type/:folder_slug/:sub_folder_type/:sub_folder_slug/:subsub_folder_type/_stats",
+      ],
+      _generalPasswordCheck,
+      _restrictIfPrivate,
+      _getFoldersStats
+    );
     app.get(
       [
         "/_api2/:folder_type",
@@ -860,6 +892,129 @@ module.exports = (function () {
     }
 
     // cache.printStatus();
+  }
+
+  async function _countFolders(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization || "{}");
+
+    try {
+      const count = await folder.countFolders({ path_to_type });
+
+      journal.log({
+        from: "api2",
+        event: "count_folders",
+        details: {
+          outcome: "success",
+          path_to_type,
+          count,
+          author_path: token_path,
+        },
+      });
+
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.json({ count });
+    } catch (err) {
+      _handleGetFoldersError(err, res, {
+        path_to_type,
+        token_path,
+        event: "count_folders",
+      });
+    }
+  }
+
+  async function _getRecentFolders(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization || "{}");
+
+    const limit = _parsePositiveInt(req.query.limit, {
+      default_value: 10,
+      max: 100,
+    });
+    const fields = _parseFieldsQuery(req.query.fields);
+
+    try {
+      const folders = await folder.getRecentFolders({
+        path_to_type,
+        limit,
+        fields,
+      });
+
+      journal.log({
+        from: "api2",
+        event: "get_recent_folders",
+        details: {
+          outcome: "success",
+          path_to_type,
+          limit,
+          folders_count: folders.length,
+          author_path: token_path,
+        },
+      });
+
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.json(folders);
+    } catch (err) {
+      _handleGetFoldersError(err, res, {
+        path_to_type,
+        token_path,
+        event: "get_recent_folders",
+      });
+    }
+  }
+
+  async function _getFoldersStats(req, res, next) {
+    const { path_to_type } = utils.makePathFromReq(req);
+    const { token_path } = JSON.parse(req.headers.authorization || "{}");
+    const group_by = String(req.query.group_by || "").trim();
+
+    if (!group_by || !/^[\$a-zA-Z][\w$]*$/.test(group_by)) {
+      return res.status(400).json({ code: "invalid_group_by" });
+    }
+
+    try {
+      const stats = await folder.getFoldersStats({
+        path_to_type,
+        group_by,
+      });
+
+      journal.log({
+        from: "api2",
+        event: "get_folders_stats",
+        details: {
+          outcome: "success",
+          path_to_type,
+          group_by,
+          total: stats.total,
+          author_path: token_path,
+        },
+      });
+
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.json(stats);
+    } catch (err) {
+      _handleGetFoldersError(err, res, {
+        path_to_type,
+        token_path,
+        event: "get_folders_stats",
+      });
+    }
+  }
+
+  function _parsePositiveInt(value, { default_value, max }) {
+    const n = parseInt(value, 10);
+    if (!Number.isFinite(n) || n < 1) return default_value;
+    return Math.min(n, max);
+  }
+
+  function _parseFieldsQuery(fields_query) {
+    if (fields_query === undefined || fields_query === null || fields_query === "")
+      return null;
+    const fields = String(fields_query)
+      .split(",")
+      .map((field) => field.trim())
+      .filter((field) => /^[\$a-zA-Z][\w$]*$/.test(field));
+    return fields.length ? fields : null;
   }
   async function _createFolder(req, res, next) {
     const { path_to_type, data } = utils.makePathFromReq(req);
@@ -3201,12 +3356,13 @@ module.exports = (function () {
 
   function _handleGetFoldersError(err, res, context) {
     const { message, code, err_infos } = err;
+    const event = context.event || "get_folders";
     const error_msg = `Failed to get folders from ${context.path_to_type}: ${message}`;
 
     dev.error(error_msg);
     journal.log({
       from: "api2",
-      event: "get_folders",
+      event,
       details: {
         outcome: "error",
         path_to_type: context.path_to_type,

@@ -180,6 +180,80 @@ module.exports = (function () {
       return total_count;
     },
 
+    /**
+     * Count folders of a single type (readdir only — no meta reads).
+     * Path is a type path, e.g. `spaces`, `gems`, or `spaces/bonjour/projects`.
+     */
+    countFolders: async ({ path_to_type }) => {
+      dev.logfunction({ path_to_type });
+
+      utils.parseAndCheckSchema({
+        relative_path: path_to_type,
+      });
+
+      const folders_slugs = await _getFolderSlugs({ path_to_type });
+      return folders_slugs.length;
+    },
+
+    /**
+     * Most recently modified folders of a type, without returning the full list.
+     * Still scans metas server-side; response size is limited by `limit`.
+     */
+    getRecentFolders: async ({
+      path_to_type,
+      limit = 10,
+      fields = null,
+    }) => {
+      dev.logfunction({ path_to_type, limit, fields });
+
+      utils.parseAndCheckSchema({
+        relative_path: path_to_type,
+      });
+
+      const folders_slugs = await _getFolderSlugs({ path_to_type });
+      const all_folders_with_meta = await _loadFoldersMetaList({
+        path_to_type,
+        folders_slugs,
+      });
+
+      all_folders_with_meta.sort(
+        (a, b) => _folderSortTimeMs(b) - _folderSortTimeMs(a)
+      );
+
+      const recent = all_folders_with_meta.slice(0, limit);
+      if (!fields || !fields.length) return recent;
+      return recent.map((meta) => _projectFolderFields(meta, fields));
+    },
+
+    /**
+     * Aggregate folder count by a meta field (e.g. group_by: "status" or "$status").
+     */
+    getFoldersStats: async ({ path_to_type, group_by }) => {
+      dev.logfunction({ path_to_type, group_by });
+
+      utils.parseAndCheckSchema({
+        relative_path: path_to_type,
+      });
+
+      const folders_slugs = await _getFolderSlugs({ path_to_type });
+      const all_folders_with_meta = await _loadFoldersMetaList({
+        path_to_type,
+        folders_slugs,
+      });
+
+      const by_value = {};
+      for (const meta of all_folders_with_meta) {
+        const key = _statsGroupKey(meta[group_by]);
+        by_value[key] = (by_value[key] || 0) + 1;
+      }
+
+      return {
+        total: all_folders_with_meta.length,
+        group_by,
+        by_value,
+      };
+    },
+
     createFolder: async ({ path_to_type, data }) => {
       dev.logfunction({ path_to_type, data });
 
@@ -626,6 +700,55 @@ module.exports = (function () {
       dev.logfunction("No dir or folder found");
       return [];
     }
+  }
+
+  async function _loadFoldersMetaList({ path_to_type, folders_slugs }) {
+    let all_folders_with_meta = [];
+    let lastYield = Date.now();
+    const YIELD_INTERVAL_MS = 50;
+
+    for (let folder_slug of folders_slugs) {
+      const path_to_folder = path.join(path_to_type, folder_slug);
+      const folder_meta = await API.getFolder({
+        path_to_folder,
+      }).catch((err) => {
+        dev.error(`Failed to get folder`, err.message);
+        return null;
+      });
+      if (folder_meta) all_folders_with_meta.push(folder_meta);
+
+      if (Date.now() - lastYield >= YIELD_INTERVAL_MS) {
+        await new Promise(setImmediate);
+        lastYield = Date.now();
+      }
+    }
+
+    return all_folders_with_meta;
+  }
+
+  function _folderSortTimeMs(meta) {
+    const raw = meta?.$date_modified || meta?.$date_created;
+    if (!raw) return 0;
+    const t = new Date(raw).getTime();
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function _projectFolderFields(meta, fields) {
+    const projected = {};
+    const field_set = new Set(fields);
+    field_set.add("$path");
+    for (const key of field_set) {
+      if (Object.prototype.hasOwnProperty.call(meta, key))
+        projected[key] = meta[key];
+    }
+    return projected;
+  }
+
+  function _statsGroupKey(value) {
+    if (value === undefined || value === null || value === "") return "";
+    if (Array.isArray(value) || typeof value === "object")
+      return JSON.stringify(value);
+    return String(value);
   }
 
   async function _updateCover({ path_to_folder, data, req }) {

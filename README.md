@@ -361,6 +361,14 @@ Then the following routes will redirect to:
 
 Actual HTTP routes use the **`/_api2/...`** prefix (e.g. `/_api2/spaces/bonjour/projects.zip`). Folder-type archives require **local admin rights** like the usual **Download** permission for `.zip`; for a root type like **`_api2/projects.zip`** (schema-dependent), ACL falls back on instance admins (path `"."`). The journal logs `download_folder_type` for those requests.
 
+Lightweight list helpers (same ACL as listing the type — general password + private-parent check):
+
+- `/_api2/spaces/_count` → `{ count }` — folder count via readdir only (no meta payload)
+- `/_api2/spaces/_recent?limit=10&fields=$path,$date_modified,title` → array of the most recently modified folders (optional field projection; `$path` is always included)
+- `/_api2/spaces/_stats?group_by=$status` → `{ total, group_by, by_value }` — counts grouped by a meta field
+
+Nested type paths work the same way, e.g. `/_api2/spaces/bonjour/projects/_count`.
+
 ### Permission
 
 For an existing folder:
