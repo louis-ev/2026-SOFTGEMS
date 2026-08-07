@@ -14,30 +14,33 @@ export const gems_table_column_picker_excluded_keys = Object.freeze([
   "price_per_carat_pa_pcb",
 ]);
 
-/** Standard gem table columns always offered in the picker (independent of loaded gems). */
+/**
+ * Standard gem table columns always offered in the picker (independent of loaded gems).
+ * Order is the default inventory column order (when no saved preference exists).
+ */
 export const gems_table_catalog_column_keys = Object.freeze([
   "id",
   "status",
   "$cover",
-  "$date_modified",
-  "reference_supplier",
-  "reference_customer",
-  "paired_gem",
   "number_of_pieces",
   "stone_type",
   "weight_ct",
   "color",
   "shape",
   "origin_country",
-  "country_of_cut",
-  "treatment_type",
   "dimensions_lwh",
+  "treatment_type",
   "base_price_pcb",
   "import_price",
   "pv_selling_price",
   "pvd_asking_price",
   "pc_to",
   "pf_invoiced_price",
+  "paired_gem",
+  "country_of_cut",
+  "reference_supplier",
+  "reference_customer",
+  "$date_modified",
 ]);
 
 export const gems_table_gem_excluded_metadata_keys = Object.freeze([

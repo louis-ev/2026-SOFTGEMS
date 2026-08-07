@@ -6,6 +6,35 @@ import {
   gems_table_catalog_column_keys,
 } from "@/utils/gems_table_metadata.js";
 
+describe("gems_table_catalog_column_keys", () => {
+  it("uses the client default inventory column order", () => {
+    expect(gems_table_catalog_column_keys).toEqual([
+      "id",
+      "status",
+      "$cover",
+      "number_of_pieces",
+      "stone_type",
+      "weight_ct",
+      "color",
+      "shape",
+      "origin_country",
+      "dimensions_lwh",
+      "treatment_type",
+      "base_price_pcb",
+      "import_price",
+      "pv_selling_price",
+      "pvd_asking_price",
+      "pc_to",
+      "pf_invoiced_price",
+      "paired_gem",
+      "country_of_cut",
+      "reference_supplier",
+      "reference_customer",
+      "$date_modified",
+    ]);
+  });
+});
+
 describe("buildGemsTableAllMetadataKeys", () => {
   it("returns the full catalog even when gems is empty", () => {
     expect(buildGemsTableAllMetadataKeys([])).toEqual([
