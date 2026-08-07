@@ -46,7 +46,6 @@
         :field_editable_map="entries_field_editable_map"
         :selected_gem_id="selected_gem_id"
         :is_gem_open="is_gem_open"
-        view_density="compact"
         :cover_can_edit="false"
         :selection_remove_column="can_edit"
         :fixed_gem_order="true"

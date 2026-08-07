@@ -2,14 +2,11 @@
   <div class="_gemsTableRoot">
     <div
       class="_gemsTable"
-      :class="[
-        density_class,
-        {
-          _hasPickColumn: selection_pick_column,
-          _hasRemoveColumn: selection_remove_column,
-          _hasTotalsRow: show_gems_table_totals_row,
-        },
-      ]"
+      :class="{
+        _hasPickColumn: selection_pick_column,
+        _hasRemoveColumn: selection_remove_column,
+        _hasTotalsRow: show_gems_table_totals_row,
+      }"
     >
       <table class="_table">
         <thead>
@@ -343,7 +340,6 @@ export default {
     field_editable_map: { type: Object, default: () => ({}) },
     selected_gem_id: { type: String, default: "" },
     is_gem_open: { type: Boolean, default: false },
-    view_density: { type: String, default: "medium" },
     cover_can_edit: { type: Boolean, default: true },
     disabled_row_paths: { type: Array, default: () => [] },
     /** When true, first column is remove-from-selection (minus icon). */
@@ -395,11 +391,6 @@ export default {
         return this.$t("sg_gems_table_paired_pick_select_aria");
       }
       return this.$t("sg_gems_table_add_to_selection_aria");
-    },
-    density_class() {
-      if (this.view_density === "compact") return "_densityCompact";
-      if (this.view_density === "large") return "_densityLarge";
-      return "_densityMedium";
     },
     sorted_gems() {
       if (!Array.isArray(this.gems)) return [];
@@ -627,9 +618,7 @@ export default {
       const totals = this.gems_table_numeric_totals;
 
       if (metadata_key === "id") {
-        return this.$t("sg_gems_table_total_row_count", {
-          count: totals.count,
-        });
+        return this.$t("sg_gems_table_total_row_count");
       }
       if (metadata_key === "$cover" || metadata_key === "$date_modified") {
         return "";
@@ -989,10 +978,13 @@ export default {
 }
 
 ._gemsTable {
+  --cell-height: 38px;
   --pick-col-width: 0px;
-  --sticky-id-col-width: 70px;
-  --sticky-cover-col-width: 80px;
-  --sticky-cover-col-height: 80px;
+  --sticky-id-col-width: 60px;
+  --sticky-cover-col-width: calc(
+    var(--cell-height) + var(--sg-table-border-width-thick)
+  );
+  --sticky-cover-col-height: var(--cell-height);
   --sg-table-border-width-thin: 1px;
   --sg-table-border-width-thick: 1px;
   --sg-table-border-color: color-mix(
@@ -1000,9 +992,9 @@ export default {
     var(--c-gris_clair),
     var(--c-noir) 15%
   );
-  --sg-cell-padding: calc(var(--spacing) / 2);
-  --sg-metadata-font-size: var(--sl-font-size-x-small);
-  --sg-id-font-size: var(--sl-font-size-medium);
+  --sg-cell-padding: calc(var(--spacing) / 3);
+  --sg-metadata-font-size: 0.68rem;
+  --sg-id-font-size: 0.82rem;
 
   flex: 1;
   min-height: 0;
@@ -1017,44 +1009,6 @@ export default {
 ._gemsTable._hasTotalsRow {
   // Room for sticky footer when the table is shorter than the scrollport.
   padding-bottom: var(--sg-table-border-width-thick);
-}
-
-._gemsTable._densityCompact {
-  --cell-height: 38px;
-  --sticky-id-col-width: 70px;
-  --sticky-cover-col-width: calc(
-    var(--cell-height) + var(--sg-table-border-width-thick)
-  );
-  --sticky-cover-col-height: var(--cell-height);
-  --sg-cell-padding: calc(var(--spacing) / 3);
-  --sg-metadata-font-size: 0.68rem;
-  --sg-id-font-size: 0.82rem;
-
-  ._table th._pricingCol,
-  ._table td._pricingCol {
-    --pricing-col-width: 7rem;
-    width: var(--pricing-col-width);
-    min-width: var(--pricing-col-width);
-    max-width: var(--pricing-col-width);
-  }
-}
-
-._gemsTable._densityMedium {
-  --sticky-id-col-width: 70px;
-  --sticky-cover-col-width: 80px;
-  --sticky-cover-col-height: 80px;
-  --sg-cell-padding: calc(var(--spacing) / 2);
-  --sg-metadata-font-size: var(--sl-font-size-x-small);
-  --sg-id-font-size: var(--sl-font-size-medium);
-}
-
-._gemsTable._densityLarge {
-  --sticky-id-col-width: 70px;
-  --sticky-cover-col-width: 104px;
-  --sticky-cover-col-height: 104px;
-  --sg-cell-padding: calc(var(--spacing) * 0.66);
-  --sg-metadata-font-size: var(--sl-font-size-small);
-  --sg-id-font-size: var(--sl-font-size-large);
 }
 
 ._table {

@@ -50,7 +50,6 @@
           :field_editable_map="resolved_field_editable_map"
           :selected_gem_id="selected_gem_id"
           :is_gem_open="is_gem_open"
-          :view_density="view_density"
           :cover_can_edit="cover_can_edit"
           :disabled_row_paths="disabled_row_paths"
           :selection_pick_column="selection_pick_column"
@@ -133,10 +132,6 @@ export default {
     is_gem_open: {
       type: Boolean,
       default: false,
-    },
-    view_density: {
-      type: String,
-      default: "compact",
     },
     cover_can_edit: {
       type: Boolean,

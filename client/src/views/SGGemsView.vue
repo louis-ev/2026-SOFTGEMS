@@ -75,7 +75,6 @@
           :fetch_error="fetch_error"
           :selected_gem_id="$route.params.gem_id"
           :is_gem_open="is_gem_open"
-          :view_density="view_density"
           :field_editable_map="field_editable_map"
           enable_column_customizer
           @rowClick="openGem"
@@ -166,7 +165,6 @@ export default {
       editing_gem: null,
       editing_field: null,
       editing_current_value: "",
-      view_density: "compact",
       sorted_gems_for_export: [],
       gems_metadata_keys: [],
       gems_metadata_labels: {},
