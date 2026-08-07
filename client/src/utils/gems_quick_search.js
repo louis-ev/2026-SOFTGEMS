@@ -27,6 +27,7 @@ export const GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY = "dimensions_lwh";
 /** Numeric (exact / range) column filters. */
 export const GEMS_COLUMN_FILTER_NUMBER_KEYS = Object.freeze([
   "id",
+  "paired_gem",
   "number_of_pieces",
   "weight_ct",
   ...GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
@@ -51,6 +52,8 @@ export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   reference_supplier: "reference_supplier",
   ref_customer: "reference_customer",
   reference_customer: "reference_customer",
+  paired: "paired_gem",
+  paired_gem: "paired_gem",
   type: "stone_type",
   stone_type: "stone_type",
   color: "color",
@@ -88,6 +91,7 @@ export const GEMS_COLUMN_FILTER_SERIALIZE_ALIAS = Object.freeze({
   status: "status",
   reference_supplier: "ref_supplier",
   reference_customer: "ref_customer",
+  paired_gem: "paired",
   stone_type: "type",
   color: "color",
   shape: "shape",
@@ -707,6 +711,18 @@ export function gemMatchesFieldFilter(gem, meta_key, filter) {
         // Non-numeric folder ids: exact string match only.
         if (Number.isFinite(filter.exact)) {
           return gem_id === String(filter.exact);
+        }
+        return false;
+      }
+      return numberMatchesFilter(n, filter);
+    }
+    if (meta_key === "paired_gem") {
+      const paired_id = String(gem?.paired_gem ?? "").trim();
+      if (!paired_id) return false;
+      const n = Number(paired_id);
+      if (!Number.isFinite(n)) {
+        if (Number.isFinite(filter.exact)) {
+          return paired_id === String(filter.exact);
         }
         return false;
       }

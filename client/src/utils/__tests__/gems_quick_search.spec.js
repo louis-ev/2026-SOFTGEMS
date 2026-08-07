@@ -22,7 +22,30 @@ describe("gems_quick_search field filters", () => {
     expect(isGemsColumnFilterableKey("country_of_cut")).toBe(true);
     expect(isGemsColumnFilterableKey("treatment_type")).toBe(true);
     expect(isGemsColumnFilterableKey("$date_modified")).toBe(true);
-    expect(isGemsColumnFilterableKey("paired_gem")).toBe(false);
+    expect(isGemsColumnFilterableKey("paired_gem")).toBe(true);
+  });
+
+  it("parses and matches paired_gem number filters", () => {
+    const parsed = parseGemsQuickSearchInput("paired=9");
+    expect(parsed.field_filters.paired_gem).toEqual({
+      mode: "number",
+      exact: 9,
+    });
+    expect(
+      gemMatchesQuickSearch(
+        { $path: "gems/3", paired_gem: "9" },
+        parsed,
+      ),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch(
+        { $path: "gems/3", paired_gem: "10" },
+        parsed,
+      ),
+    ).toBe(false);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/3", paired_gem: "" }, parsed),
+    ).toBe(false);
   });
 
   it("parses and matches edited date range and coc / treatment enums", () => {

@@ -277,9 +277,12 @@
                   formatTotalsPricingPerCt(metadata_key)
                 }}</span>
               </div>
-              <span v-else class="_gemMetadataValue _totalsCellValue">{{
-                formatTotalsCell(metadata_key)
-              }}</span>
+              <span
+                v-else
+                class="_gemMetadataValue _totalsCellValue"
+                :title="formatTotalsCell(metadata_key) || undefined"
+                >{{ formatTotalsCell(metadata_key) }}</span
+              >
             </td>
             <td v-if="show_append_column" class="_appendColTd"></td>
           </tr>
@@ -1018,11 +1021,7 @@ export default {
 
 ._gemsTable._densityCompact {
   --cell-height: 38px;
-  // to get Total (n) cell to fit the width we add 8px
-  // plus left/right sticky column border
-  --sticky-id-col-width: calc(
-    var(--cell-height) + var(--sg-table-border-width-thick) + 8px
-  );
+  --sticky-id-col-width: 70px;
   --sticky-cover-col-width: calc(
     var(--cell-height) + var(--sg-table-border-width-thick)
   );
@@ -1041,7 +1040,7 @@ export default {
 }
 
 ._gemsTable._densityMedium {
-  --sticky-id-col-width: 80px;
+  --sticky-id-col-width: 70px;
   --sticky-cover-col-width: 80px;
   --sticky-cover-col-height: 80px;
   --sg-cell-padding: calc(var(--spacing) / 2);
@@ -1050,7 +1049,7 @@ export default {
 }
 
 ._gemsTable._densityLarge {
-  --sticky-id-col-width: 96px;
+  --sticky-id-col-width: 70px;
   --sticky-cover-col-width: 104px;
   --sticky-cover-col-height: 104px;
   --sg-cell-padding: calc(var(--spacing) * 0.66);
