@@ -36,6 +36,18 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 | `paired_gem`            | select from gem list | User selects another gem to pair with current gem. On create and edit, reciprocal pairing is auto-set on the selected gem; changing or clearing pairing also unlinks the previous partner. |
 | `parent_id`             | automatic          | Shows parent ID in case of split. (hidden + purple in source) |
 
+### Duplicate gem (V1)
+
+From the gem open view (⋯ menu → **Duplicate gem**): `copyFolder` creates a new sequential gem folder (media, cover, certificates and stone fields copied). The confirmation modal lists meta that will change on the copy. Applied patch ([`gem_duplicate.js`](../client/src/utils/gem_duplicate.js)):
+
+- new ID (sequence)
+- `status` → `reference`
+- `paired_gem` cleared (no reciprocal re-pair)
+- `box_selection_path` and `selection_membership_paths` cleared (copy is not added to any selection)
+- modifications history reset (source `meta_archive.jsonl` is not kept; a fresh `created` entry is written)
+
+UI: [`SGGemDuplicateModal.vue`](../client/src/components/gems/SGGemDuplicateModal.vue).
+
 ## Stone Characteristics
 
 | Field              | Fill Method        | Notes                                                                                        |

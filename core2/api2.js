@@ -1937,6 +1937,17 @@ module.exports = (function () {
 
       // Post-response operations (non-critical)
       try {
+        if (is_copy_or_move === "copy") {
+          history
+            .appendCreated({
+              path_to_folder: utils.convertToSlashPath(copy_folder_path),
+              meta: new_folder_meta,
+              author_path: token_path,
+            })
+            .catch((err) =>
+              dev.error("Failed to write copy creation history: " + err.message)
+            );
+        }
         notifier.emit(
           "folderCreated",
           utils.convertToSlashPath(path_to_destination_type),

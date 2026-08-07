@@ -92,6 +92,17 @@ module.exports = (function () {
         return [];
       }
     },
+
+    // Used after folder copy so the destination does not keep the source log.
+    clearEntries: async ({ path_to_folder }) => {
+      dev.logfunction({ path_to_folder });
+      const full_path = _getFullPath(path_to_folder);
+      try {
+        await fs.remove(full_path);
+      } catch (err) {
+        if (err?.code !== "ENOENT") throw err;
+      }
+    },
   };
 
   function _getFullPath(path_to_folder) {

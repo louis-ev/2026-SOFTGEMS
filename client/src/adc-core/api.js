@@ -434,8 +434,22 @@ export default function () {
           // console.log("folderCreated – room isnt tracked, not adding to store");
           return;
         }
-        if (!Object.prototype.hasOwnProperty.call(this.store, type_path))
-          this.store[type_path] = new Array();
+        if (!Object.prototype.hasOwnProperty.call(this.store, type_path)) {
+          this.$set(this.store, type_path, []);
+        }
+        const list = this.store[type_path];
+        if (!Array.isArray(list)) {
+          this.$set(this.store, type_path, []);
+        }
+        const folder_path = this.normalizeFolderStorePath(
+          path_to_folder || meta?.$path || ""
+        );
+        if (
+          folder_path &&
+          this.store[type_path].some((item) => item?.$path === folder_path)
+        ) {
+          return;
+        }
         this.store[type_path].push(meta);
         this.markStoreFresh(type_path);
         // this.$set(this.store, meta.$path, meta);

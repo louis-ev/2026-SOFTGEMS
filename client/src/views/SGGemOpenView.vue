@@ -21,6 +21,14 @@
           <DropDown v-if="can_edit" :show_label="false" :right="true">
             <button
               type="button"
+              class="u-buttonLink"
+              @click="show_duplicate_modal = true"
+            >
+              <b-icon icon="files" />
+              {{ $t("sg_duplicate_gem") }}
+            </button>
+            <button
+              type="button"
               class="u-buttonLink u-buttonLink_red"
               @click="show_remove_modal = true"
             >
@@ -36,6 +44,14 @@
               @close="show_remove_modal = false"
             />
           </DropDown>
+          <SGGemDuplicateModal
+            v-if="show_duplicate_modal && gem"
+            :gem="gem"
+            :gem_path="gem_path"
+            :gem_id="gem_id"
+            @close="show_duplicate_modal = false"
+            @duplicated="onGemDuplicated"
+          />
         </div>
       </div>
       <div class="_coverColumn" v-if="gem">
@@ -502,6 +518,8 @@ export default {
     SGGemCertificatesSection: () =>
       import("@/components/gems/SGGemCertificatesSection.vue"),
     SGGemMediaSection: () => import("@/components/gems/SGGemMediaSection.vue"),
+    SGGemDuplicateModal: () =>
+      import("@/components/gems/SGGemDuplicateModal.vue"),
   },
   props: {
     gem_id: {
@@ -520,6 +538,7 @@ export default {
       gem: null,
       is_loading: false,
       show_remove_modal: false,
+      show_duplicate_modal: false,
       fetch_error: "",
       editing_field: null,
       paired_gem_preview: null,
@@ -582,6 +601,7 @@ export default {
     async onGemIdChanged(previous_gem_id) {
       this.editing_field = null;
       this.show_remove_modal = false;
+      this.show_duplicate_modal = false;
       this.paired_gem_preview = null;
       this.gem = null;
       this.fetch_error = "";
@@ -711,6 +731,15 @@ export default {
         return;
       }
       this.$router.push("/gems");
+    },
+    onGemDuplicated({ new_gem_id }) {
+      this.show_duplicate_modal = false;
+      // List updates via room `gems` + socket folderCreated (api.store.gems push).
+      if (!new_gem_id) return;
+      if (this.panel_mode) {
+        this.$emit("closePanel");
+      }
+      this.$router.push(`/gems/${new_gem_id}`);
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";

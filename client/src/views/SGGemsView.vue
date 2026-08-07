@@ -172,9 +172,12 @@ export default {
       gems_metadata_labels: {},
     };
   },
-  mounted() {
-    this.fetchGems();
+  async mounted() {
+    // Same pattern as do•doc lists (PublicationsList, SpacesList, …):
+    // bind `gems` to the api.store array, join the type room, then
+    // socket `folderCreated` / `folderRemoved` mutate that array in place.
     this.$api.join({ room: this.gems_path });
+    await this.fetchGems();
   },
   beforeDestroy() {
     this.$api.leave({ room: this.gems_path });
@@ -215,6 +218,7 @@ export default {
       this.$router.push("/gems");
     },
     onBulkPerfSeedFinished() {
+      // Perf seed intentionally deletes store.gems; re-bind after bulk copy.
       this.fetchGems();
     },
     async fetchGems() {
@@ -222,6 +226,7 @@ export default {
       this.fetch_error = "";
 
       try {
+        // Returns api.store.gems (same array reference folderCreated pushes into).
         const fetched_gems = await this.$api.getFolders({
           path: this.gems_path,
         });

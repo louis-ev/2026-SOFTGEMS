@@ -6,7 +6,8 @@ const utils = require("./utils"),
   thumbs = require("./thumbs"),
   file = require("./file"),
   cache = require("./cache"),
-  archives = require("./archives");
+  archives = require("./archives"),
+  history = require("./history");
 
 module.exports = (function () {
   const SEQUENTIAL_SLUG_STATE_FILENAME = ".slug-sequence.json";
@@ -538,6 +539,13 @@ module.exports = (function () {
         path_to_source_folder,
         path_to_destination_folder,
       });
+
+      // Do not inherit the source folder's edit history on a copy.
+      if (is_copy_or_move === "copy") {
+        await history.clearEntries({
+          path_to_folder: path_to_destination_folder,
+        });
+      }
 
       await API.updateFolder({
         path_to_type: path_to_destination_type,
