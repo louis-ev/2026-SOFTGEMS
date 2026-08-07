@@ -1,0 +1,1 @@
+function r(e){if(e==null)return"";const n=String(e);if(!n.trim())return"";if(typeof document>"u")return n.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();const t=document.createElement("div");return t.innerHTML=n,String(t.innerText||t.textContent||"").replace(/\s+/g," ").trim()}function i(e){return r(e)===""}export{r as h,i};
