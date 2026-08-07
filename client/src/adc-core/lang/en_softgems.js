@@ -344,7 +344,7 @@ export default {
   sg_stats_stock_fiscal_empty:
     "No gems with Buying Invoice status yet.",
   sg_stats_stock_fiscal_summary_aria: "Stock fiscal totals",
-  sg_stats_stock_fiscal_summary_count: "Gems (Buying Invoice)",
+  sg_stats_stock_fiscal_summary_count: "Gems",
   sg_stats_stock_fiscal_summary_cost: "Cost sum",
   sg_stats_stock_fiscal_summary_fiscal: "Fiscal value",
   sg_stats_stock_fiscal_col_cost: "Cost",
@@ -355,7 +355,7 @@ export default {
   sg_stats_stock_fiscal_col_fiscal: "Fiscal value",
   sg_stats_stock_fiscal_total_row: "Total",
   sg_stats_stock_fiscal_formula_hint:
-    "Buying Invoice gems only. Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single partner invoice; otherwise 100%.",
+    "Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single partner invoice; otherwise 100%.",
   sg_stats_stock_fiscal_open_gem_aria: "Open gem {id}",
   sg_stats_stock_fiscal_open_buying_invoice_aria:
     "Open buying invoice {id}",

@@ -3,6 +3,7 @@ import {
   buildStockFiscalCsvRows,
   buildStockFiscalRows,
   computeStockFiscalValue,
+  formatStockFiscalSelectionLabel,
   parseStockFiscalCost,
   resolveStockFiscalPercent,
   stockFiscalGemRef,
@@ -109,6 +110,23 @@ describe("resolveStockFiscalPercent", () => {
   });
 });
 
+describe("formatStockFiscalSelectionLabel", () => {
+  it("formats internal name with id in parentheses", () => {
+    expect(
+      formatStockFiscalSelectionLabel({
+        $path: "buying-invoice/10",
+        internal_name: "Acme Purchase",
+      })
+    ).toBe("Acme Purchase (10)");
+  });
+
+  it("falls back to id when internal name is missing", () => {
+    expect(
+      formatStockFiscalSelectionLabel({ $path: "partner-invoice/20" })
+    ).toBe("20");
+  });
+});
+
 describe("buildStockFiscalRows", () => {
   it("excludes non-purchased gems", () => {
     const { rows, aggregates } = buildStockFiscalRows({
@@ -126,13 +144,15 @@ describe("buildStockFiscalRows", () => {
   it("applies full cost when there is no partnership", () => {
     const { rows, aggregates } = buildStockFiscalRows({
       gems: [gem()],
-      selections: [buyingInvoice()],
+      selections: [
+        buyingInvoice({ internal_name: "Supplier BI" }),
+      ],
     });
     expect(rows).toHaveLength(1);
     expect(rows[0].applied_percent).toBe(100);
     expect(rows[0].percent_source).toBe("full");
     expect(rows[0].fiscal_value).toBe(1000);
-    expect(rows[0].buying_invoice_label).toBe("10");
+    expect(rows[0].buying_invoice_label).toBe("Supplier BI (10)");
     expect(aggregates).toEqual({
       gem_count: 1,
       cost_sum: 1000,
@@ -160,13 +180,16 @@ describe("buildStockFiscalRows", () => {
       gems: [gem()],
       selections: [
         buyingInvoice(),
-        partnerInvoice({ partnership_purchased_percentage: 25 }),
+        partnerInvoice({
+          internal_name: "Partner A",
+          partnership_purchased_percentage: 25,
+        }),
       ],
     });
     expect(rows[0].applied_percent).toBe(25);
     expect(rows[0].percent_source).toBe("partner-invoice");
     expect(rows[0].fiscal_value).toBe(250);
-    expect(rows[0].partner_invoice_labels).toEqual(["20"]);
+    expect(rows[0].partner_invoice_labels).toEqual(["Partner A (20)"]);
     expect(rows[0].partner_invoice_percentages).toEqual([25]);
   });
 
@@ -177,16 +200,21 @@ describe("buildStockFiscalRows", () => {
         buyingInvoice(),
         partnerInvoice({
           $path: "partner-invoice/20",
+          internal_name: "Partner A",
           partnership_purchased_percentage: 30,
         }),
         partnerInvoice({
           $path: "partner-invoice/21",
+          internal_name: "Partner B",
           partnership_purchased_percentage: 40,
           counterparty_path: "address_book/par2",
         }),
       ],
     });
-    expect(rows[0].partner_invoice_labels).toEqual(["20", "21"]);
+    expect(rows[0].partner_invoice_labels).toEqual([
+      "Partner A (20)",
+      "Partner B (21)",
+    ]);
     expect(rows[0].partner_invoice_percentages).toEqual([30, 40]);
     expect(rows[0].applied_percent).toBe(100);
     expect(rows[0].fiscal_value).toBe(1000);

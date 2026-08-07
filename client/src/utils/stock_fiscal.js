@@ -176,6 +176,19 @@ export function resolveStockFiscalPercent(buying_invoice, partner_invoices) {
 }
 
 /**
+ * Display label: internal name with document ID in parentheses when both exist.
+ * @param {object|null|undefined} folder
+ * @returns {string}
+ */
+export function formatStockFiscalSelectionLabel(folder) {
+  if (!folder || typeof folder !== "object") return "";
+  const id = String(selectionDocumentNumber(folder) || "").trim();
+  const name = String(folder.internal_name || "").trim();
+  if (name && id) return `${name} (${id})`;
+  return name || id;
+}
+
+/**
  * @param {object} args
  * @param {object[]} args.gems
  * @param {object[]} args.selections
@@ -229,13 +242,13 @@ export function buildStockFiscalRows({ gems, selections }) {
       cost,
       buying_invoice_path: String(buying_invoice?.$path || "").trim(),
       buying_invoice_label: buying_invoice
-        ? selectionDocumentNumber(buying_invoice)
+        ? formatStockFiscalSelectionLabel(buying_invoice)
         : "",
       partner_invoice_paths: partner_invoices.map((folder) =>
         String(folder?.$path || "").trim()
       ),
       partner_invoice_labels: partner_invoices.map((folder) =>
-        selectionDocumentNumber(folder)
+        formatStockFiscalSelectionLabel(folder)
       ),
       partner_invoice_percentages: partner_invoices.map((folder) =>
         clampPartnershipPurchasedPercentage(
