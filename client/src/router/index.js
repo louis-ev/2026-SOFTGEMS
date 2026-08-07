@@ -59,6 +59,11 @@ const routes = [
     ],
   },
   {
+    path: "/stats",
+    name: "Stats",
+    component: () => import("@/views/SGStatsView.vue"),
+  },
+  {
     path: "/selections",
     component: () => import("@/layouts/SGSelectionsLayout.vue"),
     children: [

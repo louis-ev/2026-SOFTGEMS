@@ -32,6 +32,12 @@ export default {
           icon: "people",
           match_type: "starts_with",
         },
+        {
+          to: "/stats",
+          title: "Stats",
+          icon: "graph-up",
+          match_type: "starts_with",
+        },
       ],
     };
   },

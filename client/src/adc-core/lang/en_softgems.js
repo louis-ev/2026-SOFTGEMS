@@ -304,6 +304,19 @@ export default {
   sg_pricing_pair_editor_save_hint:
     "Only the total amount is saved. Per carat updates automatically from total ÷ weight.",
   sg_address_book: "Address book",
+  sg_stats: "Stats",
+  sg_stats_page_title: "Stock statistics",
+  sg_stats_chart_menu_aria: "Chart actions",
+  sg_stats_export_csv: "Export to CSV",
+  sg_stats_export_csv_coming_soon:
+    "CSV export will be available when this chart has data.",
+  sg_stats_section_stock_fiscal: "Stock fiscal",
+  sg_stats_section_stock_by_type: "Répartition par type de pierre",
+  sg_stats_section_stock_value: "Évolution de la valeur du stock",
+  sg_stats_stock_fiscal_coming_soon:
+    "Cette vue arrivera prochainement.\n\nLe stock fiscal présentera la valeur fiscale de votre inventaire. Pour chaque pierre dont le statut est « Buying Invoice » (achetée), le coût sera repris depuis la facture d’achat associée. Si l’achat est en partenariat, le pourcentage acheté sera appliqué au coût ; de même si la pierre figure sur une facture partenaire. Votre part (partenaire, pourcentage et total) s’affichera ici, pierre par pierre et en agrégé.",
+  sg_stats_placeholder_coming_soon:
+    "Graphique à venir — les données de stock s’afficheront ici.",
   sg_create_contact: "Add a contact",
   sg_create_contact_title: "Create contact",
   sg_create_contact_in_progress: "Creating...",

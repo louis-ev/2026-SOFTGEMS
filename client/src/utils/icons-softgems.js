@@ -28,6 +28,7 @@ import {
   BIconGem,
   BIconGeoAlt,
   BIconGlobe,
+  BIconGraphUp,
   BIconGrid3x3Gap,
   BIconHash,
   BIconHouse,
@@ -87,6 +88,7 @@ Vue.component("BIconFileEarmarkZip", BIconFileEarmarkZip);
 Vue.component("BIconGem", BIconGem);
 Vue.component("BIconGeoAlt", BIconGeoAlt);
 Vue.component("BIconGlobe", BIconGlobe);
+Vue.component("BIconGraphUp", BIconGraphUp);
 Vue.component("BIconGrid3x3Gap", BIconGrid3x3Gap);
 Vue.component("BIconHash", BIconHash);
 Vue.component("BIconHouse", BIconHouse);
