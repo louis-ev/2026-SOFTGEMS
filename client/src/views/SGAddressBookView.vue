@@ -306,7 +306,7 @@ export default {
 }
 
 ._tableWrap {
-  background: transparent;
+  @include sg_data_table.sg-data-table-wrap;
 }
 
 ._table {
@@ -334,35 +334,6 @@ export default {
 
 ._nameText {
   font-size: var(--sl-font-size-small);
-}
-
-._cellText {
-  display: block;
-  font-size: var(--sl-font-size-x-small);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-._dataRow {
-  cursor: pointer;
-
-  &._selected td {
-    background: var(--c-gris_clair);
-  }
-
-  &:hover td {
-    background: var(--c-gris_clair);
-  }
-
-  &:focus {
-    outline: 2px solid var(--c-orange);
-    outline-offset: -2px;
-  }
-
-  &:focus:not(:focus-visible) {
-    outline: none;
-  }
 }
 
 ._emptyRow ._emptyCell {

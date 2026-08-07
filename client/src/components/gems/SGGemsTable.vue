@@ -978,27 +978,16 @@ export default {
 }
 
 ._gemsTable {
-  --cell-height: 38px;
+  @include sg_data_table.sg-data-table-wrap;
+
   --pick-col-width: 0px;
-  --sticky-id-col-width: 60px;
   --sticky-cover-col-width: calc(
     var(--cell-height) + var(--sg-table-border-width-thick)
   );
   --sticky-cover-col-height: var(--cell-height);
-  --sg-table-border-width-thin: 1px;
-  --sg-table-border-width-thick: 1px;
-  --sg-table-border-color: color-mix(
-    in srgb,
-    var(--c-gris_clair),
-    var(--c-noir) 15%
-  );
-  --sg-cell-padding: calc(var(--spacing) / 3);
-  --sg-metadata-font-size: 0.68rem;
-  --sg-id-font-size: 0.82rem;
 
   flex: 1;
-  min-height: 0;
-  overflow: auto;
+  height: 100%;
 
   &._hasPickColumn,
   &._hasRemoveColumn {
@@ -1012,30 +1001,8 @@ export default {
 }
 
 ._table {
-  --sg-table-footer-bg: color-mix(
-    in srgb,
-    var(--c-gris_clair) 55%,
-    var(--c-bodybg)
-  );
   @include sg_data_table.sg-data-table;
   width: max-content;
-
-  tfoot td {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    border-top: var(--sg-table-border-width-thick) solid
-      var(--sg-table-border-color);
-    border-right: var(--sg-table-border-width-thick) solid
-      var(--sg-table-border-color);
-    border-bottom: var(--sg-table-border-width-thick) solid
-      var(--sg-table-border-color);
-    background: var(--sg-table-footer-bg);
-    vertical-align: middle;
-    box-shadow: 0 calc(-1 * var(--sg-table-border-width-thick)) 0
-        var(--sg-table-border-color),
-      0 var(--sg-table-border-width-thick) 0 var(--sg-table-border-color);
-  }
 
   tfoot td._stickyIdCol {
     z-index: 10;
@@ -1128,11 +1095,6 @@ export default {
     z-index: 6;
   }
 
-  td {
-    font-size: var(--sg-metadata-font-size);
-    font-family: var(--sl-font-mono);
-  }
-
   // Compact default column width; sticky id/cover + pricing keep their own sizes.
   th:not(._stickyIdCol):not(._stickyCoverCol):not(._pricingCol):not(
       ._pickColTh
@@ -1169,13 +1131,8 @@ export default {
 
   th._pricingCol,
   td._pricingCol {
-    --pricing-col-width: 7rem;
-    width: var(--pricing-col-width);
-    min-width: var(--pricing-col-width);
-    max-width: var(--pricing-col-width);
     padding-left: calc(var(--sg-cell-padding) * 0.55);
     padding-right: calc(var(--sg-cell-padding) * 0.55);
-    box-sizing: border-box;
   }
 
   th._pricingCol ._thContent {
@@ -1284,8 +1241,6 @@ th._sortableHeader:not(._filterableHeader)
 }
 
 ._clickableRow {
-  cursor: pointer;
-
   &._selected {
     background: var(--c-gris_clair);
   }

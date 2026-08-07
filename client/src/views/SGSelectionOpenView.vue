@@ -232,6 +232,11 @@ export default {
       type: String,
       required: true,
     },
+    /** When true, close/remove stay in context (emit closePanel instead of leaving Stats/etc.). */
+    panel_mode: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -333,6 +338,10 @@ export default {
       return selectionTypeLabelFn(this.$t.bind(this), v);
     },
     goBack() {
+      if (this.panel_mode) {
+        this.$emit("closePanel");
+        return;
+      }
       this.$router.push(selectionListPath(this.type_slug));
     },
     onRemovedSuccessfully() {
@@ -390,6 +399,7 @@ export default {
       }
     },
     replaceDetailUrlIfStale() {
+      if (this.panel_mode) return;
       if (!this.selection || !this.folder_slug) return;
       const next_path = selectionDetailPath({
         type_slug: this.type_slug,

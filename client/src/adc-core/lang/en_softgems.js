@@ -329,16 +329,40 @@ export default {
   sg_stats: "Stats",
   sg_stats_page_title: "Stock statistics",
   sg_stats_chart_menu_aria: "Chart actions",
+  sg_stats_refresh_aria: "Refresh",
   sg_stats_export_csv: "Export to CSV",
   sg_stats_export_csv_coming_soon:
     "CSV export will be available when this chart has data.",
   sg_stats_section_stock_fiscal: "Stock fiscal",
-  sg_stats_section_stock_by_type: "Répartition par type de pierre",
-  sg_stats_section_stock_value: "Évolution de la valeur du stock",
-  sg_stats_stock_fiscal_coming_soon:
-    "Cette vue arrivera prochainement.\n\nLe stock fiscal présentera la valeur fiscale de votre inventaire. Pour chaque pierre dont le statut est « Buying Invoice » (achetée), le coût sera repris depuis la facture d’achat associée. Si l’achat est en partenariat, le pourcentage acheté sera appliqué au coût ; de même si la pierre figure sur une facture partenaire. Votre part (partenaire, pourcentage et total) s’affichera ici, pierre par pierre et en agrégé.",
+  sg_stats_section_stock_by_type: "Breakdown by gem type",
+  sg_stats_section_stock_value: "Stock value over time",
+  sg_stats_stock_fiscal_loading: "Loading stock fiscal…",
+  sg_stats_stock_fiscal_load_error: "Could not load stock fiscal.",
+  sg_stats_stock_fiscal_updated: "Stock fiscal has been updated.",
+  sg_stats_stock_fiscal_scope:
+    "Scope: only gems with Buying Invoice status (purchased). Other statuses are excluded.",
+  sg_stats_stock_fiscal_empty:
+    "No gems with Buying Invoice status yet.",
+  sg_stats_stock_fiscal_summary_aria: "Stock fiscal totals",
+  sg_stats_stock_fiscal_summary_count: "Gems (Buying Invoice)",
+  sg_stats_stock_fiscal_summary_cost: "Cost sum",
+  sg_stats_stock_fiscal_summary_fiscal: "Fiscal value",
+  sg_stats_stock_fiscal_col_cost: "Cost",
+  sg_stats_stock_fiscal_col_buying_invoice: "Buying invoice",
+  sg_stats_stock_fiscal_col_partner: "Partner",
+  sg_stats_stock_fiscal_col_percent: "% applied",
+  sg_stats_stock_fiscal_col_partner_invoices: "Partner invoices",
+  sg_stats_stock_fiscal_col_fiscal: "Fiscal value",
+  sg_stats_stock_fiscal_total_row: "Total",
+  sg_stats_stock_fiscal_formula_hint:
+    "Buying Invoice gems only. Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single partner invoice; otherwise 100%.",
+  sg_stats_stock_fiscal_open_gem_aria: "Open gem {id}",
+  sg_stats_stock_fiscal_open_buying_invoice_aria:
+    "Open buying invoice {id}",
+  sg_stats_stock_fiscal_open_partner_invoice_aria:
+    "Open partner invoice {id}",
   sg_stats_placeholder_coming_soon:
-    "Graphique à venir — les données de stock s’afficheront ici.",
+    "Chart coming soon — stock data will appear here.",
   sg_create_contact: "Add a contact",
   sg_create_contact_title: "Create contact",
   sg_create_contact_in_progress: "Creating...",
@@ -568,4 +592,5 @@ export default {
   sg_pdf_generated_section: "Generated PDFs",
   sg_pdf_generated_empty: "No PDFs generated for this selection yet.",
   sg_pdf_generated_on: "Generated on {date}",
+  sg_pdf_generated_show_older: "Show older",
 };

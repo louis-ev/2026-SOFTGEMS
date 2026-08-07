@@ -7,49 +7,59 @@
     <p v-if="generated_files.length === 0" class="_empty">
       {{ $t("sg_pdf_generated_empty") }}
     </p>
-    <ul v-else class="_list">
-      <li
-        v-for="file in generated_files"
-        :key="file.$path"
-        class="_row"
-      >
-        <div class="_rowBody">
-          <SGSelectionFileThumb :file="file" />
-          <div class="_main">
-            <p class="_fileName">{{ displayFilename(file) }}</p>
-            <p class="_generatedAt">
-              {{ $t("sg_pdf_generated_on", { date: formatGeneratedDate(file) }) }}
-            </p>
-            <div v-if="openUrl(file)" class="_actions">
-              <a
-                class="u-buttonLink"
-                :href="openUrl(file)"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {{ $t("open") }}
-              </a>
-              <a
-                class="u-buttonLink"
-                :href="openUrl(file)"
-                :download="displayFilename(file)"
-              >
-                {{ $t("download") }}
-              </a>
+    <template v-else>
+      <ul class="_list">
+        <li
+          v-for="file in visible_files"
+          :key="file.$path"
+          class="_row"
+        >
+          <div class="_rowBody">
+            <SGSelectionFileThumb :file="file" />
+            <div class="_main">
+              <p class="_fileName">{{ displayFilename(file) }}</p>
+              <p class="_generatedAt">
+                {{ $t("sg_pdf_generated_on", { date: formatGeneratedDate(file) }) }}
+              </p>
+              <div v-if="openUrl(file)" class="_actions">
+                <a
+                  class="u-buttonLink"
+                  :href="openUrl(file)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ $t("open") }}
+                </a>
+                <a
+                  class="u-buttonLink"
+                  :href="openUrl(file)"
+                  :download="displayFilename(file)"
+                >
+                  {{ $t("download") }}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-        <button
-          v-if="can_edit"
-          type="button"
-          class="u-buttonLink u-buttonLink_red"
-          :disabled="remove_modal_open"
-          @click="openRemoveModal(file)"
-        >
-          {{ $t("sg_certificate_remove") }}
-        </button>
-      </li>
-    </ul>
+          <button
+            v-if="can_edit"
+            type="button"
+            class="u-buttonLink u-buttonLink_red"
+            :disabled="remove_modal_open"
+            @click="openRemoveModal(file)"
+          >
+            {{ $t("sg_certificate_remove") }}
+          </button>
+        </li>
+      </ul>
+      <button
+        v-if="has_hidden_generated"
+        type="button"
+        class="u-buttonLink _showAll"
+        @click="showAllGenerated"
+      >
+        {{ $t("sg_pdf_generated_show_older") }}
+      </button>
+    </template>
 
     <SGGemMediaRemoveModal
       v-if="remove_modal_open"
@@ -90,6 +100,7 @@ export default {
   },
   data() {
     return {
+      show_all_generated: false,
       remove_modal_open: false,
       remove_file_path: "",
       remove_display_name: "",
@@ -99,8 +110,20 @@ export default {
     generated_files() {
       return findSelectionGeneratedPdfFiles(this.selection_folder);
     },
+    visible_files() {
+      if (this.show_all_generated) return this.generated_files;
+      return this.generated_files.slice(0, 3);
+    },
+    has_hidden_generated() {
+      return (
+        !this.show_all_generated && this.generated_files.length > 3
+      );
+    },
   },
   methods: {
+    showAllGenerated() {
+      this.show_all_generated = true;
+    },
     displayFilename(file) {
       return file?.$media_filename || file?.$path?.split("/").pop() || "";
     },
@@ -191,5 +214,10 @@ export default {
 ._actions {
   display: flex;
   gap: calc(var(--spacing) / 2);
+}
+
+._showAll {
+  margin-top: calc(var(--spacing) / 2);
+  align-self: flex-start;
 }
 </style>

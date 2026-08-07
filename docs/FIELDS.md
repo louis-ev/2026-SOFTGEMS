@@ -325,6 +325,8 @@ On the **buying invoice** selection folder (`buying-invoice/{n}`), optional head
 
 On the **partner invoice** selection folder (`partner-invoice/{n}`), partnership is always on (`partnership_purchase: true` at create). The percentage field is always shown (empty by default) and uses the same `partnership_purchased_percentage` meta (integer **0–100**).
 
+**Stock fiscal** (Stats → Stock fiscal): **only gems with `status === buying-invoice`** (UI: Purchased / Buying Invoice) are included; all other statuses are excluded. For each such gem, fiscal value = gem Cost (`base_price_pcb`) × applied purchased % ÷ 100. Applied % is taken from the linked buying invoice when `partnership_purchase` and `partnership_purchased_percentage` are set; otherwise from a single partner invoice with a set %; otherwise 100%. Multiple partner invoices are listed for audit but do not change the single fiscal value beyond that rule. Implementation: [`client/src/utils/stock_fiscal.js`](../client/src/utils/stock_fiscal.js).
+
 ### Sale
 
 Multiplicity rule: only one.

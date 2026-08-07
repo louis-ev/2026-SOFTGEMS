@@ -1,37 +1,62 @@
 <template>
-  <section class="_chartSection" :aria-labelledby="title_id">
+  <section
+    class="_chartSection"
+    :class="{ _chartSection_content: content_mode }"
+    :aria-labelledby="title_id"
+  >
     <header class="_header">
       <h2 :id="title_id" class="_title">{{ title }}</h2>
-      <div ref="menu_wrap" class="_menuWrap">
+      <div class="_headerActions">
         <button
+          v-if="show_refresh"
           type="button"
-          class="u-button u-button_verysmall _menuTrigger"
-          :aria-label="$t('sg_stats_chart_menu_aria')"
-          :aria-expanded="menu_open ? 'true' : 'false'"
-          aria-haspopup="menu"
-          @click.stop="toggleMenu"
+          class="u-button u-button_verysmall _iconBtn"
+          :aria-label="$t('sg_stats_refresh_aria')"
+          :disabled="is_refreshing"
+          @click="onRefresh"
         >
-          <b-icon icon="three-dots-vertical" aria-hidden="true" />
+          <b-icon
+            icon="arrow-repeat"
+            class="_refreshIcon"
+            :class="{ _refreshIcon_spinning: is_refreshing }"
+            aria-hidden="true"
+          />
         </button>
-        <div
-          v-if="menu_open"
-          class="_menu"
-          role="menu"
-          :aria-label="$t('sg_stats_chart_menu_aria')"
-        >
+        <div ref="menu_wrap" class="_menuWrap">
           <button
             type="button"
-            class="_menuItem"
-            role="menuitem"
-            @click="onExportCsv"
+            class="u-button u-button_verysmall _iconBtn"
+            :aria-label="$t('sg_stats_chart_menu_aria')"
+            :aria-expanded="menu_open ? 'true' : 'false'"
+            aria-haspopup="menu"
+            @click.stop="toggleMenu"
           >
-            <b-icon icon="download" class="_menuItemIcon" aria-hidden="true" />
-            {{ $t("sg_stats_export_csv") }}
+            <b-icon icon="three-dots-vertical" aria-hidden="true" />
           </button>
+          <div
+            v-if="menu_open"
+            class="_menu"
+            role="menu"
+            :aria-label="$t('sg_stats_chart_menu_aria')"
+          >
+            <button
+              type="button"
+              class="_menuItem"
+              role="menuitem"
+              @click="onExportCsv"
+            >
+              <b-icon
+                icon="download"
+                class="_menuItemIcon"
+                aria-hidden="true"
+              />
+              {{ $t("sg_stats_export_csv") }}
+            </button>
+          </div>
         </div>
       </div>
     </header>
-    <div class="_body">
+    <div class="_body" :class="{ _body_content: content_mode }">
       <slot>
         <p class="_placeholderMsg">{{ placeholder_message }}</p>
       </slot>
@@ -54,6 +79,18 @@ export default {
     placeholder_message: {
       type: String,
       default: "",
+    },
+    content_mode: {
+      type: Boolean,
+      default: false,
+    },
+    show_refresh: {
+      type: Boolean,
+      default: false,
+    },
+    is_refreshing: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -85,6 +122,10 @@ export default {
     closeMenu() {
       this.menu_open = false;
     },
+    onRefresh() {
+      if (this.is_refreshing) return;
+      this.$emit("refresh");
+    },
     onExportCsv() {
       this.closeMenu();
       this.$emit("exportCsv");
@@ -111,13 +152,19 @@ export default {
 ._chartSection {
   display: flex;
   flex-direction: column;
-  min-height: 500px;
-  height: 500px;
+  min-height: 300px;
+  height: auto;
   border: 1px solid var(--c-gris_clair);
   border-radius: 10px;
   background: var(--c-blanc);
   box-sizing: border-box;
   overflow: hidden;
+}
+
+._chartSection_content {
+  height: auto;
+  min-height: 360px;
+  max-height: min(80vh, 900px);
 }
 
 ._header {
@@ -137,19 +184,40 @@ export default {
   min-width: 0;
 }
 
-._menuWrap {
-  position: relative;
+._headerActions {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) / 4);
   margin-left: auto;
   flex: 0 0 auto;
 }
 
-._menuTrigger {
+._menuWrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+._iconBtn {
   width: 32px;
   height: 32px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+._refreshIcon {
+  display: inline-flex;
+}
+
+._refreshIcon_spinning {
+  animation: sg-stats-refresh-spin 0.8s linear infinite;
+}
+
+@keyframes sg-stats-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 ._menu {
@@ -198,6 +266,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+._body_content {
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: auto;
 }
 
 ._placeholderMsg {

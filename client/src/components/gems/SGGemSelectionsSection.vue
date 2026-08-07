@@ -449,6 +449,7 @@ export default {
 }
 
 ._tableWrap {
+  @include sg_data_table.sg-data-table-wrap;
   overflow-x: auto;
 }
 
@@ -457,35 +458,8 @@ export default {
   width: 100%;
 }
 
-._dataRow {
-  cursor: pointer;
-
-  &:hover td {
-    background: var(--c-gris_clair);
-  }
-
-  &:focus {
-    outline: 2px solid var(--c-orange);
-    outline-offset: -2px;
-  }
-
-  &:focus:not(:focus-visible) {
-    outline: none;
-  }
-}
-
 ._nameText {
   font-size: var(--sl-font-size-small);
-}
-
-._colId {
-  width: 4.5rem;
-  white-space: nowrap;
-}
-
-._idText {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
 }
 
 ._addedAtCell {

@@ -1,14 +1,37 @@
-@mixin sg-data-table {
+// Shared SoftGems data-table chrome.
+// Include on the <table> (e.g. `._table { @include sg-data-table; }`).
+
+@mixin sg-data-table-tokens {
+  --cell-height: 28px;
+  --sticky-id-col-width: 60px;
   --sg-table-border-width-thin: 1px;
   --sg-table-border-width-thick: 1px;
   --sg-table-border-color: color-mix(
     in srgb,
     var(--c-gris_clair),
-    var(--c-noir) 10%
+    var(--c-noir) 15%
   );
-  --sg-cell-padding: calc(var(--spacing) / 2);
-  --sg-metadata-font-size: var(--sl-font-size-x-small);
+  --sg-cell-padding: calc(var(--spacing) / 3);
+  --sg-metadata-font-size: 0.72rem;
+  --sg-id-font-size: 0.88rem;
   --sg-table-header-bg: var(--c-bodybg);
+  --sg-table-footer-bg: color-mix(
+    in srgb,
+    var(--c-gris_clair) 55%,
+    var(--c-bodybg)
+  );
+  --pricing-col-width: 7rem;
+}
+
+@mixin sg-data-table-wrap {
+  @include sg-data-table-tokens;
+  overflow: auto;
+  min-height: 0;
+  background: transparent;
+}
+
+@mixin sg-data-table {
+  @include sg-data-table-tokens;
 
   border-collapse: separate;
   border-spacing: 0;
@@ -26,6 +49,12 @@
     vertical-align: top;
     background: var(--c-bodybg);
     font-size: var(--sg-metadata-font-size);
+    height: var(--cell-height);
+    box-sizing: border-box;
+  }
+
+  td {
+    font-family: var(--sl-font-mono);
   }
 
   tr > :first-child {
@@ -58,5 +87,82 @@
   thead tr > :first-child {
     border-left: var(--sg-table-border-width-thick) solid
       var(--sg-table-border-color);
+  }
+
+  tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    font-weight: 600;
+    border-top: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-right: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    border-bottom: var(--sg-table-border-width-thick) solid
+      var(--sg-table-border-color);
+    background: var(--sg-table-footer-bg);
+    vertical-align: middle;
+    box-shadow: 0 calc(-1 * var(--sg-table-border-width-thick)) 0
+        var(--sg-table-border-color),
+      0 var(--sg-table-border-width-thick) 0 var(--sg-table-border-color);
+  }
+
+  // Compact ID column used across inventory / selections / stats.
+  ._colId {
+    width: var(--sticky-id-col-width);
+    min-width: var(--sticky-id-col-width);
+    max-width: var(--sticky-id-col-width);
+    white-space: nowrap;
+  }
+
+  ._idText {
+    font-size: var(--sg-id-font-size);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  ._colPrice,
+  ._colPercent,
+  ._pricingCol {
+    width: var(--pricing-col-width);
+    min-width: var(--pricing-col-width);
+    max-width: var(--pricing-col-width);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    box-sizing: border-box;
+  }
+
+  ._cellEllipsis,
+  ._cellText {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Hover for any marked row; pointer/focus only when the row is interactive.
+  ._dataRow:hover td,
+  ._clickableRow:hover td {
+    background: var(--c-gris_clair);
+  }
+
+  ._dataRow._selected td,
+  ._clickableRow._selected td {
+    background: var(--c-gris_clair);
+  }
+
+  ._dataRow[role="button"],
+  ._dataRow[tabindex],
+  ._clickableRow {
+    cursor: pointer;
+
+    &:focus {
+      outline: 2px solid var(--c-orange);
+      outline-offset: -2px;
+    }
+
+    &:focus:not(:focus-visible) {
+      outline: none;
+    }
   }
 }

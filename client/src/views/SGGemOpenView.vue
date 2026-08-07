@@ -248,9 +248,6 @@
       <SGSectionPanel section_id="pricing" :title="$t('sg_section_pricing')">
         <div class="_pricingGroups">
           <div class="_pricingPair">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: $t("sg_gems_table_col_pcb") }) }}
-            </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
                 :label="$t('sg_base_price_pcb')"
@@ -285,9 +282,6 @@
             </div>
           </div>
           <div class="_pricingPair">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: $t("sg_gems_table_col_import") }) }}
-            </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
                 :label="$t('sg_import_price')"
@@ -324,9 +318,6 @@
             </div>
           </div>
           <div class="_pricingPair">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: "PV" }) }}
-            </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
                 :label="$t('sg_pv_selling_price')"
@@ -361,9 +352,6 @@
             </div>
           </div>
           <div class="_pricingPair">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: "PVD" }) }}
-            </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
                 :label="$t('sg_pvd_asking_price')"
@@ -398,9 +386,6 @@
             </div>
           </div>
           <div class="_pricingPair">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: "PC" }) }}
-            </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
                 :label="$t('sg_pc_to')"
@@ -433,9 +418,6 @@
             </div>
           </div>
           <div class="_pricingPair">
-            <p class="_pricingPairCaption">
-              {{ $t("sg_pricing_pair_caption", { line: "PF" }) }}
-            </p>
             <div class="_pricingPairGrid">
               <SGEditableMetaField
                 :label="$t('sg_pf_invoiced_price')"
@@ -853,15 +835,6 @@ export default {
   grid-column: 1 / -1;
   border-color: var(--c-gris_clair);
   background: color-mix(in srgb, var(--c-gris_clair) 22%, var(--c-blanc));
-}
-
-._pricingPairCaption {
-  margin: 0 0 calc(var(--spacing) * 0.3) 0;
-  font-size: var(--sl-font-size-x-small);
-  font-weight: 700;
-  color: var(--c-noir);
-  letter-spacing: 0.01em;
-  line-height: 1.25;
 }
 
 ._pricingPairGrid {
