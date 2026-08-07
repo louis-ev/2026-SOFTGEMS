@@ -305,7 +305,10 @@
 import CoverField from "@/adc-core/fields/CoverField.vue";
 import SGTablePager from "@/components/softgems/SGTablePager.vue";
 import SGGemsColumnFilterMenu from "@/components/gems/SGGemsColumnFilterMenu.vue";
-import { getFormatLocale, formatDisplayNumber } from "@/utils/format_locale.js";
+import {
+  getDateFormatLocale,
+  formatDisplayNumber,
+} from "@/utils/format_locale.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import {
   gemTreatmentTypeCode,
@@ -571,10 +574,14 @@ export default {
         const time_value = new Date(raw).getTime();
         if (!Number.isFinite(time_value)) return String(raw);
         return new Date(raw).toLocaleString(
-          getFormatLocale(this.$i18n?.locale),
+          getDateFormatLocale(this.$i18n?.locale),
           {
-            dateStyle: "short",
-            timeStyle: "short",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
           }
         );
       }

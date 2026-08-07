@@ -28,7 +28,7 @@
 <script>
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
-import { getFormatLocale } from "@/utils/format_locale.js";
+import { getDateFormatLocale } from "@/utils/format_locale.js";
 
 export default {
   name: "GemCsvExportButton",
@@ -79,10 +79,14 @@ export default {
         const time_value = new Date(raw).getTime();
         if (!Number.isFinite(time_value)) return String(raw);
         return new Date(raw).toLocaleString(
-          getFormatLocale(this.$i18n?.locale),
+          getDateFormatLocale(this.$i18n?.locale),
           {
-            dateStyle: "short",
-            timeStyle: "short",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
           }
         );
       }

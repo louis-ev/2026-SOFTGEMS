@@ -1,4 +1,7 @@
-import { getDateFormatLocale } from "@/utils/format_locale.js";
+import {
+  getDateFormatLocale,
+  withHourCycle24,
+} from "@/utils/format_locale.js";
 
 export default {
   computed: {},
@@ -7,10 +10,23 @@ export default {
       return getDateFormatLocale(this.$i18n?.locale);
     },
     formatTime(date, options) {
-      return new Date(date).toLocaleTimeString(this.formatLocale(), options);
+      return new Date(date).toLocaleTimeString(
+        this.formatLocale(),
+        withHourCycle24(options)
+      );
     },
     formatDate(date, options) {
-      return new Date(date).toLocaleDateString(this.formatLocale(), options);
+      const opts = withHourCycle24(options);
+      const includes_time =
+        opts.hour != null ||
+        opts.minute != null ||
+        opts.second != null ||
+        opts.timeStyle != null;
+      // toLocaleDateString drops time in some engines; use toLocaleString when needed.
+      if (includes_time) {
+        return new Date(date).toLocaleString(this.formatLocale(), opts);
+      }
+      return new Date(date).toLocaleDateString(this.formatLocale(), opts);
     },
     formatDateToHuman(date) {
       if (new Date(date).toDateString() === new Date().toDateString()) {
@@ -30,36 +46,36 @@ export default {
         year: "numeric",
         month: "long",
         day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
     },
     formatDateToPrecise(date) {
       return this.formatDate(date, {
         year: "numeric",
-        month: "numeric",
-        day: "numeric",
+        month: "2-digit",
+        day: "2-digit",
       });
     },
     formatDateTimeToPrecise(date) {
       return this.formatDate(date, {
         year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
     },
     formatDateToHoursMinutesOnly(date) {
       return this.formatDate(date, {
         year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
     },
     formatDurationToHoursMinutesSeconds(seconds, round_zero = true) {

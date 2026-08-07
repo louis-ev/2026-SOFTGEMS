@@ -80,6 +80,8 @@
 </template>
 
 <script>
+import { getDateFormatLocale } from "@/utils/format_locale.js";
+
 export default {
   name: "LogsPanel",
   props: {},
@@ -104,13 +106,14 @@ export default {
   },
   methods: {
     formatDate(date) {
-      return date.toLocaleString(this.$i18n.locale, {
+      return date.toLocaleString(getDateFormatLocale(this.$i18n?.locale), {
         year: "numeric",
-        month: "short",
-        day: "numeric",
+        month: "2-digit",
+        day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
+        hour12: false,
       });
     },
     async loadLogs() {

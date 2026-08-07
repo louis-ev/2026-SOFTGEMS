@@ -3,6 +3,9 @@ import {
   parseEnglishNumber,
   formatDisplayNumber,
   number_group_separator,
+  withHourCycle24,
+  getDateFormatLocale,
+  date_format_locale,
 } from "../format_locale.js";
 
 describe("format_locale", () => {
@@ -41,6 +44,54 @@ describe("format_locale", () => {
       expect(formatDisplayNumber("10060")).toBe(
         `10${number_group_separator}060`
       );
+    });
+  });
+
+  describe("getDateFormatLocale", () => {
+    it("uses day/month/year locale", () => {
+      expect(getDateFormatLocale()).toBe(date_format_locale);
+      expect(
+        new Intl.DateTimeFormat(getDateFormatLocale(), {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }).format(new Date(2026, 6, 20))
+      ).toBe("20/07/2026");
+    });
+  });
+
+  describe("withHourCycle24", () => {
+    it("forces hour12 false when time fields are present", () => {
+      expect(
+        withHourCycle24({
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+      ).toEqual({
+        dateStyle: "short",
+        timeStyle: "short",
+        hour12: false,
+      });
+      expect(
+        withHourCycle24({
+          hour: "2-digit",
+          minute: "2-digit",
+        }).hour12
+      ).toBe(false);
+    });
+
+    it("leaves date-only options unchanged", () => {
+      expect(
+        withHourCycle24({
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+        })
+      ).toEqual({
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+      });
     });
   });
 });

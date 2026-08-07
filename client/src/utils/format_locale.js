@@ -1,5 +1,13 @@
-/** BCP 47 locale for Intl date formatting (English-style regardless of browser UI language). */
+/**
+ * BCP 47 locale for number formatting (dot decimal; grouping commas, later
+ * rewritten to NBSP in `formatDisplayNumber`).
+ */
 export const format_locale = "en-US";
+
+/**
+ * BCP 47 locale for date/time display: day/month/year (`20/07/2026`) and 24h clock.
+ */
+export const date_format_locale = "en-GB";
 
 /** Non-breaking space used as thousands grouping separator in display (`1 234.56`). */
 export const number_group_separator = "\u00a0";
@@ -14,12 +22,31 @@ export function getFormatLocale(_i18n_locale) {
 
 /** @param {string} [_i18n_locale] @returns {string} */
 export function getDateFormatLocale(_i18n_locale) {
-  return format_locale;
+  return date_format_locale;
 }
 
 /** @param {string} [_i18n_locale] @returns {string} */
 export function getNumberFormatLocale(_i18n_locale) {
   return format_locale;
+}
+
+/**
+ * SoftGems always displays clock times in 24-hour style (never AM/PM).
+ *
+ * @param {Intl.DateTimeFormatOptions} [options]
+ * @returns {Intl.DateTimeFormatOptions}
+ */
+export function withHourCycle24(options = {}) {
+  const opts = { ...(options || {}) };
+  const includes_time =
+    opts.hour != null ||
+    opts.minute != null ||
+    opts.second != null ||
+    opts.timeStyle != null;
+  if (includes_time) {
+    opts.hour12 = false;
+  }
+  return opts;
 }
 
 /**

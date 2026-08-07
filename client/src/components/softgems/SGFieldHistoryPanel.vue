@@ -104,8 +104,12 @@ export default {
       return new Date(iso_string).toLocaleString(
         getDateFormatLocale(this.$i18n?.locale),
         {
-          dateStyle: "short",
-          timeStyle: "short",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
         }
       );
     },

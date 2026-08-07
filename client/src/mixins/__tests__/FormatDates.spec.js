@@ -84,6 +84,20 @@ describe("FormatDates mixin", () => {
     });
   });
 
+  describe("date/time display conventions", () => {
+    it("formats date-times without AM/PM", () => {
+      const formatted = vm.formatDateTimeToPrecise("2026-05-06T14:05:06");
+      expect(formatted).toMatch(/14/);
+      expect(formatted).not.toMatch(/AM|PM/i);
+    });
+
+    it("formats dates as day/month/year", () => {
+      const formatted = vm.formatDateToPrecise("2026-07-20T12:00:00");
+      expect(formatted).toMatch(/^20\/07\/2026/);
+      expect(formatted).not.toMatch(/^07\/20\/2026/);
+    });
+  });
+
   describe("formatRecentDateTime", () => {
     it("formats today dates with relative time", () => {
       vi.useFakeTimers();
