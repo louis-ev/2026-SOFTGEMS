@@ -25,9 +25,11 @@
         </button>
       </header>
 
-      <p v-if="selection_status_hint" class="_pickStatusHint">
-        {{ selection_status_hint }}
-      </p>
+      <SGInfoNotice
+        v-if="selection_status_target_label"
+        :message="selection_status_hint_lead"
+        :badge="selection_status_target_label"
+      />
 
       <p v-if="is_loading_gems_inventory" class="_hint">
         {{ $t("sg_selection_add_gems_loading_background") }}
@@ -55,6 +57,7 @@
 
 <script>
 import SGGemsInventoryTableSection from "@/components/gems/SGGemsInventoryTableSection.vue";
+import SGInfoNotice from "@/components/softgems/SGInfoNotice.vue";
 import { scrollElementToViewportFraction } from "@/utils/section_anchor_scroll.js";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
@@ -67,6 +70,7 @@ export default {
   name: "SGSelectionAddGemsPicker",
   components: {
     SGGemsInventoryTableSection,
+    SGInfoNotice,
   },
   props: {
     selection_type: {
@@ -88,19 +92,18 @@ export default {
       if (!type_slug) return "selection:unknown";
       return `selection:${type_slug}`;
     },
-    selection_status_hint() {
+    selection_status_target_label() {
       if (!selectionTypeAffectsGemStatus(this.selection_type)) return "";
       const mapped_status = gemStatusSlugForSelectionType(this.selection_type);
       if (!mapped_status) return "";
-      const status_label = gemStatusLabel(this.$t.bind(this), mapped_status);
+      return gemStatusLabel(this.$t.bind(this), mapped_status);
+    },
+    selection_status_hint_lead() {
+      if (!this.selection_status_target_label) return "";
       if (this.selection_type === "memo in") {
-        return this.$t("sg_selection_add_gems_status_memo_in_hint", {
-          status: status_label,
-        });
+        return this.$t("sg_selection_add_gems_status_memo_in_hint");
       }
-      return this.$t("sg_selection_add_gems_status_hint", {
-        status: status_label,
-      });
+      return this.$t("sg_selection_add_gems_status_hint");
     },
   },
   data() {
@@ -193,17 +196,6 @@ export default {
 
 ._panelCloseBtn {
   flex-shrink: 0;
-}
-
-._pickStatusHint {
-  margin: 0 0 calc(var(--spacing) * 0.85);
-  padding: calc(var(--spacing) * 0.55) calc(var(--spacing) * 0.75);
-  border-radius: 6px;
-  font-size: var(--sl-font-size-small);
-  line-height: 1.4;
-  color: var(--c-gris_fonce);
-  background: color-mix(in srgb, var(--c-bleuvert) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c-bleuvert) 35%, transparent);
 }
 
 ._hint {

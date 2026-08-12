@@ -485,9 +485,9 @@ export default {
   sg_selection_pick_gems_table_hint:
     "Use the same search as in inventory, then click the plus on a row to add that gem (gems already in this selection show a green check).",
   sg_selection_add_gems_status_memo_in_hint:
-    "Adding a gem to this memo in selection sets its status to {status}.",
+    "Adding a gem to this memo in selection sets its status to",
   sg_selection_add_gems_status_hint:
-    "Adding a gem to this selection sets its status to {status}.",
+    "Adding a gem to this selection sets its status to",
   sg_selection_gem_status_set_on_add: "Gem added. Status set to {status}.",
   sg_selection_gem_status_restored_on_remove:
     "Gem removed from selection. Status restored to {status} (from another linked selection or from status history).",
