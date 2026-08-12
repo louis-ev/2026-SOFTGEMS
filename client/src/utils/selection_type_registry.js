@@ -43,23 +43,17 @@ export const SELECTION_TYPE_REGISTRY = Object.freeze([
     sort_order: 8,
   },
   {
-    value: "partner invoice",
-    slug: "partner-invoice",
-    icon: "person-badge",
-    sort_order: 9,
-  },
-  {
     value: "credit note",
     slug: "credit-note",
     icon: "file-earmark-minus",
-    sort_order: 10,
+    sort_order: 9,
   },
-  { value: "importation", slug: "importation", icon: "globe", sort_order: 11 },
+  { value: "importation", slug: "importation", icon: "globe", sort_order: 10 },
   {
     value: "importation return",
     slug: "importation-return",
     icon: "arrow-left-right",
-    sort_order: 12,
+    sort_order: 11,
   },
 ]);
 

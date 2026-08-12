@@ -204,12 +204,11 @@ The sheet indicates that the following sections are entered via selections:
 - `memo out`
 - `return memo out`
 - `sale invoice`
-- `partner invoice`
 - `credit note`
 - `importation`
 - `importation return`
 
-## Partnership (Partner Invoice)
+## Partnership
 
 Multiplicity rule: can be multiple partners for one stone.
 
@@ -322,11 +321,11 @@ On the **buying invoice** selection folder (`buying-invoice/{n}`), optional head
 | Field                             | Fill Method | Notes                                              |
 | --------------------------------- | ----------- | -------------------------------------------------- |
 | `partnership_purchase`            | manual      | Checkbox — partnership purchase (`achat en partenariat`). |
-| `partnership_purchased_percentage`| manual      | Shown when checkbox is checked; integer **0–100** (`Pourcentage acheté`). |
+| `partnership_purchased_percentage`| manual      | Shown when checkbox is checked; integer **0–100**. |
 
-On the **partner invoice** selection folder (`partner-invoice/{n}`), partnership is always on (`partnership_purchase: true` at create). The percentage field is always shown (empty by default) and uses the same `partnership_purchased_percentage` meta (integer **0–100**).
+On the **sale invoice** selection folder (`sale-invoice/{n}`), the same meta keys are available as **Partnership Invoice** (checkbox) + percentage when checked.
 
-**Stock fiscal** (Stats → Stock fiscal): **only gems with `status === buying-invoice`** (UI: Purchased / Buying Invoice) are included; all other statuses are excluded. For each such gem, the table shows gem id, `numero_de_mise_a_consommation`, cost, linked buying/partner invoices, applied %, and fiscal value = gem Cost (`base_price_pcb`) × applied purchased % ÷ 100. Applied % is taken from the linked buying invoice when `partnership_purchase` and `partnership_purchased_percentage` are set; otherwise from a single partner invoice with a set %; otherwise 100%. Multiple partner invoices are listed for audit but do not change the single fiscal value beyond that rule. Implementation: [`client/src/utils/stock_fiscal.js`](../client/src/utils/stock_fiscal.js).
+**Stock fiscal** (Stats → Stock fiscal): **only gems with `status === buying-invoice`** (UI: Purchased / Buying Invoice) are included; all other statuses are excluded. For each such gem, the table shows gem id, `numero_de_mise_a_consommation`, cost, linked buying invoice, partner (counterparty), applied %, and fiscal value = gem Cost (`base_price_pcb`) × applied % ÷ 100. Applied % comes from the linked buying invoice when `partnership_purchase` and `partnership_purchased_percentage` are set; otherwise from a single sale invoice with Partnership Invoice checked and a set %; otherwise 100%. Implementation: [`client/src/utils/stock_fiscal.js`](../client/src/utils/stock_fiscal.js).
 
 ### Sale
 

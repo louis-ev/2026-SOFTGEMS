@@ -133,10 +133,6 @@ export default {
           selection_date: todayDateInputValue(),
           selection_entries: [],
         };
-        // Partner invoice is always a partnership; percentage stays empty until set.
-        if (this.new_selection_type === "partner invoice") {
-          additional_meta.partnership_purchase = true;
-        }
         const new_slug = await this.$api.createFolder({
           path: this.type_root_path,
           additional_meta,

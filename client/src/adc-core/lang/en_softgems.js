@@ -356,16 +356,13 @@ export default {
   sg_stats_stock_fiscal_col_buying_invoice: "Buying invoice",
   sg_stats_stock_fiscal_col_partner: "Partner",
   sg_stats_stock_fiscal_col_percent: "% applied",
-  sg_stats_stock_fiscal_col_partner_invoices: "Partner invoices",
   sg_stats_stock_fiscal_col_fiscal: "Fiscal value",
   sg_stats_stock_fiscal_total_row: "Total",
   sg_stats_stock_fiscal_formula_hint:
-    "Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single partner invoice; otherwise 100%.",
+    "Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single sale invoice with Partnership Invoice checked; otherwise 100%.",
   sg_stats_stock_fiscal_open_gem_aria: "Open gem {id}",
   sg_stats_stock_fiscal_open_buying_invoice_aria:
     "Open buying invoice {id}",
-  sg_stats_stock_fiscal_open_partner_invoice_aria:
-    "Open partner invoice {id}",
   sg_stats_placeholder_coming_soon:
     "Chart coming soon — stock data will appear here.",
   sg_create_contact: "Add a contact",
@@ -436,8 +433,10 @@ export default {
   sg_supplier_account_number: "Supplier account N°",
   sg_selection_currency: "Currency",
   sg_section_selection_buying_invoice: "Purchase",
-  sg_section_selection_partner_invoice: "Partnership",
+  sg_section_selection_sale_invoice: "Sale",
   sg_selection_partnership_purchase: "Partnership purchase",
+  sg_selection_partnership_invoice: "Partnership Invoice",
+  sg_selection_partnership_percentage: "Percentage",
   sg_selection_purchased_percentage: "Percentage purchased",
   sg_selection_purchased_percentage_hint: "Enter a value from 0 to 100.",
   sg_selection_main_document: "Main document (PDF)",
@@ -534,7 +533,6 @@ export default {
   sg_selection_type_memo_out: "Memo out",
   sg_selection_type_return_memo_out: "Return memo out",
   sg_selection_type_sale_invoice: "Sale invoice",
-  sg_selection_type_partner_invoice: "Partner invoice",
   sg_selection_type_credit_note: "Credit note",
   sg_selection_type_importation: "Importation",
   sg_selection_type_importation_return: "Importation return",

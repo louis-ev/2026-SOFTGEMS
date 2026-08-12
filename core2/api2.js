@@ -1641,7 +1641,6 @@ module.exports = (function () {
       "memo-out",
       "return-memo-out",
       "sale-invoice",
-      "partner-invoice",
       "credit-note",
       "importation",
       "importation-return",

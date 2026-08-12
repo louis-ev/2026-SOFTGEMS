@@ -84,7 +84,6 @@ import SGStatsStockFiscalSection from "@/components/stats/SGStatsStockFiscalSect
 import SGGemOpenView from "@/views/SGGemOpenView.vue";
 import SGSelectionOpenView from "@/views/SGSelectionOpenView.vue";
 import { resolveAddressBookPathLabels } from "@/utils/address_book_paths.js";
-import { formatPartnershipPurchasedPercentageDisplay } from "@/utils/selection_buying_invoice.js";
 import {
   buildStockFiscalCsvRows,
   buildStockFiscalRows,
@@ -259,25 +258,6 @@ export default {
       if (!path) return "";
       return String(this.stock_fiscal_partner_labels[path] || path).trim();
     },
-    formatPartnerInvoicesForCsv(row) {
-      const labels = Array.isArray(row?.partner_invoice_labels)
-        ? row.partner_invoice_labels
-        : [];
-      const percentages = Array.isArray(row?.partner_invoice_percentages)
-        ? row.partner_invoice_percentages
-        : [];
-      return labels
-        .map((label, index) => {
-          const pct = formatPartnershipPurchasedPercentageDisplay(
-            percentages[index]
-          );
-          const name = String(label || "").trim();
-          if (!name) return "";
-          return pct ? `${name} (${pct})` : name;
-        })
-        .filter(Boolean)
-        .join("; ");
-    },
     escapeCsvCell(value) {
       const normalized_value = String(value ?? "").replace(/\r?\n|\r/g, "\n");
       const escaped_value = normalized_value.replace(/"/g, '""');
@@ -294,9 +274,6 @@ export default {
       const export_rows = this.stock_fiscal_rows.map((row) => ({
         ...row,
         partner_label: this.partnerLabelForRow(row),
-        partner_invoice_labels: [this.formatPartnerInvoicesForCsv(row)].filter(
-          Boolean
-        ),
       }));
 
       const csv_matrix = buildStockFiscalCsvRows(export_rows, (cell) =>
@@ -309,7 +286,6 @@ export default {
         this.$t("sg_stats_stock_fiscal_col_buying_invoice"),
         this.$t("sg_stats_stock_fiscal_col_partner"),
         this.$t("sg_stats_stock_fiscal_col_percent"),
-        this.$t("sg_stats_stock_fiscal_col_partner_invoices"),
         this.$t("sg_stats_stock_fiscal_col_fiscal"),
       ];
 
@@ -319,7 +295,6 @@ export default {
         })`,
         "",
         String(this.stock_fiscal_aggregates.cost_sum),
-        "",
         "",
         "",
         "",

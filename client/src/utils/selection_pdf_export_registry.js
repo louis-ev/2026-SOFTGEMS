@@ -50,13 +50,12 @@ export function defaultSelectionPdfShowVat(selection_type) {
 
 /**
  * Whether the “Please kindly transfer…” payment line is shown by default.
- * On only for sale invoice and partner invoice; off for all other types.
+ * On only for sale invoice; off for all other types.
  * @param {string|null|undefined} selection_type
  * @returns {boolean}
  */
 export function defaultSelectionPdfShowPaymentLine(selection_type) {
-  const type = String(selection_type || "").trim();
-  return type === "sale invoice" || type === "partner invoice";
+  return String(selection_type || "").trim() === "sale invoice";
 }
 
 /** Total price fields offered in the PDF export pricing select. */
@@ -152,12 +151,6 @@ const _defaults_by_slug = Object.freeze({
     legal_text_key: "legal_generic",
     default_pricing_key: "pf_invoiced_price",
     column_keys: buildSelectionPdfColumnKeys("pf_invoiced_price"),
-  },
-  "partner-invoice": {
-    document_title_key: "title_partner_invoice",
-    legal_text_key: "legal_generic",
-    default_pricing_key: "pc_to",
-    column_keys: buildSelectionPdfColumnKeys("pc_to"),
   },
   "credit-note": {
     document_title_key: "title_credit_note",

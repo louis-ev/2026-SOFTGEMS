@@ -34,7 +34,6 @@ export const selection_pdf_strings = Object.freeze({
     title_return_memo_in: "Return memo in N°{number}",
     title_buying_invoice: "Invoice N°{number}",
     title_sale_invoice: "Invoice N°{number}",
-    title_partner_invoice: "Invoice N°{number}",
     title_credit_note: "Credit note N°{number}",
     title_importation_return: "Importation return N°{number}",
     legal_memo_out:
@@ -86,7 +85,6 @@ export const selection_pdf_strings = Object.freeze({
     title_return_memo_in: "Retour mémo in N°{number}",
     title_buying_invoice: "Facture d’achat N°{number}",
     title_sale_invoice: "Facture de vente N°{number}",
-    title_partner_invoice: "Facture partenaire N°{number}",
     title_credit_note: "Avoir N°{number}",
     title_importation_return: "Retour importation N°{number}",
     legal_memo_out:

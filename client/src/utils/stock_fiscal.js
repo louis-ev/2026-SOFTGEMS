@@ -11,7 +11,7 @@ import {
 
 export const STOCK_FISCAL_PURCHASED_STATUS = "buying-invoice";
 export const STOCK_FISCAL_BUYING_TYPE = "buying invoice";
-export const STOCK_FISCAL_PARTNER_TYPE = "partner invoice";
+export const STOCK_FISCAL_SALE_TYPE = "sale invoice";
 
 /**
  * @param {object} api - Vue api plugin with `getFolders`
@@ -21,7 +21,7 @@ export async function fetchStockFiscalSelectionFolders(api) {
   if (!api?.getFolders) return [];
   const roots = [
     selectionTypeRootPath("buying-invoice"),
-    selectionTypeRootPath("partner-invoice"),
+    selectionTypeRootPath("sale-invoice"),
   ].filter(Boolean);
   const batches = await Promise.all(
     roots.map((path) => api.getFolders({ path }).catch(() => []))
@@ -110,12 +110,17 @@ function pickLatestMembershipOfType(
 }
 
 /**
+ * Sale invoices on the gem with Partnership Invoice checked.
  * @param {object[]} memberships
  * @returns {object[]}
  */
-function listPartnerMemberships(memberships) {
+function listPartnershipSaleMemberships(memberships) {
   return (Array.isArray(memberships) ? memberships : [])
-    .filter((folder) => resolveSelectionType(folder) === STOCK_FISCAL_PARTNER_TYPE)
+    .filter(
+      (folder) =>
+        resolveSelectionType(folder) === STOCK_FISCAL_SALE_TYPE &&
+        Boolean(folder?.partnership_purchase)
+    )
     .slice()
     .sort((a, b) => {
       const path_a = String(a?.$path || "");
@@ -126,14 +131,17 @@ function listPartnerMemberships(memberships) {
 
 /**
  * @param {object|null|undefined} buying_invoice
- * @param {object[]} partner_invoices
+ * @param {object[]} partnership_sale_invoices
  * @returns {{
  *   applied_percent: number,
- *   percent_source: "buying-partnership"|"partner-invoice"|"full",
+ *   percent_source: "buying-partnership"|"sale-partnership"|"full",
  *   counterparty_path: string,
  * }}
  */
-export function resolveStockFiscalPercent(buying_invoice, partner_invoices) {
+export function resolveStockFiscalPercent(
+  buying_invoice,
+  partnership_sale_invoices
+) {
   const buying_pct = buying_invoice?.partnership_purchase
     ? clampPartnershipPurchasedPercentage(
         buying_invoice.partnership_purchased_percentage
@@ -147,9 +155,8 @@ export function resolveStockFiscalPercent(buying_invoice, partner_invoices) {
     };
   }
 
-  const partners_with_pct = (Array.isArray(partner_invoices)
-    ? partner_invoices
-    : []
+  const sales_with_pct = (
+    Array.isArray(partnership_sale_invoices) ? partnership_sale_invoices : []
   )
     .map((folder) => ({
       folder,
@@ -159,11 +166,11 @@ export function resolveStockFiscalPercent(buying_invoice, partner_invoices) {
     }))
     .filter((row) => row.percent !== null);
 
-  if (partners_with_pct.length === 1) {
-    const only = partners_with_pct[0];
+  if (sales_with_pct.length === 1) {
+    const only = sales_with_pct[0];
     return {
       applied_percent: only.percent,
-      percent_source: "partner-invoice",
+      percent_source: "sale-partnership",
       counterparty_path: String(only.folder?.counterparty_path || "").trim(),
     };
   }
@@ -225,10 +232,11 @@ export function buildStockFiscalRows({ gems, selections }) {
       membership_paths_map,
       STOCK_FISCAL_BUYING_TYPE
     );
-    const partner_invoices = listPartnerMemberships(memberships);
+    const partnership_sale_invoices =
+      listPartnershipSaleMemberships(memberships);
     const percent_resolution = resolveStockFiscalPercent(
       buying_invoice,
-      partner_invoices
+      partnership_sale_invoices
     );
     const cost = parseStockFiscalCost(gem[gem_cost_total_field_key]);
     const fiscal_value = computeStockFiscalValue(
@@ -247,17 +255,6 @@ export function buildStockFiscalRows({ gems, selections }) {
       buying_invoice_label: buying_invoice
         ? formatStockFiscalSelectionLabel(buying_invoice)
         : "",
-      partner_invoice_paths: partner_invoices.map((folder) =>
-        String(folder?.$path || "").trim()
-      ),
-      partner_invoice_labels: partner_invoices.map((folder) =>
-        formatStockFiscalSelectionLabel(folder)
-      ),
-      partner_invoice_percentages: partner_invoices.map((folder) =>
-        clampPartnershipPurchasedPercentage(
-          folder?.partnership_purchased_percentage
-        )
-      ),
       applied_percent: percent_resolution.applied_percent,
       percent_source: percent_resolution.percent_source,
       counterparty_path: percent_resolution.counterparty_path,
@@ -303,7 +300,6 @@ export function buildStockFiscalCsvRows(rows, format_cell = String) {
     "buying_invoice",
     "partner",
     "applied_percent",
-    "partner_invoices",
     "fiscal_value",
   ];
   const data_rows = (Array.isArray(rows) ? rows : []).map((row) => [
@@ -313,11 +309,6 @@ export function buildStockFiscalCsvRows(rows, format_cell = String) {
     format_cell(row.buying_invoice_label),
     format_cell(row.partner_label || ""),
     format_cell(row.applied_percent),
-    format_cell(
-      Array.isArray(row.partner_invoice_labels)
-        ? row.partner_invoice_labels.filter(Boolean).join("; ")
-        : ""
-    ),
     format_cell(row.fiscal_value),
   ]);
   return [header, ...data_rows];

@@ -58,9 +58,6 @@
               <th scope="col" class="_colPercent">
                 {{ $t("sg_stats_stock_fiscal_col_percent") }}
               </th>
-              <th scope="col">
-                {{ $t("sg_stats_stock_fiscal_col_partner_invoices") }}
-              </th>
               <th scope="col" class="_colPrice">
                 {{ $t("sg_stats_stock_fiscal_col_fiscal") }}
               </th>
@@ -112,33 +109,6 @@
               <td class="_colPercent">
                 {{ formatPercent(row.applied_percent) }}
               </td>
-              <td>
-                <span
-                  v-if="partnerInvoiceItems(row).length"
-                  class="_partnerInvoiceList"
-                >
-                  <span
-                    v-for="(item, index) in partnerInvoiceItems(row)"
-                    :key="`${row.gem_path}-pi-${item.path || index}`"
-                    class="_partnerInvoiceItem"
-                  >
-                    <span v-if="index > 0" class="_partnerInvoiceSep">;</span>
-                    <button
-                      type="button"
-                      class="u-buttonLink _idLink"
-                      :aria-label="
-                        $t('sg_stats_stock_fiscal_open_partner_invoice_aria', {
-                          id: item.label,
-                        })
-                      "
-                      @click="onOpenSelectionPath(item.path)"
-                    >
-                      {{ item.display }}
-                    </button>
-                  </span>
-                </span>
-                <span v-else>{{ emptyPlaceholder() }}</span>
-              </td>
               <td class="_colPrice">{{ formatPrice(row.fiscal_value) }}</td>
             </tr>
           </tbody>
@@ -148,7 +118,6 @@
               <td></td>
               <td class="_colPrice">{{ formatPrice(aggregates.cost_sum) }}</td>
               <td colspan="3"></td>
-              <td></td>
               <td class="_colPrice">
                 {{ formatPrice(aggregates.fiscal_sum) }}
               </td>
@@ -225,35 +194,6 @@ export default {
       if (!path) return this.emptyPlaceholder();
       const label = String(this.partner_labels[path] || "").trim();
       return label || path;
-    },
-    partnerInvoiceItems(row) {
-      const paths = Array.isArray(row?.partner_invoice_paths)
-        ? row.partner_invoice_paths
-        : [];
-      const labels = Array.isArray(row?.partner_invoice_labels)
-        ? row.partner_invoice_labels
-        : [];
-      const percentages = Array.isArray(row?.partner_invoice_percentages)
-        ? row.partner_invoice_percentages
-        : [];
-      return paths
-        .map((path, index) => {
-          const cleaned_path = String(path || "").trim();
-          if (!cleaned_path) return null;
-          const label =
-            String(labels[index] || "").trim() ||
-            parseSelectionFolderPath(cleaned_path).folder_slug ||
-            cleaned_path;
-          const pct = formatPartnershipPurchasedPercentageDisplay(
-            percentages[index]
-          );
-          return {
-            path: cleaned_path,
-            label,
-            display: pct ? `${label} (${pct})` : label,
-          };
-        })
-        .filter(Boolean);
     },
     onOpenGem(gem_id) {
       const id = String(gem_id || "").trim();
@@ -371,14 +311,6 @@ export default {
   font: inherit;
   max-width: 100%;
   text-align: left;
-}
-
-._partnerInvoiceList {
-  display: inline;
-}
-
-._partnerInvoiceSep {
-  margin-right: 0.35em;
 }
 
 ._formulaHint {

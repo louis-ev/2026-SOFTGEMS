@@ -30,9 +30,9 @@ function buyingInvoice(overrides = {}) {
   };
 }
 
-function partnerInvoice(overrides = {}) {
+function partnershipSaleInvoice(overrides = {}) {
   return {
-    $path: "partner-invoice/20",
+    $path: "sale-invoice/20",
     selection_entries: ["gems/1"],
     partnership_purchase: true,
     partnership_purchased_percentage: null,
@@ -68,7 +68,7 @@ describe("resolveStockFiscalPercent", () => {
           partnership_purchase: true,
           partnership_purchased_percentage: 60,
         }),
-        [partnerInvoice({ partnership_purchased_percentage: 25 })]
+        [partnershipSaleInvoice({ partnership_purchased_percentage: 25 })]
       )
     ).toEqual({
       applied_percent: 60,
@@ -77,32 +77,40 @@ describe("resolveStockFiscalPercent", () => {
     });
   });
 
-  it("uses a single partner-invoice percentage when buying has no partnership %", () => {
+  it("uses a single partnership sale-invoice percentage when buying has no partnership %", () => {
     expect(
       resolveStockFiscalPercent(buyingInvoice(), [
-        partnerInvoice({ partnership_purchased_percentage: 33 }),
+        partnershipSaleInvoice({ partnership_purchased_percentage: 33 }),
       ])
     ).toEqual({
       applied_percent: 33,
-      percent_source: "partner-invoice",
+      percent_source: "sale-partnership",
       counterparty_path: "address_book/par1",
     });
   });
 
-  it("falls back to full cost when multiple partner invoices have %", () => {
+  it("falls back to full cost when multiple partnership sale invoices have %", () => {
     expect(
       resolveStockFiscalPercent(buyingInvoice(), [
-        partnerInvoice({
-          $path: "partner-invoice/20",
+        partnershipSaleInvoice({
+          $path: "sale-invoice/20",
           partnership_purchased_percentage: 30,
         }),
-        partnerInvoice({
-          $path: "partner-invoice/21",
+        partnershipSaleInvoice({
+          $path: "sale-invoice/21",
           partnership_purchased_percentage: 40,
           counterparty_path: "address_book/par2",
         }),
       ])
     ).toEqual({
+      applied_percent: 100,
+      percent_source: "full",
+      counterparty_path: "address_book/sup1",
+    });
+  });
+
+  it("falls back to full cost when buying has no partnership %", () => {
+    expect(resolveStockFiscalPercent(buyingInvoice(), [])).toEqual({
       applied_percent: 100,
       percent_source: "full",
       counterparty_path: "address_book/sup1",
@@ -122,7 +130,7 @@ describe("formatStockFiscalSelectionLabel", () => {
 
   it("falls back to id when internal name is missing", () => {
     expect(
-      formatStockFiscalSelectionLabel({ $path: "partner-invoice/20" })
+      formatStockFiscalSelectionLabel({ $path: "sale-invoice/20" })
     ).toBe("20");
   });
 });
@@ -146,6 +154,14 @@ describe("buildStockFiscalRows", () => {
       gems: [gem()],
       selections: [
         buyingInvoice({ internal_name: "Supplier BI" }),
+        // Sale without partnership checkbox must be ignored.
+        {
+          $path: "sale-invoice/99",
+          selection_entries: ["gems/1"],
+          partnership_purchase: false,
+          partnership_purchased_percentage: 40,
+          counterparty_path: "address_book/cli1",
+        },
       ],
     });
     expect(rows).toHaveLength(1);
@@ -184,49 +200,20 @@ describe("buildStockFiscalRows", () => {
     expect(rows[0].fiscal_value).toBe(1000);
   });
 
-  it("applies a single partner-invoice percentage", () => {
+  it("applies a single partnership sale-invoice percentage", () => {
     const { rows } = buildStockFiscalRows({
-      gems: [gem()],
+      gems: [gem({ base_price_pcb: 2000 })],
       selections: [
         buyingInvoice(),
-        partnerInvoice({
-          internal_name: "Partner A",
-          partnership_purchased_percentage: 25,
-        }),
-      ],
-    });
-    expect(rows[0].applied_percent).toBe(25);
-    expect(rows[0].percent_source).toBe("partner-invoice");
-    expect(rows[0].fiscal_value).toBe(250);
-    expect(rows[0].partner_invoice_labels).toEqual(["Partner A (20)"]);
-    expect(rows[0].partner_invoice_percentages).toEqual([25]);
-  });
-
-  it("lists multiple partner invoices but keeps a single full-cost fiscal value", () => {
-    const { rows } = buildStockFiscalRows({
-      gems: [gem()],
-      selections: [
-        buyingInvoice(),
-        partnerInvoice({
-          $path: "partner-invoice/20",
-          internal_name: "Partner A",
-          partnership_purchased_percentage: 30,
-        }),
-        partnerInvoice({
-          $path: "partner-invoice/21",
-          internal_name: "Partner B",
+        partnershipSaleInvoice({
+          internal_name: "Partner Sale",
           partnership_purchased_percentage: 40,
-          counterparty_path: "address_book/par2",
         }),
       ],
     });
-    expect(rows[0].partner_invoice_labels).toEqual([
-      "Partner A (20)",
-      "Partner B (21)",
-    ]);
-    expect(rows[0].partner_invoice_percentages).toEqual([30, 40]);
-    expect(rows[0].applied_percent).toBe(100);
-    expect(rows[0].fiscal_value).toBe(1000);
+    expect(rows[0].applied_percent).toBe(40);
+    expect(rows[0].percent_source).toBe("sale-partnership");
+    expect(rows[0].fiscal_value).toBe(800);
   });
 
   it("treats missing cost as zero fiscal value while keeping the row", () => {
@@ -273,7 +260,13 @@ describe("buildStockFiscalCsvRows", () => {
   it("builds a header and data rows", () => {
     const { rows } = buildStockFiscalRows({
       gems: [gem()],
-      selections: [buyingInvoice()],
+      selections: [
+        buyingInvoice(),
+        partnershipSaleInvoice({
+          internal_name: "SI Partner",
+          partnership_purchased_percentage: 25,
+        }),
+      ],
     });
     rows[0].partner_label = "Supplier One";
     rows[0].numero_de_mise_a_consommation = "MAC-7";
@@ -285,10 +278,9 @@ describe("buildStockFiscalCsvRows", () => {
         "buying_invoice",
         "partner",
         "applied_percent",
-        "partner_invoices",
         "fiscal_value",
       ],
-      ["1", "MAC-7", "1000", "10", "Supplier One", "100", "", "1000"],
+      ["1", "MAC-7", "1000", "10", "Supplier One", "25", "250"],
     ]);
   });
 });

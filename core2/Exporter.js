@@ -1152,7 +1152,6 @@ function isValidSelectionTypeSlugForExport(slug) {
     "memo-out",
     "return-memo-out",
     "sale-invoice",
-    "partner-invoice",
     "credit-note",
     "importation",
     "importation-return",

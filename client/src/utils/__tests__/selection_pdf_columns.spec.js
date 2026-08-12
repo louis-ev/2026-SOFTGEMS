@@ -44,9 +44,8 @@ describe("defaultSelectionPdfShowVat", () => {
 });
 
 describe("defaultSelectionPdfShowPaymentLine", () => {
-  it("is on only for sale invoice and partner invoice", () => {
+  it("is on only for sale invoice", () => {
     expect(defaultSelectionPdfShowPaymentLine("sale invoice")).toBe(true);
-    expect(defaultSelectionPdfShowPaymentLine("partner invoice")).toBe(true);
     expect(defaultSelectionPdfShowPaymentLine("memo out")).toBe(false);
     expect(defaultSelectionPdfShowPaymentLine("buying invoice")).toBe(false);
     expect(defaultSelectionPdfShowPaymentLine("credit note")).toBe(false);

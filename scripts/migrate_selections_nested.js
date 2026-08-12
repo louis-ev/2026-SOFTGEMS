@@ -31,7 +31,6 @@ const SELECTION_TYPE_TO_SLUG = Object.freeze({
   "memo out": "memo-out",
   "return memo out": "return-memo-out",
   "sale invoice": "sale-invoice",
-  "partner invoice": "partner-invoice",
   "credit note": "credit-note",
   importation: "importation",
   "importation return": "importation-return",
