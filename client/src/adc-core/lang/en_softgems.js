@@ -553,7 +553,8 @@ export default {
   sg_pdf_export_show_payment_line:
     "Show “Please kindly transfer…” payment line",
   sg_pdf_export_show_customs_summary:
-    "Add customs summary (RSE / PF) at the end of the PDF",
+    "Add customs summary (RSE / PF) at the end, grouped by importation",
+  sg_pdf_export_customs_summary_title: "Customs summary",
   sg_pdf_export_no_pricing: "No price column",
   sg_pdf_export_set_as_main_document: "Set as main document",
   sg_pdf_export_main_document_set:

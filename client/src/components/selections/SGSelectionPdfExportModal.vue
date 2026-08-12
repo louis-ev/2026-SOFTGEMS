@@ -98,14 +98,6 @@
         />
       </div>
 
-      <div class="_pricingSection">
-        <ToggleInput
-          :label="$t('sg_pdf_export_show_customs_summary')"
-          :content="selected_show_customs_summary"
-          @update:content="selected_show_customs_summary = $event"
-        />
-      </div>
-
       <SGSelectionPdfBankFootersEditor
         v-if="has_pricing_selected"
         :presets="bank_footer_presets_draft"
@@ -114,6 +106,17 @@
         @update:presets="onBankFooterPresetsUpdate"
         @update:selected_id="selected_bank_footer_id = $event"
       />
+
+      <section class="_customsSection">
+        <div class="_customsSectionHeader">
+          <span>{{ $t("sg_pdf_export_customs_summary_title") }}</span>
+        </div>
+        <ToggleInput
+          :label="$t('sg_pdf_export_show_customs_summary')"
+          :content="selected_show_customs_summary"
+          @update:content="selected_show_customs_summary = $event"
+        />
+      </section>
     </div>
 
     <template slot="footer">
@@ -669,6 +672,17 @@ export default {
   width: 4.5rem;
   padding: 0.2rem 0.35rem;
   text-align: right;
+}
+
+._customsSection {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 2);
+  margin-top: calc(var(--spacing) / 2);
+}
+
+._customsSectionHeader {
+  font-weight: 600;
 }
 
 ._exporting,
