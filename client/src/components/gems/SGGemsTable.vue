@@ -303,6 +303,18 @@
       </table>
     </div>
 
+    <p
+      v-if="show_gems_table_totals_scope_note"
+      class="_totalsScopeNote"
+      role="note"
+    >
+      {{
+        $t("sg_gems_table_totals_all_gems", {
+          total: sorted_gems.length,
+        })
+      }}
+    </p>
+
     <SGTablePager
       :total_items="sorted_gems.length"
       :page_index="gems_page_index"
@@ -481,6 +493,9 @@ export default {
     },
     show_gems_table_totals_row() {
       return this.show_totals_row && this.sorted_gems.length > 0;
+    },
+    show_gems_table_totals_scope_note() {
+      return this.show_gems_table_totals_row && this.gems_page_count > 1;
     },
     gems_table_numeric_totals() {
       return this.computeNumericTotalsForGems(this.sorted_gems);
@@ -1042,6 +1057,14 @@ export default {
   min-height: 0;
   height: 100%;
   gap: calc(var(--spacing) / 4);
+}
+
+._totalsScopeNote {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: var(--sl-font-size-x-small);
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--c-gris_fonce) 88%, transparent);
 }
 
 ._gemsTable {

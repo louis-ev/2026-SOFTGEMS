@@ -49,6 +49,8 @@ export default {
   sg_gems_page_next: "Next",
   sg_gems_page_nav_label: "Gems table pages",
   sg_gems_page_status: "{start}–{end} of {total} · Page {page} of {pages}",
+  sg_gems_table_totals_all_gems:
+    "Totals below are for all {total} gems, not only this page.",
   sg_table_page_range_status: "{start}–{end} of {total}",
   sg_table_page_nav_label: "Table pages",
   sg_table_page_size_label: "Rows per page",
