@@ -194,6 +194,10 @@ import {
   readSelectionPdfBankFootersEn,
 } from "@/utils/selection_pdf_instance_settings.js";
 import {
+  readSelectionPdfExportPrefs,
+  writeSelectionPdfExportPrefs,
+} from "@/utils/selection_pdf_export_prefs.js";
+import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
@@ -347,7 +351,7 @@ export default {
     },
   },
   async created() {
-    this.resetExportOptions();
+    this.restoreExportOptions();
     this.previous_main_document_path =
       findSelectionMainDocumentFile(this.selection)?.$path || "";
     await this.loadInstanceSettings();
@@ -367,20 +371,33 @@ export default {
         resolveSelectionType(this.selection)
       );
     },
-    resetExportOptions() {
-      this.selected_pricing_key = this.defaultPricingKeyValue();
-      this.selected_show_vat = this.defaultShowVatValue();
-      this.selected_vat_percent = selection_pdf_default_vat_percent;
-      this.selected_show_payment_line = this.defaultShowPaymentLineValue();
-      this.selected_show_customs_summary = false;
+    restoreExportOptions() {
+      const prefs = readSelectionPdfExportPrefs(
+        resolveSelectionType(this.selection)
+      );
+      this.selected_export_lang = prefs.lang;
+      this.selected_pricing_key = prefs.pricing_key;
+      this.selected_show_vat = prefs.show_vat;
+      this.selected_vat_percent = prefs.vat_percent;
+      this.selected_show_payment_line = prefs.show_payment_line;
+      this.selected_show_customs_summary = prefs.show_customs_summary;
+      this.selected_bank_footer_id = prefs.bank_footer_id;
+    },
+    persistExportOptions() {
+      writeSelectionPdfExportPrefs(resolveSelectionType(this.selection), {
+        lang: this.selected_export_lang,
+        pricing_key: this.selected_pricing_key,
+        show_vat: this.selected_show_vat,
+        vat_percent: this.selected_vat_percent,
+        show_payment_line: this.selected_show_payment_line,
+        show_customs_summary: this.selected_show_customs_summary,
+        bank_footer_id: this.selected_bank_footer_id,
+      });
     },
     onVatPercentChange() {
       this.selected_vat_percent = normalizeSelectionPdfVatPercent(
         this.selected_vat_percent
       );
-    },
-    resetPricingSelection() {
-      this.resetExportOptions();
     },
     async loadInstanceSettings() {
       let presets = readSelectionPdfBankFootersEn(
@@ -481,6 +498,7 @@ export default {
       if (!this.folder_slug || this.is_exporting) return;
 
       await this.saveBankFootersIfDirty();
+      this.persistExportOptions();
 
       const instructions = {
         recipe: "pdf",
@@ -515,6 +533,7 @@ export default {
 
       this.is_exporting = true;
       this.fail_message = "";
+      this.task_progress = 0;
 
       try {
         const task_id = await this.$api.exportFolder({
@@ -538,6 +557,8 @@ export default {
 
             if (event === "completed") {
               this.created_doc = message.file;
+              this.is_main_document_set = false;
+              this.$emit("exported");
             } else {
               this.fail_message =
                 event === "failed"
@@ -616,12 +637,16 @@ export default {
       this.fail_message = "";
       this.task_progress = 0;
       this.created_doc = null;
-      this.resetPricingSelection();
+      this.is_main_document_set = false;
+      // Keep last option values (also restored from localStorage on reopen).
       if (had_created_doc) {
         this.$emit("exported");
       }
     },
     onClose() {
+      if (!this.is_exporting && !this.export_done) {
+        this.persistExportOptions();
+      }
       this.$emit("close");
       if (this.export_done && this.created_doc) {
         this.$emit("exported");
