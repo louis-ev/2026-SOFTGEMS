@@ -45,6 +45,9 @@
           <thead>
             <tr>
               <th scope="col" class="_colId">{{ $t("sg_id") }}</th>
+              <th scope="col">
+                {{ $t("sg_numero_de_mise_a_consommation") }}
+              </th>
               <th scope="col" class="_colPrice">
                 {{ $t("sg_stats_stock_fiscal_col_cost") }}
               </th>
@@ -80,6 +83,11 @@
                   <span class="_idText">{{ row.gem_ref }}</span>
                 </button>
                 <span v-else class="_idText">{{ emptyPlaceholder() }}</span>
+              </td>
+              <td>
+                <span class="_cellEllipsis">{{
+                  displayText(row.numero_de_mise_a_consommation)
+                }}</span>
               </td>
               <td class="_colPrice">{{ formatPrice(row.cost) }}</td>
               <td>
@@ -137,6 +145,7 @@
           <tfoot>
             <tr>
               <td class="_colId">{{ $t("sg_stats_stock_fiscal_total_row") }}</td>
+              <td></td>
               <td class="_colPrice">{{ formatPrice(aggregates.cost_sum) }}</td>
               <td colspan="3"></td>
               <td></td>

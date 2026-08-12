@@ -239,6 +239,9 @@ export function buildStockFiscalRows({ gems, selections }) {
     rows.push({
       gem_path,
       gem_ref: stockFiscalGemRef(gem),
+      numero_de_mise_a_consommation: String(
+        gem.numero_de_mise_a_consommation ?? ""
+      ).trim(),
       cost,
       buying_invoice_path: String(buying_invoice?.$path || "").trim(),
       buying_invoice_label: buying_invoice
@@ -295,6 +298,7 @@ export function buildStockFiscalRows({ gems, selections }) {
 export function buildStockFiscalCsvRows(rows, format_cell = String) {
   const header = [
     "id",
+    "numero_de_mise_a_consommation",
     "cost",
     "buying_invoice",
     "partner",
@@ -304,6 +308,7 @@ export function buildStockFiscalCsvRows(rows, format_cell = String) {
   ];
   const data_rows = (Array.isArray(rows) ? rows : []).map((row) => [
     format_cell(row.gem_ref),
+    format_cell(row.numero_de_mise_a_consommation || ""),
     format_cell(row.cost),
     format_cell(row.buying_invoice_label),
     format_cell(row.partner_label || ""),

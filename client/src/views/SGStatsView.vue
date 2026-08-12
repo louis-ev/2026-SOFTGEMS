@@ -304,6 +304,7 @@ export default {
       );
       csv_matrix[0] = [
         this.$t("sg_id"),
+        this.$t("sg_numero_de_mise_a_consommation"),
         this.$t("sg_stats_stock_fiscal_col_cost"),
         this.$t("sg_stats_stock_fiscal_col_buying_invoice"),
         this.$t("sg_stats_stock_fiscal_col_partner"),
@@ -316,6 +317,7 @@ export default {
         `${this.$t("sg_stats_stock_fiscal_total_row")} (${
           this.stock_fiscal_aggregates.gem_count
         })`,
+        "",
         String(this.stock_fiscal_aggregates.cost_sum),
         "",
         "",

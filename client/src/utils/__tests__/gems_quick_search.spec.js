@@ -232,6 +232,7 @@ describe("gems_quick_search field filters", () => {
       selection_membership_paths: {
         "memo-in/2": "2024-01-01T00:00:00.000Z",
         "memo-in/10": "2024-02-01T00:00:00.000Z",
+        "sale-invoice/7": "2024-03-01T00:00:00.000Z",
       },
     };
     const gem_no_box = {
@@ -248,6 +249,16 @@ describe("gems_quick_search field filters", () => {
     expect(gemMatchesQuickSearch(gem_in_box_3, exact)).toBe(true);
     expect(gemMatchesQuickSearch(gem_no_box, exact)).toBe(false);
 
+    // UI apply path: metadata key ? short alias token ? parse ? match
+    const from_ui = upsertFieldFilterInSearch("", "selection_nums_box", {
+      mode: "number",
+      exact: 3,
+    });
+    expect(from_ui).toBe("sel_box=3");
+    expect(
+      gemMatchesQuickSearch(gem_in_box_3, parseGemsQuickSearchInput(from_ui)),
+    ).toBe(true);
+
     const range = parseGemsQuickSearchInput("sel_memo_in=2-5");
     expect(range.field_filters.selection_nums_memo_in).toEqual({
       mode: "number",
@@ -255,6 +266,19 @@ describe("gems_quick_search field filters", () => {
       max: 5,
     });
     expect(gemMatchesQuickSearch(gem_in_box_3, range)).toBe(true);
+    // Multi-membership: 10 is also present; exact on 10 must still match.
+    expect(
+      gemMatchesQuickSearch(
+        gem_in_box_3,
+        parseGemsQuickSearchInput("sel_memo_in=10"),
+      ),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch(
+        gem_in_box_3,
+        parseGemsQuickSearchInput("sel_memo_in=8-12"),
+      ),
+    ).toBe(true);
     expect(
       gemMatchesQuickSearch(
         {
@@ -270,6 +294,43 @@ describe("gems_quick_search field filters", () => {
     const empty = parseGemsQuickSearchInput("sel_box=__empty__");
     expect(gemMatchesQuickSearch(gem_no_box, empty)).toBe(true);
     expect(gemMatchesQuickSearch(gem_in_box_3, empty)).toBe(false);
+    expect(
+      hasAvailableEmptyNumberField(
+        [gem_in_box_3, gem_no_box],
+        parseGemsQuickSearchInput(""),
+        "selection_nums_box",
+      ),
+    ).toBe(true);
+    expect(
+      hasAvailableEmptyNumberField(
+        [gem_in_box_3],
+        parseGemsQuickSearchInput(""),
+        "selection_nums_box",
+      ),
+    ).toBe(false);
+
+    const or_empty = parseGemsQuickSearchInput("sel_box=__empty__,3");
+    expect(gemMatchesQuickSearch(gem_no_box, or_empty)).toBe(true);
+    expect(gemMatchesQuickSearch(gem_in_box_3, or_empty)).toBe(true);
+    expect(
+      gemMatchesQuickSearch(
+        { $path: "gems/9", box_selection_path: "box/9" },
+        or_empty,
+      ),
+    ).toBe(false);
+
+    expect(
+      gemMatchesQuickSearch(
+        gem_in_box_3,
+        parseGemsQuickSearchInput("sel_sale_invoice=7"),
+      ),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch(
+        gem_in_box_3,
+        parseGemsQuickSearchInput("selection_nums_box=3"),
+      ),
+    ).toBe(true);
 
     expect(
       serializeFieldFilter("selection_nums_box", {

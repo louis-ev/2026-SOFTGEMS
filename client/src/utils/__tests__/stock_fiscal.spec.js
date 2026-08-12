@@ -153,11 +153,20 @@ describe("buildStockFiscalRows", () => {
     expect(rows[0].percent_source).toBe("full");
     expect(rows[0].fiscal_value).toBe(1000);
     expect(rows[0].buying_invoice_label).toBe("Supplier BI (10)");
+    expect(rows[0].numero_de_mise_a_consommation).toBe("");
     expect(aggregates).toEqual({
       gem_count: 1,
       cost_sum: 1000,
       fiscal_sum: 1000,
     });
+  });
+
+  it("includes numero_de_mise_a_consommation from the gem", () => {
+    const { rows } = buildStockFiscalRows({
+      gems: [gem({ numero_de_mise_a_consommation: " MAC-42 " })],
+      selections: [buyingInvoice()],
+    });
+    expect(rows[0].numero_de_mise_a_consommation).toBe("MAC-42");
   });
 
   it("applies buying partnership percentage to cost", () => {
@@ -267,9 +276,11 @@ describe("buildStockFiscalCsvRows", () => {
       selections: [buyingInvoice()],
     });
     rows[0].partner_label = "Supplier One";
+    rows[0].numero_de_mise_a_consommation = "MAC-7";
     expect(buildStockFiscalCsvRows(rows)).toEqual([
       [
         "id",
+        "numero_de_mise_a_consommation",
         "cost",
         "buying_invoice",
         "partner",
@@ -277,7 +288,7 @@ describe("buildStockFiscalCsvRows", () => {
         "partner_invoices",
         "fiscal_value",
       ],
-      ["1", "1000", "10", "Supplier One", "100", "", "1000"],
+      ["1", "MAC-7", "1000", "10", "Supplier One", "100", "", "1000"],
     ]);
   });
 });
