@@ -259,10 +259,7 @@ export default {
       const raw =
         typeof row?.internal_name === "string" ? row.internal_name.trim() : "";
       if (raw) return raw;
-      return (
-        this.selectionSlugFromPath(row?.$path) ||
-        this.$t("sg_selection_untitled")
-      );
+      return "—";
     },
     entryCount(row) {
       return normalizeSelectionGemPaths(row?.selection_entries).length;

@@ -262,10 +262,7 @@ export default {
       const raw =
         typeof row?.internal_name === "string" ? row.internal_name.trim() : "";
       if (raw) return raw;
-      return (
-        selectionFolderSlugFromPath(row?.$path) ||
-        this.$t("sg_selection_untitled")
-      );
+      return "—";
     },
     detailPath(row) {
       const parsed = parseSelectionFolderPath(row?.$path);

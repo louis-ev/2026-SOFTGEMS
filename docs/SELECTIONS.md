@@ -11,7 +11,7 @@ This document describes how **selections** are stored and exposed in Softgems, a
 - **Document number** for PDFs and the open view is the **folder slug** (e.g. `12` for `box/12`), via `selectionDocumentNumber()`. The former `document_number_name` meta field is removed.
 - **Folder meta** (in `meta.txt`):
 
-  - **`internal_name`** (string, required): display title.
+  - **`internal_name`** (string, optional): display title. Created empty; editable on the open view. Empty values display as **—** in lists and titles.
   - **`selection_date`**, **`counterparty_path`**, **`reference_number`**, **`currency`**, **`notes`**: optional header fields (date, counterparty, purchase order, currency, and notes are editable on the open view). **`selection_date`** defaults to **today’s local date** when a selection is created and is stored as an **ISO 8601 calendar date** (`YYYY-MM-DD`, schema `type: "date"`) — not a full timestamp like `$date_created`.
   - **`currency`**: select with exactly two options — **`USD ($)`** or **`EUR (€)`** (stored as `USD` / `EUR`). Empty values **display as USD ($)**. PDF export uses this field for amount formatting (`$…` / `… €`), the payment line, and the bank-account intro. Helpers: [`selection_currency.js`](../client/src/utils/selection_currency.js).
   - **`reference_number`**: optional **purchase order N°** shown on the PDF as “N° Commande” / “Purchase order N°” when non-empty (omitted from the PDF when empty).
@@ -80,7 +80,7 @@ Labels, URL slugs, and sidebar icons are defined in [selection_type_registry.js]
 | ---------- | ------------- | ---- |
 | **`/selections`** | — | Hub (all types) |
 | **`/selections/box`** | `box` | Box list |
-| **`/selections/box/new`** | `box` (create) | Create box selection |
+| **`/selections/box/new`** | `box` (create) | Creates a box selection immediately (empty `internal_name`) and opens it |
 | **`/selections/box/12`** | `box/12` | Open selection #12 |
 
 Short storage-style URLs redirect into the UI: `/box` → `/selections/box`, `/box/12` → `/selections/box/12`.
@@ -96,7 +96,7 @@ Helpers: [selection_urls.js](../client/src/utils/selection_urls.js), [selection_
 - Layout + type sidebar: [SGSelectionsLayout.vue](../client/src/layouts/SGSelectionsLayout.vue)
 - Hub: [SGSelectionsHubView.vue](../client/src/views/SGSelectionsHubView.vue)
 - List + panel: [SGSelectionsView.vue](../client/src/views/SGSelectionsView.vue)
-- Create: [SGSelectionNewView.vue](../client/src/views/SGSelectionNewView.vue)
+- Create (direct, no name form): [SGSelectionNewView.vue](../client/src/views/SGSelectionNewView.vue)
 - Detail: [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
 - Selection title (click to edit **`internal_name`** when allowed): [SGSelectionOpenView.vue](../client/src/views/SGSelectionOpenView.vue)
 - Document details (date, document number from folder slug, counterparty, reference, currency): [SGSelectionHeaderFieldsSection.vue](../client/src/components/selections/SGSelectionHeaderFieldsSection.vue)

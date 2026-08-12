@@ -278,7 +278,7 @@ export default {
       if (!this.selection) return this.$t("sg_open_selection_title");
       const n = this.cleanString(this.selection.internal_name);
       if (n) return n;
-      return this.$t("sg_open_selection_title");
+      return "—";
     },
     stored_internal_name() {
       return this.selection && typeof this.selection.internal_name === "string"
@@ -303,8 +303,8 @@ export default {
         field_key: "internal_name",
         stored_value: this.stored_internal_name,
         is_saving: this.is_saving_internal_name,
-        required: true,
-        required_empty_hint: this.$t("sg_selection_name_required"),
+        required: false,
+        required_empty_hint: "",
         external_warning: "",
       };
     },
@@ -424,7 +424,6 @@ export default {
     },
     async persistInternalName() {
       const trimmed = this.cleanString(this.edited_internal_name);
-      if (!trimmed) return;
       if (this.is_saving_internal_name) return;
       this.is_saving_internal_name = true;
       try {

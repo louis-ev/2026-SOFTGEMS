@@ -1,41 +1,16 @@
 <template>
   <section class="_selectionNewView">
-    <div class="_pageHeader">
-      <h1 class="_pageTitle">{{ page_title }}</h1>
-      <p v-if="active_type_label" class="_typeReadonly">
-        {{ $t("sg_selection_type_label") }}:
-        <strong>{{ active_type_label }}</strong>
-      </p>
-    </div>
-
-    <form class="_form" @submit.prevent="createSelection">
-      <SGSectionPanel
-        section_id="selection_identity"
-        :title="$t('sg_section_contact_identity')"
-      >
-        <div class="_fieldsGrid">
-          <div>
-            <DLabel :str="$t('sg_selection_internal_name')" icon="pencil" />
-            <TextInput
-              ref="name_input"
-              :content.sync="new_internal_name"
-              :required="true"
-              :autofocus="true"
-              @update:content="onNameInput"
-            />
-            <p v-if="name_error" class="_fieldError">{{ name_error }}</p>
-          </div>
-        </div>
-      </SGSectionPanel>
-
+    <div v-if="create_error" class="_errorBlock">
+      <p class="u-errorMsg">{{ create_error }}</p>
       <div class="_actions">
         <button type="button" class="u-button" @click="goBack">
           {{ $t("sg_cancel") }}
         </button>
         <button
-          type="submit"
+          type="button"
           class="u-button u-button_bleuvert"
-          :disabled="is_create_disabled"
+          :disabled="is_creating"
+          @click="createSelection"
         >
           {{
             is_creating
@@ -44,26 +19,22 @@
           }}
         </button>
       </div>
-    </form>
+    </div>
+    <div v-else>{{ $t("sg_create_selection_in_progress") }}</div>
   </section>
 </template>
 
 <script>
-import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
 import {
   selectionDetailPath,
   selectionListPath,
 } from "@/utils/selection_urls.js";
-import { selectionTypeLabel as selectionTypeLabelFn } from "@/utils/selection_types.js";
 import { selectionTypeRootPath } from "@/utils/selection_paths.js";
 import { todayDateInputValue } from "@/utils/date_input.js";
 
 export default {
   name: "SGSelectionNewView",
-  components: {
-    SGSectionPanel,
-  },
   props: {
     type_slug: {
       type: String,
@@ -72,9 +43,9 @@ export default {
   },
   data() {
     return {
-      new_internal_name: "",
-      name_touched: false,
       is_creating: false,
+      create_error: "",
+      did_start_create: false,
     };
   },
   computed: {
@@ -84,52 +55,39 @@ export default {
     type_root_path() {
       return selectionTypeRootPath(this.type_slug);
     },
-    active_type_label() {
-      if (!this.new_selection_type) return "";
-      return selectionTypeLabelFn(this.$t.bind(this), this.new_selection_type);
-    },
-    page_title() {
-      if (!this.active_type_label) return this.$t("sg_create_selection_title");
-      return this.$t("sg_create_selection_of_type", {
-        type: this.active_type_label,
-      });
-    },
-    trimmed_name() {
-      return this.cleanString(this.new_internal_name);
-    },
-    name_error() {
-      if (!this.name_touched) return "";
-      if (!this.trimmed_name) return this.$t("sg_selection_name_required");
-      return "";
-    },
-    is_create_disabled() {
-      return this.is_creating || !this.trimmed_name || !this.new_selection_type;
+  },
+  watch: {
+    type_slug: {
+      immediate: true,
+      handler() {
+        this.did_start_create = false;
+        this.create_error = "";
+        this.$nextTick(() => {
+          this.createSelection();
+        });
+      },
     },
   },
   methods: {
-    onNameInput() {
-      this.name_touched = true;
-    },
     goBack() {
       this.$router.push(selectionListPath(this.type_slug));
     },
-    cleanString(value) {
-      if (value === null || value === undefined) return "";
-      return String(value).trim();
-    },
     async createSelection() {
-      this.name_touched = true;
-      if (!this.trimmed_name || this.is_creating || !this.new_selection_type) {
+      if (this.is_creating || this.did_start_create) return;
+      if (!this.new_selection_type || !this.type_root_path) {
+        this.create_error = this.$t("sg_could_not_create_selection");
         return;
       }
 
+      this.did_start_create = true;
       this.is_creating = true;
+      this.create_error = "";
       try {
         const additional_meta = {
           $status: "public",
           $admins: "everyone",
           $contributors: "everyone",
-          internal_name: this.trimmed_name,
+          internal_name: "",
           selection_date: todayDateInputValue(),
           selection_entries: [],
         };
@@ -142,14 +100,13 @@ export default {
             type_slug: this.type_slug,
             folder_slug: new_slug,
           });
-          this.$router.push(path);
+          this.$router.replace(path);
         } else {
-          this.$router.push(selectionListPath(this.type_slug));
+          this.$router.replace(selectionListPath(this.type_slug));
         }
       } catch ({ code }) {
-        this.$alertify
-          .delay(4000)
-          .error(code || this.$t("sg_could_not_create_selection"));
+        this.create_error = code || this.$t("sg_could_not_create_selection");
+        this.did_start_create = false;
       } finally {
         this.is_creating = false;
       }
@@ -164,35 +121,10 @@ export default {
   padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
 }
 
-._pageHeader {
+._errorBlock {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: calc(var(--spacing) * 0.35);
-  margin-bottom: calc(var(--spacing) * 1);
-}
-
-._pageTitle {
-  margin: 0;
-}
-
-._typeReadonly {
-  margin: 0;
-  font-size: var(--sl-font-size-small);
-  color: var(--c-gris_fonce);
-}
-
-._form {
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--spacing) * 1.1);
-}
-
-._fieldsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: calc(var(--spacing) / 1.75);
+  gap: calc(var(--spacing) * 1);
 }
 
 ._actions {
@@ -201,11 +133,5 @@ export default {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: calc(var(--spacing) / 2);
-}
-
-._fieldError {
-  margin: calc(var(--spacing) / 6) 0 0;
-  color: var(--c-rouge);
-  font-size: var(--sl-font-size-x-small);
 }
 </style>

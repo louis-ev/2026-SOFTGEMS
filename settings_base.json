@@ -366,8 +366,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -431,8 +430,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -496,8 +494,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -561,8 +558,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -626,8 +622,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -697,8 +692,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -762,8 +756,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -827,8 +820,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -898,8 +890,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -963,8 +954,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
@@ -1028,8 +1018,7 @@
         },
         "fields": {
           "internal_name": {
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           "selection_date": {
             "type": "date"
