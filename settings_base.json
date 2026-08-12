@@ -157,6 +157,9 @@
           "reference_customer": {
             "type": "string"
           },
+          "numero_de_mise_a_consommation": {
+            "type": "string"
+          },
           "paired_gem": {
             "type": "string"
           },

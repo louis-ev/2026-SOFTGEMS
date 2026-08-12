@@ -57,6 +57,12 @@ export function buildGemFieldConfigs(t) {
       icon: "person-circle",
       type: "text",
     },
+    numero_de_mise_a_consommation: {
+      key: "numero_de_mise_a_consommation",
+      label: t("sg_numero_de_mise_a_consommation"),
+      icon: "receipt",
+      type: "text",
+    },
     paired_gem: {
       key: "paired_gem",
       label: t("sg_paired_gem"),

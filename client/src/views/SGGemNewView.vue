@@ -93,6 +93,7 @@ import { syncPairedGemLinks } from "@/utils/gem_pairing.js";
 const creation_locked_field_keys = [
   "reference_supplier",
   "reference_customer",
+  "numero_de_mise_a_consommation",
   "paired_gem",
 ];
 
@@ -100,6 +101,7 @@ const v1_new_gem_fields_defaults = {
   status: "reference",
   reference_supplier: "",
   reference_customer: "",
+  numero_de_mise_a_consommation: "",
   paired_gem: "",
   number_of_pieces: 1,
   stone_type: "",

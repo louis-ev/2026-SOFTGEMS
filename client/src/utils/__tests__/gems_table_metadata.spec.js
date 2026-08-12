@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildGemsTableAllMetadataKeys,
+  buildGemsTableOrderedPickerKeys,
   countGemsWithFilledTableColumnValue,
   gemHasFilledTableColumnValue,
   gems_table_catalog_column_keys,
@@ -57,6 +58,28 @@ describe("buildGemsTableAllMetadataKeys", () => {
     ]);
     expect(keys).toContain("description");
     expect(keys).toContain("stone_type");
+  });
+});
+
+describe("buildGemsTableOrderedPickerKeys", () => {
+  it("prefers a saved full order, then selected order, then leftovers", () => {
+    expect(
+      buildGemsTableOrderedPickerKeys(
+        ["id", "status", "color", "weight_ct", "shape"],
+        ["id", "status", "weight_ct", "color"],
+        ["id", "status", "shape"]
+      )
+    ).toEqual(["id", "status", "weight_ct", "color", "shape"]);
+  });
+
+  it("falls back to selected order when no saved picker order exists", () => {
+    expect(
+      buildGemsTableOrderedPickerKeys(
+        ["id", "status", "color", "weight_ct", "shape"],
+        [],
+        ["id", "status", "shape", "weight_ct"]
+      )
+    ).toEqual(["id", "status", "shape", "weight_ct", "color"]);
   });
 });
 

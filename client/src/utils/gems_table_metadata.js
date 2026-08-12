@@ -112,6 +112,38 @@ export function normalizeGemsTableSelectedMetadataKeys(metadata_keys) {
   return stripLinearDimensionKeys(stripVirtualPerCaratKeys(metadata_keys));
 }
 
+/**
+ * Build the column picker list order.
+ * Prefer a saved full order, then fall back to selected (visible) order, then catalog leftovers.
+ *
+ * @param {string[]} all_keys
+ * @param {string[]} [preferred_order]
+ * @param {string[]} [selected_keys]
+ * @returns {string[]}
+ */
+export function buildGemsTableOrderedPickerKeys(
+  all_keys,
+  preferred_order = [],
+  selected_keys = []
+) {
+  const available_keys = Array.isArray(all_keys) ? all_keys : [];
+  const available_set = new Set(available_keys);
+  const seen = new Set();
+  const ordered = [];
+
+  const pushIfAvailable = (metadata_key) => {
+    if (!available_set.has(metadata_key) || seen.has(metadata_key)) return;
+    seen.add(metadata_key);
+    ordered.push(metadata_key);
+  };
+
+  (Array.isArray(preferred_order) ? preferred_order : []).forEach(pushIfAvailable);
+  (Array.isArray(selected_keys) ? selected_keys : []).forEach(pushIfAvailable);
+  available_keys.forEach(pushIfAvailable);
+
+  return ordered;
+}
+
 export function sortGemsTableMetadataKeys(metadata_keys) {
   if (!Array.isArray(metadata_keys)) return [];
   return [...new Set(metadata_keys)].sort((first_key, second_key) => {

@@ -115,6 +115,26 @@
             @saved="onFieldSaved"
           />
           <SGEditableMetaField
+            :label="$t('sg_numero_de_mise_a_consommation')"
+            icon="receipt"
+            :value="gem.numero_de_mise_a_consommation"
+            :is_flashing="isFieldFlashing('numero_de_mise_a_consommation')"
+            :modal_open="
+              editing_field === field_configs.numero_de_mise_a_consommation
+            "
+            :modal_title="
+              gemFieldModalTitle(field_configs.numero_de_mise_a_consommation)
+            "
+            :gem_edit="
+              gemEditorProps(field_configs.numero_de_mise_a_consommation)
+            "
+            @presentClick="
+              openEditModal(field_configs.numero_de_mise_a_consommation)
+            "
+            @close="editing_field = null"
+            @saved="onFieldSaved"
+          />
+          <SGEditableMetaField
             :label="$t('sg_paired_gem')"
             icon="link"
             :value="sanitized_paired_gem_value"

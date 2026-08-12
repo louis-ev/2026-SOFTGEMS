@@ -19,6 +19,14 @@
         >
           {{ $t("sg_uncheck_all_columns") }}
         </button>
+        <button
+          type="button"
+          class="u-button u-button_small"
+          :disabled="!has_custom_columns"
+          @click="resetColumns"
+        >
+          {{ $t("reset") }}
+        </button>
       </div>
 
       <transition-group tag="div" class="_columnsList" name="columnsReorder">
@@ -126,6 +134,7 @@
 
 <script>
 import {
+  buildGemsTableOrderedPickerKeys,
   isGemsTableMergedDimensionsColumnKey,
   isGemsTableMergedPricingColumnKey,
   normalizeGemsTableSelectedMetadataKeys,
@@ -140,6 +149,10 @@ export default {
       default: () => [],
     },
     selected_metadata_keys: {
+      type: Array,
+      default: () => [],
+    },
+    column_order_keys: {
       type: Array,
       default: () => [],
     },
@@ -164,6 +177,20 @@ export default {
       return this.local_columns.filter((column_item) => column_item.is_enabled)
         .length;
     },
+    has_custom_columns() {
+      const all_keys = Array.isArray(this.all_metadata_keys)
+        ? this.all_metadata_keys
+        : [];
+      if (all_keys.length === 0 || this.local_columns.length === 0) return false;
+
+      if (this.local_columns.length !== all_keys.length) return true;
+      if (this.local_columns.some((column_item) => !column_item.is_enabled)) {
+        return true;
+      }
+      return this.local_columns.some(
+        (column_item, index) => column_item.metadata_key !== all_keys[index]
+      );
+    },
   },
   watch: {
     all_metadata_keys: {
@@ -173,6 +200,12 @@ export default {
       },
     },
     selected_metadata_keys: {
+      immediate: true,
+      handler() {
+        this.syncLocalColumns();
+      },
+    },
+    column_order_keys: {
       immediate: true,
       handler() {
         this.syncLocalColumns();
@@ -189,9 +222,17 @@ export default {
           ? this.selected_metadata_keys
           : []
       );
+      const preferred_order = normalizeGemsTableSelectedMetadataKeys(
+        Array.isArray(this.column_order_keys) ? this.column_order_keys : []
+      );
       const selected_set = new Set(selected_keys);
+      const ordered_keys = buildGemsTableOrderedPickerKeys(
+        all_keys,
+        preferred_order,
+        selected_keys
+      );
 
-      const columns = all_keys.map((metadata_key) => ({
+      const columns = ordered_keys.map((metadata_key) => ({
         metadata_key,
         is_enabled: selected_set.has(metadata_key),
         is_locked: gems_pinned_metadata_keys.includes(metadata_key),
@@ -211,6 +252,9 @@ export default {
         ...column_item,
         is_enabled: column_item.is_locked ? true : is_enabled,
       }));
+    },
+    resetColumns() {
+      this.$emit("reset");
     },
     normalizeColumns(columns) {
       const pinned_columns = [];
@@ -237,7 +281,13 @@ export default {
           .filter((column_item) => column_item.is_enabled)
           .map((column_item) => column_item.metadata_key)
       );
-      this.$emit("save", next_selected_metadata_keys);
+      const next_column_order_keys = normalizeGemsTableSelectedMetadataKeys(
+        this.local_columns.map((column_item) => column_item.metadata_key)
+      );
+      this.$emit("save", {
+        selected_metadata_keys: next_selected_metadata_keys,
+        column_order_keys: next_column_order_keys,
+      });
     },
     isMergedPricingColumn(metadata_key) {
       return isGemsTableMergedPricingColumnKey(metadata_key);

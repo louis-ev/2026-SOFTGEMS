@@ -98,9 +98,11 @@
       v-if="show_columns_modal"
       :all_metadata_keys="all_metadata_keys"
       :selected_metadata_keys="selected_metadata_keys"
+      :column_order_keys="picker_column_order_keys"
       :metadata_labels="metadata_labels"
       :metadata_icons="metadata_icons"
       @save="onSaveGemsColumnsSelection"
+      @reset="onResetGemsColumnsSelection"
       @close="show_columns_modal = false"
     />
   </SGSectionPanel>

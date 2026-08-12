@@ -2,14 +2,18 @@ import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import {
   buildGemsTableAllMetadataKeys,
+  buildGemsTableOrderedPickerKeys,
   gems_table_gem_excluded_metadata_keys,
   normalizeGemsTableSelectedMetadataKeys,
   stripLinearDimensionKeys,
   stripVirtualPerCaratKeys,
 } from "@/utils/gems_table_metadata.js";
 import {
+  clearGemsMetadataKeysStorage,
   gems_table_columns_storage_scopes,
   loadGemsMetadataKeysFromStorage,
+  loadGemsMetadataKeysOrderFromStorage,
+  persistGemsMetadataKeysOrderToStorage,
   persistGemsMetadataKeysToStorage,
 } from "@/utils/gems_table_columns_storage.js";
 
@@ -27,6 +31,7 @@ export default {
   data() {
     return {
       selected_metadata_keys: [],
+      picker_column_order_keys: [],
     };
   },
   created() {
@@ -110,12 +115,16 @@ export default {
       const storage_scope = this.gems_metadata_keys_storage_scope;
       if (!storage_scope) {
         this.selected_metadata_keys = [];
+        this.picker_column_order_keys = [];
         this.syncSelectedGemsMetadataKeys();
         return;
       }
 
       this.selected_metadata_keys = this.stripExcludedGemMetadataKeys(
         loadGemsMetadataKeysFromStorage(storage_scope)
+      );
+      this.picker_column_order_keys = this.stripExcludedGemMetadataKeys(
+        loadGemsMetadataKeysOrderFromStorage(storage_scope)
       );
       this.syncSelectedGemsMetadataKeys();
     },
@@ -128,6 +137,7 @@ export default {
         : [];
       if (all_keys.length === 0) {
         this.selected_metadata_keys = [];
+        this.picker_column_order_keys = [];
         return;
       }
 
@@ -154,6 +164,28 @@ export default {
       ) {
         this.selected_metadata_keys = normalized_selected_keys;
       }
+
+      const preferred_order = Array.isArray(this.picker_column_order_keys)
+        ? this.stripExcludedGemMetadataKeys(
+            normalizeGemsTableSelectedMetadataKeys(this.picker_column_order_keys)
+          )
+        : [];
+      const next_order_keys = this.enforcePinnedGemsColumns(
+        buildGemsTableOrderedPickerKeys(
+          all_keys,
+          preferred_order,
+          normalized_selected_keys
+        ),
+        all_keys
+      );
+      if (
+        !this.areGemsMetadataKeyArraysEqual(
+          next_order_keys,
+          this.picker_column_order_keys
+        )
+      ) {
+        this.picker_column_order_keys = next_order_keys;
+      }
     },
     persistGemsMetadataKeysToStorage() {
       const storage_scope = this.gems_metadata_keys_storage_scope;
@@ -162,21 +194,61 @@ export default {
         storage_scope,
         this.selected_metadata_keys
       );
+      persistGemsMetadataKeysOrderToStorage(
+        storage_scope,
+        this.picker_column_order_keys
+      );
     },
-    onSaveGemsColumnsSelection(next_selected_metadata_keys) {
+    onSaveGemsColumnsSelection(payload) {
+      const next_selected_metadata_keys = Array.isArray(payload)
+        ? payload
+        : payload?.selected_metadata_keys;
+      const next_column_order_keys = Array.isArray(payload)
+        ? payload
+        : payload?.column_order_keys;
+
       if (
         !Array.isArray(next_selected_metadata_keys) ||
         next_selected_metadata_keys.length === 0
       ) {
         return;
       }
+
+      const all_keys = this.all_metadata_keys;
       this.selected_metadata_keys = this.enforcePinnedGemsColumns(
         this.stripExcludedGemMetadataKeys(
           normalizeGemsTableSelectedMetadataKeys(next_selected_metadata_keys)
         ),
-        this.all_metadata_keys
+        all_keys
+      );
+      this.picker_column_order_keys = this.enforcePinnedGemsColumns(
+        buildGemsTableOrderedPickerKeys(
+          all_keys,
+          Array.isArray(next_column_order_keys)
+            ? this.stripExcludedGemMetadataKeys(
+                normalizeGemsTableSelectedMetadataKeys(next_column_order_keys)
+              )
+            : [],
+          this.selected_metadata_keys
+        ),
+        all_keys
       );
       this.persistGemsMetadataKeysToStorage();
+      this.show_columns_modal = false;
+    },
+    onResetGemsColumnsSelection() {
+      const storage_scope = this.gems_metadata_keys_storage_scope;
+      if (storage_scope) {
+        clearGemsMetadataKeysStorage(storage_scope);
+      }
+      const all_keys = Array.isArray(this.all_metadata_keys)
+        ? [...this.all_metadata_keys]
+        : [];
+      this.selected_metadata_keys = this.enforcePinnedGemsColumns(
+        all_keys,
+        all_keys
+      );
+      this.picker_column_order_keys = [...this.selected_metadata_keys];
       this.show_columns_modal = false;
     },
     enforcePinnedGemsColumns(metadata_keys, all_keys = this.all_metadata_keys) {
