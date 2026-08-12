@@ -5,13 +5,25 @@
         <div class="_titleRow">
           <div class="_titleGroup">
             <h1 class="_pageTitle">{{ gem_title }}</h1>
-            <SGPairedGemShortcutCard
-              v-if="paired_gem_preview_id"
-              :gem_id="paired_gem_preview_id"
-              :gem_path="paired_gem_shortcut_path"
-              :cover="paired_gem_preview && paired_gem_preview.$cover"
-              @open="openPairedGemPage"
-            />
+            <div
+              v-if="
+                paired_gem_preview_id || outstanding_memo_out_document_number
+              "
+              class="_statusCards"
+            >
+              <SGPairedGemShortcutCard
+                v-if="paired_gem_preview_id"
+                :gem_id="paired_gem_preview_id"
+                :gem_path="paired_gem_shortcut_path"
+                :cover="paired_gem_preview && paired_gem_preview.$cover"
+                @open="openPairedGemPage"
+              />
+              <SGMemoOutStatusCard
+                v-if="outstanding_memo_out_document_number"
+                :document_number="outstanding_memo_out_document_number"
+                @open="openOutstandingMemoOut"
+              />
+            </div>
             <SGFolderModificationsHistory
               :folder_path="gem_path"
               :folder_meta="gem"
@@ -495,11 +507,18 @@ import GemDimensions from "@/mixins/GemDimensions";
 import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import SGPairedGemShortcutCard from "@/components/gems/SGPairedGemShortcutCard.vue";
+import SGMemoOutStatusCard from "@/components/gems/SGMemoOutStatusCard.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemSelectionsSection from "@/components/gems/SGGemSelectionsSection.vue";
+import { resolveOutstandingMemoOutPath } from "@/utils/gem_selection_membership_paths.js";
+import {
+  parseSelectionFolderPath,
+  selectionDocumentNumber,
+} from "@/utils/selection_paths.js";
+import { selectionDetailPath } from "@/utils/selection_urls.js";
 
 export default {
   name: "SGGemOpenView",
@@ -512,6 +531,7 @@ export default {
   components: {
     RemoveMenu2,
     SGPairedGemShortcutCard,
+    SGMemoOutStatusCard,
     SGEditableMetaField,
     SGFolderMetaPeek,
     SGFolderModificationsHistory,
@@ -575,6 +595,12 @@ export default {
       return (
         this.paired_gem_preview?.$path || `${this.gems_path}/${paired_id}`
       );
+    },
+    outstanding_memo_out_path() {
+      return resolveOutstandingMemoOutPath(this.gem);
+    },
+    outstanding_memo_out_document_number() {
+      return selectionDocumentNumber(this.outstanding_memo_out_path);
     },
   },
   watch: {
@@ -659,6 +685,18 @@ export default {
       const paired_id = this.paired_gem_preview_id;
       if (!paired_id) return;
       this.$router.push(`/gems/${paired_id}`);
+    },
+    openOutstandingMemoOut() {
+      const path = this.outstanding_memo_out_path;
+      if (!path) return;
+      const parsed = parseSelectionFolderPath(path);
+      if (!parsed.type_slug || !parsed.folder_slug) return;
+      this.$router.push(
+        selectionDetailPath({
+          type_slug: parsed.type_slug,
+          folder_slug: parsed.folder_slug,
+        })
+      );
     },
     onPairedGemFieldSaved(payload) {
       this.onFieldSaved(payload);
@@ -782,6 +820,21 @@ export default {
 
 ._titleGroup {
   min-width: 0;
+}
+
+._statusCards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: calc(var(--spacing) * 0.45);
+  margin-top: calc(var(--spacing) * 0.45);
+  margin-bottom: calc(var(--spacing) * 0.35);
+
+  ::v-deep ._pairedGemShortcutCard,
+  ::v-deep ._memoOutStatusCard {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 }
 
 ._pageTitle {

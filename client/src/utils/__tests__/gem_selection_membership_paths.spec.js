@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   getGemMembershipAddedAt,
+  isGemMemoOutOutstanding,
   listGemIndexedSelectionPaths,
   normalizeMembershipPathsMap,
   recordGemSelectionMembership,
+  resolveOutstandingMemoOutPath,
   clearGemSelectionMembership,
 } from "@/utils/gem_selection_membership_paths.js";
 
@@ -15,6 +17,76 @@ describe("normalizeMembershipPathsMap", () => {
     );
     expect(map["selections/1"]).toBe("2026-05-01T00:00:00.000Z");
     expect(map["selections/2"]).toBe("2026-06-02T00:00:00.000Z");
+  });
+});
+
+describe("isGemMemoOutOutstanding", () => {
+  it("is true when memo-out is newer than return-memo-out", () => {
+    expect(
+      isGemMemoOutOutstanding({
+        selection_membership_paths: {
+          "memo-out/1": "2026-06-02T00:00:00.000Z",
+          "return-memo-out/1": "2026-05-01T00:00:00.000Z",
+        },
+      })
+    ).toBe(true);
+  });
+
+  it("is true when only memo-out is present", () => {
+    expect(
+      isGemMemoOutOutstanding({
+        selection_membership_paths: {
+          "memo-out/3": "2026-04-01T00:00:00.000Z",
+          "sale-invoice/1": "2026-07-01T00:00:00.000Z",
+        },
+      })
+    ).toBe(true);
+  });
+
+  it("is false when return-memo-out is newer than memo-out", () => {
+    expect(
+      isGemMemoOutOutstanding({
+        selection_membership_paths: {
+          "memo-out/1": "2026-05-01T00:00:00.000Z",
+          "return-memo-out/2": "2026-06-01T00:00:00.000Z",
+        },
+      })
+    ).toBe(false);
+  });
+
+  it("is false when neither memo-out nor return-memo-out is present", () => {
+    expect(
+      isGemMemoOutOutstanding({
+        selection_membership_paths: {
+          "memo-in/1": "2026-06-01T00:00:00.000Z",
+        },
+      })
+    ).toBe(false);
+  });
+});
+
+describe("resolveOutstandingMemoOutPath", () => {
+  it("returns the newest outstanding memo-out path", () => {
+    expect(
+      resolveOutstandingMemoOutPath({
+        selection_membership_paths: {
+          "memo-out/7": "2026-06-02T00:00:00.000Z",
+          "return-memo-out/1": "2026-05-01T00:00:00.000Z",
+          "sale-invoice/1": "2026-07-01T00:00:00.000Z",
+        },
+      })
+    ).toBe("memo-out/7");
+  });
+
+  it("returns empty when return-memo-out is newer", () => {
+    expect(
+      resolveOutstandingMemoOutPath({
+        selection_membership_paths: {
+          "memo-out/1": "2026-05-01T00:00:00.000Z",
+          "return-memo-out/2": "2026-06-01T00:00:00.000Z",
+        },
+      })
+    ).toBe("");
   });
 });
 

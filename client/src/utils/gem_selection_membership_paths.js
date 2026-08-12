@@ -4,6 +4,18 @@
  * this map (+ `box_selection_path`) is the fetch index for the gem open view.
  */
 
+import { parseSelectionFolderPath } from "@/utils/selection_paths.js";
+
+/**
+ * @param {*} raw
+ * @returns {number}
+ */
+function parseSortableTimestamp(raw) {
+  if (!raw) return 0;
+  const time = new Date(raw).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
 /**
  * @param {*} raw
  * @returns {Record<string, string>}
@@ -47,6 +59,50 @@ export function getGemMembershipAddedAt(gem, selection_path) {
     gem?.selection_gem_added_at
   );
   return map[cleaned_path] || "";
+}
+
+/**
+ * Outstanding `memo-out/{n}` path when walking indexed memberships newest → oldest
+ * the first of `memo-out` / `return-memo-out` is `memo-out`. Empty otherwise.
+ *
+ * @param {object|null|undefined} gem
+ * @returns {string}
+ */
+export function resolveOutstandingMemoOutPath(gem) {
+  const map = normalizeMembershipPathsMap(
+    gem?.selection_membership_paths,
+    gem?.selection_gem_added_at
+  );
+  const candidates = Object.entries(map)
+    .map(([path, iso]) => {
+      const { type_slug } = parseSelectionFolderPath(path);
+      if (type_slug !== "memo-out" && type_slug !== "return-memo-out") {
+        return null;
+      }
+      return {
+        type_slug,
+        path,
+        sort_key: parseSortableTimestamp(iso),
+      };
+    })
+    .filter(Boolean);
+
+  if (!candidates.length) return "";
+  candidates.sort((a, b) => {
+    if (b.sort_key !== a.sort_key) return b.sort_key - a.sort_key;
+    return String(a.path).localeCompare(String(b.path));
+  });
+  return candidates[0].type_slug === "memo-out" ? candidates[0].path : "";
+}
+
+/**
+ * True when the gem has an outstanding memo out (see `resolveOutstandingMemoOutPath`).
+ *
+ * @param {object|null|undefined} gem
+ * @returns {boolean}
+ */
+export function isGemMemoOutOutstanding(gem) {
+  return Boolean(resolveOutstandingMemoOutPath(gem));
 }
 
 /**

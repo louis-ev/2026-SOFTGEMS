@@ -150,6 +150,9 @@
               _pickSelected: isRowSinglePicked(gem),
               _rowPickerDisabled: isRowPickerDisabled(gem),
             }"
+            :data-memo-out-outstanding="
+              isGemMemoOutOutstanding(gem) ? true : null
+            "
             @click="handleTableRowClick(gem)"
           >
             <td v-if="selection_remove_column" class="_removeColTd" @click.stop>
@@ -363,6 +366,7 @@ import {
 } from "@/utils/table_page_size.js";
 import { isRseStoneType } from "@/utils/selection_pdf_customs_summary.js";
 import { formatGemSelectionNumsColumnValue } from "@/utils/gem_selection_nums_columns.js";
+import { isGemMemoOutOutstanding } from "@/utils/gem_selection_membership_paths.js";
 import { isSelectionNumsColumnKey } from "@/utils/gems_table_metadata.js";
 
 export default {
@@ -613,6 +617,7 @@ export default {
       const path_parts = gem_path.split("/");
       return path_parts[path_parts.length - 1] || "";
     },
+    isGemMemoOutOutstanding,
     formatMetadataCellDisplay(gem, metadata_key) {
       if (metadata_key === "status") {
         return gemStatusLabel(this.$t.bind(this), gem?.status);
@@ -1355,6 +1360,24 @@ th._sortableHeader:not(._filterableHeader)
 
   &._rowPickerDisabled:hover {
     background: inherit;
+  }
+}
+
+tr[data-memo-out-outstanding] {
+  color: var(--c-rouge);
+
+  ._gemMetadataValue,
+  ._pricingLine,
+  ._dimensionsCellValue,
+  ._totalsCellValue {
+    color: var(--c-rouge);
+  }
+
+  ._editableCell:hover {
+    ._gemMetadataValue,
+    ._pricingLine {
+      color: var(--c-rouge);
+    }
   }
 }
 

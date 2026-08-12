@@ -247,6 +247,8 @@ export default {
     "Gem {target_id} is already paired with gem {other_id}. Saving will re-pair it with this gem and unlink {other_id}.",
   sg_paired_gem_open_preview: "Open gem {id}",
   sg_paired_with_gem: "Paired with gem #{id}",
+  sg_currently_on_memo_out: "Currently on memo out #{id}",
+  sg_memo_out_open_preview: "Open memo out {id}",
   sg_paired_gem_replace_pair: "Replace",
   sg_paired_gem_select_pair: "Select pair",
   sg_paired_gem_remove_pairing: "Remove pairing",
