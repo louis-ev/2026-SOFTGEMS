@@ -8,7 +8,7 @@ import {
 } from "@/utils/selection_currency.js";
 
 describe("selection_currency", () => {
-  it("select options are USD ($) and EUR (€)", () => {
+  it("select options are USD ($) and EUR (â‚¬)", () => {
     expect(SELECTION_CURRENCY_OPTIONS).toEqual([
       { value: "USD", label: "USD ($)" },
       { value: "EUR", label: "EUR (\u20AC)" },

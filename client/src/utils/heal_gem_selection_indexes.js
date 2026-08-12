@@ -100,10 +100,10 @@ export function gemsNeedingIndexHeal({ gems, selection_path, selection_folder })
  * Best-effort: continues on individual gem failures.
  *
  * @param {object} args
- * @param {object} args.api ù `updateMeta`
+ * @param {object} args.api ‚Äî `updateMeta`
  * @param {string} args.selection_path
  * @param {object|null|undefined} args.selection_folder
- * @param {object[]} args.gems ù already-loaded gem folders (from selection entries)
+ * @param {object[]} args.gems ‚Äî already-loaded gem folders (from selection entries)
  * @returns {Promise<{
  *   healed: string[],
  *   skipped: string[],

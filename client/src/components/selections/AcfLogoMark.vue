@@ -31,7 +31,7 @@ export default {
 <style lang="scss" scoped>
 ._acfLogoMark {
   display: block;
-  /* ~18mm wide as measured on the ACF INV Nù20265 reference PDF. */
+  /* ~18mm wide as measured on the ACF INV N¬∞20265 reference PDF. */
   width: 18mm;
   height: auto;
 

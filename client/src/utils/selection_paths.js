@@ -6,7 +6,7 @@ import {
 } from "@/utils/selection_type_registry.js";
 
 /**
- * Storage path for a selection type root — top-level like `gems` / `box`.
+ * Storage path for a selection type root â€” top-level like `gems` / `box`.
  * @param {string} type_slug
  * @returns {string}
  */
@@ -29,7 +29,7 @@ export function selectionFolderPath(type_slug, folder_slug) {
 }
 
 /**
- * @param {string} folder_path – e.g. `box/12` (also accepts legacy `selections/box/12`)
+ * @param {string} folder_path â€“ e.g. `box/12` (also accepts legacy `selections/box/12`)
  * @returns {{ type_slug: string, folder_slug: string, selection_type: string }}
  */
 export function parseSelectionFolderPath(folder_path) {
@@ -59,7 +59,7 @@ export function parseSelectionFolderPath(folder_path) {
 
 /**
  * @param {object|null|undefined} folder
- * @returns {string} CDC selection type value (e.g. `boîte`, `memo in`)
+ * @returns {string} CDC selection type value (e.g. `boÃ®te`, `memo in`)
  */
 export function resolveSelectionType(folder) {
   const from_path = parseSelectionFolderPath(folder?.$path).selection_type;
@@ -102,7 +102,7 @@ export function selectionFolderSlugFromPath(folder_path) {
 }
 
 /**
- * @param {object} api – Vue api plugin with `getFolders`
+ * @param {object} api â€“ Vue api plugin with `getFolders`
  * @returns {Promise<object[]>}
  */
 export async function fetchAllSelectionFolders(api) {
@@ -127,7 +127,7 @@ export async function fetchAllSelectionFolders(api) {
 /**
  * Fetch specific selection folders by path (targeted; no type-root scan).
  *
- * @param {object} api – Vue api plugin with `getFolder`
+ * @param {object} api â€“ Vue api plugin with `getFolder`
  * @param {string[]} paths
  * @returns {Promise<object[]>}
  */

@@ -4,7 +4,7 @@ export const selections_table_page_size_localstorage_key =
 export const address_book_table_page_size_localstorage_key =
   "sg_address_book_table_page_size";
 
-/** @deprecated Legacy global key — migrated to gems on read. */
+/** @deprecated Legacy global key â€” migrated to gems on read. */
 const legacy_table_page_size_localstorage_key = "sg_table_page_size";
 
 export const table_page_size_options = [25, 50, 100, 200, 500];

@@ -14,7 +14,7 @@ describe("gemTreatmentTypeCode", () => {
       gemTreatmentTypeCode(
         "Indications of heating with residues (TE1/2/3/4/5)",
       ),
-    ).toBe("TE1–5");
+    ).toBe("TE1â€“5");
     expect(
       gemTreatmentTypeCode(
         "Indications of heating with diffusion (Be/Ti/Cr)",
@@ -24,7 +24,7 @@ describe("gemTreatmentTypeCode", () => {
       gemTreatmentTypeCode(
         "Indications of heating with Lead Glass filling (F1/2/3)",
       ),
-    ).toBe("F1–3");
+    ).toBe("F1â€“3");
     expect(gemTreatmentTypeCode("Oil - Minor")).toBe("O Min");
     expect(gemTreatmentTypeCode("Resin - Significant")).toBe("RES Sig");
     expect(gemTreatmentTypeCode("Type A (Natural)")).toBe("Type A");

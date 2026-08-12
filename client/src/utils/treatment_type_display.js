@@ -3,7 +3,7 @@
  * Stored meta keeps the full lab-style string; table/filters show the code.
  *
  * Codes lean on CIBJO trade letters (N, H, U, F, O, RES) plus SoftGems
- * lab shorthand already present in the values (TE, TE1–5, F1–3, Type A/B).
+ * lab shorthand already present in the values (TE, TE1â€“5, F1â€“3, Type A/B).
  */
 
 /** @type {ReadonlyArray<{ value: string, code: string }>} */
@@ -13,7 +13,7 @@ export const TREATMENT_TYPE_DISPLAY_ENTRIES = Object.freeze([
   { value: "Indications of heating / TE", code: "TE" },
   {
     value: "Indications of heating with residues (TE1/2/3/4/5)",
-    code: "TE1–5",
+    code: "TE1â€“5",
   },
   {
     value: "Indications of heating with diffusion (Be/Ti/Cr)",
@@ -21,7 +21,7 @@ export const TREATMENT_TYPE_DISPLAY_ENTRIES = Object.freeze([
   },
   {
     value: "Indications of heating with Lead Glass filling (F1/2/3)",
-    code: "F1–3",
+    code: "F1â€“3",
   },
   { value: "No indications of clarity modification", code: "No CM" },
   { value: "Oil - Insignificant", code: "O Ins" },

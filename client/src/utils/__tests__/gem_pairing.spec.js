@@ -53,7 +53,7 @@ describe("buildPairedGemListLabel", () => {
       })
     ).toEqual({
       gem_id: "42",
-      secondary: "1.25 ct  Blue  Sapphire",
+      secondary: "1.25 ct Â· Blue Â· Sapphire",
     });
   });
 });

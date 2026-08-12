@@ -83,7 +83,7 @@ export default {
     field_modal_title(label) {
       const title = String(this.page_title || "").trim();
       if (!title) return label;
-      return `${title} — ${label}`;
+      return `${title} â€” ${label}`;
     },
     openField() {
       if (!this.can_edit) return;

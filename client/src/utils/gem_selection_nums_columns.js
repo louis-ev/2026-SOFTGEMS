@@ -12,7 +12,7 @@ import {
 export const SELECTION_NUMS_COLUMN_PREFIX = "selection_nums_";
 
 /**
- * @param {string} type_slug ù e.g. `memo-in`
+ * @param {string} type_slug ‚Äî e.g. `memo-in`
  * @returns {string} e.g. `selection_nums_memo_in`
  */
 export function selectionNumsColumnKeyFromSlug(type_slug) {

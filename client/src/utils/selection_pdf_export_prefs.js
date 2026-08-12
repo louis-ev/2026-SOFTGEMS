@@ -69,7 +69,7 @@ function writeAllPrefs(all) {
       JSON.stringify(all || {})
     );
   } catch {
-    // Quota / private mode ù ignore.
+    // Quota / private mode ‚Äî ignore.
   }
 }
 
