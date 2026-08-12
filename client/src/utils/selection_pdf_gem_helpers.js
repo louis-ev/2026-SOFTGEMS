@@ -226,12 +226,13 @@ export function formatPdfCurrencyTotal(value, currency) {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "—";
   }
-  const code = String(currency || "USD").trim() || "USD";
+  const code = String(currency || "USD").trim().toUpperCase() || "USD";
   const formatted = formatPdfBaseNumber(value, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
   if (code === "USD") return `$${formatted}`;
+  if (code === "EUR") return `${formatted} \u20AC`;
   return `${formatted} ${code}`;
 }
 
@@ -244,10 +245,12 @@ export function formatPdfCurrencyAmount(value, currency) {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "—";
   }
-  const code = String(currency || "USD").trim() || "USD";
+  const code = String(currency || "USD").trim().toUpperCase() || "USD";
   const formatted = formatPdfBaseNumber(value, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  if (code === "USD") return `$${formatted}`;
+  if (code === "EUR") return `${formatted} \u20AC`;
   return `${formatted} ${code}`;
 }

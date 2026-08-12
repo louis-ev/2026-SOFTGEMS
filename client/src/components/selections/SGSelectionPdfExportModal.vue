@@ -201,6 +201,7 @@ import {
   findSelectionMainDocumentFile,
   selectionTypeHasMainDocument,
 } from "@/utils/selection_documents.js";
+import { resolveSelectionCurrency } from "@/utils/selection_currency.js";
 import { selectionFolderSlugFromPath, resolveSelectionType, selectionMembershipTypeSlug } from "@/utils/selection_paths.js";
 import {
   SELECTION_PDF_DEFAULT_LANG,
@@ -312,7 +313,7 @@ export default {
       }));
     },
     export_currency() {
-      return String(this.selection?.currency || "USD").trim() || "USD";
+      return resolveSelectionCurrency(this.selection?.currency);
     },
     show_main_document_option() {
       return (

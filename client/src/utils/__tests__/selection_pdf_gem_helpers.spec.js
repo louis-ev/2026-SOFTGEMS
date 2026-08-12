@@ -152,6 +152,7 @@ describe("pdf number formatting", () => {
   it("formats currency totals and dashes for missing values", () => {
     expect(formatPdfCurrencyTotal(16125, "USD")).toBe("$16\u00a0125.00");
     expect(formatPdfCurrencyTotal(424476, "USD")).toBe("$424\u00a0476.00");
+    expect(formatPdfCurrencyTotal(16125, "EUR")).toBe("16\u00a0125.00 \u20AC");
     expect(formatPdfNumber(null)).toBe("—");
   });
 

@@ -24,9 +24,9 @@ export const selection_pdf_strings = Object.freeze({
     order_number: "Purchase order N°:",
     supplier_account_number: "Supplier account N°:",
     date_line: "Paris, {date}",
-    bank_intro: "On our bank account in US dollars:",
+    bank_intro: "On our bank account in {bank_currency}:",
     payment_line:
-      "Please kindly transfer {amount_words} dollars ({amount} $US)",
+      "Please kindly transfer {amount_words} {currency_name} ({amount} {currency_code_display})",
     title_generic: "Document N°{number}",
     title_box: "Box N°{number}",
     title_memo_out: "Consignment N°{number}",
@@ -76,9 +76,9 @@ export const selection_pdf_strings = Object.freeze({
     order_number: "N° Commande :",
     supplier_account_number: "N° Compte Fournisseur :",
     date_line: "Paris, {date}",
-    bank_intro: "Sur notre compte bancaire en dollars US :",
+    bank_intro: "Sur notre compte bancaire en {bank_currency} :",
     payment_line:
-      "Merci de bien vouloir virer {amount_words} dollars ({amount} $US)",
+      "Merci de bien vouloir virer {amount_words} {currency_name} ({amount} {currency_code_display})",
     title_generic: "Document N°{number}",
     title_box: "Boîte N°{number}",
     title_memo_out: "Consignation N°{number}",

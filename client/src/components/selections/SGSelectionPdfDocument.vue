@@ -183,7 +183,7 @@
     </section>
 
     <p v-if="has_pricing && bank_footer_en" class="_bankIntro">
-      {{ pdfT("bank_intro") }}
+      {{ bank_intro_line }}
     </p>
     <div v-if="bank_footer_en" class="_bankBlock">{{ bank_footer_en }}</div>
 
@@ -294,6 +294,10 @@ import {
   selectionPdfT,
 } from "@/utils/selection_pdf_strings.js";
 import { isEmptyRichText } from "@/utils/rich_text.js";
+import {
+  resolveSelectionCurrency,
+  selectionPdfCurrencyWording,
+} from "@/utils/selection_currency.js";
 import {
   formatPdfCurrencyTotal,
   formatPdfNumber,
@@ -451,7 +455,13 @@ export default {
       return selectionPdfFooterLines(this.resolved_export_lang);
     },
     currency() {
-      return String(this.selection?.currency || "USD").trim() || "USD";
+      return resolveSelectionCurrency(this.selection?.currency);
+    },
+    pdf_currency_wording() {
+      return selectionPdfCurrencyWording(
+        this.resolved_export_lang,
+        this.currency
+      );
     },
     has_pricing() {
       return Boolean(this.pricing_total_key);
@@ -515,7 +525,14 @@ export default {
         this.resolved_export_lang === "fr"
           ? numberToWordsFrCapitalized(this.payment_amount)
           : numberToWordsEnCapitalized(this.payment_amount);
-      return this.pdfT("payment_line", { amount, amount_words });
+      return this.pdfT("payment_line", {
+        amount,
+        amount_words,
+        ...this.pdf_currency_wording,
+      });
+    },
+    bank_intro_line() {
+      return this.pdfT("bank_intro", this.pdf_currency_wording);
     },
     media_origin() {
       if (typeof window === "undefined") return "";

@@ -58,7 +58,7 @@
       <SGEditableMetaField
         :label="$t('sg_selection_currency')"
         icon="tag"
-        :value="selection.currency"
+        :value="display_currency"
         :readonly="!can_edit"
         :modal_open="active_field === 'currency'"
         :modal_title="field_modal_title($t('sg_selection_currency'))"
@@ -66,7 +66,7 @@
         :meta_text="currency_meta_text"
         @presentClick="openField('currency')"
         @close="closeField"
-        @save="onMetaTextSave"
+        @save="onCurrencySave"
       />
     </div>
   </SGSectionPanel>
@@ -80,6 +80,11 @@ import FormatDates from "@/mixins/FormatDates.js";
 import SGSelectionCounterpartyEditor from "@/components/selections/SGSelectionCounterpartyEditor.vue";
 import { resolveAddressBookPathLabel } from "@/utils/address_book_paths.js";
 import { toDateInputValue, toStoredCalendarDate } from "@/utils/date_input.js";
+import {
+  SELECTION_CURRENCY_OPTIONS,
+  resolveSelectionCurrency,
+  selectionCurrencyLabel,
+} from "@/utils/selection_currency.js";
 import { selectionDocumentNumber } from "@/utils/selection_paths.js";
 
 export default {
@@ -129,6 +134,9 @@ export default {
         day: "2-digit",
       });
     },
+    display_currency() {
+      return selectionCurrencyLabel(this.selection?.currency);
+    },
     counterparty_display() {
       const path = this.cleanString(this.selection?.counterparty_path);
       if (!path) return "";
@@ -158,7 +166,13 @@ export default {
       return this.buildMetaText("reference_number");
     },
     currency_meta_text() {
-      return this.buildMetaText("currency");
+      const stored_code = resolveSelectionCurrency(this.selection?.currency);
+      return {
+        ...this.buildMetaText("currency"),
+        stored_value: stored_code,
+        options: SELECTION_CURRENCY_OPTIONS,
+        required: true,
+      };
     },
   },
   watch: {
@@ -206,6 +220,9 @@ export default {
     },
     async onCounterpartySave({ value }) {
       await this.persistField("counterparty_path", value);
+    },
+    async onCurrencySave({ value }) {
+      await this.persistField("currency", resolveSelectionCurrency(value));
     },
     async onMetaTextSave({ value }) {
       const field_key = this.active_field;
