@@ -87,7 +87,7 @@ export function defaultSelectionPdfExportPrefs(selection_type) {
     vat_percent: selection_pdf_default_vat_percent,
     show_payment_line: defaultSelectionPdfShowPaymentLine(selection_type),
     show_customs_summary: false,
-    bank_footer_id: "",
+    bank_footer_id: SELECTION_PDF_BANK_FOOTER_NONE_ID,
   };
 }
 

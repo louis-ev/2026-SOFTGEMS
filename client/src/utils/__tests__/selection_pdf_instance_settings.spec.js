@@ -52,17 +52,29 @@ describe("selection pdf instance settings", () => {
         id: SELECTION_PDF_BANK_FOOTER_NONE_ID,
       })
     ).toBe("");
-    expect(defaultSelectionPdfBankFooterId(presets)).toBe("bf_a");
   });
 
-  it("coerces invalid selection back to the first preset", () => {
+  it("defaults bank footer selection to no footer", () => {
+    const presets = [
+      { id: "bf_a", internal_name: "A", body: "First" },
+      { id: "bf_b", internal_name: "B", body: "Second" },
+    ];
+    expect(defaultSelectionPdfBankFooterId(presets)).toBe(
+      SELECTION_PDF_BANK_FOOTER_NONE_ID
+    );
+  });
+
+  it("coerces invalid or empty selection to no footer", () => {
     const presets = [
       { id: "bf_a", internal_name: "A", body: "First" },
       { id: "bf_b", internal_name: "B", body: "Second" },
     ];
     expect(coerceSelectionPdfBankFooterSelection(presets, "bf_b")).toBe("bf_b");
     expect(coerceSelectionPdfBankFooterSelection(presets, "missing")).toBe(
-      "bf_a"
+      SELECTION_PDF_BANK_FOOTER_NONE_ID
+    );
+    expect(coerceSelectionPdfBankFooterSelection(presets, "")).toBe(
+      SELECTION_PDF_BANK_FOOTER_NONE_ID
     );
     expect(
       coerceSelectionPdfBankFooterSelection(

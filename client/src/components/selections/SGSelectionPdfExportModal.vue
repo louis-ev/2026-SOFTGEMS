@@ -250,7 +250,7 @@ export default {
       instance_settings: null,
       bank_footer_presets_draft: [],
       bank_footer_presets_saved: [],
-      selected_bank_footer_id: "",
+      selected_bank_footer_id: SELECTION_PDF_BANK_FOOTER_NONE_ID,
       is_saving_bank_footer: false,
       bank_footer_save_pending: false,
       selected_pricing_key: "",

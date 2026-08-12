@@ -55,9 +55,13 @@ export function readSelectionPdfBankFootersEn(instance_meta) {
  * @param {SelectionPdfBankFooterPreset[]} presets
  * @returns {string}
  */
-export function defaultSelectionPdfBankFooterId(presets) {
-  const list = Array.isArray(presets) ? presets : [];
-  return list[0]?.id || "";
+/**
+ * Default bank footer selection when a price line is chosen: no footer.
+ * @param {SelectionPdfBankFooterPreset[]} [_presets]
+ * @returns {string}
+ */
+export function defaultSelectionPdfBankFooterId(_presets) {
+  return SELECTION_PDF_BANK_FOOTER_NONE_ID;
 }
 
 /**
@@ -97,7 +101,7 @@ export function coerceSelectionPdfBankFooterSelection(presets, selected_id) {
     return SELECTION_PDF_BANK_FOOTER_NONE_ID;
   }
   if (id && list.some((preset) => preset.id === id)) return id;
-  return defaultSelectionPdfBankFooterId(list);
+  return SELECTION_PDF_BANK_FOOTER_NONE_ID;
 }
 
 /**

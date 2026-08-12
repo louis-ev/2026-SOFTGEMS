@@ -38,7 +38,6 @@
           >
             {{ $t("sg_pdf_export_bank_footer_none") }}
           </button>
-          <p class="_noneHint">{{ $t("sg_pdf_export_bank_footer_none_hint") }}</p>
         </div>
       </article>
 
@@ -97,8 +96,14 @@
                 preset.internal_name || $t("sg_pdf_export_bank_footer_untitled")
               }}
             </button>
-            <pre class="_bodyPre">{{ preset.body || "—" }}</pre>
-            <div v-if="can_edit" class="_cardActions">
+            <pre
+              v-if="preset.id === selected_id"
+              class="_bodyPre"
+            >{{ preset.body || "—" }}</pre>
+            <div
+              v-if="can_edit && preset.id === selected_id"
+              class="_cardActions"
+            >
               <button
                 type="button"
                 class="u-buttonLink"
@@ -224,6 +229,7 @@ export default {
     startEdit(preset_id) {
       const preset = this.local_presets.find((item) => item.id === preset_id);
       if (!preset) return;
+      this.selectPreset(preset_id);
       this.editing_preset_id = preset_id;
       this.edit_draft = {
         internal_name: preset.internal_name || "",
@@ -265,7 +271,7 @@ export default {
       this.local_presets = this.local_presets.filter((_, i) => i !== index);
       this.emitPresets();
       if (removed?.id === this.selected_id) {
-        this.$emit("update:selected_id", this.local_presets[0]?.id || "");
+        this.$emit("update:selected_id", SELECTION_PDF_BANK_FOOTER_NONE_ID);
       }
     },
     movePreset(index, direction) {
@@ -303,12 +309,6 @@ export default {
   margin: 0;
   color: var(--c-gris_fonce);
   // font-style: italic;
-}
-
-._noneHint {
-  margin: calc(var(--spacing) / 4) 0 0;
-  color: var(--c-gris_fonce);
-  font-size: var(--sl-font-size-x-small);
 }
 
 ._list {
