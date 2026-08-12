@@ -50,6 +50,16 @@ export const selection_pdf_strings = Object.freeze({
       "Registered Office: 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
       "SAS with a share capital of EUR 50,000 • SIRET N° 994 099 448 00015",
+    customs_summary_title: "Customs summary",
+    customs_col_hs_code: "Customs code",
+    customs_col_name: "Name",
+    customs_col_qty: "Qty",
+    customs_col_weight: "Weight",
+    customs_col_price: "Selected price",
+    customs_name_rse: "Precious stone",
+    customs_name_pf: "Semi Precious",
+    customs_importation_heading: "Importation N°{number}",
+    customs_no_importation_heading: "No importation",
   }),
   fr: Object.freeze({
     col_no: "N°",
@@ -92,6 +102,16 @@ export const selection_pdf_strings = Object.freeze({
       "SIÈGE SOCIAL : 10 Place Vendôme, 75001 Paris, France • Tél. : +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
       "SAS AU CAPITAL DE 50 000 EUROS • SIRET 994 099 448 00015",
+    customs_summary_title: "Résumé douanier",
+    customs_col_hs_code: "Code douanier",
+    customs_col_name: "Nom",
+    customs_col_qty: "Nb",
+    customs_col_weight: "Poids",
+    customs_col_price: "Prix sélectionné",
+    customs_name_rse: "RSE",
+    customs_name_pf: "PF",
+    customs_importation_heading: "Importation N°{number}",
+    customs_no_importation_heading: "Aucune importation",
   }),
 });
 

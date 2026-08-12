@@ -98,6 +98,14 @@
         />
       </div>
 
+      <div class="_pricingSection">
+        <ToggleInput
+          :label="$t('sg_pdf_export_show_customs_summary')"
+          :content="selected_show_customs_summary"
+          @update:content="selected_show_customs_summary = $event"
+        />
+      </div>
+
       <SGSelectionPdfBankFootersEditor
         v-if="has_pricing_selected"
         :presets="bank_footer_presets_draft"
@@ -243,6 +251,7 @@ export default {
       selected_show_vat: false,
       selected_vat_percent: selection_pdf_default_vat_percent,
       selected_show_payment_line: true,
+      selected_show_customs_summary: false,
     };
   },
   computed: {
@@ -360,6 +369,7 @@ export default {
       this.selected_show_vat = this.defaultShowVatValue();
       this.selected_vat_percent = selection_pdf_default_vat_percent;
       this.selected_show_payment_line = this.defaultShowPaymentLineValue();
+      this.selected_show_customs_summary = false;
     },
     onVatPercentChange() {
       this.selected_vat_percent = normalizeSelectionPdfVatPercent(
@@ -491,6 +501,7 @@ export default {
           show_payment_line:
             this.has_pricing_selected &&
             this.selected_show_payment_line === true,
+          show_customs_summary: this.selected_show_customs_summary === true,
         },
         additional_meta: {
           is_selection_generated_pdf: true,

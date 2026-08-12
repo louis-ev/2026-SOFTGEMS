@@ -188,7 +188,7 @@ function decodeQueryBooleanFlag(raw) {
 }
 
 /**
- * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string, show_vat?: boolean, vat_percent?: number, show_payment_line?: boolean }} options
+ * @param {{ metadata_keys?: string[], bank_footer_id?: string, lang?: string, show_vat?: boolean, vat_percent?: number, show_payment_line?: boolean, show_customs_summary?: boolean }} options
  * @returns {string}
  */
 export function encodeSelectionPdfExportQuery(options) {
@@ -212,12 +212,16 @@ export function encodeSelectionPdfExportQuery(options) {
     "show_payment_line",
     options?.show_payment_line === false ? "0" : "1"
   );
+  params.set(
+    "show_customs_summary",
+    options?.show_customs_summary === true ? "1" : "0"
+  );
   return params.toString();
 }
 
 /**
  * @param {import('vue-router').Route} route
- * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr", show_vat: boolean|null, vat_percent: number, show_payment_line: boolean|null }}
+ * @returns {{ metadata_keys: string[], bank_footer_id: string, bank_footer_en: string, lang: "en"|"fr", show_vat: boolean|null, vat_percent: number, show_payment_line: boolean|null, show_customs_summary: boolean }}
  */
 export function decodeSelectionPdfExportQuery(route) {
   const raw_cols = String(route?.query?.cols || "").trim();
@@ -235,6 +239,8 @@ export function decodeSelectionPdfExportQuery(route) {
   const show_payment_line = decodeQueryBooleanFlag(
     route?.query?.show_payment_line
   );
+  const show_customs_summary =
+    decodeQueryBooleanFlag(route?.query?.show_customs_summary) === true;
   return {
     metadata_keys,
     bank_footer_id,
@@ -243,6 +249,7 @@ export function decodeSelectionPdfExportQuery(route) {
     show_vat,
     vat_percent,
     show_payment_line,
+    show_customs_summary,
   };
 }
 

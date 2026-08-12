@@ -256,6 +256,35 @@ describe("selection pdf fixed columns", () => {
     ).toBeNull();
   });
 
+  it("encodes and decodes show_customs_summary in export query", () => {
+    const enabled = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      show_customs_summary: true,
+    });
+    expect(enabled).toContain("show_customs_summary=1");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(enabled)),
+      }).show_customs_summary
+    ).toBe(true);
+
+    const disabled = encodeSelectionPdfExportQuery({
+      metadata_keys: ["id"],
+      show_customs_summary: false,
+    });
+    expect(disabled).toContain("show_customs_summary=0");
+    expect(
+      decodeSelectionPdfExportQuery({
+        query: Object.fromEntries(new URLSearchParams(disabled)),
+      }).show_customs_summary
+    ).toBe(false);
+
+    expect(
+      decodeSelectionPdfExportQuery({ query: { cols: "id" } })
+        .show_customs_summary
+    ).toBe(false);
+  });
+
   it("decodes bank_footer_en from export query", () => {
     const decoded = decodeSelectionPdfExportQuery({
       query: {

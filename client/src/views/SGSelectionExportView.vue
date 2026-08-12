@@ -25,6 +25,7 @@
       :show_vat="show_vat"
       :vat_percent="vat_percent"
       :show_payment_line="show_payment_line"
+      :show_customs_summary="show_customs_summary"
     />
   </div>
 </template>
@@ -118,6 +119,9 @@ export default {
         this.export_query.show_payment_line,
         this.resolved_selection_type
       );
+    },
+    show_customs_summary() {
+      return this.export_query.show_customs_summary === true;
     },
     selection_folder_path() {
       return selectionFolderPath(this.type_slug, this.folder_slug);

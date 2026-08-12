@@ -547,11 +547,13 @@ export default {
   sg_pdf_export_language_en: "English",
   sg_pdf_export_language_fr: "Français",
   sg_pdf_export_modal_instructions:
-    "Language, price line, VAT and bank footer are set here — header fields and notes come from the selection.",
+    "Language, price line, VAT, customs summary and bank footer are set here — header fields and notes come from the selection.",
   sg_pdf_export_pricing_line: "Price line",
   sg_pdf_export_show_vat: "Show VAT and total including VAT",
   sg_pdf_export_show_payment_line:
     "Show “Please kindly transfer…” payment line",
+  sg_pdf_export_show_customs_summary:
+    "Add customs summary (RSE / PF) at the end of the PDF",
   sg_pdf_export_no_pricing: "No price column",
   sg_pdf_export_set_as_main_document: "Set as main document",
   sg_pdf_export_main_document_set:

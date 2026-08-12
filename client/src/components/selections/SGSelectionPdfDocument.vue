@@ -189,6 +189,76 @@
 
     <p v-if="show_legal_text" class="_legal">{{ legal_text }}</p>
 
+    <section v-if="show_customs_summary" class="_customsSummary">
+      <div class="_logoRow">
+        <AcfLogoMark class="_logoMark" />
+      </div>
+      <h2 class="_customsTitle">{{ pdfT("customs_summary_title") }}</h2>
+
+      <div
+        v-for="(group, group_index) in customs_summary_groups"
+        :key="'customs-group-' + (group.importation_path || 'none') + '-' + group_index"
+        class="_customsGroup"
+      >
+        <h3 class="_customsGroupHeading">
+          {{ customsGroupHeading(group) }}
+        </h3>
+        <table class="_customsTable">
+          <thead>
+            <tr>
+              <th class="_alignLeft">{{ pdfT("customs_col_hs_code") }}</th>
+              <th class="_alignLeft">{{ pdfT("customs_col_name") }}</th>
+              <th class="_alignRight">{{ pdfT("customs_col_qty") }}</th>
+              <th class="_alignRight">{{ pdfT("customs_col_weight") }}</th>
+              <th class="_alignRight">{{ pdfT("customs_col_price") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="_alignLeft">{{ customs_hs_code_rse }}</td>
+              <td class="_alignLeft">{{ pdfT("customs_name_rse") }}</td>
+              <td class="_alignRight">
+                {{ formatCustomsQuantity(group.rse.quantity) }}
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsWeight(group.rse.weight) }}
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsTotal(group.rse.total) }}
+              </td>
+            </tr>
+            <tr>
+              <td class="_alignLeft">{{ customs_hs_code_pf }}</td>
+              <td class="_alignLeft">{{ pdfT("customs_name_pf") }}</td>
+              <td class="_alignRight">
+                {{ formatCustomsQuantity(group.pf.quantity) }}
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsWeight(group.pf.weight) }}
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsTotal(group.pf.total) }}
+              </td>
+            </tr>
+            <tr class="_customsGroupTotalRow">
+              <td class="_alignLeft" colspan="2">
+                <span class="_totalLabel">{{ pdfT("total") }}</span>
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsQuantity(group.group_total.quantity) }}
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsWeight(group.group_total.weight) }}
+              </td>
+              <td class="_alignRight">
+                {{ formatCustomsTotal(group.group_total.total) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <footer class="_footer">
       <p v-for="(line, index) in footer_lines" :key="index">{{ line }}</p>
     </footer>
@@ -235,6 +305,11 @@ import {
   sumGemPricingTotals,
   toAbsoluteAppUrl,
 } from "@/utils/selection_pdf_gem_helpers.js";
+import {
+  CUSTOMS_HS_CODE_PF,
+  CUSTOMS_HS_CODE_RSE,
+  buildCustomsSummaryGroups,
+} from "@/utils/selection_pdf_customs_summary.js";
 
 export default {
   name: "SGSelectionPdfDocument",
@@ -315,12 +390,18 @@ export default {
       type: Boolean,
       default: true,
     },
+    show_customs_summary: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       description_column_key: selection_pdf_description_column_key,
       photo_column_key: selection_pdf_photo_column_key,
       per_carat_column_key: selection_pdf_per_carat_column_key,
+      customs_hs_code_rse: CUSTOMS_HS_CODE_RSE,
+      customs_hs_code_pf: CUSTOMS_HS_CODE_PF,
     };
   },
   computed: {
@@ -448,10 +529,42 @@ export default {
     has_notes() {
       return !isEmptyRichText(this.notes_html);
     },
+    customs_summary_groups() {
+      if (!this.show_customs_summary) return [];
+      return buildCustomsSummaryGroups(this.gems, this.pricing_total_key);
+    },
   },
   methods: {
     pdfT(key, params = {}) {
       return selectionPdfT(this.resolved_export_lang, key, params);
+    },
+    customsGroupHeading(group) {
+      if (group?.importation_path && group.document_number) {
+        return this.pdfT("customs_importation_heading", {
+          number: group.document_number,
+        });
+      }
+      return this.pdfT("customs_no_importation_heading");
+    },
+    formatCustomsQuantity(value) {
+      const qty =
+        value === null || value === undefined || !Number.isFinite(value)
+          ? 0
+          : value;
+      return formatPdfNumber(qty, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    },
+    formatCustomsWeight(value) {
+      return formatPdfNumber(value, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+    },
+    formatCustomsTotal(value) {
+      if (!this.has_pricing) return "—";
+      return formatPdfCurrencyTotal(value, this.currency);
     },
     cleanReferenceLine(value) {
       const trimmed = String(value || "").trim();
@@ -880,6 +993,82 @@ $acf-pdf-table-line: #000;
   color: $acf-brand-primary;
 }
 
+._customsSummary {
+  page-break-before: always;
+  break-before: page;
+  padding-top: 0;
+}
+
+._customsTitle {
+  margin: 0 0 5mm;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-size: 8pt;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+._customsGroup {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 0 0 5mm;
+}
+
+._customsGroupHeading {
+  margin: 0 0 2mm;
+  font-size: 8pt;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+._customsTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border-left: 0.5pt solid $acf-pdf-table-line;
+  border-right: 0.5pt solid $acf-pdf-table-line;
+  background: #fff;
+}
+
+._customsTable th,
+._customsTable td {
+  border: none;
+  border-bottom: 0.5pt solid $acf-pdf-table-line;
+  padding: 1.2mm 1.4mm;
+  vertical-align: top;
+  word-break: break-word;
+  background: #fff;
+  color: #000;
+  font-size: 8pt;
+}
+
+._customsTable thead th {
+  border-top: 0.5pt solid $acf-pdf-table-line;
+  font-weight: 700;
+}
+
+._customsTable th:nth-child(1),
+._customsTable td:nth-child(1) {
+  width: 16%;
+}
+
+._customsTable th:nth-child(2),
+._customsTable td:nth-child(2) {
+  width: 30%;
+}
+
+._customsTable th:nth-child(3),
+._customsTable td:nth-child(3),
+._customsTable th:nth-child(4),
+._customsTable td:nth-child(4),
+._customsTable th:nth-child(5),
+._customsTable td:nth-child(5) {
+  width: 18%;
+}
+
+._customsGroupTotalRow td {
+  font-weight: 700;
+}
+
 ._footer {
   margin-top: auto;
   padding-top: 2mm;
@@ -915,6 +1104,16 @@ $acf-pdf-table-line: #000;
   }
 
   ._gemsTable tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  ._customsSummary {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  ._customsGroup {
     break-inside: avoid;
     page-break-inside: avoid;
   }

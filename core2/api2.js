@@ -1684,12 +1684,18 @@ module.exports = (function () {
       opts.show_payment_line !== 0 &&
       opts.show_payment_line !== "0" &&
       opts.show_payment_line !== "false";
+    const show_customs_summary =
+      opts.show_customs_summary === true ||
+      opts.show_customs_summary === 1 ||
+      opts.show_customs_summary === "1" ||
+      opts.show_customs_summary === "true";
     const export_query = {
       cols: metadata_keys.join(","),
       lang: export_lang,
       show_vat: show_vat ? "1" : "0",
       vat_percent: String(vat_percent),
       show_payment_line: show_payment_line ? "1" : "0",
+      show_customs_summary: show_customs_summary ? "1" : "0",
     };
     if (bank_footer_id && /^[a-zA-Z0-9_-]+$/.test(bank_footer_id)) {
       export_query.bank_footer_id = bank_footer_id;
