@@ -37,6 +37,7 @@ describe("gemStatusLabel", () => {
     expect(gemStatusLabel(t, "sale-invoice")).toBe("Sold");
     expect(gemStatusLabel(t, "return-memo-in")).toBe("Returned");
     expect(gemStatusLabel(t, "return-memo-out")).toBe("Returned");
+    expect(gemStatusLabel(t, "importation-return")).toBe("Returned");
   });
 
   it("returns unknown stored values unchanged", () => {

@@ -15,6 +15,7 @@ export const SELECTION_TYPES_AFFECTING_GEM_STATUS = Object.freeze([
   "memo in",
   "return memo in",
   "return memo out",
+  "importation return",
   "buying invoice",
   "sale invoice",
 ]);

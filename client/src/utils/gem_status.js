@@ -9,6 +9,7 @@ export const GEM_STATUS_MANUAL_SLUGS = Object.freeze([
   "sale-invoice",
   "return-memo-in",
   "return-memo-out",
+  "importation-return",
 ]);
 
 /** Inventory-oriented display labels (stored slugs stay selection-type based). */
@@ -19,6 +20,7 @@ const GEM_STATUS_LABEL_KEYS = Object.freeze({
   "sale-invoice": "sg_status_value_sold",
   "return-memo-in": "sg_status_value_returned",
   "return-memo-out": "sg_status_value_returned",
+  "importation-return": "sg_status_value_returned",
 });
 
 const VALID_GEM_STATUS_SLUGS = new Set(GEM_STATUS_MANUAL_SLUGS);

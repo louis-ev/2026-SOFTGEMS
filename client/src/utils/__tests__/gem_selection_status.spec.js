@@ -20,11 +20,15 @@ describe("gemStatusSlugForSelectionType", () => {
     expect(gemStatusSlugForSelectionType("return memo out")).toBe(
       "return-memo-out"
     );
+    expect(gemStatusSlugForSelectionType("importation return")).toBe(
+      "importation-return"
+    );
   });
 
   it("returns empty for types without status rule", () => {
     expect(gemStatusSlugForSelectionType("simple")).toBe("");
     expect(gemStatusSlugForSelectionType("boîte")).toBe("");
+    expect(gemStatusSlugForSelectionType("importation")).toBe("");
   });
 
   it("keeps gemStatusForSelectionType as an alias", () => {
