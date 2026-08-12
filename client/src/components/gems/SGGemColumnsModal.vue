@@ -135,6 +135,7 @@
 <script>
 import {
   buildGemsTableOrderedPickerKeys,
+  filterGemsTableDefaultVisibleKeys,
   isGemsTableMergedDimensionsColumnKey,
   isGemsTableMergedPricingColumnKey,
   normalizeGemsTableSelectedMetadataKeys,
@@ -183,13 +184,17 @@ export default {
         : [];
       if (all_keys.length === 0 || this.local_columns.length === 0) return false;
 
-      if (this.local_columns.length !== all_keys.length) return true;
-      if (this.local_columns.some((column_item) => !column_item.is_enabled)) {
-        return true;
-      }
-      return this.local_columns.some(
-        (column_item, index) => column_item.metadata_key !== all_keys[index]
+      const default_selected = new Set(
+        filterGemsTableDefaultVisibleKeys(all_keys)
       );
+      if (this.local_columns.length !== all_keys.length) return true;
+      return this.local_columns.some((column_item, index) => {
+        if (column_item.metadata_key !== all_keys[index]) return true;
+        return (
+          Boolean(column_item.is_enabled) !==
+          default_selected.has(column_item.metadata_key)
+        );
+      });
     },
   },
   watch: {

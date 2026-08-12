@@ -12,6 +12,7 @@ import {
   removeLegacyFilterFromSearch,
   getGemsColumnFilterMode,
   isGemsColumnFilterableKey,
+  isGemsColumnFilterEmptyValue,
   isGemsDimensionAxisFilterKey,
   GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
   GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY,
@@ -205,25 +206,40 @@ export default {
 
       if (filter?.mode === "enum") {
         const values = Array.isArray(filter.values) ? filter.values : [];
-        let display = values;
-        if (meta_key === "status") {
-          display = values.map((v) => gemStatusLabel(this.$t.bind(this), v));
-        } else if (meta_key === "treatment_type") {
-          display = values.map((v) => gemTreatmentTypeCode(v));
-        }
+        let display = values.map((v) => {
+          if (isGemsColumnFilterEmptyValue(v)) {
+            return this.$t("sg_gems_column_filter_empty");
+          }
+          if (meta_key === "status") {
+            return gemStatusLabel(this.$t.bind(this), v);
+          }
+          if (meta_key === "treatment_type") {
+            return gemTreatmentTypeCode(v);
+          }
+          return v;
+        });
         return `${field_label}: ${display.join(", ")}`;
       }
       if (filter?.mode === "number") {
+        const parts = [];
+        if (filter.empty) {
+          parts.push(this.$t("sg_gems_column_filter_empty"));
+        }
         if (Number.isFinite(filter.exact)) {
-          return `${field_label}: ${fmt(filter.exact)}`;
+          parts.push(fmt(filter.exact));
+        } else {
+          const has_min = Number.isFinite(filter.min);
+          const has_max = Number.isFinite(filter.max);
+          if (has_min && has_max) {
+            parts.push(`${fmt(filter.min)}–${fmt(filter.max)}`);
+          } else if (has_min) {
+            parts.push(`≥${fmt(filter.min)}`);
+          } else if (has_max) {
+            parts.push(`≤${fmt(filter.max)}`);
+          }
         }
-        const has_min = Number.isFinite(filter.min);
-        const has_max = Number.isFinite(filter.max);
-        if (has_min && has_max) {
-          return `${field_label}: ${fmt(filter.min)}–${fmt(filter.max)}`;
-        }
-        if (has_min) return `${field_label}: ≥${fmt(filter.min)}`;
-        if (has_max) return `${field_label}: ≤${fmt(filter.max)}`;
+        if (!parts.length) return field_label;
+        return `${field_label}: ${parts.join(", ")}`;
       }
       if (filter?.mode === "date") {
         if (filter.exact) return `${field_label}: ${filter.exact}`;

@@ -14,6 +14,7 @@
           v-for="option in options"
           :key="option.value"
           class="_optionRow"
+          :class="{ _optionRow_empty: option.is_empty }"
           :title="option.title || undefined"
           :data-title-popper="option.title ? true : null"
         >
@@ -22,7 +23,9 @@
             type="checkbox"
             :value="option.value"
           />
-          <span>{{ option.label }}</span>
+          <span :class="{ _optionLabel_empty: option.is_empty }">{{
+            option.label
+          }}</span>
         </label>
         <p v-if="!options.length" class="_empty">
           {{ $t("sg_gems_column_filter_no_options") }}
@@ -135,6 +138,15 @@
     </template>
 
     <template v-else-if="mode === 'number'">
+      <label
+        v-if="show_empty_option || draft_empty"
+        class="_optionRow _optionRow_empty"
+      >
+        <input v-model="draft_empty" type="checkbox" />
+        <span class="_optionLabel_empty">{{
+          $t("sg_gems_column_filter_empty")
+        }}</span>
+      </label>
       <div class="_numberModeTabs" role="tablist">
         <button
           type="button"
@@ -252,10 +264,15 @@ export default {
       type: Object,
       default: null,
     },
+    show_empty_option: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       draft_values: [],
+      draft_empty: false,
       number_mode: "exact",
       draft_exact: "",
       draft_min: "",
@@ -372,6 +389,7 @@ export default {
     },
     syncDraftFromCurrent() {
       const filter = this.current_filter;
+      this.draft_empty = Boolean(filter?.empty);
       if (this.mode === "enum") {
         this.draft_values = Array.isArray(filter?.values)
           ? [...filter.values]
@@ -509,14 +527,25 @@ export default {
 
       if (this.number_mode === "exact") {
         const exact = normalizeGemsSearchNumber(this.draft_exact);
-        if (!Number.isFinite(exact)) {
-          this.$emit("clear", this.metadata_key);
+        if (Number.isFinite(exact)) {
+          this.$emit("apply", {
+            metadata_key: this.metadata_key,
+            filter: {
+              mode: "number",
+              ...(this.draft_empty ? { empty: true } : {}),
+              exact,
+            },
+          });
           return;
         }
-        this.$emit("apply", {
-          metadata_key: this.metadata_key,
-          filter: { mode: "number", exact },
-        });
+        if (this.draft_empty) {
+          this.$emit("apply", {
+            metadata_key: this.metadata_key,
+            filter: { mode: "number", empty: true },
+          });
+          return;
+        }
+        this.$emit("clear", this.metadata_key);
         return;
       }
 
@@ -524,21 +553,26 @@ export default {
       const max = normalizeGemsSearchNumber(this.draft_max);
       const has_min = Number.isFinite(min);
       const has_max = Number.isFinite(max);
-      if (!has_min || !has_max) {
-        // Range mode requires both bounds ("between X and Y").
-        if (!has_min && !has_max) {
-          this.$emit("clear", this.metadata_key);
-        }
+      if (has_min && has_max) {
+        this.$emit("apply", {
+          metadata_key: this.metadata_key,
+          filter: {
+            mode: "number",
+            ...(this.draft_empty ? { empty: true } : {}),
+            min: Math.min(min, max),
+            max: Math.max(min, max),
+          },
+        });
         return;
       }
-      this.$emit("apply", {
-        metadata_key: this.metadata_key,
-        filter: {
-          mode: "number",
-          min: Math.min(min, max),
-          max: Math.max(min, max),
-        },
-      });
+      if (this.draft_empty) {
+        this.$emit("apply", {
+          metadata_key: this.metadata_key,
+          filter: { mode: "number", empty: true },
+        });
+        return;
+      }
+      this.$emit("clear", this.metadata_key);
     },
   },
 };
@@ -633,6 +667,11 @@ export default {
 ._optionRow span {
   font-weight: 400;
   min-width: 0;
+}
+
+._optionLabel_empty {
+  font-style: italic;
+  color: var(--c-gris_fonce);
 }
 
 ._empty {

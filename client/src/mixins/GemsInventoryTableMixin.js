@@ -3,11 +3,19 @@ import GemDimensions from "@/mixins/GemDimensions";
 import {
   buildGemsTableAllMetadataKeys,
   buildGemsTableOrderedPickerKeys,
+  filterGemsTableDefaultVisibleKeys,
   gems_table_gem_excluded_metadata_keys,
+  isSelectionNumsColumnKey,
   normalizeGemsTableSelectedMetadataKeys,
   stripLinearDimensionKeys,
   stripVirtualPerCaratKeys,
 } from "@/utils/gems_table_metadata.js";
+import {
+  selectionNumsColumnIcon,
+  selectionTypeSlugFromNumsColumnKey,
+} from "@/utils/gem_selection_nums_columns.js";
+import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
+import { selectionTypeLabel } from "@/utils/selection_types.js";
 import {
   clearGemsMetadataKeysStorage,
   gems_table_columns_storage_scopes,
@@ -48,7 +56,9 @@ export default {
     metadata_keys() {
       const all_keys = this.all_metadata_keys;
       if (all_keys.length === 0) return [];
-      if (!Array.isArray(this.selected_metadata_keys)) return all_keys;
+      if (!Array.isArray(this.selected_metadata_keys)) {
+        return this.defaultVisibleGemsMetadataKeys(all_keys);
+      }
 
       const selected_in_order = this.stripExcludedGemMetadataKeys(
         this.stripLinearDimensionKeys(
@@ -60,7 +70,9 @@ export default {
         )
       );
       const selected_or_default =
-        selected_in_order.length > 0 ? selected_in_order : all_keys;
+        selected_in_order.length > 0
+          ? selected_in_order
+          : this.defaultVisibleGemsMetadataKeys(all_keys);
       return this.enforcePinnedGemsColumns(selected_or_default, all_keys);
     },
     sorted_gems() {
@@ -111,6 +123,11 @@ export default {
         (key) => !gem_excluded_metadata_keys.includes(key)
       );
     },
+    defaultVisibleGemsMetadataKeys(all_keys = this.all_metadata_keys) {
+      return filterGemsTableDefaultVisibleKeys(
+        Array.isArray(all_keys) ? all_keys : []
+      );
+    },
     reloadGemsMetadataKeysFromStorage() {
       const storage_scope = this.gems_metadata_keys_storage_scope;
       if (!storage_scope) {
@@ -150,7 +167,9 @@ export default {
         all_keys.includes(metadata_key)
       );
       const next_selected_keys =
-        selected_in_order.length > 0 ? [...selected_in_order] : [...all_keys];
+        selected_in_order.length > 0
+          ? [...selected_in_order]
+          : this.defaultVisibleGemsMetadataKeys(all_keys);
       const normalized_selected_keys = this.enforcePinnedGemsColumns(
         next_selected_keys,
         all_keys
@@ -245,10 +264,14 @@ export default {
         ? [...this.all_metadata_keys]
         : [];
       this.selected_metadata_keys = this.enforcePinnedGemsColumns(
+        this.defaultVisibleGemsMetadataKeys(all_keys),
+        all_keys
+      );
+      // Full catalog order so opt-in columns stay in the picker (unchecked).
+      this.picker_column_order_keys = this.enforcePinnedGemsColumns(
         all_keys,
         all_keys
       );
-      this.picker_column_order_keys = [...this.selected_metadata_keys];
       this.show_columns_modal = false;
     },
     enforcePinnedGemsColumns(metadata_keys, all_keys = this.all_metadata_keys) {
@@ -291,6 +314,9 @@ export default {
       );
     },
     getGemsMetadataIcon(metadata_key) {
+      if (isSelectionNumsColumnKey(metadata_key)) {
+        return selectionNumsColumnIcon(metadata_key);
+      }
       const metadata_to_icon = {
         id: undefined,
         $cover: "images",
@@ -298,6 +324,7 @@ export default {
         status: "tag",
         reference_supplier: "archive",
         reference_customer: "person-circle",
+        numero_de_mise_a_consommation: "receipt",
         paired_gem: "link",
         number_of_pieces: "list-ol",
         stone_type: "gem",
@@ -322,6 +349,14 @@ export default {
       return metadata_to_icon[metadata_key] || null;
     },
     getGemsMetadataLabel(metadata_key) {
+      if (isSelectionNumsColumnKey(metadata_key)) {
+        const type_slug = selectionTypeSlugFromNumsColumnKey(metadata_key);
+        const type_value = selectionTypeFromSlug(type_slug);
+        return (
+          selectionTypeLabel(this.$t.bind(this), type_value) || metadata_key
+        );
+      }
+
       // Short headers for the gems inventory table only (forms keep long labels).
       const table_header_i18n = {
         base_price_pcb: "sg_gems_table_col_pcb",
@@ -333,6 +368,7 @@ export default {
         pf_invoiced_price: "sg_gems_table_col_pf",
         reference_supplier: "sg_gems_table_col_ref_supplier",
         reference_customer: "sg_gems_table_col_ref_customer",
+        numero_de_mise_a_consommation: "sg_gems_table_col_mac",
         number_of_pieces: "sg_gems_table_col_pcs",
         stone_type: "sg_gems_table_col_stone_type",
         weight_ct: "sg_gems_table_col_weight_ct",
@@ -353,6 +389,7 @@ export default {
         $cover: "sg_cover",
         reference_supplier: "sg_reference_supplier",
         reference_customer: "sg_reference_customer",
+        numero_de_mise_a_consommation: "sg_numero_de_mise_a_consommation",
         paired_gem: "sg_paired_gem",
         number_of_pieces: "sg_number_of_pieces",
         stone_type: "sg_stone_type",

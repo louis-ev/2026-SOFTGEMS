@@ -8,6 +8,7 @@ import {
   removeLegacyFilterFromSearch,
   isGemsColumnFilterableKey,
   collectAvailableEnumFilterValues,
+  hasAvailableEmptyNumberField,
 } from "@/utils/gems_quick_search.js";
 
 describe("gems_quick_search field filters", () => {
@@ -19,10 +20,15 @@ describe("gems_quick_search field filters", () => {
     expect(isGemsColumnFilterableKey("status")).toBe(true);
     expect(isGemsColumnFilterableKey("reference_supplier")).toBe(true);
     expect(isGemsColumnFilterableKey("reference_customer")).toBe(true);
+    expect(
+      isGemsColumnFilterableKey("numero_de_mise_a_consommation"),
+    ).toBe(true);
     expect(isGemsColumnFilterableKey("country_of_cut")).toBe(true);
     expect(isGemsColumnFilterableKey("treatment_type")).toBe(true);
     expect(isGemsColumnFilterableKey("$date_modified")).toBe(true);
     expect(isGemsColumnFilterableKey("paired_gem")).toBe(true);
+    expect(isGemsColumnFilterableKey("selection_nums_box")).toBe(true);
+    expect(isGemsColumnFilterableKey("selection_nums_memo_in")).toBe(true);
   });
 
   it("parses and matches paired_gem number filters", () => {
@@ -137,6 +143,140 @@ describe("gems_quick_search field filters", () => {
       mode: "enum",
       values: ["Oval"],
     });
+  });
+
+  it("matches enum empty sentinel for missing field values", () => {
+    const parsed = parseGemsQuickSearchInput("shape=__empty__");
+    expect(parsed.field_filters.shape).toEqual({
+      mode: "enum",
+      values: ["__empty__"],
+    });
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/1", shape: "" }, parsed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/2", shape: "   " }, parsed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/3" }, parsed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/4", shape: "Oval" }, parsed),
+    ).toBe(false);
+
+    const mixed = parseGemsQuickSearchInput("shape=__empty__,Oval");
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/5", shape: "" }, mixed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/6", shape: "Oval" }, mixed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/7", shape: "Round" }, mixed),
+    ).toBe(false);
+
+    expect(
+      serializeFieldFilter("shape", {
+        mode: "enum",
+        values: ["__empty__"],
+      }),
+    ).toBe("shape=__empty__");
+  });
+
+  it("matches number empty sentinel for missing numeric values", () => {
+    const parsed = parseGemsQuickSearchInput("weight=__empty__");
+    expect(parsed.field_filters.weight_ct).toEqual({
+      mode: "number",
+      empty: true,
+    });
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/1", weight_ct: "" }, parsed),
+    ).toBe(true);
+    expect(gemMatchesQuickSearch({ $path: "gems/2" }, parsed)).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/3", weight_ct: 1.2 }, parsed),
+    ).toBe(false);
+
+    const mixed = parseGemsQuickSearchInput("weight=__empty__,2");
+    expect(mixed.field_filters.weight_ct).toEqual({
+      mode: "number",
+      empty: true,
+      exact: 2,
+    });
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/4", weight_ct: "" }, mixed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/5", weight_ct: 2 }, mixed),
+    ).toBe(true);
+    expect(
+      gemMatchesQuickSearch({ $path: "gems/6", weight_ct: 3 }, mixed),
+    ).toBe(false);
+
+    expect(
+      serializeFieldFilter("weight_ct", { mode: "number", empty: true }),
+    ).toBe("weight=__empty__");
+    expect(
+      serializeFieldFilter("weight_ct", {
+        mode: "number",
+        empty: true,
+        exact: 2,
+      }),
+    ).toBe("weight=__empty__,2");
+  });
+
+  it("filters selection-nums columns by document number exact/range/empty", () => {
+    const gem_in_box_3 = {
+      $path: "gems/1",
+      box_selection_path: "box/3",
+      selection_membership_paths: {
+        "memo-in/2": "2024-01-01T00:00:00.000Z",
+        "memo-in/10": "2024-02-01T00:00:00.000Z",
+      },
+    };
+    const gem_no_box = {
+      $path: "gems/2",
+      box_selection_path: "",
+      selection_membership_paths: {},
+    };
+
+    const exact = parseGemsQuickSearchInput("sel_box=3");
+    expect(exact.field_filters.selection_nums_box).toEqual({
+      mode: "number",
+      exact: 3,
+    });
+    expect(gemMatchesQuickSearch(gem_in_box_3, exact)).toBe(true);
+    expect(gemMatchesQuickSearch(gem_no_box, exact)).toBe(false);
+
+    const range = parseGemsQuickSearchInput("sel_memo_in=2-5");
+    expect(range.field_filters.selection_nums_memo_in).toEqual({
+      mode: "number",
+      min: 2,
+      max: 5,
+    });
+    expect(gemMatchesQuickSearch(gem_in_box_3, range)).toBe(true);
+    expect(
+      gemMatchesQuickSearch(
+        {
+          $path: "gems/3",
+          selection_membership_paths: {
+            "memo-in/9": "2024-01-01T00:00:00.000Z",
+          },
+        },
+        range,
+      ),
+    ).toBe(false);
+
+    const empty = parseGemsQuickSearchInput("sel_box=__empty__");
+    expect(gemMatchesQuickSearch(gem_no_box, empty)).toBe(true);
+    expect(gemMatchesQuickSearch(gem_in_box_3, empty)).toBe(false);
+
+    expect(
+      serializeFieldFilter("selection_nums_box", {
+        mode: "number",
+        exact: 3,
+      }),
+    ).toBe("sel_box=3");
   });
 
   it("parses exact and range number filters via aliases", () => {
@@ -267,12 +407,14 @@ describe("gems_quick_search field filters", () => {
       { $path: "gems/1", color: "Blue", shape: "Oval" },
       { $path: "gems/2", color: "Red", shape: "Round" },
       { $path: "gems/3", color: "Blue", shape: "Round" },
+      { $path: "gems/4", color: "Blue", shape: "" },
     ];
     const parsed = parseGemsQuickSearchInput("color=Blue");
     const shapes = collectAvailableEnumFilterValues(gems, parsed, "shape");
     expect(shapes.has("oval")).toBe(true);
     expect(shapes.has("round")).toBe(true);
-    // Red is excluded by color=Blue, so only Blue gems' shapes count  both present.
+    expect(shapes.has("__empty__")).toBe(true);
+    // Red is excluded by color=Blue, so only Blue gems' shapes count ? both present.
     const colors = collectAvailableEnumFilterValues(gems, parsed, "color");
     // Excepting color, all colors in inventory remain available for faceting.
     expect(colors.has("blue")).toBe(true);
@@ -286,5 +428,26 @@ describe("gems_quick_search field filters", () => {
     );
     expect(colors_under_oval.has("blue")).toBe(true);
     expect(colors_under_oval.has("red")).toBe(false);
+  });
+
+  it("detects available empty number fields under other filters", () => {
+    const gems = [
+      { $path: "gems/1", color: "Blue", weight_ct: 1.2 },
+      { $path: "gems/2", color: "Blue", weight_ct: "" },
+      { $path: "gems/3", color: "Red", weight_ct: "" },
+    ];
+    const blue = parseGemsQuickSearchInput("color=Blue");
+    expect(hasAvailableEmptyNumberField(gems, blue, "weight_ct")).toBe(true);
+
+    const red = parseGemsQuickSearchInput("color=Red");
+    expect(hasAvailableEmptyNumberField(gems, red, "weight_ct")).toBe(true);
+
+    const filled_only = [
+      { $path: "gems/1", color: "Blue", weight_ct: 1.2 },
+      { $path: "gems/2", color: "Blue", weight_ct: 2 },
+    ];
+    expect(
+      hasAvailableEmptyNumberField(filled_only, blue, "weight_ct"),
+    ).toBe(false);
   });
 });

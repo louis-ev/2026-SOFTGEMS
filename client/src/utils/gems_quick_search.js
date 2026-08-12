@@ -1,11 +1,18 @@
 import { parseEnglishNumber } from "@/utils/format_locale.js";
 import { gem_pricing_total_column_keys } from "@/mixins/GemPricing";
+import {
+  gems_table_selection_nums_column_keys,
+  isSelectionNumsColumnKey,
+  listGemSelectionDocumentNumbersForType,
+  selectionTypeSlugFromNumsColumnKey,
+} from "@/utils/gem_selection_nums_columns.js";
 
 /** Enum (checkbox) column filters. */
 export const GEMS_COLUMN_FILTER_ENUM_KEYS = Object.freeze([
   "status",
   "reference_supplier",
   "reference_customer",
+  "numero_de_mise_a_consommation",
   "stone_type",
   "color",
   "shape",
@@ -32,6 +39,7 @@ export const GEMS_COLUMN_FILTER_NUMBER_KEYS = Object.freeze([
   "weight_ct",
   ...GEMS_COLUMN_FILTER_DIMENSION_AXIS_KEYS,
   ...gem_pricing_total_column_keys,
+  ...gems_table_selection_nums_column_keys,
 ]);
 
 /** Date (from / to) column filters. Stored as ISO `YYYY-MM-DD`. */
@@ -44,6 +52,51 @@ export const GEMS_COLUMN_FILTERABLE_KEYS = Object.freeze([
   GEMS_COLUMN_FILTER_DIMENSIONS_UI_KEY,
 ]);
 
+/** Sentinel stored in enum filter `values` for “field is empty”. */
+export const GEMS_COLUMN_FILTER_EMPTY_VALUE = "__empty__";
+
+/**
+ * @param {string|null|undefined} value
+ * @returns {boolean}
+ */
+export function isGemsColumnFilterEmptyValue(value) {
+  return String(value ?? "").trim().toLowerCase() === GEMS_COLUMN_FILTER_EMPTY_VALUE;
+}
+
+/**
+ * @param {*} gem
+ * @param {string} meta_key
+ * @returns {boolean}
+ */
+export function isGemEnumFieldEmpty(gem, meta_key) {
+  const raw = gem?.[meta_key];
+  if (raw === undefined || raw === null) return true;
+  return String(raw).trim() === "";
+}
+
+/**
+ * Missing / blank / non-numeric value for a number filter column.
+ * @param {*} gem
+ * @param {string} meta_key
+ * @returns {boolean}
+ */
+export function isGemNumberFieldEmpty(gem, meta_key) {
+  if (isSelectionNumsColumnKey(meta_key)) {
+    const type_slug = selectionTypeSlugFromNumsColumnKey(meta_key);
+    return listGemSelectionDocumentNumbersForType(gem, type_slug).length === 0;
+  }
+  if (meta_key === "id") {
+    return !String(getGemIdFromPath(gem) || "").trim();
+  }
+  if (meta_key === "paired_gem") {
+    return !String(gem?.paired_gem ?? "").trim();
+  }
+  const raw = gem?.[meta_key];
+  if (raw === undefined || raw === null || raw === "") return true;
+  if (typeof raw === "string" && raw.trim() === "") return true;
+  return !Number.isFinite(Number(raw));
+}
+
 /** Alias (search token) → metadata key. */
 export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   id: "id",
@@ -52,6 +105,8 @@ export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   reference_supplier: "reference_supplier",
   ref_customer: "reference_customer",
   reference_customer: "reference_customer",
+  mac: "numero_de_mise_a_consommation",
+  numero_de_mise_a_consommation: "numero_de_mise_a_consommation",
   paired: "paired_gem",
   paired_gem: "paired_gem",
   type: "stone_type",
@@ -83,6 +138,18 @@ export const GEMS_COLUMN_FILTER_ALIAS_TO_KEY = Object.freeze({
   ...Object.fromEntries(
     gem_pricing_total_column_keys.map((key) => [key, key]),
   ),
+  ...Object.fromEntries(
+    gems_table_selection_nums_column_keys.flatMap((key) => {
+      const slug = selectionTypeSlugFromNumsColumnKey(key);
+      const short = slug ? `sel_${slug.replace(/-/g, "_")}` : "";
+      return short
+        ? [
+            [key, key],
+            [short, key],
+          ]
+        : [[key, key]];
+    }),
+  ),
 });
 
 /** Preferred short alias when writing a filter into the search string. */
@@ -91,6 +158,7 @@ export const GEMS_COLUMN_FILTER_SERIALIZE_ALIAS = Object.freeze({
   status: "status",
   reference_supplier: "ref_supplier",
   reference_customer: "ref_customer",
+  numero_de_mise_a_consommation: "mac",
   paired_gem: "paired",
   stone_type: "type",
   color: "color",
@@ -106,6 +174,13 @@ export const GEMS_COLUMN_FILTER_SERIALIZE_ALIAS = Object.freeze({
   height_mm: "h",
   ...Object.fromEntries(
     gem_pricing_total_column_keys.map((key) => [key, key]),
+  ),
+  ...Object.fromEntries(
+    gems_table_selection_nums_column_keys.map((key) => {
+      const slug = selectionTypeSlugFromNumsColumnKey(key);
+      const short = slug ? `sel_${slug.replace(/-/g, "_")}` : key;
+      return [key, short];
+    }),
   ),
 });
 
@@ -262,25 +337,49 @@ export function parseEnumFilterValues(raw_value) {
 
 /**
  * @param {string} raw_value
- * @returns {{ mode: "number", exact?: number, min?: number, max?: number } | null}
+ * @returns {{ mode: "number", empty?: boolean, exact?: number, min?: number, max?: number } | null}
  */
 export function parseNumberFilterValue(raw_value) {
   const s = String(raw_value ?? "").trim();
   if (!s) return null;
 
-  const range_m = s.match(
+  let rest = s;
+  let empty = false;
+  if (isGemsColumnFilterEmptyValue(rest)) {
+    return { mode: "number", empty: true };
+  }
+  const empty_prefix = new RegExp(
+    `^${GEMS_COLUMN_FILTER_EMPTY_VALUE}\\s*,\\s*`,
+    "i",
+  );
+  if (empty_prefix.test(rest)) {
+    empty = true;
+    rest = rest.replace(empty_prefix, "").trim();
+    if (!rest) return { mode: "number", empty: true };
+  }
+
+  const range_m = rest.match(
     /^(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)$/,
   );
   if (range_m) {
     const min = normalizeGemsSearchNumber(range_m[1]);
     const max = normalizeGemsSearchNumber(range_m[2]);
     if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
-    return { mode: "number", min, max };
+    return {
+      mode: "number",
+      ...(empty ? { empty: true } : {}),
+      min,
+      max,
+    };
   }
 
-  const exact = normalizeGemsSearchNumber(s);
+  const exact = normalizeGemsSearchNumber(rest);
   if (!Number.isFinite(exact)) return null;
-  return { mode: "number", exact };
+  return {
+    mode: "number",
+    ...(empty ? { empty: true } : {}),
+    exact,
+  };
 }
 
 /**
@@ -345,14 +444,19 @@ export function serializeFieldFilter(meta_key, filter) {
     return `${alias}=${values.map(quoteFilterValueIfNeeded).join(",")}`;
   }
   if (filter.mode === "number") {
+    const parts = [];
+    if (filter.empty) parts.push(GEMS_COLUMN_FILTER_EMPTY_VALUE);
     if (Number.isFinite(filter.exact)) {
-      return `${alias}=${filter.exact}`;
+      parts.push(String(filter.exact));
+    } else {
+      const has_min = Number.isFinite(filter.min);
+      const has_max = Number.isFinite(filter.max);
+      if (has_min && has_max) parts.push(`${filter.min}-${filter.max}`);
+      else if (has_min) parts.push(`${filter.min}-${filter.min}`);
+      else if (has_max) parts.push(`${filter.max}-${filter.max}`);
     }
-    const has_min = Number.isFinite(filter.min);
-    const has_max = Number.isFinite(filter.max);
-    if (has_min && has_max) return `${alias}=${filter.min}-${filter.max}`;
-    if (has_min) return `${alias}=${filter.min}-${filter.min}`;
-    if (has_max) return `${alias}=${filter.max}-${filter.max}`;
+    if (!parts.length) return "";
+    return `${alias}=${parts.join(",")}`;
   }
   if (filter.mode === "date") {
     if (filter.exact && isIsoDateString(filter.exact)) {
@@ -697,13 +801,46 @@ export function gemMatchesFieldFilter(gem, meta_key, filter) {
   if (filter.mode === "enum") {
     const values = Array.isArray(filter.values) ? filter.values : [];
     if (!values.length) return true;
-    const raw = gem?.[meta_key];
-    const gem_value = String(raw ?? "").trim().toLowerCase();
-    if (!gem_value) return false;
-    return values.some((v) => String(v).trim().toLowerCase() === gem_value);
+    const wants_empty = values.some((v) => isGemsColumnFilterEmptyValue(v));
+    const concrete_values = values.filter(
+      (v) => !isGemsColumnFilterEmptyValue(v),
+    );
+    if (isGemEnumFieldEmpty(gem, meta_key)) return wants_empty;
+    if (!concrete_values.length) return false;
+    const gem_value = String(gem?.[meta_key] ?? "")
+      .trim()
+      .toLowerCase();
+    return concrete_values.some(
+      (v) => String(v).trim().toLowerCase() === gem_value,
+    );
   }
 
   if (filter.mode === "number") {
+    if (isSelectionNumsColumnKey(meta_key)) {
+      const type_slug = selectionTypeSlugFromNumsColumnKey(meta_key);
+      const numbers = listGemSelectionDocumentNumbersForType(gem, type_slug)
+        .map((doc) => Number(doc))
+        .filter((n) => Number.isFinite(n));
+      if (numbers.length === 0) return Boolean(filter.empty);
+
+      const has_exact = Number.isFinite(filter.exact);
+      const has_min = Number.isFinite(filter.min);
+      const has_max = Number.isFinite(filter.max);
+      if (!has_exact && !has_min && !has_max) return false;
+      return numbers.some((n) => numberMatchesFilter(n, filter));
+    }
+
+    const field_empty = isGemNumberFieldEmpty(gem, meta_key);
+    if (field_empty) return Boolean(filter.empty);
+
+    const has_exact = Number.isFinite(filter.exact);
+    const has_min = Number.isFinite(filter.min);
+    const has_max = Number.isFinite(filter.max);
+    if (!has_exact && !has_min && !has_max) {
+      // Empty-only filter: filled values do not match.
+      return false;
+    }
+
     if (meta_key === "id") {
       const gem_id = getGemIdFromPath(gem);
       const n = Number(gem_id);
@@ -718,7 +855,6 @@ export function gemMatchesFieldFilter(gem, meta_key, filter) {
     }
     if (meta_key === "paired_gem") {
       const paired_id = String(gem?.paired_gem ?? "").trim();
-      if (!paired_id) return false;
       const n = Number(paired_id);
       if (!Number.isFinite(n)) {
         if (Number.isFinite(filter.exact)) {
@@ -835,11 +971,30 @@ export function collectAvailableEnumFilterValues(
   const facet_parsed = parsedQuickSearchExceptField(parsed, except_meta_key);
   gems.forEach((gem) => {
     if (!gemMatchesQuickSearch(gem, facet_parsed)) return;
+    if (isGemEnumFieldEmpty(gem, except_meta_key)) {
+      available.add(GEMS_COLUMN_FILTER_EMPTY_VALUE);
+      return;
+    }
     const raw = gem?.[except_meta_key];
-    if (raw === undefined || raw === null || raw === "") return;
     available.add(String(raw).trim().toLowerCase());
   });
   return available;
+}
+
+/**
+ * Whether any gem matching other filters has an empty value for a number column.
+ * @param {object[]} gems
+ * @param {ReturnType<typeof parseGemsQuickSearchInput>} parsed
+ * @param {string} meta_key
+ * @returns {boolean}
+ */
+export function hasAvailableEmptyNumberField(gems, parsed, meta_key) {
+  if (!meta_key || !Array.isArray(gems)) return false;
+  const facet_parsed = parsedQuickSearchExceptField(parsed, meta_key);
+  return gems.some((gem) => {
+    if (!gemMatchesQuickSearch(gem, facet_parsed)) return false;
+    return isGemNumberFieldEmpty(gem, meta_key);
+  });
 }
 
 /**

@@ -115,6 +115,9 @@
                 :mode="getColumnFilterMode(metadata_key)"
                 :column_label="metadata_labels[metadata_key] || metadata_key"
                 :options="column_filter_options[metadata_key] || []"
+                :show_empty_option="
+                  Boolean(column_filter_empty_available[metadata_key])
+                "
                 :current_filter="getColumnCurrentFilter(metadata_key)"
                 @apply="onColumnFilterApply"
                 @clear="onColumnFilterClear"
@@ -359,6 +362,8 @@ import {
   persistTablePageSize,
 } from "@/utils/table_page_size.js";
 import { isRseStoneType } from "@/utils/selection_pdf_customs_summary.js";
+import { formatGemSelectionNumsColumnValue } from "@/utils/gem_selection_nums_columns.js";
+import { isSelectionNumsColumnKey } from "@/utils/gems_table_metadata.js";
 
 export default {
   name: "SGGemsTable",
@@ -400,6 +405,7 @@ export default {
     column_field_filters: { type: Object, default: () => ({}) },
     /** Enum options per filterable column: { [meta_key]: [{ value, label }] }. */
     column_filter_options: { type: Object, default: () => ({}) },
+    column_filter_empty_available: { type: Object, default: () => ({}) },
   },
   data() {
     return {
@@ -643,6 +649,9 @@ export default {
     },
     resolveMetadataValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
+      if (isSelectionNumsColumnKey(metadata_key)) {
+        return formatGemSelectionNumsColumnValue(gem, metadata_key);
+      }
       return gem?.[metadata_key];
     },
     formatValue(value) {

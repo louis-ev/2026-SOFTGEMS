@@ -60,6 +60,7 @@
           :enable_column_filters="true"
           :column_field_filters="gems_column_field_filters"
           :column_filter_options="gems_column_filter_options"
+          :column_filter_empty_available="gems_column_filter_empty_available"
           @rowClick="$emit('rowClick', $event)"
           @editCell="$emit('editCell', $event)"
           @applyColumnFilter="onApplyColumnFilter"
@@ -101,9 +102,13 @@ import {
 } from "@/suggestions/softgems";
 import { gemStatusLabel } from "@/utils/gem_status.js";
 import {
+  GEMS_COLUMN_FILTER_EMPTY_VALUE,
   GEMS_COLUMN_FILTER_ENUM_KEYS,
+  GEMS_COLUMN_FILTER_NUMBER_KEYS,
   getGemsColumnFilterMode,
   collectAvailableEnumFilterValues,
+  hasAvailableEmptyNumberField,
+  isGemsColumnFilterEmptyValue,
 } from "@/utils/gems_quick_search.js";
 
 export default {
@@ -236,6 +241,17 @@ export default {
       });
       return options;
     },
+    gems_column_filter_empty_available() {
+      const available = {};
+      GEMS_COLUMN_FILTER_NUMBER_KEYS.forEach((meta_key) => {
+        available[meta_key] = hasAvailableEmptyNumberField(
+          this.gems,
+          this.gems_quick_search_parsed,
+          meta_key,
+        );
+      });
+      return available;
+    },
   },
   watch: {
     gems: {
@@ -288,7 +304,7 @@ export default {
       if (meta_key === "country_of_cut") return country_of_cut_suggestions;
       if (meta_key === "treatment_type") return treatment_type_suggestions;
       if (meta_key === "status") return status_suggestions;
-      // reference_supplier / reference_customer: distinct values from gems only
+      // reference_supplier / reference_customer / MAC: distinct values from gems only
       return [];
     },
     buildColumnFilterOptions(meta_key) {
@@ -317,8 +333,14 @@ export default {
           value: v,
           label: label || v,
           title: title || "",
+          is_empty: isGemsColumnFilterEmptyValue(v),
         });
       };
+
+      push_option(
+        GEMS_COLUMN_FILTER_EMPTY_VALUE,
+        this.$t("sg_gems_column_filter_empty"),
+      );
 
       this.suggestionListForFilterKey(meta_key).forEach((value) => {
         if (meta_key === "status") {
@@ -338,9 +360,12 @@ export default {
         push_option(raw, String(raw));
       });
 
-      options.sort((a, b) =>
-        a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
-      );
+      options.sort((a, b) => {
+        if (a.is_empty !== b.is_empty) return a.is_empty ? -1 : 1;
+        return a.label.localeCompare(b.label, undefined, {
+          sensitivity: "base",
+        });
+      });
       return options;
     },
     onApplyColumnFilter(payload) {

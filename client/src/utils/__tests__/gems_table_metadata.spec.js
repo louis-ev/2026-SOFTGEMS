@@ -3,8 +3,10 @@ import {
   buildGemsTableAllMetadataKeys,
   buildGemsTableOrderedPickerKeys,
   countGemsWithFilledTableColumnValue,
+  filterGemsTableDefaultVisibleKeys,
   gemHasFilledTableColumnValue,
   gems_table_catalog_column_keys,
+  gems_table_selection_nums_column_keys,
 } from "@/utils/gems_table_metadata.js";
 
 describe("gems_table_catalog_column_keys", () => {
@@ -31,8 +33,22 @@ describe("gems_table_catalog_column_keys", () => {
       "country_of_cut",
       "reference_supplier",
       "reference_customer",
+      "numero_de_mise_a_consommation",
       "$date_modified",
+      ...gems_table_selection_nums_column_keys,
     ]);
+  });
+});
+
+describe("filterGemsTableDefaultVisibleKeys", () => {
+  it("drops all selection-number columns including box", () => {
+    const visible = filterGemsTableDefaultVisibleKeys([
+      ...gems_table_catalog_column_keys,
+    ]);
+    for (const key of gems_table_selection_nums_column_keys) {
+      expect(visible).not.toContain(key);
+    }
+    expect(visible).toContain("$date_modified");
   });
 });
 
@@ -50,6 +66,11 @@ describe("buildGemsTableAllMetadataKeys", () => {
     expect(keys).toContain("pf_invoiced_price");
     expect(keys).toContain("pc_to");
     expect(keys).toContain("dimensions_lwh");
+    expect(keys).toContain("selection_nums_box");
+    expect(keys).toContain("selection_nums_memo_in");
+    expect(keys.indexOf("selection_nums_simple")).toBeLessThan(
+      keys.indexOf("selection_nums_box")
+    );
   });
 
   it("merges extra keys discovered on loaded gems", () => {
@@ -90,12 +111,23 @@ describe("gemHasFilledTableColumnValue", () => {
       stone_type: "Ruby",
       pf_invoiced_price: "",
       length_mm: 5,
+      box_selection_path: "box/2",
+      selection_membership_paths: {
+        "memo-in/4": "2024-01-01T00:00:00.000Z",
+      },
     };
 
     expect(gemHasFilledTableColumnValue(gem, "id")).toBe(true);
     expect(gemHasFilledTableColumnValue(gem, "stone_type")).toBe(true);
     expect(gemHasFilledTableColumnValue(gem, "pf_invoiced_price")).toBe(false);
     expect(gemHasFilledTableColumnValue(gem, "dimensions_lwh")).toBe(true);
+    expect(gemHasFilledTableColumnValue(gem, "selection_nums_box")).toBe(true);
+    expect(gemHasFilledTableColumnValue(gem, "selection_nums_memo_in")).toBe(
+      true
+    );
+    expect(gemHasFilledTableColumnValue(gem, "selection_nums_sale_invoice")).toBe(
+      false
+    );
     expect(countGemsWithFilledTableColumnValue([gem], "color")).toBe(0);
   });
 });

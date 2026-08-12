@@ -6,6 +6,20 @@ import {
   gem_linear_dimension_keys,
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
+import {
+  formatGemSelectionNumsColumnValue,
+  gems_table_selection_nums_column_keys,
+  isSelectionNumsColumnKey,
+} from "@/utils/gem_selection_nums_columns.js";
+
+export {
+  filterGemsTableDefaultVisibleKeys,
+  gems_table_selection_nums_box_column_key,
+  gems_table_selection_nums_column_keys,
+  gems_table_selection_nums_opt_in_column_keys,
+  isGemsTableDefaultOffColumnKey,
+  isSelectionNumsColumnKey,
+} from "@/utils/gem_selection_nums_columns.js";
 
 /** Keys never offered as separate columns (merged into one table column). */
 export const gems_table_column_picker_excluded_keys = Object.freeze([
@@ -17,6 +31,7 @@ export const gems_table_column_picker_excluded_keys = Object.freeze([
 /**
  * Standard gem table columns always offered in the picker (independent of loaded gems).
  * Order is the default inventory column order (when no saved preference exists).
+ * Selection-number columns follow selection-type registry order; all are off by default / on reset.
  */
 export const gems_table_catalog_column_keys = Object.freeze([
   "id",
@@ -40,7 +55,9 @@ export const gems_table_catalog_column_keys = Object.freeze([
   "country_of_cut",
   "reference_supplier",
   "reference_customer",
+  "numero_de_mise_a_consommation",
   "$date_modified",
+  ...gems_table_selection_nums_column_keys,
 ]);
 
 export const gems_table_gem_excluded_metadata_keys = Object.freeze([
@@ -219,6 +236,9 @@ export function gemHasFilledTableColumnValue(gem, metadata_key) {
     return gem_linear_dimension_keys.some((key) =>
       is_filled_meta_value(gem[key])
     );
+  }
+  if (isSelectionNumsColumnKey(metadata_key)) {
+    return Boolean(formatGemSelectionNumsColumnValue(gem, metadata_key));
   }
   return is_filled_meta_value(gem[metadata_key]);
 }
