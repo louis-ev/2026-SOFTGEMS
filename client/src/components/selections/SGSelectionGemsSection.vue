@@ -36,34 +36,73 @@
       {{ $t("sg_loading_gems") }}
     </p>
     <div v-else-if="show_entries_table_shell" class="_entriesTableShell">
-      <SGGemsTable
-        ref="entries_gems_table"
-        :gems="entry_gems_list"
-        :inventory_has_gems="entry_gems_list.length > 0"
-        :metadata_keys="metadata_keys"
-        :metadata_labels="metadata_labels"
-        :metadata_icons="metadata_icons"
-        :field_editable_map="entries_field_editable_map"
-        :selected_gem_id="selected_gem_id"
-        :is_gem_open="is_gem_open"
-        :cover_can_edit="false"
-        :selection_remove_column="can_edit"
-        :fixed_gem_order="true"
-        :show_rse_pf_totals="show_rse_pf_totals"
-        @rowClick="onEntryRowClick"
-        @editCell="onTableEditCell"
-        @removeRowClick="confirmRemoveGemRow"
-      />
+      <div class="_gemsSearchBar">
+        <SearchInput
+          v-model="gems_quick_search"
+          :search_placeholder="$t('sg_gems_search_placeholder')"
+          name="selection_entries_search"
+        />
+      </div>
       <div
-        v-if="show_entries_reload_overlay"
-        class="_entriesReloadOverlay"
+        v-if="gems_quick_search_has_active_filters"
+        class="_gemsActiveFilters"
         role="status"
-        aria-live="polite"
-        aria-busy="true"
       >
-        <p class="_entriesReloadMessage">
-          {{ $t("sg_selection_entries_reloading") }}
-        </p>
+        <span class="_filteredPrefix">{{ $t("sg_gems_filtered_prefix") }}</span>
+        <button
+          v-for="chip in gems_active_filter_chips"
+          :key="chip.chip_key"
+          type="button"
+          class="_filterChip"
+          :title="$t('sg_gems_filter_chip_remove_title')"
+          :aria-label="
+            $t('sg_gems_filter_chip_remove_aria', { filter: chip.label })
+          "
+          @click="removeGemsFilterChip(chip)"
+        >
+          <span class="_filterChipLabel">{{ chip.label }}</span>
+          <span class="_filterChipRemove" aria-hidden="true">×</span>
+        </button>
+        <span class="_filteredCount">{{
+          gems_quick_search_filter_count_caption
+        }}</span>
+      </div>
+      <div class="_entriesTableBody">
+        <SGGemsTable
+          ref="entries_gems_table"
+          :gems="filtered_gems"
+          :inventory_has_gems="entry_gems_list.length > 0"
+          :metadata_keys="metadata_keys"
+          :metadata_labels="metadata_labels"
+          :metadata_icons="metadata_icons"
+          :field_editable_map="entries_field_editable_map"
+          :selected_gem_id="selected_gem_id"
+          :is_gem_open="is_gem_open"
+          :cover_can_edit="false"
+          :selection_remove_column="can_edit"
+          :fixed_gem_order="true"
+          :show_rse_pf_totals="show_rse_pf_totals"
+          :enable_column_filters="true"
+          :column_field_filters="gems_column_field_filters"
+          :column_filter_options="gems_column_filter_options"
+          :column_filter_empty_available="gems_column_filter_empty_available"
+          @rowClick="onEntryRowClick"
+          @editCell="onTableEditCell"
+          @removeRowClick="confirmRemoveGemRow"
+          @applyColumnFilter="onApplyColumnFilter"
+          @clearColumnFilter="onClearColumnFilter"
+        />
+        <div
+          v-if="show_entries_reload_overlay"
+          class="_entriesReloadOverlay"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <p class="_entriesReloadMessage">
+            {{ $t("sg_selection_entries_reloading") }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -110,6 +149,7 @@
 
 <script>
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
+import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGSelectionAddGemsPicker from "@/components/selections/SGSelectionAddGemsPicker.vue";
 import SGSelectionGemsHistoryModal from "@/components/selections/SGSelectionGemsHistoryModal.vue";
@@ -121,6 +161,8 @@ import {
   gem_linear_dimension_keys,
   gem_dimensions_merged_column_key,
 } from "@/mixins/GemDimensions";
+import GemsColumnFiltersMixin from "@/mixins/GemsColumnFiltersMixin.js";
+import GemsQuickSearchMixin from "@/mixins/GemsQuickSearchMixin.js";
 import GemsInventoryTableMixin from "@/mixins/GemsInventoryTableMixin.js";
 import {
   parseSelectionFolderPath,
@@ -142,9 +184,14 @@ import { gemStatusLabel } from "@/utils/gem_status.js";
 
 export default {
   name: "SGSelectionGemsSection",
-  mixins: [GemsInventoryTableMixin],
+  mixins: [
+    GemsQuickSearchMixin,
+    GemsColumnFiltersMixin,
+    GemsInventoryTableMixin,
+  ],
   components: {
     SGSectionPanel,
+    SearchInput,
     SGGemsTable,
     SGSelectionAddGemsPicker,
     SGSelectionGemsHistoryModal,
@@ -546,11 +593,88 @@ export default {
 <style lang="scss" scoped>
 ._entriesTableShell {
   position: relative;
-  // display: flex;
-  // flex-direction: column;
-  // min-height: 0;
-  // height: min(70vh, 720px);
-  // max-height: min(70vh, 720px);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 0.65);
+  min-height: 0;
+  overflow: hidden;
+}
+
+._gemsSearchBar {
+  flex: 0 0 auto;
+  max-width: 52rem;
+}
+
+._gemsSearchBar ::v-deep ._searchInput {
+  width: 100%;
+  min-width: 12rem;
+}
+
+._gemsActiveFilters {
+  flex: 0 0 auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.4rem;
+  font-size: var(--sl-font-size-x-small);
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--c-gris_fonce) 82%, transparent);
+  font-weight: 400;
+}
+
+._filteredPrefix {
+  flex-shrink: 0;
+}
+
+._filteredCount {
+  flex-shrink: 0;
+  margin-left: 0.15rem;
+}
+
+._filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.1rem 0.4rem 0.1rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--c-gris_fonce) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-gris_clair) 70%, transparent);
+  color: var(--c-noir, inherit);
+  font: inherit;
+  font-size: inherit;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+._filterChip:hover {
+  border-color: var(--c-bleuvert);
+  color: var(--c-bleuvert);
+}
+
+._filterChipLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+._filterChipRemove {
+  flex-shrink: 0;
+  font-size: 0.95em;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+._entriesTableBody {
+  position: relative;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 
   > *:not(._entriesReloadOverlay) {
