@@ -49,6 +49,7 @@
         :cover_can_edit="false"
         :selection_remove_column="can_edit"
         :fixed_gem_order="true"
+        :show_rse_pf_totals="show_rse_pf_totals"
         @rowClick="onEntryRowClick"
         @editCell="onTableEditCell"
         @removeRowClick="confirmRemoveGemRow"
@@ -205,6 +206,10 @@ export default {
     },
     resolved_selection_type() {
       return resolveSelectionType(this.selection_folder);
+    },
+    show_rse_pf_totals() {
+      const selection_type = this.resolved_selection_type;
+      return selection_type === "simple" || selection_type === "importation";
     },
     is_box_type() {
       return (

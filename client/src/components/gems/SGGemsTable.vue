@@ -248,12 +248,16 @@
           </tr>
         </transition-group>
         <tfoot v-if="show_gems_table_totals_row">
-          <tr class="_totalsRow">
+          <tr
+            v-for="totals_row in gems_table_footer_total_rows"
+            :key="totals_row.key"
+            class="_totalsRow"
+          >
             <td v-if="selection_remove_column" class="_removeColTd"></td>
             <td v-if="selection_pick_column" class="_pickColTd"></td>
             <td
               v-for="metadata_key in metadata_keys"
-              :key="`total-${metadata_key}`"
+              :key="`total-${totals_row.key}-${metadata_key}`"
               :class="[
                 getStickyColumnClass(metadata_key),
                 {
@@ -268,17 +272,29 @@
                 class="_pricingCell"
               >
                 <span class="_pricingLine _pricingTotal">{{
-                  formatTotalsPricingTotal(metadata_key)
+                  formatTotalsPricingTotal(metadata_key, totals_row.totals)
                 }}</span>
                 <span class="_pricingLine _pricingPerCt">{{
-                  formatTotalsPricingPerCt(metadata_key)
+                  formatTotalsPricingPerCt(metadata_key, totals_row.totals)
                 }}</span>
               </div>
               <span
                 v-else
                 class="_gemMetadataValue _totalsCellValue"
-                :title="formatTotalsCell(metadata_key) || undefined"
-                >{{ formatTotalsCell(metadata_key) }}</span
+                :title="
+                  formatTotalsCell(
+                    metadata_key,
+                    totals_row.totals,
+                    totals_row.label
+                  ) || undefined
+                "
+                >{{
+                  formatTotalsCell(
+                    metadata_key,
+                    totals_row.totals,
+                    totals_row.label
+                  )
+                }}</span
               >
             </td>
             <td v-if="show_append_column" class="_appendColTd"></td>
@@ -330,6 +346,7 @@ import {
   normalizeTablePageSize,
   persistTablePageSize,
 } from "@/utils/table_page_size.js";
+import { isRseStoneType } from "@/utils/selection_pdf_customs_summary.js";
 
 export default {
   name: "SGGemsTable",
@@ -360,6 +377,11 @@ export default {
     gems_page_size: { type: [Number, String], default: 100 },
     /** When true, shows a totals row for the current table rows (incl. search/filter). */
     show_totals_row: { type: Boolean, default: true },
+    /**
+     * When true, appends RSE and PF total rows under the main Total row
+     * (precious vs other stone types).
+     */
+    show_rse_pf_totals: { type: Boolean, default: false },
     /** When true, icon/label opens a column filter menu. */
     enable_column_filters: { type: Boolean, default: false },
     /** Active structured field filters keyed by metadata key. */
@@ -461,29 +483,40 @@ export default {
       return this.show_totals_row && this.sorted_gems.length > 0;
     },
     gems_table_numeric_totals() {
-      const gems = this.sorted_gems;
-      const pricing_totals = {};
-
-      this.metadata_keys.forEach((metadata_key) => {
-        if (!this.isGemPricingTotalColumnKey(metadata_key)) return;
-        pricing_totals[metadata_key] = gems.reduce(
-          (sum, gem) => sum + this.toNumberOrDefault(gem?.[metadata_key], 0),
-          0
-        );
-      });
-
-      return {
-        count: gems.length,
-        weight_total: gems.reduce(
-          (sum, gem) => sum + this.toNumberOrDefault(gem?.weight_ct, 0),
-          0
-        ),
-        pieces_total: gems.reduce(
-          (sum, gem) => sum + this.toNumberOrDefault(gem?.number_of_pieces, 0),
-          0
-        ),
-        pricing_totals,
-      };
+      return this.computeNumericTotalsForGems(this.sorted_gems);
+    },
+    gems_table_rse_totals() {
+      return this.computeNumericTotalsForGems(
+        this.sorted_gems.filter((gem) => isRseStoneType(gem?.stone_type))
+      );
+    },
+    gems_table_pf_totals() {
+      return this.computeNumericTotalsForGems(
+        this.sorted_gems.filter((gem) => !isRseStoneType(gem?.stone_type))
+      );
+    },
+    gems_table_footer_total_rows() {
+      const rows = [
+        {
+          key: "total",
+          label: this.$t("sg_gems_table_total_row_count"),
+          totals: this.gems_table_numeric_totals,
+        },
+      ];
+      if (!this.show_rse_pf_totals) return rows;
+      rows.push(
+        {
+          key: "rse",
+          label: this.$t("sg_gems_table_rse_total_row"),
+          totals: this.gems_table_rse_totals,
+        },
+        {
+          key: "pf",
+          label: this.$t("sg_gems_table_pf_total_row"),
+          totals: this.gems_table_pf_totals,
+        }
+      );
+      return rows;
     },
   },
   watch: {
@@ -621,37 +654,64 @@ export default {
       const per = this.computeDisplayedPerCaratForGem(gem, total_key);
       return `${this.formatPriceCellNumber(per)} /ct`;
     },
-    formatTotalsCell(metadata_key) {
-      const totals = this.gems_table_numeric_totals;
+    computeNumericTotalsForGems(gems) {
+      const list = Array.isArray(gems) ? gems : [];
+      const pricing_totals = {};
+
+      this.metadata_keys.forEach((metadata_key) => {
+        if (!this.isGemPricingTotalColumnKey(metadata_key)) return;
+        pricing_totals[metadata_key] = list.reduce(
+          (sum, gem) => sum + this.toNumberOrDefault(gem?.[metadata_key], 0),
+          0
+        );
+      });
+
+      return {
+        count: list.length,
+        weight_total: list.reduce(
+          (sum, gem) => sum + this.toNumberOrDefault(gem?.weight_ct, 0),
+          0
+        ),
+        pieces_total: list.reduce(
+          (sum, gem) => sum + this.toNumberOrDefault(gem?.number_of_pieces, 0),
+          0
+        ),
+        pricing_totals,
+      };
+    },
+    formatTotalsCell(metadata_key, totals = null, row_label = "") {
+      const resolved_totals = totals || this.gems_table_numeric_totals;
 
       if (metadata_key === "id") {
-        return this.$t("sg_gems_table_total_row_count");
+        return (
+          row_label || this.$t("sg_gems_table_total_row_count")
+        );
       }
       if (metadata_key === "$cover" || metadata_key === "$date_modified") {
         return "";
       }
       if (metadata_key === "weight_ct") {
-        if (totals.weight_total <= 0) return "—";
-        return this.formatValue(totals.weight_total);
+        if (resolved_totals.weight_total <= 0) return "—";
+        return this.formatValue(resolved_totals.weight_total);
       }
       if (metadata_key === "number_of_pieces") {
-        if (totals.pieces_total <= 0) return "—";
-        return this.formatValue(totals.pieces_total);
+        return this.formatValue(resolved_totals.pieces_total || 0);
       }
       return "";
     },
-    formatTotalsPricingTotal(metadata_key) {
-      const total = this.gems_table_numeric_totals.pricing_totals[metadata_key];
+    formatTotalsPricingTotal(metadata_key, totals = null) {
+      const resolved_totals = totals || this.gems_table_numeric_totals;
+      const total = resolved_totals.pricing_totals[metadata_key];
       if (!Number.isFinite(total) || total <= 0) return "—";
       return this.formatPriceCellNumber(total);
     },
-    formatTotalsPricingPerCt(metadata_key) {
-      const totals = this.gems_table_numeric_totals;
-      const total = totals.pricing_totals[metadata_key];
+    formatTotalsPricingPerCt(metadata_key, totals = null) {
+      const resolved_totals = totals || this.gems_table_numeric_totals;
+      const total = resolved_totals.pricing_totals[metadata_key];
       if (!Number.isFinite(total) || total <= 0) return "— /ct";
       const per = this.computePerCarat({
         total_value: total,
-        weight_ct: totals.weight_total,
+        weight_ct: resolved_totals.weight_total,
       });
       if (!Number.isFinite(per) || per <= 0) return "— /ct";
       return `${this.formatPriceCellNumber(per)} /ct`;
