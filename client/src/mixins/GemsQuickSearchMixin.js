@@ -21,23 +21,33 @@ import {
 import {
   loadGemsQuickSearchFromStorage,
   persistGemsQuickSearchToStorage,
+  gems_quick_search_storage_scopes,
 } from "@/utils/gems_quick_search_storage.js";
 
 const gems_quick_search_debounce_ms = 200;
 
 export default {
   data() {
-    const initial_search = loadGemsQuickSearchFromStorage();
     return {
-      gems_quick_search: initial_search,
-      gems_quick_search_debounced: initial_search,
+      gems_quick_search: "",
+      gems_quick_search_debounced: "",
       gems_quick_search_debounce_timer_id: null,
     };
   },
+  created() {
+    this.reloadGemsQuickSearchFromStorage();
+  },
   watch: {
+    gems_quick_search_storage_scope(next_scope, previous_scope) {
+      if (next_scope === previous_scope) return;
+      this.reloadGemsQuickSearchFromStorage();
+    },
     gems_quick_search(next_value) {
       const value = typeof next_value === "string" ? next_value : "";
-      persistGemsQuickSearchToStorage(value);
+      persistGemsQuickSearchToStorage(
+        this.gems_quick_search_storage_scope,
+        value
+      );
       if (this.gems_quick_search_debounce_timer_id !== null) {
         clearTimeout(this.gems_quick_search_debounce_timer_id);
         this.gems_quick_search_debounce_timer_id = null;
@@ -49,6 +59,9 @@ export default {
     },
   },
   computed: {
+    gems_quick_search_storage_scope() {
+      return this.getGemsQuickSearchStorageScope();
+    },
     gems_quick_search_parsed() {
       return parseGemsQuickSearchInput(this.gems_quick_search_debounced);
     },
@@ -185,6 +198,24 @@ export default {
     }
   },
   methods: {
+    getGemsQuickSearchStorageScope() {
+      if (typeof this.getGemsMetadataKeysStorageScope === "function") {
+        const scope = String(this.getGemsMetadataKeysStorageScope() || "").trim();
+        if (scope) return scope;
+      }
+      return gems_quick_search_storage_scopes.all_gems;
+    },
+    reloadGemsQuickSearchFromStorage() {
+      const loaded = loadGemsQuickSearchFromStorage(
+        this.gems_quick_search_storage_scope
+      );
+      if (this.gems_quick_search_debounce_timer_id !== null) {
+        clearTimeout(this.gems_quick_search_debounce_timer_id);
+        this.gems_quick_search_debounce_timer_id = null;
+      }
+      this.gems_quick_search = loaded;
+      this.gems_quick_search_debounced = loaded;
+    },
     isGemsColumnFilterableKey,
     getGemsColumnFilterMode,
     getGemId(gem) {
