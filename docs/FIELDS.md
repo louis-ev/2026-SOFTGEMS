@@ -380,7 +380,7 @@ Company folders under `address_book/{slug}` may store:
 
 | Field                     | Fill Method | Notes                                                                 |
 | ------------------------- | ----------- | --------------------------------------------------------------------- |
-| `supplier_account_number` | manual      | Optional. Shown on selection PDFs as supplier account N° when the company is the selection counterparty (or parent company of a person counterparty). Omitted from the PDF when empty. UI: [SGContactOpenView.vue](../client/src/views/SGContactOpenView.vue). |
+| `supplier_account_number` | manual      | Optional. Shown on selection PDFs as supplier account No. when the company is the selection counterparty (or parent company of a person counterparty). Omitted from the PDF when empty. UI: [SGContactOpenView.vue](../client/src/views/SGContactOpenView.vue). |
 
 ## Related specification
 

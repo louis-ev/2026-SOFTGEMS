@@ -1725,7 +1725,7 @@ module.exports = (function () {
       export_lang === "en"
         ? [
             "Registered Office: 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
-            "SAS with a share capital of EUR 50,000 • SIRET N° 994 099 448 00015",
+            "SAS with a share capital of EUR 50,000 • SIRET No. 994 099 448 00015",
           ]
         : [
             "SIÈGE SOCIAL : 10 Place Vendôme, 75001 Paris, France • Tél. : +33 (0)6 69 24 14 89 • info@acfinegems.com",

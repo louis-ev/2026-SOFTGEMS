@@ -17,6 +17,69 @@ export function gemSlugFromPath(path_raw) {
 }
 
 /**
+ * Parse gem IDs pasted from clipboard / textarea.
+ * Accepts bare IDs (`42`), `#42`, or paths (`gems/42`), separated by
+ * commas, semicolons, or whitespace. Deduplicates while preserving order.
+ *
+ * @param {*} raw
+ * @returns {string[]}
+ */
+export function parseGemIdsFromText(raw) {
+  const text = String(raw ?? "").trim();
+  if (!text) return [];
+
+  const tokens = text.split(/[\s,;]+/).filter(Boolean);
+  const out = [];
+  const seen = new Set();
+  for (const token of tokens) {
+    let id = String(token || "").trim();
+    if (!id) continue;
+    if (id.startsWith("#")) id = id.slice(1).trim();
+    if (id.includes("/")) id = gemSlugFromPath(id);
+    if (!id || id === "gems" || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+/**
+ * Split pasted gem IDs into those already on the selection vs those still to add.
+ *
+ * @param {string[]|undefined|null} gem_ids
+ * @param {string[]|undefined|null} selection_gem_paths
+ * @returns {{ already_included_ids: string[], new_ids: string[] }}
+ */
+export function partitionGemIdsAgainstSelection(gem_ids, selection_gem_paths) {
+  const existing_ids = new Set(
+    normalizeSelectionGemPaths(selection_gem_paths)
+      .map(gemSlugFromPath)
+      .filter(Boolean)
+  );
+  const already_included_ids = [];
+  const new_ids = [];
+  for (const raw_id of Array.isArray(gem_ids) ? gem_ids : []) {
+    const gem_id = String(raw_id || "").trim();
+    if (!gem_id) continue;
+    if (existing_ids.has(gem_id)) already_included_ids.push(gem_id);
+    else new_ids.push(gem_id);
+  }
+  return { already_included_ids, new_ids };
+}
+
+/**
+ * @param {string[]|undefined|null} gem_paths
+ * @param {string} [separator=", "]
+ * @returns {string}
+ */
+export function formatGemIdsForClipboard(gem_paths, separator = ", ") {
+  const ids = normalizeSelectionGemPaths(gem_paths)
+    .map(gemSlugFromPath)
+    .filter(Boolean);
+  return ids.join(separator);
+}
+
+/**
  * @param {*} raw
  * @returns {string}
  */

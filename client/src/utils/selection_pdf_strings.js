@@ -10,7 +10,7 @@ export const SELECTION_PDF_DEFAULT_LANG = "en";
  */
 export const selection_pdf_strings = Object.freeze({
   en: Object.freeze({
-    col_no: "No",
+    col_no: "No.",
     col_ref: "REF",
     col_description: "Description",
     col_photo: "Photo",
@@ -21,21 +21,21 @@ export const selection_pdf_strings = Object.freeze({
     total: "TOTAL",
     vat: "VAT",
     grand_total: "Total",
-    order_number: "Purchase order N°:",
-    supplier_account_number: "Supplier account N°:",
+    order_number: "Purchase order No.:",
+    supplier_account_number: "Supplier account No.:",
     date_line: "Paris, {date}",
     bank_intro: "On our bank account in {bank_currency}:",
     payment_line:
       "Please kindly transfer {amount_words} {currency_name} ({amount} {currency_code_display})",
-    title_generic: "Document N°{number}",
-    title_box: "Box N°{number}",
-    title_memo_out: "Consignment N°{number}",
-    title_return_memo_out: "Return consignment N°{number}",
-    title_return_memo_in: "Return memo in N°{number}",
-    title_buying_invoice: "Invoice N°{number}",
-    title_sale_invoice: "Invoice N°{number}",
-    title_credit_note: "Credit note N°{number}",
-    title_importation_return: "Importation return N°{number}",
+    title_generic: "Document No. {number}",
+    title_box: "Box No. {number}",
+    title_memo_out: "Consignment No. {number}",
+    title_return_memo_out: "Return consignment No. {number}",
+    title_return_memo_in: "Return memo in No. {number}",
+    title_buying_invoice: "Invoice No. {number}",
+    title_sale_invoice: "Invoice No. {number}",
+    title_credit_note: "Credit note No. {number}",
+    title_importation_return: "Importation return No. {number}",
     legal_memo_out:
       "It is expressly agreed that the Goods are delivered on a consignment (deposit) basis and do not constitute a sale. Under no circumstances may the Consignee relinquish possession or control of the Goods, including to any third party, and the Consignee shall at all times be able to produce and return the Goods immediately upon first demand. The Goods are delivered to and entrusted to the Consignee solely for the purpose of either presenting them to customers or carrying out work, processing, or other operations relating to them. The consignment shall terminate only upon the actual return of the Goods. Any failure to return the Goods shall constitute the criminal offence of criminal breach of trust, as provided under applicable law. The Consignee undertakes to insure the Goods, on behalf of the Consignor, against all risks of loss or damage for their full value, inclusive of all applicable taxes. Receipt of the Goods shall constitute the Consignee's irrevocable acceptance of these terms and conditions.",
     legal_generic:
@@ -48,7 +48,7 @@ export const selection_pdf_strings = Object.freeze({
     footer_line_1:
       "Registered Office: 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
-      "SAS with a share capital of EUR 50,000 • SIRET N° 994 099 448 00015",
+      "SAS with a share capital of EUR 50,000 • SIRET No. 994 099 448 00015",
     customs_summary_title: "Customs summary",
     customs_col_hs_code: "Customs code",
     customs_col_name: "Name",
@@ -57,7 +57,7 @@ export const selection_pdf_strings = Object.freeze({
     customs_col_price: "Selected price",
     customs_name_rse: "Precious stone",
     customs_name_pf: "Semi Precious",
-    customs_importation_heading: "Importation N°{number}",
+    customs_importation_heading: "Importation No. {number}",
     customs_no_importation_heading: "No importation",
   }),
   fr: Object.freeze({

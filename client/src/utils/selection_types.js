@@ -35,6 +35,22 @@ export function selectionTypeLabel(t, value) {
   return map[v] || v || "—";
 }
 
+/**
+ * Default `internal_name` at creation: `{type label} #{document_number}`.
+ * @param {(key: string) => string} t
+ * @param {string} selection_type
+ * @param {string|number} document_number
+ * @returns {string}
+ */
+export function defaultSelectionInternalName(t, selection_type, document_number) {
+  const type_value = String(selection_type || "").trim();
+  const number = String(document_number || "").trim();
+  if (!type_value || !number) return "";
+  const label = selectionTypeLabel(t, type_value);
+  if (!label || label === "—") return "";
+  return `${label} #${number}`;
+}
+
 /** Plural / collection label for typed list pages (hub cards, sidebar, table heading). */
 export function selectionTypeListLabel(t, value) {
   const v = String(value || "").trim();

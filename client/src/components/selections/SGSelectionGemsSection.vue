@@ -5,23 +5,34 @@
     :count="selection_gem_paths.length"
   >
     <template #actions>
-      <button
-        v-if="show_entries_table_shell || entry_gems_loading"
-        type="button"
-        class="u-button u-button_small"
-        @click="openColumnsModal"
-      >
-        <b-icon icon="layout-three-columns" />
-        <span>{{ $t("sg_customize_columns") }}</span>
-      </button>
-      <button
-        type="button"
-        class="u-button u-button_small"
-        @click="show_history_modal = true"
-      >
-        <b-icon icon="clock-history" />
-        <span>{{ $t("sg_selection_gems_history") }}</span>
-      </button>
+      <DropDown :show_label="false" :right="true">
+        <button
+          v-if="show_entries_table_shell || entry_gems_loading"
+          type="button"
+          class="u-buttonLink"
+          @click="openColumnsModal"
+        >
+          <b-icon icon="layout-three-columns" />
+          {{ $t("sg_customize_columns") }}
+        </button>
+        <button
+          type="button"
+          class="u-buttonLink"
+          @click="show_history_modal = true"
+        >
+          <b-icon icon="clock-history" />
+          {{ $t("sg_selection_gems_history") }}
+        </button>
+        <button
+          type="button"
+          class="u-buttonLink"
+          :disabled="selection_gem_paths.length === 0"
+          @click="copyGemIdsToClipboard"
+        >
+          <b-icon icon="clipboard" />
+          {{ $t("sg_selection_copy_gem_ids") }}
+        </button>
+      </DropDown>
     </template>
     <p v-if="selection_gem_paths.length > 0" class="_entriesSortHint">
       {{ $t("sg_selection_entries_sort_hint") }}
@@ -112,6 +123,17 @@
       :disabled_row_paths="selection_gem_paths"
       :busy="picker_busy"
       @pick="pickGem"
+      @addById="show_add_by_id_modal = true"
+    />
+
+    <SGSelectionAddGemsByIdModal
+      v-if="can_edit && show_add_by_id_modal"
+      :is_submitting="picker_busy"
+      :adding_current="add_by_id_current"
+      :adding_total="add_by_id_total"
+      :selection_gem_paths="selection_gem_paths"
+      @close="show_add_by_id_modal = false"
+      @submit="addGemsByIds"
     />
 
     <SGSelectionGemsHistoryModal
@@ -152,6 +174,7 @@ import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SearchInput from "@/adc-core/inputs/SearchInput.vue";
 import SGGemsTable from "@/components/gems/SGGemsTable.vue";
 import SGSelectionAddGemsPicker from "@/components/selections/SGSelectionAddGemsPicker.vue";
+import SGSelectionAddGemsByIdModal from "@/components/selections/SGSelectionAddGemsByIdModal.vue";
 import SGSelectionGemsHistoryModal from "@/components/selections/SGSelectionGemsHistoryModal.vue";
 import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
 import SGGemColumnsModal from "@/components/gems/SGGemColumnsModal.vue";
@@ -171,12 +194,14 @@ import {
 import { selectionSlugFromType } from "@/utils/selection_type_registry.js";
 import {
   areSelectionGemPathsEqual,
+  formatGemIdsForClipboard,
   normalizeSelectionGemPaths,
   sortSelectionGems,
 } from "@/utils/selection_entries.js";
 import {
   assignGemToBox,
   addGemToSelectionEntries,
+  addGemsToSelectionEntries,
   removeGemFromSelection,
 } from "@/utils/assign_gem_to_box.js";
 import { healGemIndexesForSelection, gemsNeedingIndexHeal } from "@/utils/heal_gem_selection_indexes.js";
@@ -194,6 +219,7 @@ export default {
     SearchInput,
     SGGemsTable,
     SGSelectionAddGemsPicker,
+    SGSelectionAddGemsByIdModal,
     SGSelectionGemsHistoryModal,
     SGGemEditFieldModal,
     SGGemColumnsModal,
@@ -224,12 +250,15 @@ export default {
     return {
       gems_root_path: "gems",
       picker_busy: false,
+      add_by_id_current: 0,
+      add_by_id_total: 0,
       entry_gems_list: [],
       entry_gems_loading: false,
       refresh_entry_gems_seq: 0,
       pending_entry_gems_refresh: false,
       show_history_modal: false,
       show_columns_modal: false,
+      show_add_by_id_modal: false,
       editing_gem: null,
       editing_field: null,
       editing_current_value: "",
@@ -305,6 +334,29 @@ export default {
     openColumnsModal() {
       this.show_columns_modal = true;
     },
+    async copyGemIdsToClipboard() {
+      const text = formatGemIdsForClipboard(this.selection_gem_paths);
+      if (!text) {
+        this.$alertify.delay(2500).log(this.$t("sg_selection_copy_gem_ids_empty"));
+        return;
+      }
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          throw new Error("clipboard_unavailable");
+        }
+        this.$alertify.delay(2500).success(
+          this.$t("sg_selection_copy_gem_ids_success", {
+            count: this.selection_gem_paths.length,
+          })
+        );
+      } catch {
+        this.$alertify
+          .delay(4000)
+          .error(this.$t("sg_selection_copy_gem_ids_failed"));
+      }
+    },
     formatGemStatusLabel(status_value) {
       return gemStatusLabel(this.$t.bind(this), status_value);
     },
@@ -318,6 +370,50 @@ export default {
         return;
       }
       this.$alertify.delay(2500).success(this.$t("sg_selection_gems_updated"));
+    },
+    notifyGemsAddedById({
+      added_count,
+      skipped_duplicate_count,
+      missing_ids,
+    }) {
+      const parts = [];
+      if (added_count > 0) {
+        parts.push(
+          this.$t("sg_selection_add_gems_by_id_added", { count: added_count })
+        );
+      }
+      if (skipped_duplicate_count > 0) {
+        parts.push(
+          this.$t("sg_selection_add_gems_by_id_skipped_duplicates", {
+            count: skipped_duplicate_count,
+          })
+        );
+      }
+      if (missing_ids.length > 0) {
+        const shown = missing_ids.slice(0, 12);
+        const ids_label =
+          missing_ids.length > shown.length
+            ? `${shown.join(", ")}…`
+            : shown.join(", ");
+        parts.push(
+          this.$t("sg_selection_add_gems_by_id_not_found", {
+            count: missing_ids.length,
+            ids: ids_label,
+          })
+        );
+      }
+      if (!parts.length) {
+        this.$alertify
+          .delay(4000)
+          .log(this.$t("sg_selection_add_gems_by_id_nothing_to_add"));
+        return;
+      }
+      const message = parts.join(" ");
+      if (added_count > 0) {
+        this.$alertify.delay(5000).success(message);
+      } else {
+        this.$alertify.delay(5000).log(message);
+      }
     },
     notifyGemStatusOnRemove(status_result) {
       if (!status_result?.status_changed) return;
@@ -486,6 +582,121 @@ export default {
         this.pending_entry_gems_refresh = false;
       } finally {
         this.picker_busy = false;
+        await this.flushPendingEntryGemsRefresh();
+      }
+    },
+    async resolveExistingGemPathsByIds(gem_ids) {
+      const unique_ids = [];
+      const seen = new Set();
+      for (const raw_id of Array.isArray(gem_ids) ? gem_ids : []) {
+        const gem_id = this.cleanString(raw_id);
+        if (!gem_id || seen.has(gem_id)) continue;
+        seen.add(gem_id);
+        unique_ids.push(gem_id);
+      }
+      if (!unique_ids.length) {
+        return { existing_paths: [], missing_ids: [] };
+      }
+
+      const { folders, failed } = await this.$api.getFoldersBySlugs({
+        path: this.gems_root_path,
+        folder_slugs: unique_ids,
+        no_files: true,
+      });
+
+      const existing_paths = [];
+      const found_ids = new Set();
+      for (const folder of Array.isArray(folders) ? folders : []) {
+        const gem_path = this.cleanString(folder?.$path);
+        const gem_id = this.gem_slug_from_path(gem_path);
+        if (!gem_path || !gem_id) continue;
+        found_ids.add(gem_id);
+        existing_paths.push(gem_path);
+      }
+
+      const missing_from_failed = (Array.isArray(failed) ? failed : [])
+        .map((item) => this.cleanString(item?.folder_slug || item))
+        .filter(Boolean);
+      const missing_ids = [
+        ...new Set([
+          ...unique_ids.filter((gem_id) => !found_ids.has(gem_id)),
+          ...missing_from_failed.filter((gem_id) => !found_ids.has(gem_id)),
+        ]),
+      ];
+      return { existing_paths, missing_ids };
+    },
+    setAddByIdProgress(current, total) {
+      this.add_by_id_current = current;
+      this.add_by_id_total = total;
+    },
+    async addGemsByIds(gem_ids) {
+      if (!this.can_edit || this.picker_busy) return;
+      this.picker_busy = true;
+      this.setAddByIdProgress(0, 0);
+      try {
+        const { existing_paths, missing_ids } =
+          await this.resolveExistingGemPathsByIds(gem_ids);
+        const already_in = new Set(this.selection_gem_paths);
+        const paths_to_add = [];
+        let skipped_duplicate_count = 0;
+        for (const gem_path of existing_paths) {
+          if (already_in.has(gem_path)) {
+            skipped_duplicate_count += 1;
+            continue;
+          }
+          already_in.add(gem_path);
+          paths_to_add.push(gem_path);
+        }
+
+        let added_count = 0;
+        if (paths_to_add.length > 0) {
+          this.setAddByIdProgress(0, paths_to_add.length);
+          if (this.is_box_type) {
+            for (
+              let gem_index = 0;
+              gem_index < paths_to_add.length;
+              gem_index += 1
+            ) {
+              this.setAddByIdProgress(gem_index + 1, paths_to_add.length);
+              await assignGemToBox({
+                api: this.$api,
+                gem_path: paths_to_add[gem_index],
+                new_box_folder_path: this.selection_folder_path,
+              });
+              added_count += 1;
+            }
+          } else {
+            const { added_paths } = await addGemsToSelectionEntries({
+              api: this.$api,
+              selection_path: this.selection_folder_path,
+              selection_folder: this.selection_folder,
+              gem_paths: paths_to_add,
+              on_progress: ({ current, total }) => {
+                this.setAddByIdProgress(current, total);
+              },
+            });
+            added_count = added_paths.length;
+          }
+        }
+
+        this.notifyGemsAddedById({
+          added_count,
+          skipped_duplicate_count,
+          missing_ids,
+        });
+        if (added_count > 0) {
+          this.show_add_by_id_modal = false;
+        }
+      } catch (err) {
+        const c = err && err.code;
+        if (c === "not_a_box_selection")
+          this.$alertify.delay(4000).error(this.$t("sg_error_not_a_box"));
+        else
+          this.$alertify.delay(4000).error(c || this.$t("sg_could_not_save"));
+        this.pending_entry_gems_refresh = false;
+      } finally {
+        this.picker_busy = false;
+        this.setAddByIdProgress(0, 0);
         await this.flushPendingEntryGemsRefresh();
       }
     },

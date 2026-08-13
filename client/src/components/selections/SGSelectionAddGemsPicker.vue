@@ -1,15 +1,25 @@
 <template>
   <div class="_addGemsRoot">
-    <button
-      v-if="!panel_open"
-      type="button"
-      class="u-button u-button_small u-button_bleuvert"
-      :disabled="busy"
-      @click="openPanel"
-    >
-      <b-icon icon="plus" scale="1.35" />
-      {{ $t("sg_selection_add_gems_to_selection_button") }}
-    </button>
+    <div v-if="!panel_open" class="_addGemsActions">
+      <button
+        type="button"
+        class="u-button u-button_small u-button_bleuvert"
+        :disabled="busy"
+        @click="openPanel"
+      >
+        <b-icon icon="plus" scale="1.35" />
+        {{ $t("sg_selection_add_gems_to_selection_button") }}
+      </button>
+      <button
+        type="button"
+        class="u-button u-button_small"
+        :disabled="busy"
+        @click="$emit('addById')"
+      >
+        <b-icon icon="hash" />
+        {{ $t("sg_selection_add_gems_by_id_button") }}
+      </button>
+    </div>
 
     <div v-else ref="add_gems_panel" class="_addGemsPanel">
       <header class="_panelHeader">
@@ -166,6 +176,13 @@ export default {
 <style lang="scss" scoped>
 ._addGemsRoot {
   margin-top: calc(var(--spacing) / 2);
+}
+
+._addGemsActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) / 2);
 }
 
 ._openAddGemsBtnIcon {

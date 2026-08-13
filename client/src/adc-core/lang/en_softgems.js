@@ -284,7 +284,7 @@ export default {
   sg_gems_table_col_pf: "PF",
   sg_gems_table_col_ref_supplier: "Ref. supplier",
   sg_gems_table_col_ref_customer: "Ref. customer",
-  sg_gems_table_col_mac: "N° MAC",
+  sg_gems_table_col_mac: "MAC No.",
   sg_gems_table_col_pcs: "Pcs",
   sg_gems_table_col_stone_type: "Type",
   sg_gems_table_col_weight_ct: "Ct",
@@ -431,8 +431,8 @@ export default {
   sg_selection_counterparty_company_contact_optional:
     "Optional — select a contact person at this company.",
   sg_selection_counterparty_loading_contacts: "Loading contacts…",
-  sg_selection_reference_number: "Purchase order N°",
-  sg_supplier_account_number: "Supplier account N°",
+  sg_selection_reference_number: "Purchase order No.",
+  sg_supplier_account_number: "Supplier account No.",
   sg_selection_currency: "Currency",
   sg_section_selection_buying_invoice: "Purchase",
   sg_section_selection_sale_invoice: "Sale",
@@ -484,10 +484,32 @@ export default {
   sg_selection_entries_sort_hint:
     "Gems are ordered by stone type (alphabetical), then by weight (lightest to heaviest) within each type. Order cannot be changed.",
   sg_selection_add_gems: "Add gems",
-  sg_selection_add_gems_to_selection_button: "Add gems to this selection",
+  sg_selection_add_gems_to_selection_button: "Add gems using the table",
+  sg_selection_add_gems_by_id_button: "Add gems using their ID",
+  sg_selection_add_gems_by_id_title: "Add gems using their ID",
+  sg_selection_add_gems_by_id_hint:
+    "Paste gem IDs copied from another selection (comma, space, or line separated). IDs already in this selection are skipped.",
+  sg_selection_add_gems_by_id_label: "Gem IDs",
+  sg_selection_add_gems_by_id_placeholder: "e.g. 12, 45, 108",
+  sg_selection_add_gems_by_id_preview: "{count} unique ID(s) ready to add",
+  sg_selection_add_gems_by_id_already_included:
+    "{count} of these gems are already in this selection. Only gems not already included will be added.",
+  sg_selection_add_gems_by_id_submit: "Add gems",
+  sg_selection_add_gems_by_id_adding: "Adding…",
+  sg_selection_add_gems_by_id_adding_progress: "Adding {current}/{total}",
+  sg_selection_add_gems_by_id_added: "Added {count} gem(s).",
+  sg_selection_add_gems_by_id_skipped_duplicates:
+    "Skipped {count} already in this selection.",
+  sg_selection_add_gems_by_id_not_found: "{count} ID(s) not found: {ids}",
+  sg_selection_add_gems_by_id_nothing_to_add:
+    "No new gems to add (all IDs missing or already in this selection).",
+  sg_selection_copy_gem_ids: "Copy gem IDs to clipboard",
+  sg_selection_copy_gem_ids_success: "Copied {count} gem ID(s) to clipboard.",
+  sg_selection_copy_gem_ids_empty: "No gem IDs to copy.",
+  sg_selection_copy_gem_ids_failed: "Could not copy gem IDs to clipboard.",
   sg_selection_add_gems_loading_background:
     "Loading gem inventory in the background…",
-  sg_selection_add_gems_title: "Add gems to selection",
+  sg_selection_add_gems_title: "Add gems using the table",
   sg_selection_pick_gems_table_hint:
     "Use the same search as in inventory, then click the plus on a row to add that gem (gems already in this selection show a green check).",
   sg_selection_add_gems_status_memo_in_hint:

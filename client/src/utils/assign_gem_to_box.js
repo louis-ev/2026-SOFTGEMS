@@ -167,6 +167,60 @@ export async function removeGemFromSelection({
 }
 
 /**
+ * Append gems to a non-box selection only (no `box_selection_path` change).
+ * Deduplicates against current `selection_entries` and writes once.
+ *
+ * @param {((info: { current: number, total: number }) => void)=} [on_progress]
+ * @returns {Promise<{ added_paths: string[], status_results: object[] }>}
+ */
+export async function addGemsToSelectionEntries({
+  api,
+  selection_path,
+  selection_folder,
+  gem_paths,
+  on_progress,
+}) {
+  const existing = normalizeSelectionGemPaths(
+    selection_folder?.selection_entries
+  );
+  const existing_set = new Set(existing);
+  const to_add = [];
+  for (const raw_path of Array.isArray(gem_paths) ? gem_paths : []) {
+    const gem_path = String(raw_path || "").trim();
+    if (!gem_path || existing_set.has(gem_path)) continue;
+    existing_set.add(gem_path);
+    to_add.push(gem_path);
+  }
+  if (!to_add.length) {
+    return { added_paths: [], status_results: [] };
+  }
+
+  const selection_type = resolveSelectionType(selection_folder);
+  const status_results = [];
+  const total = to_add.length;
+  for (let gem_index = 0; gem_index < to_add.length; gem_index += 1) {
+    if (typeof on_progress === "function") {
+      on_progress({ current: gem_index + 1, total });
+    }
+    const gem_path = to_add[gem_index];
+    const status_result = await applyGemMetaWhenAddedToSelection({
+      api,
+      gem_path,
+      selection_path,
+      selection_type,
+    });
+    status_results.push({ gem_path, ...(status_result || {}) });
+  }
+
+  await api.updateMeta({
+    path: selection_path,
+    new_meta: { selection_entries: [...existing, ...to_add] },
+  });
+
+  return { added_paths: to_add, status_results };
+}
+
+/**
  * Append a gem to a non-box selection only (no `box_selection_path` change).
  */
 export async function addGemToSelectionEntries({
@@ -175,20 +229,11 @@ export async function addGemToSelectionEntries({
   selection_folder,
   gem_path,
 }) {
-  const paths = normalizeSelectionGemPaths(selection_folder.selection_entries);
-  if (paths.includes(gem_path)) return;
-
-  const status_result = await applyGemMetaWhenAddedToSelection({
+  const { status_results } = await addGemsToSelectionEntries({
     api,
-    gem_path,
     selection_path,
-    selection_type: resolveSelectionType(selection_folder),
+    selection_folder,
+    gem_paths: [gem_path],
   });
-
-  await api.updateMeta({
-    path: selection_path,
-    new_meta: { selection_entries: [...paths, gem_path] },
-  });
-
-  return status_result;
+  return status_results[0];
 }

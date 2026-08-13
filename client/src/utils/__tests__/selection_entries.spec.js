@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatGemIdsForClipboard,
   normalizeSelectionGemPaths,
+  parseGemIdsFromText,
+  partitionGemIdsAgainstSelection,
   sortSelectionGems,
 } from "@/utils/selection_entries.js";
 
@@ -20,6 +23,48 @@ describe("normalizeSelectionGemPaths", () => {
         42,
       ])
     ).toEqual(["gems/1"]);
+  });
+});
+
+describe("parseGemIdsFromText", () => {
+  it("parses mixed separators, paths, hashes, and drops duplicates", () => {
+    expect(
+      parseGemIdsFromText("42, gems/7\n#7  3;gems/42\t9")
+    ).toEqual(["42", "7", "3", "9"]);
+  });
+
+  it("returns empty for blank input", () => {
+    expect(parseGemIdsFromText("  \n\t  ")).toEqual([]);
+    expect(parseGemIdsFromText(null)).toEqual([]);
+  });
+});
+
+describe("partitionGemIdsAgainstSelection", () => {
+  it("splits already included IDs from new ones", () => {
+    expect(
+      partitionGemIdsAgainstSelection(
+        ["12", "45", "108"],
+        ["gems/45", "gems/3"]
+      )
+    ).toEqual({
+      already_included_ids: ["45"],
+      new_ids: ["12", "108"],
+    });
+  });
+
+  it("treats all as new when the selection is empty", () => {
+    expect(partitionGemIdsAgainstSelection(["12", "45"], [])).toEqual({
+      already_included_ids: [],
+      new_ids: ["12", "45"],
+    });
+  });
+});
+
+describe("formatGemIdsForClipboard", () => {
+  it("joins gem slugs with the default separator", () => {
+    expect(formatGemIdsForClipboard(["gems/3", "gems/1", "gems/3"])).toBe(
+      "3, 1"
+    );
   });
 });
 

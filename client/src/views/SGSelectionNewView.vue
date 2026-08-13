@@ -26,11 +26,15 @@
 
 <script>
 import { selectionTypeFromSlug } from "@/utils/selection_type_registry.js";
+import { defaultSelectionInternalName } from "@/utils/selection_types.js";
 import {
   selectionDetailPath,
   selectionListPath,
 } from "@/utils/selection_urls.js";
-import { selectionTypeRootPath } from "@/utils/selection_paths.js";
+import {
+  selectionFolderPath,
+  selectionTypeRootPath,
+} from "@/utils/selection_paths.js";
 import { todayDateInputValue } from "@/utils/date_input.js";
 
 export default {
@@ -96,11 +100,28 @@ export default {
           additional_meta,
         });
         if (new_slug) {
-          const path = selectionDetailPath({
-            type_slug: this.type_slug,
-            folder_slug: new_slug,
-          });
-          this.$router.replace(path);
+          const folder_path = selectionFolderPath(this.type_slug, new_slug);
+          const internal_name = defaultSelectionInternalName(
+            this.$t.bind(this),
+            this.new_selection_type,
+            new_slug
+          );
+          if (internal_name && folder_path) {
+            try {
+              await this.$api.updateMeta({
+                path: folder_path,
+                new_meta: { internal_name },
+              });
+            } catch {
+              /* Folder exists; name can be set on the open view. */
+            }
+          }
+          this.$router.replace(
+            selectionDetailPath({
+              type_slug: this.type_slug,
+              folder_slug: new_slug,
+            })
+          );
         } else {
           this.$router.replace(selectionListPath(this.type_slug));
         }
