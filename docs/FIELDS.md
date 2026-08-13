@@ -10,7 +10,6 @@ Purple-highlighted rows are **TODO for later** and **not in V1 scope**.
 
 | Section               | Field            | Fill Method        | Notes                                            |
 | --------------------- | ---------------- | ------------------ | ------------------------------------------------ |
-| Identification        | `parent_id`      | automatic          | Shows parent ID in case of split.                |
 | Stone Characteristics | `color_grading`  | select from a list | Hidden in source sheet. TODO for later (not V1). |
 | Stone Characteristics | `quality_grade`  | select from a list | Hidden in source sheet. TODO for later (not V1). |
 | Stone Characteristics | `clarity`        | select from a list | Hidden in source sheet. TODO for later (not V1). |
@@ -35,7 +34,8 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 | `reference_customer`    | manual             | Customer unique identifier for gemstone or parcel.            |
 | `numero_de_mise_a_consommation` | manual     | Alphanumeric consumption entry number (`Numéro de mise à consommation`). Editable in Identification on the gem open view. |
 | `paired_gem`            | select from gem list | User selects another gem to pair with current gem. On create and edit, reciprocal pairing is auto-set on the selected gem; changing or clearing pairing also unlinks the previous partner. |
-| `parent_id`             | automatic          | Shows parent ID in case of split. (hidden + purple in source) |
+| `parent_id`             | automatic          | Set on the new gem when splitting (`parent_id` = original gem ID). Child gem open view shows a **Split from gem #…** cartouche (with cover) linking to the original. |
+| `splits`                | automatic          | On the original gem: array of `{ id, date }` for each gem split off it, oldest first. Survives repeated splits. Cleared on duplicate/split copies so children do not inherit the parent’s list. Original gem open view shows a **This gem has been split** cartouche; click opens a history modal with links to each child. |
 
 ### Duplicate gem (V1)
 
@@ -45,9 +45,28 @@ From the gem open view (⋯ menu → **Duplicate gem**): `copyFolder` creates a 
 - `status` → `reference`
 - `paired_gem` cleared (no reciprocal re-pair)
 - `box_selection_path` and `selection_membership_paths` cleared (copy is not added to any selection)
+- `splits` cleared (duplicate is not the same parcel history)
 - modifications history reset (source `meta_archive.jsonl` is not kept; a fresh `created` entry is written)
 
 UI: [`SGGemDuplicateModal.vue`](../client/src/components/gems/SGGemDuplicateModal.vue).
+
+### Split gem (V1)
+
+From the gem open view (⋯ menu → **Split gem**, only when `number_of_pieces` > 1): same `copyFolder` clone as duplicate. The modal is two steps:
+
+1. **Pieces:** how many pieces to split off, defaulting to 1. The notice shows the original count (and `{min} to {max}` when more than one value is possible). If the original has exactly 2 pieces, the field is prefilled with 1 and read-only. Next is enabled only for a valid count.
+2. **Weight:** a proportional suggestion (`original weight × new pieces / original pieces`) is shown as the field placeholder; leaving it blank uses that suggestion. The user can override it. A side-by-side comparison shows original (from → remaining) vs new gem for pieces, weight, and prices when Cost /ct is available.
+
+After the copy, the original is updated by subtraction.
+
+- New gem `weight_ct` = entered or suggested weight; original `weight_ct` = original − new (must stay > 0).
+- New gem `number_of_pieces` = entered count; original = original − new (must leave at least 1 piece).
+- **Prices:** if Cost per carat can be computed (`base_price_pcb` / original `weight_ct`), every set price total (Cost, Import, PV, PVD, PC, PF) is recalculated from its own /ct × the new or remaining weight. If Cost /ct is missing, prices are left unchanged.
+- New gem also gets `parent_id` = original gem ID, plus the duplicate resets (new ID, `status` → `reference`, pairing/box/memberships cleared, fresh history).
+- Original gem appends `{ id, date }` to `splits` (ISO date) when the copy is created.
+- Open-view cartouches: child shows **Split from gem #…** (cover, links to original); original shows **This gem has been split** and opens a history modal with child links.
+
+Helpers: [`gem_split.js`](../client/src/utils/gem_split.js). UI: [`SGGemSplitModal.vue`](../client/src/components/gems/SGGemSplitModal.vue).
 
 ## Stone Characteristics
 

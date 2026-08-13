@@ -540,7 +540,7 @@ textarea,
 
   &:hover,
   &:focus-visible {
-    &:not([disabled]) {
+    &:not([disabled]):not([readonly]) {
       // outline: 0;
       // filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.05));
       border-color: var(--c-gris);
@@ -563,6 +563,12 @@ textarea,
     // background-color: var(--c-gris_clair);
     color: var(--c-gris_fonce);
     cursor: not-allowed;
+  }
+
+  &[readonly] {
+    color: var(--c-gris_fonce);
+    cursor: default;
+    caret-color: transparent;
   }
 }
 

@@ -6,9 +6,7 @@
           <div class="_titleGroup">
             <h1 class="_pageTitle">{{ gem_title }}</h1>
             <div
-              v-if="
-                paired_gem_preview_id || outstanding_memo_out_document_number
-              "
+              v-if="has_status_cards"
               class="_statusCards"
             >
               <SGPairedGemShortcutCard
@@ -22,6 +20,20 @@
                 v-if="outstanding_memo_out_document_number"
                 :document_number="outstanding_memo_out_document_number"
                 @open="openOutstandingMemoOut"
+              />
+              <SGGemSplitStatusCard
+                v-if="parent_id_value"
+                kind="from"
+                :gem_id="parent_id_value"
+                :gem_path="parent_gem_shortcut_path"
+                :cover="parent_gem_preview && parent_gem_preview.$cover"
+                @open="openParentGemPage"
+              />
+              <SGGemSplitStatusCard
+                v-if="split_count > 0"
+                kind="into"
+                :split_count="split_count"
+                @open="show_split_history_modal = true"
               />
             </div>
             <SGFolderModificationsHistory
@@ -38,6 +50,15 @@
             >
               <b-icon icon="files" />
               {{ $t("sg_duplicate_gem") }}
+            </button>
+            <button
+              v-if="can_split_gem"
+              type="button"
+              class="u-buttonLink"
+              @click="show_split_modal = true"
+            >
+              <b-icon icon="scissors" />
+              {{ $t("sg_split_gem") }}
             </button>
             <button
               type="button"
@@ -63,6 +84,21 @@
             :gem_id="gem_id"
             @close="show_duplicate_modal = false"
             @duplicated="onGemDuplicated"
+          />
+          <SGGemSplitModal
+            v-if="show_split_modal && gem"
+            :gem="gem"
+            :gem_path="gem_path"
+            :gem_id="gem_id"
+            @close="show_split_modal = false"
+            @splitCompleted="onGemSplit"
+          />
+          <SGGemSplitHistoryModal
+            v-if="show_split_history_modal && gem"
+            :splits="gem.splits"
+            :gems_path="gems_path"
+            @close="show_split_history_modal = false"
+            @openGem="openSplitChildGem"
           />
         </div>
       </div>
@@ -508,6 +544,7 @@ import FieldFlashMixin from "@/mixins/FieldFlashMixin";
 import SectionAnchorScrollMixin from "@/mixins/SectionAnchorScrollMixin.js";
 import SGPairedGemShortcutCard from "@/components/gems/SGPairedGemShortcutCard.vue";
 import SGMemoOutStatusCard from "@/components/gems/SGMemoOutStatusCard.vue";
+import SGGemSplitStatusCard from "@/components/gems/SGGemSplitStatusCard.vue";
 import SGEditableMetaField from "@/components/softgems/SGEditableMetaField.vue";
 import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
@@ -519,6 +556,7 @@ import {
   selectionDocumentNumber,
 } from "@/utils/selection_paths.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
+import { canSplitGem, normalizeGemSplits } from "@/utils/gem_split.js";
 
 export default {
   name: "SGGemOpenView",
@@ -532,6 +570,7 @@ export default {
     RemoveMenu2,
     SGPairedGemShortcutCard,
     SGMemoOutStatusCard,
+    SGGemSplitStatusCard,
     SGEditableMetaField,
     SGFolderMetaPeek,
     SGFolderModificationsHistory,
@@ -542,6 +581,9 @@ export default {
     SGGemMediaSection: () => import("@/components/gems/SGGemMediaSection.vue"),
     SGGemDuplicateModal: () =>
       import("@/components/gems/SGGemDuplicateModal.vue"),
+    SGGemSplitModal: () => import("@/components/gems/SGGemSplitModal.vue"),
+    SGGemSplitHistoryModal: () =>
+      import("@/components/gems/SGGemSplitHistoryModal.vue"),
   },
   props: {
     gem_id: {
@@ -561,9 +603,12 @@ export default {
       is_loading: false,
       show_remove_modal: false,
       show_duplicate_modal: false,
+      show_split_modal: false,
+      show_split_history_modal: false,
       fetch_error: "",
       editing_field: null,
       paired_gem_preview: null,
+      parent_gem_preview: null,
     };
   },
   computed: {
@@ -589,11 +634,35 @@ export default {
     sanitized_paired_gem_value() {
       return this.paired_gem_preview_id;
     },
+    parent_id_value() {
+      return this.cleanString(this.gem?.parent_id);
+    },
+    split_count() {
+      return normalizeGemSplits(this.gem?.splits).length;
+    },
+    has_status_cards() {
+      return Boolean(
+        this.paired_gem_preview_id ||
+          this.outstanding_memo_out_document_number ||
+          this.parent_id_value ||
+          this.split_count > 0
+      );
+    },
+    can_split_gem() {
+      return canSplitGem(this.gem);
+    },
     paired_gem_shortcut_path() {
       const paired_id = this.paired_gem_preview_id;
       if (!paired_id) return "";
       return (
         this.paired_gem_preview?.$path || `${this.gems_path}/${paired_id}`
+      );
+    },
+    parent_gem_shortcut_path() {
+      const parent_id = this.parent_id_value;
+      if (!parent_id) return "";
+      return (
+        this.parent_gem_preview?.$path || `${this.gems_path}/${parent_id}`
       );
     },
     outstanding_memo_out_path() {
@@ -616,6 +685,12 @@ export default {
         this.fetchPairedGemPreview();
       },
     },
+    parent_id_value: {
+      immediate: true,
+      handler() {
+        this.fetchParentGemPreview();
+      },
+    },
   },
   async created() {
     await this.fetchGem();
@@ -630,7 +705,10 @@ export default {
       this.editing_field = null;
       this.show_remove_modal = false;
       this.show_duplicate_modal = false;
+      this.show_split_modal = false;
+      this.show_split_history_modal = false;
       this.paired_gem_preview = null;
+      this.parent_gem_preview = null;
       this.gem = null;
       this.fetch_error = "";
       if (previous_gem_id) {
@@ -681,10 +759,36 @@ export default {
         this.paired_gem_preview = null;
       }
     },
+    async fetchParentGemPreview() {
+      const parent_id = this.parent_id_value;
+      if (!parent_id) {
+        this.parent_gem_preview = null;
+        return;
+      }
+      try {
+        this.parent_gem_preview = await this.$api.getFolder({
+          path: `${this.gems_path}/${parent_id}`,
+          no_files: true,
+        });
+      } catch {
+        this.parent_gem_preview = null;
+      }
+    },
     openPairedGemPage() {
       const paired_id = this.paired_gem_preview_id;
       if (!paired_id) return;
       this.$router.push(`/gems/${paired_id}`);
+    },
+    openParentGemPage() {
+      const parent_id = this.parent_id_value;
+      if (!parent_id) return;
+      this.$router.push(`/gems/${parent_id}`);
+    },
+    openSplitChildGem(gem_id) {
+      const id = this.cleanString(gem_id);
+      if (!id) return;
+      this.show_split_history_modal = false;
+      this.$router.push(`/gems/${id}`);
     },
     openOutstandingMemoOut() {
       const path = this.outstanding_memo_out_path;
@@ -781,6 +885,14 @@ export default {
       }
       this.$router.push(`/gems/${new_gem_id}`);
     },
+    onGemSplit({ new_gem_id }) {
+      this.show_split_modal = false;
+      if (!new_gem_id) return;
+      if (this.panel_mode) {
+        this.$emit("closePanel");
+      }
+      this.$router.push(`/gems/${new_gem_id}`);
+    },
     cleanString(value) {
       if (value === null || value === undefined) return "";
       return String(value).trim();
@@ -831,7 +943,8 @@ export default {
   margin-bottom: calc(var(--spacing) * 0.35);
 
   ::v-deep ._pairedGemShortcutCard,
-  ::v-deep ._memoOutStatusCard {
+  ::v-deep ._memoOutStatusCard,
+  ::v-deep ._splitStatusCard {
     margin-top: 0;
     margin-bottom: 0;
   }

@@ -190,6 +190,51 @@ export default {
   sg_duplicate_gem_success: "Gem duplicated as #{id}.",
   sg_duplicate_gem_failed: "Could not duplicate gem.",
   sg_duplicate_gem_not_allowed: "You are not allowed to duplicate this gem.",
+  sg_split_gem: "Split gem",
+  sg_split_gem_modal_title: "Split gem",
+  sg_split_gem_pieces_question:
+    "How many pieces would you like to split from the original?",
+  sg_split_gem_pieces_hint: "The original has {count} pieces.",
+  sg_split_gem_pieces_hint_range:
+    "The original has {count} pieces. {min} to {max}.",
+  sg_split_gem_new_pieces: "Pieces to split",
+  sg_split_gem_weight_intro:
+    "Weight for the new gem. The suggested value is a proportional split of the original.",
+  sg_split_gem_new_weight: "Weight for the new gem (ct)",
+  sg_split_gem_weight_hint: "You can keep the suggested weight or change it.",
+  sg_split_gem_original_remaining: "Original remaining: {from} → {to}",
+  sg_split_gem_original_column: "Original",
+  sg_split_gem_new_column: "New gem",
+  sg_split_gem_confirm: "Split",
+  sg_split_gem_in_progress: "Splitting...",
+  sg_split_gem_success: "Gem split. New gem is #{id}.",
+  sg_split_gem_failed: "Could not split gem.",
+  sg_split_gem_not_allowed: "You are not allowed to split this gem.",
+  sg_split_gem_original_update_failed:
+    "The new gem was created as #{id}, but the original could not be updated. Check both gems.",
+  sg_split_gem_error_original_weight:
+    "The original gem needs a weight greater than 0.",
+  sg_split_gem_error_new_weight:
+    "Enter a weight greater than 0 for the new gem.",
+  sg_split_gem_error_weight_too_large:
+    "New weight must be less than the original weight.",
+  sg_split_gem_error_new_pieces:
+    "Enter a whole number of pieces greater than 0.",
+  sg_split_gem_error_original_pieces:
+    "Split is only available when the gem has more than one piece.",
+  sg_split_gem_error_pieces_too_large:
+    "New pieces must leave at least 1 piece on the original.",
+  sg_parent_id: "Parent ID",
+  sg_splits: "Split gems",
+  sg_split_from_gem: "Split from gem #{id}",
+  sg_split_from_open: "Open original gem {id}",
+  sg_gem_has_been_split: "This gem has been split",
+  sg_gem_has_been_split_count: "This gem has been split ({count})",
+  sg_split_history_open: "Open split history",
+  sg_split_history_modal_title: "Split history",
+  sg_split_history_modal_intro:
+    "Gems created from this parcel, most recent first.",
+  sg_split_history_open_gem: "Open gem {id}",
   sg_remove_contact: "Remove contact",
   sg_remove_contact_confirm: 'Remove "{name}" permanently?',
   sg_gem_field_updated_remotely:

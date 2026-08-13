@@ -163,6 +163,12 @@
           "paired_gem": {
             "type": "string"
           },
+          "parent_id": {
+            "type": "string"
+          },
+          "splits": {
+            "type": "array"
+          },
           "number_of_pieces": {
             "type": "number"
           },

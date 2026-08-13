@@ -15,6 +15,8 @@
           :size="size"
           :required="required"
           :disabled="disabled"
+          :readonly="read_only"
+          :tabindex="read_only ? -1 : undefined"
           :placeholder="placeholder"
           :value="content"
           @input="onInput"
@@ -123,6 +125,10 @@ export default {
       default: true,
     },
     disabled: {
+      type: Boolean,
+      default: false,
+    },
+    read_only: {
       type: Boolean,
       default: false,
     },

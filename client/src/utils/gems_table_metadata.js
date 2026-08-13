@@ -67,6 +67,8 @@ export const gems_table_gem_excluded_metadata_keys = Object.freeze([
   "selection_membership_paths",
   "purchased_price_pa",
   "price_per_carat_pa",
+  "parent_id",
+  "splits",
 ]);
 
 export const gems_table_discovery_ignored_keys = Object.freeze([

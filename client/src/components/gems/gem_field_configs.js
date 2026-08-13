@@ -71,6 +71,20 @@ export function buildGemFieldConfigs(t) {
       modal_size: "x-large",
       modal_nopadding: true,
     },
+    parent_id: {
+      key: "parent_id",
+      label: t("sg_parent_id"),
+      icon: "diagram-2",
+      type: "text",
+      readonly: true,
+    },
+    splits: {
+      key: "splits",
+      label: t("sg_splits"),
+      icon: "scissors",
+      type: "text",
+      readonly: true,
+    },
     number_of_pieces: {
       key: "number_of_pieces",
       label: t("sg_number_of_pieces"),

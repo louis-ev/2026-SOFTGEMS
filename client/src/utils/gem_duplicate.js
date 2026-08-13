@@ -12,6 +12,7 @@ export function buildGemDuplicateNewMeta() {
     box_selection_path: "",
     selection_membership_paths: {},
     status: GEM_STATUS_REFERENCE,
+    splits: [],
   };
 }
 
