@@ -904,7 +904,10 @@ export default {
 <style lang="scss" scoped>
 ._gemOpenView {
   position: relative;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
   padding: calc(var(--spacing) * 1.35) calc(var(--spacing) * 3)
     calc(var(--spacing) * 2);
 }

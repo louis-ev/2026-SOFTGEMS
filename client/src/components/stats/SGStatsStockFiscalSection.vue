@@ -218,8 +218,10 @@ export default {
 ._stockFiscal {
   width: 100%;
   min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   gap: calc(var(--spacing) * 0.85);
 }
 
@@ -266,6 +268,8 @@ export default {
 ._tableWrap {
   @include sg_data_table.sg-data-table-wrap;
   flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   padding-bottom: var(--sg-table-border-width-thick);
 }
 

@@ -269,9 +269,11 @@ export default {
 }
 
 ._body_content {
+  flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 ._placeholderMsg {
