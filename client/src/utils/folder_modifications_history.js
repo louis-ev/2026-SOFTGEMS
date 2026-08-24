@@ -15,6 +15,7 @@ export function buildSelectionFieldLabels(t) {
     counterparty_path: t("sg_selection_counterparty"),
     reference_number: t("sg_selection_reference_number"),
     currency: t("sg_selection_currency"),
+    exchange_rate: t("sg_selection_exchange_rate"),
     notes: t("sg_selection_notes"),
     partnership_purchase: t("sg_selection_partnership_purchase"),
     partnership_purchased_percentage: t("sg_selection_purchased_percentage"),

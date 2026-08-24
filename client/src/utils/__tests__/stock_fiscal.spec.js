@@ -3,6 +3,8 @@ import {
   buildStockFiscalCsvRows,
   buildStockFiscalRows,
   computeStockFiscalValue,
+  convertStockFiscalAmountToEur,
+  formatStockFiscalBuyingInvoiceWithRate,
   formatStockFiscalSelectionLabel,
   parseStockFiscalCost,
   resolveStockFiscalPercent,
@@ -118,6 +120,23 @@ describe("resolveStockFiscalPercent", () => {
   });
 });
 
+describe("convertStockFiscalAmountToEur", () => {
+  it("keeps EUR amounts and converts USD with a rate", () => {
+    expect(
+      convertStockFiscalAmountToEur(1000, { currency: "EUR" })
+    ).toBe(1000);
+    expect(
+      convertStockFiscalAmountToEur(1000, {
+        currency: "USD",
+        exchange_rate: 0.86,
+      })
+    ).toBe(860);
+    expect(
+      convertStockFiscalAmountToEur(1000, { currency: "USD" })
+    ).toBeNull();
+  });
+});
+
 describe("formatStockFiscalSelectionLabel", () => {
   it("formats internal name with id in parentheses", () => {
     expect(
@@ -146,6 +165,7 @@ describe("buildStockFiscalRows", () => {
       gem_count: 0,
       cost_sum: 0,
       fiscal_sum: 0,
+      fiscal_sum_eur: 0,
     });
   });
 
@@ -174,6 +194,7 @@ describe("buildStockFiscalRows", () => {
       gem_count: 1,
       cost_sum: 1000,
       fiscal_sum: 1000,
+      fiscal_sum_eur: 0,
     });
   });
 
@@ -223,8 +244,10 @@ describe("buildStockFiscalRows", () => {
     });
     expect(rows[0].cost).toBeNull();
     expect(rows[0].fiscal_value).toBe(0);
+    expect(rows[0].fiscal_value_eur).toBeNull();
     expect(aggregates.cost_sum).toBe(0);
     expect(aggregates.fiscal_sum).toBe(0);
+    expect(aggregates.fiscal_sum_eur).toBe(0);
   });
 
   it("picks the latest buying invoice by membership timestamp", () => {
@@ -254,6 +277,47 @@ describe("buildStockFiscalRows", () => {
     expect(rows[0].buying_invoice_path).toBe("buying-invoice/11");
     expect(rows[0].applied_percent).toBe(75);
   });
+
+  it("keeps EUR fiscal value as-is and omits a rate on the invoice label", () => {
+    const { rows, aggregates } = buildStockFiscalRows({
+      gems: [gem()],
+      selections: [buyingInvoice({ currency: "EUR", internal_name: "Paris BI" })],
+    });
+    expect(rows[0].currency).toBe("EUR");
+    expect(rows[0].exchange_rate).toBeNull();
+    expect(rows[0].fiscal_value_eur).toBe(1000);
+    expect(formatStockFiscalBuyingInvoiceWithRate(rows[0])).toBe("Paris BI (10)");
+    expect(aggregates.fiscal_sum_eur).toBe(1000);
+  });
+
+  it("converts USD fiscal value with the buying-invoice exchange rate", () => {
+    const { rows, aggregates } = buildStockFiscalRows({
+      gems: [gem()],
+      selections: [
+        buyingInvoice({
+          currency: "USD",
+          exchange_rate: 0.86,
+          internal_name: "NY BI",
+        }),
+      ],
+    });
+    expect(rows[0].exchange_rate).toBe(0.86);
+    expect(rows[0].fiscal_value).toBe(1000);
+    expect(rows[0].fiscal_value_eur).toBe(860);
+    expect(formatStockFiscalBuyingInvoiceWithRate(rows[0])).toBe(
+      "NY BI (10) (USD → EUR rate = 0.86)"
+    );
+    expect(aggregates.fiscal_sum_eur).toBe(860);
+  });
+
+  it("leaves EUR blank when USD has no exchange rate", () => {
+    const { rows } = buildStockFiscalRows({
+      gems: [gem()],
+      selections: [buyingInvoice({ currency: "USD" })],
+    });
+    expect(rows[0].fiscal_value_eur).toBeNull();
+    expect(formatStockFiscalBuyingInvoiceWithRate(rows[0])).toBe("10");
+  });
 });
 
 describe("buildStockFiscalCsvRows", () => {
@@ -279,8 +343,26 @@ describe("buildStockFiscalCsvRows", () => {
         "partner",
         "applied_percent",
         "fiscal_value",
+        "fiscal_value_eur",
       ],
-      ["1", "MAC-7", "1000", "10", "Supplier One", "25", "250"],
+      ["1", "MAC-7", "1000", "10", "Supplier One", "25", "250", ""],
     ]);
+  });
+
+  it("includes the exchange rate on the buying invoice cell and EUR value", () => {
+    const { rows } = buildStockFiscalRows({
+      gems: [gem()],
+      selections: [
+        buyingInvoice({
+          currency: "USD",
+          exchange_rate: 0.86,
+          internal_name: "NY BI",
+        }),
+      ],
+    });
+    expect(buildStockFiscalCsvRows(rows)[1][3]).toBe(
+      "NY BI (10) (USD → EUR rate = 0.86)"
+    );
+    expect(buildStockFiscalCsvRows(rows)[1][7]).toBe("860");
   });
 });

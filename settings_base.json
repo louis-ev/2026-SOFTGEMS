@@ -386,6 +386,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -449,6 +452,9 @@
           },
           "currency": {
             "type": "string"
+          },
+          "exchange_rate": {
+            "type": "number"
           },
           "notes": {
             "type": "string"
@@ -514,6 +520,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -578,6 +587,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -641,6 +653,9 @@
           },
           "currency": {
             "type": "string"
+          },
+          "exchange_rate": {
+            "type": "number"
           },
           "partnership_purchase": {
             "type": "boolean"
@@ -712,6 +727,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -776,6 +794,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -839,6 +860,9 @@
           },
           "currency": {
             "type": "string"
+          },
+          "exchange_rate": {
+            "type": "number"
           },
           "partnership_purchase": {
             "type": "boolean"
@@ -910,6 +934,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -974,6 +1001,9 @@
           "currency": {
             "type": "string"
           },
+          "exchange_rate": {
+            "type": "number"
+          },
           "notes": {
             "type": "string"
           },
@@ -1037,6 +1067,9 @@
           },
           "currency": {
             "type": "string"
+          },
+          "exchange_rate": {
+            "type": "number"
           },
           "notes": {
             "type": "string"

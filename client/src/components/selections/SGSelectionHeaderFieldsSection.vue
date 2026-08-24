@@ -68,6 +68,22 @@
         @close="closeField"
         @save="onCurrencySave"
       />
+
+      <SGEditableMetaField
+        v-if="show_exchange_rate"
+        :label="$t('sg_selection_exchange_rate')"
+        icon="arrow-left-right"
+        :value="display_exchange_rate"
+        :readonly="!can_edit"
+        :modal_open="active_field === 'exchange_rate'"
+        :modal_title="field_modal_title($t('sg_selection_exchange_rate'))"
+        :modal_is_loading="is_saving_field === 'exchange_rate'"
+        :editor_component="exchange_rate_editor_component"
+        :editor_props="exchange_rate_editor_props"
+        @presentClick="openField('exchange_rate')"
+        @close="closeField"
+        @save="onExchangeRateSave"
+      />
     </div>
   </SGSectionPanel>
 </template>
@@ -78,13 +94,19 @@ import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGDateFieldEditor from "@/components/softgems/SGDateFieldEditor.vue";
 import FormatDates from "@/mixins/FormatDates.js";
 import SGSelectionCounterpartyEditor from "@/components/selections/SGSelectionCounterpartyEditor.vue";
+import SGSelectionExchangeRateEditor from "@/components/selections/SGSelectionExchangeRateEditor.vue";
 import { resolveAddressBookPathLabel } from "@/utils/address_book_paths.js";
 import { toDateInputValue, toStoredCalendarDate } from "@/utils/date_input.js";
 import {
   SELECTION_CURRENCY_OPTIONS,
+  SELECTION_CURRENCY_USD,
   resolveSelectionCurrency,
   selectionCurrencyLabel,
 } from "@/utils/selection_currency.js";
+import {
+  formatSelectionExchangeRateDisplay,
+  normalizeSelectionExchangeRate,
+} from "@/utils/selection_exchange_rate.js";
 import { selectionDocumentNumber } from "@/utils/selection_paths.js";
 
 export default {
@@ -119,6 +141,7 @@ export default {
       counterparty_label: "",
       date_editor_component: SGDateFieldEditor,
       counterparty_editor_component: SGSelectionCounterpartyEditor,
+      exchange_rate_editor_component: SGSelectionExchangeRateEditor,
     };
   },
   computed: {
@@ -136,6 +159,15 @@ export default {
     },
     display_currency() {
       return selectionCurrencyLabel(this.selection?.currency);
+    },
+    show_exchange_rate() {
+      return (
+        resolveSelectionCurrency(this.selection?.currency) ===
+        SELECTION_CURRENCY_USD
+      );
+    },
+    display_exchange_rate() {
+      return formatSelectionExchangeRateDisplay(this.selection?.exchange_rate);
     },
     counterparty_display() {
       const path = this.cleanString(this.selection?.counterparty_path);
@@ -160,6 +192,12 @@ export default {
             ? this.selection.counterparty_path
             : "",
         label: this.$t("sg_selection_counterparty"),
+      };
+    },
+    exchange_rate_editor_props() {
+      return {
+        initial_value: this.selection?.exchange_rate ?? "",
+        label: this.$t("sg_selection_exchange_rate"),
       };
     },
     reference_meta_text() {
@@ -224,19 +262,31 @@ export default {
     async onCurrencySave({ value }) {
       await this.persistField("currency", resolveSelectionCurrency(value));
     },
+    async onExchangeRateSave({ value }) {
+      await this.persistFields({
+        exchange_rate: normalizeSelectionExchangeRate(value),
+      });
+    },
     async onMetaTextSave({ value }) {
       const field_key = this.active_field;
       if (!field_key) return;
       await this.persistField(field_key, value);
     },
     async persistField(field_key, raw_value) {
-      if (!field_key || this.is_saving_field) return;
+      if (!field_key) return;
       const value = typeof raw_value === "string" ? raw_value : "";
-      this.is_saving_field = field_key;
+      await this.persistFields({ [field_key]: value }, field_key);
+    },
+    async persistFields(new_meta, saving_key = "") {
+      if (!new_meta || typeof new_meta !== "object" || this.is_saving_field) {
+        return;
+      }
+      this.is_saving_field =
+        saving_key || Object.keys(new_meta)[0] || "fields";
       try {
         await this.$api.updateMeta({
           path: this.selection_folder_path,
-          new_meta: { [field_key]: value },
+          new_meta,
         });
         this.closeField();
         this.$alertify.delay(2500).success(this.$t("sg_selection_field_saved"));

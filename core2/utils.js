@@ -248,9 +248,14 @@ module.exports = (function () {
           } else if (
             new_meta.hasOwnProperty(field_name) &&
             opt.type === "number" &&
-            typeof new_meta[field_name] === "number"
+            (typeof new_meta[field_name] === "number" ||
+              new_meta[field_name] === null ||
+              new_meta[field_name] === "")
           ) {
-            meta[field_name] = new_meta[field_name];
+            meta[field_name] =
+              typeof new_meta[field_name] === "number"
+                ? new_meta[field_name]
+                : null;
             // TODO Validator
           } else if (
             new_meta.hasOwnProperty(field_name) &&

@@ -412,14 +412,17 @@ export default {
   sg_stats_stock_fiscal_summary_count: "Gems",
   sg_stats_stock_fiscal_summary_cost: "Cost sum",
   sg_stats_stock_fiscal_summary_fiscal: "Fiscal value",
+  sg_stats_stock_fiscal_summary_fiscal_eur: "Fiscal value (€)",
   sg_stats_stock_fiscal_col_cost: "Cost",
   sg_stats_stock_fiscal_col_buying_invoice: "Buying invoice",
   sg_stats_stock_fiscal_col_partner: "Partner",
   sg_stats_stock_fiscal_col_percent: "% applied",
   sg_stats_stock_fiscal_col_fiscal: "Fiscal value",
+  sg_stats_stock_fiscal_col_fiscal_eur: "Fiscal value (€)",
+  sg_stats_stock_fiscal_usd_eur_rate: "USD → EUR rate = {rate}",
   sg_stats_stock_fiscal_total_row: "Total",
   sg_stats_stock_fiscal_formula_hint:
-    "Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single sale invoice with Partnership Invoice checked; otherwise 100%.",
+    "Fiscal value = Cost × % applied ÷ 100. The % comes from the partnership purchase on the buying invoice, or from a single sale invoice with Partnership Invoice checked; otherwise 100%. Fiscal value (€) converts USD with the buying invoice exchange rate (shown as USD → EUR rate = …); EUR amounts are kept as-is. Missing USD rates are left blank.",
   sg_stats_stock_fiscal_open_gem_aria: "Open gem {id}",
   sg_stats_stock_fiscal_open_buying_invoice_aria:
     "Open buying invoice {id}",
@@ -492,6 +495,9 @@ export default {
   sg_selection_reference_number: "Purchase order No.",
   sg_supplier_account_number: "Supplier account No.",
   sg_selection_currency: "Currency",
+  sg_selection_exchange_rate: "Exchange rate",
+  sg_selection_exchange_rate_hint:
+    "USD to EUR rate (for example 0.86).",
   sg_section_selection_buying_invoice: "Purchase",
   sg_section_selection_sale_invoice: "Sale",
   sg_selection_partnership_purchase: "Partnership purchase",

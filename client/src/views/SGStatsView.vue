@@ -109,6 +109,7 @@ export default {
         gem_count: 0,
         cost_sum: 0,
         fiscal_sum: 0,
+        fiscal_sum_eur: 0,
       },
       stock_fiscal_partner_labels: {},
       stock_fiscal_loading: false,
@@ -208,6 +209,7 @@ export default {
           gem_count: 0,
           cost_sum: 0,
           fiscal_sum: 0,
+          fiscal_sum_eur: 0,
         };
         this.stock_fiscal_partner_labels = {};
       } finally {
@@ -276,8 +278,13 @@ export default {
         partner_label: this.partnerLabelForRow(row),
       }));
 
-      const csv_matrix = buildStockFiscalCsvRows(export_rows, (cell) =>
-        cell === null || cell === undefined ? "" : String(cell)
+      const csv_matrix = buildStockFiscalCsvRows(
+        export_rows,
+        (cell) => (cell === null || cell === undefined ? "" : String(cell)),
+        {
+          format_rate_note: (rate_text) =>
+            this.$t("sg_stats_stock_fiscal_usd_eur_rate", { rate: rate_text }),
+        }
       );
       csv_matrix[0] = [
         this.$t("sg_id"),
@@ -287,6 +294,7 @@ export default {
         this.$t("sg_stats_stock_fiscal_col_partner"),
         this.$t("sg_stats_stock_fiscal_col_percent"),
         this.$t("sg_stats_stock_fiscal_col_fiscal"),
+        this.$t("sg_stats_stock_fiscal_col_fiscal_eur"),
       ];
 
       csv_matrix.push([
@@ -299,6 +307,7 @@ export default {
         "",
         "",
         String(this.stock_fiscal_aggregates.fiscal_sum),
+        String(this.stock_fiscal_aggregates.fiscal_sum_eur),
       ]);
 
       const csv_content = csv_matrix

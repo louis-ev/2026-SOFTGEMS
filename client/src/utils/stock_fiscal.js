@@ -4,6 +4,14 @@ import { findGemSelectionMemberships } from "@/utils/gem_selection_memberships.j
 import { normalizeMembershipPathsMap } from "@/utils/gem_selection_membership_paths.js";
 import { clampPartnershipPurchasedPercentage } from "@/utils/selection_buying_invoice.js";
 import {
+  SELECTION_CURRENCY_USD,
+  resolveSelectionCurrency,
+} from "@/utils/selection_currency.js";
+import {
+  formatSelectionExchangeRateDisplay,
+  normalizeSelectionExchangeRate,
+} from "@/utils/selection_exchange_rate.js";
+import {
   resolveSelectionType,
   selectionDocumentNumber,
   selectionTypeRootPath,
@@ -196,12 +204,73 @@ export function formatStockFiscalSelectionLabel(folder) {
 }
 
 /**
+ * USD→EUR rate from the buying invoice, or null when currency is EUR / rate missing.
+ * @param {object|null|undefined} folder
+ * @returns {number|null}
+ */
+export function resolveStockFiscalExchangeRate(folder) {
+  if (!folder || typeof folder !== "object") return null;
+  if (resolveSelectionCurrency(folder.currency) !== SELECTION_CURRENCY_USD) {
+    return null;
+  }
+  return normalizeSelectionExchangeRate(folder.exchange_rate);
+}
+
+/**
+ * Convert an amount to EUR using the buying-invoice currency and rate.
+ * EUR stays as-is. USD requires a stored exchange rate; otherwise null.
+ * @param {number|null} amount
+ * @param {{ currency?: *, exchange_rate?: * }} [options]
+ * @returns {number|null}
+ */
+export function convertStockFiscalAmountToEur(
+  amount,
+  { currency, exchange_rate } = {}
+) {
+  if (amount === null || amount === undefined || amount === "") return null;
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return null;
+  if (resolveSelectionCurrency(currency) !== SELECTION_CURRENCY_USD) {
+    return Number(n.toFixed(2));
+  }
+  const rate = normalizeSelectionExchangeRate(exchange_rate);
+  if (rate === null) return null;
+  return Number((n * rate).toFixed(2));
+}
+
+/**
+ * Buying invoice label with the USD→EUR rate in parentheses when used.
+ * @param {object|null|undefined} row
+ * @param {(rate_text: string) => string} [format_rate_note]
+ * @returns {string}
+ */
+export function formatStockFiscalBuyingInvoiceWithRate(
+  row,
+  format_rate_note
+) {
+  const label = String(row?.buying_invoice_label || "").trim();
+  const rate_text = formatSelectionExchangeRateDisplay(row?.exchange_rate);
+  if (!rate_text) return label;
+  const note =
+    typeof format_rate_note === "function"
+      ? format_rate_note(rate_text)
+      : `USD → EUR rate = ${rate_text}`;
+  if (!label) return `(${note})`;
+  return `${label} (${note})`;
+}
+
+/**
  * @param {object} args
  * @param {object[]} args.gems
  * @param {object[]} args.selections
  * @returns {{
  *   rows: object[],
- *   aggregates: { gem_count: number, cost_sum: number, fiscal_sum: number },
+ *   aggregates: {
+ *     gem_count: number,
+ *     cost_sum: number,
+ *     fiscal_sum: number,
+ *     fiscal_sum_eur: number,
+ *   },
  * }}
  */
 export function buildStockFiscalRows({ gems, selections }) {
@@ -243,6 +312,14 @@ export function buildStockFiscalRows({ gems, selections }) {
       cost,
       percent_resolution.applied_percent
     );
+    const currency = buying_invoice
+      ? resolveSelectionCurrency(buying_invoice.currency)
+      : SELECTION_CURRENCY_USD;
+    const exchange_rate = resolveStockFiscalExchangeRate(buying_invoice);
+    const fiscal_value_eur = convertStockFiscalAmountToEur(fiscal_value, {
+      currency,
+      exchange_rate,
+    });
 
     rows.push({
       gem_path,
@@ -258,7 +335,10 @@ export function buildStockFiscalRows({ gems, selections }) {
       applied_percent: percent_resolution.applied_percent,
       percent_source: percent_resolution.percent_source,
       counterparty_path: percent_resolution.counterparty_path,
+      currency,
+      exchange_rate,
       fiscal_value,
+      fiscal_value_eur,
     });
   }
 
@@ -272,9 +352,11 @@ export function buildStockFiscalRows({ gems, selections }) {
 
   let cost_sum = 0;
   let fiscal_sum = 0;
+  let fiscal_sum_eur = 0;
   for (const row of rows) {
     if (row.cost !== null) cost_sum += row.cost;
     fiscal_sum += row.fiscal_value;
+    if (row.fiscal_value_eur !== null) fiscal_sum_eur += row.fiscal_value_eur;
   }
 
   return {
@@ -283,6 +365,7 @@ export function buildStockFiscalRows({ gems, selections }) {
       gem_count: rows.length,
       cost_sum: Number(cost_sum.toFixed(2)),
       fiscal_sum: Number(fiscal_sum.toFixed(2)),
+      fiscal_sum_eur: Number(fiscal_sum_eur.toFixed(2)),
     },
   };
 }
@@ -290,9 +373,14 @@ export function buildStockFiscalRows({ gems, selections }) {
 /**
  * @param {object[]} rows
  * @param {(cell: *) => string} [format_cell]
+ * @param {{ format_rate_note?: (rate_text: string) => string }} [options]
  * @returns {string[][]}
  */
-export function buildStockFiscalCsvRows(rows, format_cell = String) {
+export function buildStockFiscalCsvRows(
+  rows,
+  format_cell = String,
+  { format_rate_note } = {}
+) {
   const header = [
     "id",
     "numero_de_mise_a_consommation",
@@ -301,15 +389,19 @@ export function buildStockFiscalCsvRows(rows, format_cell = String) {
     "partner",
     "applied_percent",
     "fiscal_value",
+    "fiscal_value_eur",
   ];
   const data_rows = (Array.isArray(rows) ? rows : []).map((row) => [
     format_cell(row.gem_ref),
     format_cell(row.numero_de_mise_a_consommation || ""),
-    format_cell(row.cost),
-    format_cell(row.buying_invoice_label),
+    format_cell(row.cost == null ? "" : row.cost),
+    format_cell(
+      formatStockFiscalBuyingInvoiceWithRate(row, format_rate_note)
+    ),
     format_cell(row.partner_label || ""),
     format_cell(row.applied_percent),
     format_cell(row.fiscal_value),
+    format_cell(row.fiscal_value_eur == null ? "" : row.fiscal_value_eur),
   ]);
   return [header, ...data_rows];
 }

@@ -35,6 +35,14 @@
             formatPrice(aggregates.fiscal_sum)
           }}</span>
         </div>
+        <div class="_summaryItem">
+          <span class="_summaryLabel">{{
+            $t("sg_stats_stock_fiscal_summary_fiscal_eur")
+          }}</span>
+          <span class="_summaryValue">{{
+            formatPrice(aggregates.fiscal_sum_eur)
+          }}</span>
+        </div>
       </div>
 
       <div v-if="!rows.length" class="_stateMsg">
@@ -51,7 +59,7 @@
               <th scope="col" class="_colPrice">
                 {{ $t("sg_stats_stock_fiscal_col_cost") }}
               </th>
-              <th scope="col">
+              <th scope="col" class="_colBuyingInvoice">
                 {{ $t("sg_stats_stock_fiscal_col_buying_invoice") }}
               </th>
               <th scope="col">{{ $t("sg_stats_stock_fiscal_col_partner") }}</th>
@@ -60,6 +68,9 @@
               </th>
               <th scope="col" class="_colPrice">
                 {{ $t("sg_stats_stock_fiscal_col_fiscal") }}
+              </th>
+              <th scope="col" class="_colPrice">
+                {{ $t("sg_stats_stock_fiscal_col_fiscal_eur") }}
               </th>
             </tr>
           </thead>
@@ -87,7 +98,7 @@
                 }}</span>
               </td>
               <td class="_colPrice">{{ formatPrice(row.cost) }}</td>
-              <td>
+              <td class="_colBuyingInvoice">
                 <button
                   v-if="row.buying_invoice_path"
                   type="button"
@@ -97,9 +108,12 @@
                       id: row.buying_invoice_label || row.buying_invoice_path,
                     })
                   "
+                  :title="displayText(buyingInvoiceLabel(row))"
                   @click="onOpenSelectionPath(row.buying_invoice_path)"
                 >
-                  {{ displayText(row.buying_invoice_label) }}
+                  <span class="_cellEllipsis">{{
+                    displayText(buyingInvoiceLabel(row))
+                  }}</span>
                 </button>
                 <span v-else>{{ emptyPlaceholder() }}</span>
               </td>
@@ -110,6 +124,9 @@
                 {{ formatPercent(row.applied_percent) }}
               </td>
               <td class="_colPrice">{{ formatPrice(row.fiscal_value) }}</td>
+              <td class="_colPrice">
+                {{ formatPrice(row.fiscal_value_eur) }}
+              </td>
             </tr>
           </tbody>
           <tfoot>
@@ -120,6 +137,9 @@
               <td colspan="3"></td>
               <td class="_colPrice">
                 {{ formatPrice(aggregates.fiscal_sum) }}
+              </td>
+              <td class="_colPrice">
+                {{ formatPrice(aggregates.fiscal_sum_eur) }}
               </td>
             </tr>
           </tfoot>
@@ -134,6 +154,7 @@
 <script>
 import { formatDisplayNumber } from "@/utils/format_locale.js";
 import { formatPartnershipPurchasedPercentageDisplay } from "@/utils/selection_buying_invoice.js";
+import { formatStockFiscalBuyingInvoiceWithRate } from "@/utils/stock_fiscal.js";
 import { parseSelectionFolderPath } from "@/utils/selection_paths.js";
 
 export default {
@@ -149,6 +170,7 @@ export default {
         gem_count: 0,
         cost_sum: 0,
         fiscal_sum: 0,
+        fiscal_sum_eur: 0,
       }),
     },
     is_loading: {
@@ -194,6 +216,11 @@ export default {
       if (!path) return this.emptyPlaceholder();
       const label = String(this.partner_labels[path] || "").trim();
       return label || path;
+    },
+    buyingInvoiceLabel(row) {
+      return formatStockFiscalBuyingInvoiceWithRate(row, (rate_text) =>
+        this.$t("sg_stats_stock_fiscal_usd_eur_rate", { rate: rate_text })
+      );
     },
     onOpenGem(gem_id) {
       const id = String(gem_id || "").trim();
@@ -278,10 +305,15 @@ export default {
   width: max-content;
   min-width: 100%;
 
-  th:not(._colId):not(._colPrice):not(._colPercent),
-  td:not(._colId):not(._colPrice):not(._colPercent) {
+  th:not(._colId):not(._colPrice):not(._colPercent):not(._colBuyingInvoice),
+  td:not(._colId):not(._colPrice):not(._colPercent):not(._colBuyingInvoice) {
     min-width: 14ch;
     max-width: 22ch;
+  }
+
+  ._colBuyingInvoice {
+    min-width: 22ch;
+    max-width: 36ch;
   }
 
   tfoot td._colId {

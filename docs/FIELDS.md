@@ -337,6 +337,8 @@ Multiplicity rule: only one.
 | `pdf`              | link                     |                          |
 | `link_to_purchase` | link                     |                          |
 
+On every selection folder, when **`currency` is USD** (empty values display as USD), an optional **`exchange_rate`** number (USD→EUR, e.g. `0.86`) is shown in Document details and entered manually. See [SELECTIONS.md](SELECTIONS.md) and [`selection_exchange_rate.js`](../client/src/utils/selection_exchange_rate.js).
+
 On the **buying invoice** selection folder (`buying-invoice/{n}`), optional header fields (see [SGSelectionBuyingInvoiceFieldsSection.vue](../client/src/components/selections/SGSelectionBuyingInvoiceFieldsSection.vue)):
 
 | Field                             | Fill Method | Notes                                              |
@@ -346,7 +348,7 @@ On the **buying invoice** selection folder (`buying-invoice/{n}`), optional head
 
 On the **sale invoice** selection folder (`sale-invoice/{n}`), the same meta keys are available as **Partnership Invoice** (checkbox) + percentage when checked.
 
-**Stock fiscal** (Stats → Stock fiscal): **only gems with `status === buying-invoice`** (UI: Purchased / Buying Invoice) are included; all other statuses are excluded. For each such gem, the table shows gem id, `numero_de_mise_a_consommation`, cost, linked buying invoice, partner (counterparty), applied %, and fiscal value = gem Cost (`base_price_pcb`) × applied % ÷ 100. Applied % comes from the linked buying invoice when `partnership_purchase` and `partnership_purchased_percentage` are set; otherwise from a single sale invoice with Partnership Invoice checked and a set %; otherwise 100%. Implementation: [`client/src/utils/stock_fiscal.js`](../client/src/utils/stock_fiscal.js).
+**Stock fiscal** (Stats → Stock fiscal): **only gems with `status === buying-invoice`** (UI: Purchased / Buying Invoice) are included; all other statuses are excluded. For each such gem, the table shows gem id, `numero_de_mise_a_consommation`, cost, linked buying invoice, partner (counterparty), applied %, fiscal value = gem Cost (`base_price_pcb`) × applied % ÷ 100, and **fiscal value in EUR**. Applied % comes from the linked buying invoice when `partnership_purchase` and `partnership_purchased_percentage` are set; otherwise from a single sale invoice with Partnership Invoice checked and a set %; otherwise 100%. USD fiscal values are converted with the buying invoice **`exchange_rate`** (shown as `USD → EUR rate = 0.86` on the invoice cell); EUR amounts are kept as-is; a missing USD rate leaves the EUR cell blank. Implementation: [`client/src/utils/stock_fiscal.js`](../client/src/utils/stock_fiscal.js).
 
 ### Sale
 
