@@ -91,7 +91,7 @@
           :is_gem_open="is_gem_open"
           :cover_can_edit="false"
           :selection_remove_column="can_edit"
-          :fixed_gem_order="true"
+          default_sort_key=""
           :show_rse_pf_totals="show_rse_pf_totals"
           :enable_column_filters="true"
           :column_field_filters="gems_column_field_filters"

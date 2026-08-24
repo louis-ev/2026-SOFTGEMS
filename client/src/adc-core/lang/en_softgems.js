@@ -546,7 +546,7 @@ export default {
   sg_selection_entries_empty: "No gems linked yet.",
   sg_selection_entries_reloading: "Reloading gems…",
   sg_selection_entries_sort_hint:
-    "Gems are ordered by stone type (alphabetical), then by weight (lightest to heaviest) within each type. Order cannot be changed.",
+    "Gems are ordered by stone type (alphabetical), then by weight (lightest to heaviest) within each type. Click a column’s sort arrows to change the order.",
   sg_selection_add_gems: "Add gems",
   sg_selection_add_gems_to_selection_button: "Add gems using the table",
   sg_selection_add_gems_by_id_button: "Add gems using their ID",

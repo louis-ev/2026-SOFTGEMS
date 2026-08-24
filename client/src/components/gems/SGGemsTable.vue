@@ -394,6 +394,11 @@ export default {
     append_column_label: { type: String, default: "" },
     /** When true, keeps `gems` array order and disables column sorting. */
     fixed_gem_order: { type: Boolean, default: false },
+    /**
+     * Initial column sort. Empty string keeps the incoming `gems` order
+     * until the user clicks sort arrows (used by selection tables).
+     */
+    default_sort_key: { type: String, default: "id" },
     inventory_has_gems: { type: Boolean, default: true },
     gems_page_size: { type: [Number, String], default: 100 },
     /** When true, shows a totals row for the current table rows (incl. search/filter). */
@@ -416,8 +421,8 @@ export default {
       gems_page_size_value: loadTablePageSize("gems"),
       gems_page_index: 0,
       gems_watch_previous_length: null,
-      sort_key: "id",
-      sort_direction: "desc",
+      sort_key: this.default_sort_key || "",
+      sort_direction: this.default_sort_key === "id" ? "desc" : "asc",
       has_initialized_snapshot: false,
       previous_cell_values: {},
       flashing_cells: {},
@@ -565,11 +570,17 @@ export default {
       immediate: true,
       handler(new_keys) {
         if (!Array.isArray(new_keys) || new_keys.length === 0) {
-          this.sort_key = "";
+          if (!this.default_sort_key) this.sort_key = "";
           return;
         }
 
+        if (!this.sort_key) return;
+
         if (!new_keys.includes(this.sort_key)) {
+          if (!this.default_sort_key) {
+            this.sort_key = "";
+            return;
+          }
           this.sort_key = new_keys.includes("id") ? "id" : new_keys[0];
           this.sort_direction = this.sort_key === "id" ? "desc" : "asc";
           this.gems_page_index = 0;

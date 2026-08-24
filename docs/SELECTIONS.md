@@ -23,7 +23,7 @@ This document describes how **selections** are stored and exposed in Softgems, a
     ```json
     ["gems/12", "gems/45"]
     ```
-    - **Display order** is computed client-side (not stored): stone type A→Z, then weight (ct) lightest→heaviest within each type. See `sortSelectionGems` in [client/src/utils/selection_entries.js](../client/src/utils/selection_entries.js).
+    - **Display order** is computed client-side (not stored): stone type A→Z, then weight (ct) lightest→heaviest within each type (`sortSelectionGems`). The open-view table uses that as the **default**; column sort arrows can change it (like all gems). PDF export keeps the type/weight order.
 
 - **Files** on the selection folder: `$files` with thumbs, same pattern as other folder types.
   - **Main document** (all types except **`simple`**): exactly one **PDF**, flagged with **`is_selection_main_document: true`** and **`is_selection_attachment: false`**. Shown in its own section directly under the selection title on the open view; replacing uploads a new PDF and removes the previous one.

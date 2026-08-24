@@ -145,7 +145,8 @@ function parseWeightCt(gem) {
 }
 
 /**
- * Fixed selection table order: stone type (A→Z), then weight (lightest→heaviest).
+ * Default / PDF selection gem order: stone type (A→Z), then weight
+ * (lightest→heaviest). The open-view table is user-sortable separately.
  *
  * @param {object[]} gems
  * @returns {object[]}
