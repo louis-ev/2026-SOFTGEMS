@@ -276,8 +276,10 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
-    calc(var(--spacing) * 1);
+  @include sg-page-padding(
+    calc(var(--spacing) * 2) calc(var(--spacing) * 3)
+      calc(var(--spacing) * 1)
+  );
   box-sizing: border-box;
 }
 

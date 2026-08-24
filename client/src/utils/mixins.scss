@@ -32,3 +32,14 @@
     }
   }
 }
+
+/// Desktop page padding (`* 2` / `* 3`), tighter `* 1` all around on mobile.
+@mixin sg-page-padding(
+  $padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3)
+) {
+  padding: $padding;
+
+  @media (max-width: 767px) {
+    padding: calc(var(--spacing) * 1);
+  }
+}

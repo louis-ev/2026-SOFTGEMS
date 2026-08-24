@@ -357,7 +357,7 @@ export default {
   height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  @include sg-page-padding;
   box-sizing: border-box;
 }
 

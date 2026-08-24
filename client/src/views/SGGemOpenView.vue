@@ -908,8 +908,10 @@ export default {
   min-height: 0;
   overflow-y: auto;
   box-sizing: border-box;
-  padding: calc(var(--spacing) * 1.35) calc(var(--spacing) * 3)
-    calc(var(--spacing) * 2);
+  @include sg-page-padding(
+    calc(var(--spacing) * 1.35) calc(var(--spacing) * 3)
+      calc(var(--spacing) * 2)
+  );
 }
 
 ._pageHeader {

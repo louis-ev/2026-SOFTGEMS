@@ -83,7 +83,7 @@ export default {
 ._sgHome {
   height: 100%;
   overflow-y: auto;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  @include sg-page-padding;
   box-sizing: border-box;
 }
 
