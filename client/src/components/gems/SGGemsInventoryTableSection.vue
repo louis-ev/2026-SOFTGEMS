@@ -365,7 +365,35 @@ export default {
 }
 
 ._tableShell._tableShellBounded {
-  height: min(70vh, 720px);
-  max-height: min(70vh, 720px);
+  height: 70vh;
+  max-height: 720px;
+}
+
+@media (max-width: 767px) {
+  ._tableShell._tableShellBounded {
+    flex: none;
+    height: auto;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    > * {
+      flex: none;
+      height: auto;
+      min-height: 0;
+    }
+
+    ::v-deep ._gemsTableRoot,
+    ::v-deep ._gemsTable {
+      flex: none;
+      height: auto;
+      min-height: 0;
+    }
+
+    ::v-deep ._gemsTable {
+      overflow: visible;
+    }
+  }
 }
 </style>

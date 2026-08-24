@@ -132,7 +132,7 @@ export default {
       this.fetchGemsInventory();
       this.$nextTick(() => {
         this.scrollAddGemsPanelIntoView();
-        this.$refs.gems_inventory_table?.focusSearchInput();
+        this.focusSearchInputIfDesktop();
       });
     },
     scrollAddGemsPanelIntoView({ smooth = true } = {}) {
@@ -142,6 +142,10 @@ export default {
         viewport_fraction_from_top: 1 / 3,
         smooth,
       });
+    },
+    focusSearchInputIfDesktop() {
+      if (this.$root.is_mobile_view) return;
+      this.$refs.gems_inventory_table?.focusSearchInput();
     },
     closePanel() {
       this.panel_open = false;
@@ -161,7 +165,7 @@ export default {
         this.is_loading_gems_inventory = false;
         this.$nextTick(() => {
           this.scrollAddGemsPanelIntoView();
-          this.$refs.gems_inventory_table?.focusSearchInput();
+          this.focusSearchInputIfDesktop();
         });
       }
     },
@@ -176,6 +180,7 @@ export default {
 <style lang="scss" scoped>
 ._addGemsRoot {
   margin-top: calc(var(--spacing) / 2);
+  min-width: 0;
 }
 
 ._addGemsActions {
@@ -195,6 +200,8 @@ export default {
   border: 1px solid color-mix(in srgb, var(--c-gris_fonce) 28%, transparent);
   border-radius: 6px;
   background: color-mix(in srgb, var(--c-gris_clair) 40%, transparent);
+  min-width: 0;
+  max-width: 100%;
 }
 
 ._panelHeader {
