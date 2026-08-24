@@ -281,8 +281,7 @@ import {
   selectionPdfColumnTextAlign,
   selectionPdfTableColPercents,
 } from "@/utils/selection_pdf_columns.js";
-import { numberToWordsEnCapitalized } from "@/utils/number_to_words_en.js";
-import { numberToWordsFrCapitalized } from "@/utils/number_to_words_fr.js";
+import { paymentAmountWordParts } from "@/utils/selection_pdf_payment_amount.js";
 import { resolveAppPublicOrigin } from "@/utils/app_public_url.js";
 import {
   buildGemPdfDescriptionBlocks,
@@ -518,16 +517,17 @@ export default {
     payment_line() {
       if (!Number.isFinite(this.payment_amount)) return "";
       const amount = formatPdfNumber(this.payment_amount, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       });
-      const amount_words =
-        this.resolved_export_lang === "fr"
-          ? numberToWordsFrCapitalized(this.payment_amount)
-          : numberToWordsEnCapitalized(this.payment_amount);
+      const { amount_words, cents_clause } = paymentAmountWordParts(
+        this.resolved_export_lang,
+        this.payment_amount
+      );
       return this.pdfT("payment_line", {
         amount,
         amount_words,
+        cents_clause,
         ...this.pdf_currency_wording,
       });
     },

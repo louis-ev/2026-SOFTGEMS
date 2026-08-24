@@ -25,6 +25,32 @@ describe("selection_pdf_strings", () => {
     expect(selectionPdfT("fr", "order_number")).toBe("N\u00b0 Commande :");
   });
 
+  it("interpolates the payment line with lowercase words and cents", () => {
+    expect(
+      selectionPdfT("en", "payment_line", {
+        amount_words:
+          "four hundred twenty-four thousand four hundred seventy-six",
+        currency_name: "dollars",
+        cents_clause: " and fifty cents",
+        amount: "424\u00a0476.50",
+        currency_code_display: "$US",
+      })
+    ).toBe(
+      "Please kindly transfer four hundred twenty-four thousand four hundred seventy-six dollars and fifty cents (424\u00a0476.50 $US)."
+    );
+    expect(
+      selectionPdfT("fr", "payment_line", {
+        amount_words: "seize mille cent vingt-cinq",
+        currency_name: "euros",
+        cents_clause: "",
+        amount: "16\u00a0125.00",
+        currency_code_display: "\u20AC",
+      })
+    ).toBe(
+      "Merci de bien vouloir virer seize mille cent vingt-cinq euros (16\u00a0125.00 \u20AC)."
+    );
+  });
+
   it("returns accented French footer lines", () => {
     const fr = selectionPdfFooterLines("fr");
     expect(fr[0]).toContain("SI\u00c8GE SOCIAL");
