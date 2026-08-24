@@ -52,17 +52,19 @@ UI: [`SGGemDuplicateModal.vue`](../client/src/components/gems/SGGemDuplicateModa
 
 ### Split gem (V1)
 
-From the gem open view (⋯ menu → **Split gem**, only when `number_of_pieces` > 1): same `copyFolder` clone as duplicate. The modal is two steps:
+From the gem open view (⋯ menu → **Split gem**, only when `number_of_pieces` > 1): same `copyFolder` clone as duplicate. The modal starts on **pieces**:
 
-1. **Pieces:** how many pieces to split off, defaulting to 1. The notice shows the original count (and `{min} to {max}` when more than one value is possible). If the original has exactly 2 pieces, the field is prefilled with 1 and read-only. Next is enabled only for a valid count.
-2. **Weight:** a proportional suggestion (`original weight × new pieces / original pieces`) is shown as the field placeholder; leaving it blank uses that suggestion. The user can override it. A side-by-side comparison shows original (from → remaining) vs new gem for pieces, weight, and prices when Cost /ct is available.
+1. **Pieces:** how many pieces to split off, defaulting to 1. The notice shows the original count (and `{min} to {max}` when more than one value is possible). If the original has exactly 2 pieces, the field is prefilled with 1 and read-only. A compact preview shows the proportional weight (new gem vs remaining) and how many parent selections the copy will join. **Split** (primary, right) confirms immediately with that proportional weight and **all** parent selections. **Advanced split** (to the left of Split) opens the weight and selection screen. Cancel stays on the left.
+2. **Advanced:** a proportional suggestion (`original weight × new pieces / original pieces`) is shown as the field placeholder; leaving it blank uses that suggestion. The user can override it. A side-by-side comparison shows original (from → remaining) vs new gem for pieces, weight, and prices when Cost /ct is available. Below, checkboxes list the original’s selections (including its box); all are checked by default and can be unchecked. **Split** on this screen uses the entered weight and only the checked selections.
 
-After the copy, the original is updated by subtraction.
+After confirmation, the modal shows three progress steps: create the new gem, update the original, then add to selections `{current}/{total}` (omitted when none are selected).
+
+After the copy, the original is updated by subtraction. The copy then inherits the chosen parent selections (`selection_entries` + gem index + box assignment when a box is checked).
 
 - New gem `weight_ct` = entered or suggested weight; original `weight_ct` = original − new (must stay > 0).
 - New gem `number_of_pieces` = entered count; original = original − new (must leave at least 1 piece).
 - **Prices:** if Cost per carat can be computed (`base_price_pcb` / original `weight_ct`), every set price total (Cost, Import, PV, PVD, PC, PF) is recalculated from its own /ct × the new or remaining weight. If Cost /ct is missing, prices are left unchanged.
-- New gem also gets `parent_id` = original gem ID, plus the duplicate resets (new ID, `status` → `reference`, pairing/box/memberships cleared, fresh history).
+- New gem also gets `parent_id` = original gem ID, plus the duplicate resets on copy (new ID, pairing cleared, fresh history). Memberships start cleared on the copy, then the selected parent selections are applied.
 - Original gem appends `{ id, date }` to `splits` (ISO date) when the copy is created.
 - Open-view cartouches: child shows **Split from gem #…** (cover, links to original); original shows **This gem has been split** and opens a history modal with child links.
 

@@ -3,11 +3,18 @@ import {
   gem_pricing_total_column_keys,
 } from "@/mixins/GemPricing.js";
 import {
+  addGemToSelectionEntries,
+  assignGemToBox,
+} from "@/utils/assign_gem_to_box.js";
+import {
   buildGemDuplicateNewMeta,
   listGemDuplicateMetaChanges,
 } from "@/utils/gem_duplicate.js";
 import { formatDisplayNumber, parseEnglishNumber } from "@/utils/format_locale.js";
 import { getGemIdFromPath } from "@/utils/gem_pairing.js";
+import { isBoxSelectionPath } from "@/utils/gem_selection_memberships.js";
+import { listGemIndexedSelectionPaths } from "@/utils/gem_selection_membership_paths.js";
+import { resolveSelectionType } from "@/utils/selection_paths.js";
 
 const PRICE_LABEL_KEYS = Object.freeze({
   base_price_pcb: "sg_base_price_pcb",
@@ -267,6 +274,160 @@ export function buildGemSplitOriginalMeta(
   return meta;
 }
 
+/** Parent selection folder paths the split-off gem can inherit. */
+export function listGemSplitParentSelectionPaths(gem) {
+  return listGemIndexedSelectionPaths(gem)
+    .map((path) => clean_string(path))
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * @param {*} raw ? path array, or `{ [path]: checked }` map
+ * @returns {string[]}
+ */
+export function normalizeGemSplitSelectedPaths(raw) {
+  const seen = new Set();
+  const paths = [];
+  let list = [];
+  if (Array.isArray(raw)) {
+    list = raw;
+  } else if (raw && typeof raw === "object") {
+    list = Object.entries(raw)
+      .filter(([, checked]) => Boolean(checked))
+      .map(([path]) => path);
+  }
+  for (const item of list) {
+    const path = clean_string(item);
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    paths.push(path);
+  }
+  return paths;
+}
+
+function report_gem_split_progress(on_progress, info) {
+  if (typeof on_progress === "function") on_progress(info);
+}
+
+function is_box_selection_target(selection_path, selection_folder) {
+  if (isBoxSelectionPath(selection_path)) return true;
+  if (isBoxSelectionPath(selection_folder?.$path)) return true;
+  return resolveSelectionType(selection_folder) === "boîte";
+}
+
+async function addSplitGemToSelection({ api, gem_path, selection_path }) {
+  const folder = await api.getFolder({ path: selection_path });
+  if (is_box_selection_target(selection_path, folder)) {
+    await assignGemToBox({
+      api,
+      gem_path,
+      new_box_folder_path: selection_path,
+    });
+    return;
+  }
+  await addGemToSelectionEntries({
+    api,
+    selection_path,
+    selection_folder: folder,
+    gem_path,
+  });
+}
+
+/**
+ * Copy the gem, subtract remainder on the original, then add the copy to
+ * the selected parent selections. Memberships are cleared on copy (duplicate
+ * reset) and re-applied via the existing assignment helpers.
+ *
+ * @param {object} args
+ * @param {object} args.api
+ * @param {object} args.gem
+ * @param {string} args.gem_path
+ * @param {string} args.gem_id
+ * @param {object} args.plan
+ * @param {string[]|Record<string, boolean>} [args.selected_selection_paths]
+ * @param {(info: {
+ *   step: "copy"|"original"|"selections",
+ *   current?: number,
+ *   total?: number,
+ *   selection_path?: string,
+ * }) => void} [args.on_progress]
+ * @returns {Promise<{ copy_folder_path: string, new_gem_id: string }>}
+ */
+export async function runGemSplit({
+  api,
+  gem,
+  gem_path,
+  gem_id,
+  plan,
+  selected_selection_paths = [],
+  on_progress,
+}) {
+  const paths = normalizeGemSplitSelectedPaths(selected_selection_paths);
+
+  report_gem_split_progress(on_progress, { step: "copy" });
+  const copy_folder_path = await api.copyFolder({
+    path: gem_path,
+    path_to_destination_type: "gems",
+    new_meta: buildGemSplitNewMeta({
+      plan,
+      parent_id: gem_id,
+    }),
+    is_copy_or_move: "copy",
+  });
+  const new_gem_id = getGemIdFromPath(copy_folder_path);
+
+  report_gem_split_progress(on_progress, { step: "original" });
+  try {
+    await api.updateMeta({
+      path: gem_path,
+      new_meta: buildGemSplitOriginalMeta(plan, {
+        gem,
+        new_gem_id,
+      }),
+    });
+  } catch (original_err) {
+    const err =
+      original_err && typeof original_err === "object" ? original_err : {};
+    throw {
+      ...err,
+      code: err.code || "split_original_update_failed",
+      new_gem_id,
+      copy_folder_path,
+    };
+  }
+
+  const total = paths.length;
+  for (let index = 0; index < paths.length; index += 1) {
+    const selection_path = paths[index];
+    report_gem_split_progress(on_progress, {
+      step: "selections",
+      current: index + 1,
+      total,
+      selection_path,
+    });
+    try {
+      await addSplitGemToSelection({
+        api,
+        gem_path: copy_folder_path,
+        selection_path,
+      });
+    } catch (selection_err) {
+      const err =
+        selection_err && typeof selection_err === "object" ? selection_err : {};
+      throw {
+        ...err,
+        code: "split_selection_failed",
+        selection_path,
+        new_gem_id,
+        copy_folder_path,
+      };
+    }
+  }
+
+  return { copy_folder_path, new_gem_id };
+}
+
 /** Split-off gems recorded on the original parcel, oldest first. */
 export function normalizeGemSplits(raw) {
   if (!Array.isArray(raw)) return [];
@@ -300,7 +461,7 @@ export function formatGemSplitsDisplay(splits, format_date) {
         row.date && typeof format_date === "function"
           ? format_date(row.date)
           : row.date;
-      if (date_label) return `#${row.id} · ${date_label}`;
+      if (date_label) return `#${row.id} ? ${date_label}`;
       return `#${row.id}`;
     })
     .join(", ");

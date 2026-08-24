@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GEM_STATUS_REFERENCE } from "@/utils/gem_status.js";
 import {
   appendGemSplitRecord,
@@ -13,6 +13,9 @@ import {
   listGemSplitComparisonRows,
   listGemSplitNewChanges,
   listGemSplitOriginalChanges,
+  listGemSplitParentSelectionPaths,
+  normalizeGemSplitSelectedPaths,
+  runGemSplit,
   suggestedGemSplitWeight,
   validateGemSplitDraft,
   validateGemSplitPiecesDraft,
@@ -288,6 +291,221 @@ describe("appendGemSplitRecord", () => {
     ]);
     expect(
       formatGemSplitsDisplay(next, () => "13/08/2026")
-    ).toBe("#40 · 13/08/2026, #45 · 13/08/2026");
+    ).toBe("#40 ? 13/08/2026, #45 ? 13/08/2026");
+  });
+});
+
+describe("listGemSplitParentSelectionPaths", () => {
+  it("unions membership map keys with box_selection_path and sorts", () => {
+    expect(
+      listGemSplitParentSelectionPaths({
+        box_selection_path: "box/2",
+        selection_membership_paths: {
+          "memo-in/3": "2026-01-01T00:00:00.000Z",
+          "box/2": "2026-02-01T00:00:00.000Z",
+        },
+      })
+    ).toEqual(["box/2", "memo-in/3"]);
+  });
+
+  it("includes box_selection_path when the membership map is empty", () => {
+    expect(
+      listGemSplitParentSelectionPaths({
+        box_selection_path: "box/9",
+        selection_membership_paths: {},
+      })
+    ).toEqual(["box/9"]);
+  });
+
+  it("returns an empty list when the gem has no selections", () => {
+    expect(listGemSplitParentSelectionPaths(parcel)).toEqual([]);
+  });
+});
+
+describe("normalizeGemSplitSelectedPaths", () => {
+  it("keeps checked map keys and drops blanks", () => {
+    expect(
+      normalizeGemSplitSelectedPaths({
+        "memo-in/2": true,
+        "box/3": false,
+        "sale-invoice/1": true,
+        "": true,
+      })
+    ).toEqual(["memo-in/2", "sale-invoice/1"]);
+  });
+
+  it("dedupes array paths", () => {
+    expect(
+      normalizeGemSplitSelectedPaths(["box/3", "box/3", "  memo-in/2  "])
+    ).toEqual(["box/3", "memo-in/2"]);
+  });
+});
+
+function createSplitApiMock({
+  copy_path = "gems/45",
+  folders = {},
+  fail_original = false,
+} = {}) {
+  const store = { ...folders };
+  const api = {
+    copyFolder: vi.fn(async ({ new_meta }) => {
+      store[copy_path] = {
+        $path: copy_path,
+        selection_membership_paths: {},
+        box_selection_path: "",
+        status: GEM_STATUS_REFERENCE,
+        ...new_meta,
+      };
+      return copy_path;
+    }),
+    getFolder: vi.fn(async ({ path }) => {
+      const folder = store[path];
+      if (!folder) {
+        const err = new Error(`missing ${path}`);
+        err.code = "missing_folder";
+        throw err;
+      }
+      return { ...folder };
+    }),
+    updateMeta: vi.fn(async ({ path, new_meta }) => {
+      if (fail_original && path === "gems/12") {
+        throw { code: "original_update_denied" };
+      }
+      store[path] = { ...(store[path] || { $path: path }), ...new_meta };
+    }),
+  };
+  return { api, store };
+}
+
+describe("runGemSplit", () => {
+  const plan = computeGemSplitPlan({
+    gem: parcel,
+    new_weight_raw: "10",
+    new_pieces_raw: "4",
+  });
+
+  it("copies, updates the original, then assigns box vs non-box selections", async () => {
+    const { api, store } = createSplitApiMock({
+      folders: {
+        "gems/12": { ...parcel },
+        "memo-in/2": {
+          $path: "memo-in/2",
+          selection_type: "memo in",
+          selection_entries: ["gems/12"],
+        },
+        "box/3": {
+          $path: "box/3",
+          selection_entries: ["gems/12"],
+        },
+      },
+    });
+    const on_progress = vi.fn();
+
+    const result = await runGemSplit({
+      api,
+      gem: parcel,
+      gem_path: "gems/12",
+      gem_id: "12",
+      plan,
+      selected_selection_paths: ["memo-in/2", "box/3"],
+      on_progress,
+    });
+
+    expect(result).toEqual({
+      copy_folder_path: "gems/45",
+      new_gem_id: "45",
+    });
+    expect(api.copyFolder).toHaveBeenCalledTimes(1);
+    expect(store["gems/12"]).toMatchObject({
+      weight_ct: 40,
+      number_of_pieces: 16,
+    });
+    expect(store["memo-in/2"].selection_entries).toEqual(["gems/12", "gems/45"]);
+    expect(store["box/3"].selection_entries).toEqual(["gems/12", "gems/45"]);
+    expect(store["gems/45"].box_selection_path).toBe("box/3");
+    expect(store["gems/45"].selection_membership_paths["memo-in/2"]).toBeTruthy();
+    expect(store["gems/45"].selection_membership_paths["box/3"]).toBeTruthy();
+    expect(on_progress.mock.calls.map((call) => call[0])).toEqual([
+      { step: "copy" },
+      { step: "original" },
+      {
+        step: "selections",
+        current: 1,
+        total: 2,
+        selection_path: "memo-in/2",
+      },
+      {
+        step: "selections",
+        current: 2,
+        total: 2,
+        selection_path: "box/3",
+      },
+    ]);
+  });
+
+  it("assigns only checked selections", async () => {
+    const { api, store } = createSplitApiMock({
+      folders: {
+        "gems/12": { ...parcel },
+        "memo-in/2": {
+          $path: "memo-in/2",
+          selection_type: "memo in",
+          selection_entries: ["gems/12"],
+        },
+        "box/3": {
+          $path: "box/3",
+          selection_entries: ["gems/12"],
+        },
+      },
+    });
+    const on_progress = vi.fn();
+
+    await runGemSplit({
+      api,
+      gem: parcel,
+      gem_path: "gems/12",
+      gem_id: "12",
+      plan,
+      selected_selection_paths: { "memo-in/2": true, "box/3": false },
+      on_progress,
+    });
+
+    expect(store["memo-in/2"].selection_entries).toEqual(["gems/12", "gems/45"]);
+    expect(store["box/3"].selection_entries).toEqual(["gems/12"]);
+    expect(store["gems/45"].box_selection_path).toBe("");
+    expect(store["gems/45"].selection_membership_paths["memo-in/2"]).toBeTruthy();
+    expect(store["gems/45"].selection_membership_paths["box/3"]).toBeFalsy();
+    expect(on_progress.mock.calls.map((call) => call[0])).toEqual([
+      { step: "copy" },
+      { step: "original" },
+      {
+        step: "selections",
+        current: 1,
+        total: 1,
+        selection_path: "memo-in/2",
+      },
+    ]);
+  });
+
+  it("throws after a successful copy when the original cannot be updated", async () => {
+    const { api } = createSplitApiMock({
+      folders: { "gems/12": { ...parcel } },
+      fail_original: true,
+    });
+
+    await expect(
+      runGemSplit({
+        api,
+        gem: parcel,
+        gem_path: "gems/12",
+        gem_id: "12",
+        plan,
+        selected_selection_paths: [],
+      })
+    ).rejects.toMatchObject({
+      code: "original_update_denied",
+      new_gem_id: "45",
+      copy_folder_path: "gems/45",
+    });
   });
 });

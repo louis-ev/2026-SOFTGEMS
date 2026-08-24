@@ -206,12 +206,25 @@ export default {
   sg_split_gem_original_column: "Original",
   sg_split_gem_new_column: "New gem",
   sg_split_gem_confirm: "Split",
+  sg_split_gem_advanced: "Advanced split",
+  sg_split_gem_weight_preview:
+    "Proportional weight: {new_weight} ct for the new gem, {remaining_weight} ct remaining.",
+  sg_split_gem_selections_preview:
+    "The new gem will be added to the same {count} selection(s).",
+  sg_split_gem_selections_intro:
+    "Add the new gem to the same selections as the original:",
+  sg_split_gem_selections_empty: "The original gem is not in any selection.",
+  sg_split_gem_progress_copy: "Creating the new gem",
+  sg_split_gem_progress_original: "Updating the original gem",
+  sg_split_gem_progress_selections: "Adding to selections {current}/{total}",
   sg_split_gem_in_progress: "Splitting...",
   sg_split_gem_success: "Gem split. New gem is #{id}.",
   sg_split_gem_failed: "Could not split gem.",
   sg_split_gem_not_allowed: "You are not allowed to split this gem.",
   sg_split_gem_original_update_failed:
     "The new gem was created as #{id}, but the original could not be updated. Check both gems.",
+  sg_split_gem_selection_failed:
+    "The new gem was created as #{id}, but it could not be added to {name}. Check both gems.",
   sg_split_gem_error_original_weight:
     "The original gem needs a weight greater than 0.",
   sg_split_gem_error_new_weight:
