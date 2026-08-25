@@ -29,6 +29,17 @@ export function extract_field_entries(entries, field_key) {
         author_path: entry.author || "",
         event: "updated",
       });
+    } else if (
+      entry.event === "updated" &&
+      entry.fields &&
+      Object.prototype.hasOwnProperty.call(entry.fields, field_key)
+    ) {
+      rows.push({
+        ts: entry.ts,
+        value: entry.fields[field_key],
+        author_path: entry.author || "",
+        event: "updated",
+      });
     }
   }
   return rows.reverse();

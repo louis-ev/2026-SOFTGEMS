@@ -209,6 +209,57 @@ export function formatFolderHistoryEntryValue(entry, { t, history_kind }) {
   return formatGenericHistoryValue(value);
 }
 
+function history_updated_fields(entry) {
+  if (entry?.fields && typeof entry.fields === "object") {
+    return entry.fields;
+  }
+  if (entry?.event === "updated" && entry.field) {
+    return { [entry.field]: entry.value };
+  }
+  return null;
+}
+
+function same_history_update_group(a, b) {
+  return (
+    a?.event === "updated" &&
+    b?.event === "updated" &&
+    a.ts === b.ts &&
+    (a.author || "") === (b.author || "")
+  );
+}
+
+/**
+ * Collapse per-field `updated` lines that share a timestamp (legacy logs, or
+ * older multi-field PATCHes) into one `{ fields }` entry.
+ * @param {Array<object>} entries
+ * @returns {Array<object>}
+ */
+export function groupFolderHistoryEntries(entries) {
+  const grouped = [];
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    if (!entry || entry.event !== "updated") {
+      grouped.push(entry);
+      continue;
+    }
+    const prev = grouped[grouped.length - 1];
+    if (!same_history_update_group(prev, entry)) {
+      grouped.push({ ...entry });
+      continue;
+    }
+    const merged_fields = {
+      ...(history_updated_fields(prev) || {}),
+      ...(history_updated_fields(entry) || {}),
+    };
+    grouped[grouped.length - 1] = {
+      ts: prev.ts,
+      event: "updated",
+      fields: merged_fields,
+      author: prev.author || "",
+    };
+  }
+  return grouped;
+}
+
 /**
  * @param {object} entry
  * @param {{ t: Function }} options
@@ -217,6 +268,20 @@ export function formatFolderHistoryEntryValue(entry, { t, history_kind }) {
 export function formatFolderHistoryCreatedTitle(entry, { t }) {
   const fields_count = Object.keys(entry?.fields || {}).length;
   return t("sg_created_with_fields", { count: fields_count });
+}
+
+/**
+ * @param {object} entry
+ * @param {{ t: Function }} options
+ * @returns {string}
+ */
+export function formatFolderHistoryUpdatedTitle(entry, { t }) {
+  const fields = history_updated_fields(entry);
+  const fields_count = fields ? Object.keys(fields).length : 0;
+  if (fields_count > 1) {
+    return t("sg_updated_with_fields", { count: fields_count });
+  }
+  return t("sg_field_history");
 }
 
 /**
@@ -230,11 +295,47 @@ export function formatFolderHistoryEntryTitle(entry, { t, history_kind }) {
   }
 
   if (entry?.event === "updated") {
-    const field_name = formatFolderHistoryFieldName(entry, { t, history_kind });
-    const value = formatFolderHistoryEntryValue(entry, { t, history_kind });
-    const value_one_line = String(value || "").replace(/\n/g, ", ");
+    const fields = history_updated_fields(entry);
+    const field_keys = fields ? Object.keys(fields) : [];
+    if (field_keys.length > 1) {
+      return formatFolderHistoryUpdatedTitle(entry, { t });
+    }
+    const field = entry.field || field_keys[0];
+    const value = entry.field ? entry.value : fields?.[field];
+    const field_name = formatFolderHistoryFieldName(
+      { field },
+      { t, history_kind }
+    );
+    const formatted = formatFolderHistoryEntryValue(
+      { event: "updated", field, value },
+      { t, history_kind }
+    );
+    const value_one_line = String(formatted || "").replace(/\n/g, ", ");
     return `${field_name}: ${value_one_line}`;
   }
 
   return t("sg_field_history");
+}
+
+/**
+ * @param {object} entry
+ * @param {{ t: Function, history_kind: 'gem' | 'selection' }} options
+ * @returns {string}
+ */
+export function formatFolderHistoryUpdatedFieldsValue(entry, { t, history_kind }) {
+  const fields = history_updated_fields(entry);
+  if (!fields) return "";
+  return Object.entries(fields)
+    .map(([field, value]) => {
+      const field_name = formatFolderHistoryFieldName(
+        { field },
+        { t, history_kind }
+      );
+      const formatted = formatFolderHistoryEntryValue(
+        { event: "updated", field, value },
+        { t, history_kind }
+      );
+      return `${field_name}: ${formatted}`;
+    })
+    .join("\n");
 }

@@ -46,28 +46,41 @@ module.exports = (function () {
       });
     },
 
-    // Called on every meta update. Each changed user-editable field gets its
-    // own line. Sensitive values are blanked — their presence is enough.
+    // Called on every meta update. One user-editable field stays a single
+    // `{ field, value }` line. Several fields in the same PATCH are stored as
+    // one `{ fields }` line so modifications history shows a single event.
     appendUpdated: async ({ path_to_folder, data, author_path }) => {
       dev.logfunction({ path_to_folder });
 
-      const ts = new Date().toISOString();
-      const writes = [];
-
+      const fields = {};
       for (const [key, value] of Object.entries(data || {})) {
         if (EXCLUDED_KEYS.has(key)) continue;
-        writes.push(
-          _appendLine(path_to_folder, {
-            ts,
-            event: "updated",
-            field: key,
-            value: SENSITIVE_KEYS.has(key) ? null : value,
-            author: author_path || "",
-          })
-        );
+        fields[key] = SENSITIVE_KEYS.has(key) ? null : value;
+      }
+      const keys = Object.keys(fields);
+      if (keys.length === 0) return;
+
+      const ts = new Date().toISOString();
+      const author = author_path || "";
+
+      if (keys.length === 1) {
+        const field = keys[0];
+        await _appendLine(path_to_folder, {
+          ts,
+          event: "updated",
+          field,
+          value: fields[field],
+          author,
+        });
+        return;
       }
 
-      await Promise.all(writes);
+      await _appendLine(path_to_folder, {
+        ts,
+        event: "updated",
+        fields,
+        author,
+      });
     },
 
     // Returns all entries in chronological order (oldest first).

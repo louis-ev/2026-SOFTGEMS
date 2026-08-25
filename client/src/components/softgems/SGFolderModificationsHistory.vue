@@ -26,7 +26,7 @@
           <li
             v-for="(entry, index) in history_entries"
             :key="`${entry.ts}-${entry.event}-${
-              entry.field || 'created'
+              entry.field || 'fields'
             }-${index}`"
             class="_historyEntry"
           >
@@ -61,6 +61,9 @@ import {
   formatFolderHistoryCreatedTitle,
   formatFolderHistoryEntryValue,
   formatFolderHistoryFieldName,
+  formatFolderHistoryUpdatedFieldsValue,
+  formatFolderHistoryUpdatedTitle,
+  groupFolderHistoryEntries,
 } from "@/utils/folder_modifications_history.js";
 
 export default {
@@ -114,7 +117,9 @@ export default {
       this.is_loading_history = true;
       try {
         const entries = await this.$api.getFieldHistory({ path });
-        this.history_entries = (Array.isArray(entries) ? entries : [])
+        this.history_entries = groupFolderHistoryEntries(
+          Array.isArray(entries) ? entries : []
+        )
           .slice()
           .reverse();
       } catch {
@@ -134,14 +139,27 @@ export default {
         return formatFolderHistoryCreatedTitle(entry, this.historyFormatOptions());
       }
       if (entry?.event === "updated") {
+        if (this.isMultiFieldUpdate(entry)) {
+          return formatFolderHistoryUpdatedTitle(entry, this.historyFormatOptions());
+        }
         return formatFolderHistoryFieldName(entry, this.historyFormatOptions());
       }
       return this.$t("sg_field_history");
+    },
+    isMultiFieldUpdate(entry) {
+      const fields = entry?.fields;
+      return Boolean(fields && Object.keys(fields).length > 1);
     },
     historyEntryHasValue(entry) {
       return entry?.event === "updated";
     },
     formatHistoryValue(entry) {
+      if (this.isMultiFieldUpdate(entry)) {
+        return formatFolderHistoryUpdatedFieldsValue(
+          entry,
+          this.historyFormatOptions()
+        );
+      }
       return formatFolderHistoryEntryValue(entry, this.historyFormatOptions());
     },
     formatAuthor(author_path) {

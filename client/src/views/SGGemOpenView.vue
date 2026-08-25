@@ -61,6 +61,15 @@
               {{ $t("sg_split_gem") }}
             </button>
             <button
+              v-if="can_show_merge_gem"
+              type="button"
+              class="u-buttonLink"
+              @click="show_merge_modal = true"
+            >
+              <b-icon icon="box-arrow-in-down" />
+              {{ $t("sg_merge_gem") }}
+            </button>
+            <button
               type="button"
               class="u-buttonLink u-buttonLink_red"
               @click="show_remove_modal = true"
@@ -92,6 +101,16 @@
             :gem_id="gem_id"
             @close="show_split_modal = false"
             @splitCompleted="onGemSplit"
+          />
+          <SGGemMergeModal
+            v-if="show_merge_modal && gem"
+            :gem="gem"
+            :gem_path="gem_path"
+            :gem_id="gem_id"
+            :parent_gem="parent_gem_preview"
+            :gems_path="gems_path"
+            @close="show_merge_modal = false"
+            @merged="onGemMerged"
           />
           <SGGemSplitHistoryModal
             v-if="show_split_history_modal && gem"
@@ -566,6 +585,7 @@ import {
 } from "@/utils/selection_paths.js";
 import { selectionDetailPath } from "@/utils/selection_urls.js";
 import { canSplitGem, normalizeGemSplits } from "@/utils/gem_split.js";
+import { canShowMergeGem } from "@/utils/gem_merge.js";
 
 export default {
   name: "SGGemOpenView",
@@ -592,6 +612,7 @@ export default {
     SGGemDuplicateModal: () =>
       import("@/components/gems/SGGemDuplicateModal.vue"),
     SGGemSplitModal: () => import("@/components/gems/SGGemSplitModal.vue"),
+    SGGemMergeModal: () => import("@/components/gems/SGGemMergeModal.vue"),
     SGGemSplitHistoryModal: () =>
       import("@/components/gems/SGGemSplitHistoryModal.vue"),
   },
@@ -614,6 +635,7 @@ export default {
       show_remove_modal: false,
       show_duplicate_modal: false,
       show_split_modal: false,
+      show_merge_modal: false,
       show_split_history_modal: false,
       fetch_error: "",
       editing_field: null,
@@ -660,6 +682,9 @@ export default {
     },
     can_split_gem() {
       return canSplitGem(this.gem);
+    },
+    can_show_merge_gem() {
+      return canShowMergeGem(this.gem);
     },
     paired_gem_shortcut_path() {
       const paired_id = this.paired_gem_preview_id;
@@ -716,6 +741,7 @@ export default {
       this.show_remove_modal = false;
       this.show_duplicate_modal = false;
       this.show_split_modal = false;
+      this.show_merge_modal = false;
       this.show_split_history_modal = false;
       this.paired_gem_preview = null;
       this.parent_gem_preview = null;
@@ -902,6 +928,14 @@ export default {
         this.$emit("closePanel");
       }
       this.$router.push(`/gems/${new_gem_id}`);
+    },
+    onGemMerged({ parent_id }) {
+      this.show_merge_modal = false;
+      if (!parent_id) return;
+      if (this.panel_mode) {
+        this.$emit("closePanel");
+      }
+      this.$router.push(`/gems/${parent_id}`);
     },
     cleanString(value) {
       if (value === null || value === undefined) return "";

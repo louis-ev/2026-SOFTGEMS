@@ -3,7 +3,9 @@ import {
   formatFolderHistoryEntryTitle,
   formatFolderHistoryEntryValue,
   formatFolderHistoryFieldName,
+  formatFolderHistoryUpdatedFieldsValue,
   formatSelectionMembershipPathsHistoryValue,
+  groupFolderHistoryEntries,
 } from "@/utils/folder_modifications_history.js";
 
 const t = (key, values) => {
@@ -15,6 +17,9 @@ const t = (key, values) => {
     sg_gem_notes: "Notes",
     sg_selection_entries: "Gems",
     sg_created_with_fields: `Created (${values?.count} fields)`,
+    sg_updated_with_fields: `Updated (${values?.count} fields)`,
+    sg_weight_ct: "Weight (ct)",
+    sg_number_of_pieces: "Number of pieces",
     sg_field_history: "History",
     sg_status_value_purchased: "Purchased",
     sg_status_value_reference: "Reference",
@@ -165,5 +170,68 @@ describe("formatFolderHistoryEntryTitle", () => {
         gem_opts
       )
     ).toBe("Created (2 fields)");
+  });
+
+  it("formats a multi-field update as one title", () => {
+    expect(
+      formatFolderHistoryEntryTitle(
+        {
+          event: "updated",
+          fields: { weight_ct: 50, number_of_pieces: 20 },
+        },
+        gem_opts
+      )
+    ).toBe("Updated (2 fields)");
+  });
+});
+
+describe("formatFolderHistoryUpdatedFieldsValue", () => {
+  it("lists each field on its own line", () => {
+    expect(
+      formatFolderHistoryUpdatedFieldsValue(
+        {
+          event: "updated",
+          fields: { weight_ct: 50, number_of_pieces: 20 },
+        },
+        gem_opts
+      )
+    ).toBe("Weight (ct): 50\nNumber of pieces: 20");
+  });
+});
+
+describe("groupFolderHistoryEntries", () => {
+  it("collapses same-timestamp field updates into one entry", () => {
+    const grouped = groupFolderHistoryEntries([
+      {
+        ts: "2026-08-25T16:00:00.000Z",
+        event: "updated",
+        field: "weight_ct",
+        value: 50,
+        author: "authors/1",
+      },
+      {
+        ts: "2026-08-25T16:00:00.000Z",
+        event: "updated",
+        field: "number_of_pieces",
+        value: 20,
+        author: "authors/1",
+      },
+      {
+        ts: "2026-08-25T16:01:00.000Z",
+        event: "updated",
+        field: "status",
+        value: "buying-invoice",
+        author: "authors/1",
+      },
+    ]);
+    expect(grouped).toHaveLength(2);
+    expect(grouped[0]).toMatchObject({
+      event: "updated",
+      fields: { weight_ct: 50, number_of_pieces: 20 },
+    });
+    expect(grouped[1]).toMatchObject({
+      field: "status",
+      value: "buying-invoice",
+    });
   });
 });

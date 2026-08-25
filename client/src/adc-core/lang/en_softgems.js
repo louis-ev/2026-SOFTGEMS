@@ -248,6 +248,35 @@ export default {
   sg_split_history_modal_intro:
     "Gems created from this parcel, most recent first.",
   sg_split_history_open_gem: "Open gem {id}",
+  sg_merge_gem: "Merge into parent",
+  sg_merge_gem_modal_title: "Merge into parent",
+  sg_merge_gem_modal_intro:
+    "Add gem #{child_id} back into parent #{parent_id}. Gem #{child_id} will be deleted.",
+  sg_merge_gem_changes_title: "Changes on the parent",
+  sg_merge_gem_changes_legend_parent: "Parent",
+  sg_merge_gem_changes_legend_child: "This split gem",
+  sg_merge_gem_changes_legend_result: "New parent value",
+  sg_merge_gem_discard_notice:
+    "Changed metadata and files on this gem will be discarded. This gem will also be removed from all selections.",
+  sg_merge_gem_confirm: "Merge",
+  sg_merge_gem_in_progress: "Merging...",
+  sg_merge_gem_progress_selections: "Removing from selections {current}/{total}",
+  sg_merge_gem_progress_parent: "Updating the parent gem",
+  sg_merge_gem_progress_delete: "Deleting this gem",
+  sg_merge_gem_success: "Merged into parent #{id}.",
+  sg_merge_gem_failed: "Could not merge gem.",
+  sg_merge_gem_error_no_parent: "This gem has no parent to merge into.",
+  sg_merge_gem_error_parent_missing:
+    "The parent gem could not be found. It may have been removed.",
+  sg_merge_gem_error_has_children:
+    "This gem has been split. Merge its split gems into it first.",
+  sg_merge_gem_selection_failed:
+    "Could not remove this gem from {name}. The merge was stopped.",
+  sg_merge_gem_pairing_failed:
+    "Could not clear pairing on the partner gem. The merge was stopped.",
+  sg_merge_gem_parent_update_failed: "Could not update the parent gem.",
+  sg_merge_gem_delete_failed:
+    "The parent was updated, but gem #{id} could not be deleted. Remove it manually.",
   sg_remove_contact: "Remove contact",
   sg_remove_contact_confirm: 'Remove "{name}" permanently?',
   sg_gem_field_updated_remotely:
@@ -284,6 +313,7 @@ export default {
   sg_path: "Path",
   sg_created: "Created",
   sg_created_with_fields: "Created ({count} fields)",
+  sg_updated_with_fields: "Updated ({count} fields)",
   sg_last_edited: "Last edited",
   sg_last_modified: "Last modified",
   sg_metadata: "Information",

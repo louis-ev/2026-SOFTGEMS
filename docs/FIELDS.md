@@ -34,8 +34,8 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 | `reference_customer`    | manual             | Customer unique identifier for gemstone or parcel.            |
 | `numero_de_mise_a_consommation` | manual     | Alphanumeric consumption entry number. UI label stays **Numéro de mise à consommation** (customs term, do not translate). Editable in Identification on the gem open view. |
 | `paired_gem`            | select from gem list | User selects another gem to pair with current gem. On create and edit, reciprocal pairing is auto-set on the selected gem; changing or clearing pairing also unlinks the previous partner. |
-| `parent_id`             | automatic          | Set on the new gem when splitting (`parent_id` = original gem ID). Child gem open view shows a **Split from gem #…** cartouche (with cover) linking to the original. |
-| `splits`                | automatic          | On the original gem: array of `{ id, date }` for each gem split off it, oldest first. Survives repeated splits. Cleared on duplicate/split copies so children do not inherit the parent’s list. Original gem open view shows a **This gem has been split** cartouche; click opens a history modal with links to each child. |
+| `parent_id`             | automatic          | Set on the new gem when splitting (`parent_id` = original gem ID). Child gem open view shows a **Split from gem #…** cartouche (with cover) linking to the original. ⋯ menu **Merge into parent** adds the child back into that parent. |
+| `splits`                | automatic          | On the original gem: array of `{ id, date }` for each gem split off it, oldest first. Survives repeated splits. Cleared on duplicate/split copies so children do not inherit the parent’s list. Original gem open view shows a **This gem has been split** cartouche; click opens a history modal with links to each child. Merging a child removes its id from this list. |
 
 ### Duplicate gem (V1)
 
@@ -69,6 +69,19 @@ After the copy, the original is updated by subtraction. The copy then inherits t
 - Open-view cartouches: child shows **Split from gem #…** (cover, links to original); original shows **This gem has been split** and opens a history modal with child links.
 
 Helpers: [`gem_split.js`](../client/src/utils/gem_split.js). UI: [`SGGemSplitModal.vue`](../client/src/components/gems/SGGemSplitModal.vue).
+
+### Merge gem (V1)
+
+From the gem open view (⋯ menu → **Merge into parent**), only when `parent_id` is set (the gem is a split-off child). A confirmation modal shows:
+
+1. **Parent changes:** weight, piece count, and price totals (Cost, Import, PV, PVD, PC, PF) as **addition**, shown as `parent + child = merged` (missing side = 0; weight 3 decimals, money 2), with a legend: **Parent** + **This split gem** = **New parent value**. Parent keeps its other meta, cover, files, pairing, status, and selections.
+2. **Notice:** changed metadata and files on the child are discarded; the child is also removed from all selections.
+
+**Blocked** when the child itself has `splits` (merge those grandchildren first) or when the parent folder is missing.
+
+On confirm: remove the child from every indexed selection (including its box), clear reciprocal pairing, add the totals onto the parent **in one `updateMeta`** (one modifications-history event for all summed fields + `splits`) and drop the child id from parent `splits`, then `deleteItem` the child folder (it disappears from inventory and selections). Navigate to the parent gem.
+
+Helpers: [`gem_merge.js`](../client/src/utils/gem_merge.js). UI: [`SGGemMergeModal.vue`](../client/src/components/gems/SGGemMergeModal.vue).
 
 ## Notes
 
