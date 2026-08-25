@@ -1520,6 +1520,8 @@ export default {
   message_too_long:
     "Le message est trop long, il ne doit pas dépasser {max_length} caractères.",
   today: "Aujourd’hui",
+  yesterday_at: "Hier, à {time}",
+  now: "maintenant",
   copy_to_clipboard: "Copier dans le presse-papiers",
   copied: "Copié !",
 

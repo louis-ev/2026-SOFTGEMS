@@ -1511,6 +1511,8 @@ export default {
   show_cursor: "Show cursor",
   starts_on_page: "Starts on page",
   today: "Today",
+  yesterday_at: "yesterday, at {time}",
+  now: "now",
   type: "Type",
   side_by_side: "Side by side",
   new_line: "One after the other",

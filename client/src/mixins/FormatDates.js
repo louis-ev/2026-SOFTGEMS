@@ -1,5 +1,6 @@
 import {
   getDateFormatLocale,
+  getNumberFormatLocale,
   withHourCycle24,
 } from "@/utils/format_locale.js";
 
@@ -92,11 +93,12 @@ export default {
       const hours = Math.floor(duration / 3600);
       const minutes = Math.floor((duration % 3600) / 60);
       const seconds = Math.floor(duration % 60);
+      const locale = getNumberFormatLocale(this.$i18n?.locale);
 
       const parts = [];
       if (hours > 0) {
         parts.push(
-          new Intl.NumberFormat(undefined, {
+          new Intl.NumberFormat(locale, {
             style: "unit",
             unit: "hour",
             unitDisplay: "short",
@@ -105,7 +107,7 @@ export default {
       }
       if (minutes > 0 || hours > 0) {
         parts.push(
-          new Intl.NumberFormat(undefined, {
+          new Intl.NumberFormat(locale, {
             style: "unit",
             unit: "minute",
             unitDisplay: "short",
@@ -114,7 +116,7 @@ export default {
       }
       if (seconds > 0 || (hours === 0 && minutes === 0)) {
         parts.push(
-          new Intl.NumberFormat(undefined, {
+          new Intl.NumberFormat(locale, {
             style: "unit",
             unit: "second",
             unitDisplay: "short",
@@ -161,7 +163,7 @@ export default {
         });
 
         if (abs_diff_seconds < 60) {
-          return "now";
+          return this.$t("now");
         }
         if (abs_diff_seconds < 3600) {
           return relative_time_formatter.format(
@@ -176,9 +178,11 @@ export default {
       }
 
       if (day_diff === 1) {
-        const hours = String(parsed_date.getHours()).padStart(2, "0");
-        const minutes = String(parsed_date.getMinutes()).padStart(2, "0");
-        return `Hier, à ${hours}h${minutes}`;
+        const time = this.formatTime(parsed_date, {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return this.$t("yesterday_at", { time });
       }
 
       return this.formatDateTimeToPrecise(parsed_date);
