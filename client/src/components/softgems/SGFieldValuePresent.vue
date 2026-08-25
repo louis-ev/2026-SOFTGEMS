@@ -1,6 +1,6 @@
 <template>
   <div class="sg-field-value-present" :class="{ _flashing: is_flashing }">
-    <div class="_labelRow">
+    <div v-if="!hide_label" class="_labelRow">
       <DLabel :str="label" :icon="icon || null" />
       <span v-if="pill_text" class="_linkRolePill">{{ pill_text }}</span>
       <slot name="label_append" />
@@ -80,6 +80,11 @@ export default {
     pill_text: {
       type: String,
       default: "",
+    },
+    /** When true, the label row is omitted (e.g. single-field section with its own heading). */
+    hide_label: {
+      type: Boolean,
+      default: false,
     },
     hint_title: {
       type: String,

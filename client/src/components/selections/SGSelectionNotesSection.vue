@@ -8,7 +8,7 @@
     </p>
     <SGEditableMetaField
       :label="$t('sg_selection_notes')"
-      icon="card-text"
+      :hide_label="true"
       value_type="rich_text"
       :value="notes_html"
       :readonly="!can_edit"

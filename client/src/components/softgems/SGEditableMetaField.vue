@@ -3,6 +3,7 @@
     <SGFieldValuePresent
       :label="label"
       :icon="icon"
+      :hide_label="hide_label"
       :value="value"
       :value_type="value_type"
       :readonly="effective_readonly"
@@ -72,6 +73,10 @@ export default {
     icon: {
       type: String,
       default: "",
+    },
+    hide_label: {
+      type: Boolean,
+      default: false,
     },
     value: {
       default: "",
