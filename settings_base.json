@@ -361,18 +361,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -495,18 +483,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -562,18 +538,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -629,18 +593,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -702,18 +654,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -769,18 +709,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -836,18 +764,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -909,18 +825,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -976,18 +880,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"
@@ -1043,18 +935,6 @@
         "$can_be_created_by": "everyone",
         "slug_naming": "sequence",
         "slug_sequence_start": 1,
-        "$cover": {
-          "width": 2000,
-          "height": 2000,
-          "thumbs": {
-            "resolutions": [
-              50,
-              320,
-              640,
-              2000
-            ]
-          }
-        },
         "fields": {
           "internal_name": {
             "type": "string"

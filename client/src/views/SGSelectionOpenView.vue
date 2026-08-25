@@ -8,63 +8,77 @@
         <div v-if="is_loading">{{ $t("sg_loading_selection") }}</div>
         <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
         <div v-else-if="selection" class="_form">
-          <header class="_pageHeading">
-            <div class="_titleRow">
-              <div class="_titleGroup">
-                <div class="_titleLine">
-                  <h1
-                    class="_pageTitle"
-                    :class="{ _pageTitle_editable: can_edit }"
-                    :title="
-                      can_edit ? $t('sg_selection_edit_name_hint') : undefined
-                    "
-                    :tabindex="can_edit ? 0 : undefined"
-                    @click="openInternalNameModal"
-                    @keydown.enter.prevent="openInternalNameModal"
-                    @keydown.space.prevent="openInternalNameModal"
-                  >
-                    {{ page_title }}
-                  </h1>
-                  <span class="_selectionType">{{
-                    formatSelectionType(resolved_selection_type)
-                  }}</span>
+          <header class="_pageHeading" :class="{ _pageHeading_box: is_box_type }">
+            <div class="_pageHeader" :class="{ _pageHeader_box: is_box_type }">
+              <div class="_headerMain">
+                <div class="_titleRow">
+                  <div class="_titleGroup">
+                    <h1
+                      class="_pageTitle"
+                      :class="{ _pageTitle_editable: can_edit }"
+                      :title="
+                        can_edit ? $t('sg_selection_edit_name_hint') : undefined
+                      "
+                      :tabindex="can_edit ? 0 : undefined"
+                      @click="openInternalNameModal"
+                      @keydown.enter.prevent="openInternalNameModal"
+                      @keydown.space.prevent="openInternalNameModal"
+                    >
+                      {{ page_title }}
+                    </h1>
+                    <span class="_pageSubtitle _selectionType">{{
+                      formatSelectionType(resolved_selection_type)
+                    }}</span>
+                    <SGFolderModificationsHistory
+                      :folder_path="selection_folder_path"
+                      :folder_meta="selection"
+                      history_kind="selection"
+                    />
+                  </div>
+                  <div class="_headingActions">
+                    <button
+                      v-if="show_pdf_export"
+                      type="button"
+                      class="u-button u-button_black"
+                      @click="show_pdf_export_modal = true"
+                    >
+                      <b-icon icon="file-earmark-pdf" />
+                      {{ $t("sg_pdf_export_button") }}
+                    </button>
+                    <DropDown v-if="can_edit" :show_label="false" :right="true">
+                      <button
+                        type="button"
+                        class="u-buttonLink u-buttonLink_red"
+                        @click="show_remove_modal = true"
+                      >
+                        <b-icon icon="trash" />
+                        {{ $t("sg_remove_selection") }}
+                      </button>
+                      <RemoveMenu2
+                        v-if="show_remove_modal"
+                        :path="selection_folder_path"
+                        :modal_title="
+                          $t('sg_remove_selection_confirm', { name: page_title })
+                        "
+                        :success_notification="$t('removed_successfully')"
+                        @removedSuccessfully="onRemovedSuccessfully"
+                        @close="show_remove_modal = false"
+                      />
+                    </DropDown>
+                  </div>
                 </div>
-                <SGFolderModificationsHistory
-                  :folder_path="selection_folder_path"
-                  :folder_meta="selection"
-                  history_kind="selection"
-                />
               </div>
-              <div class="_headingActions">
-                <button
-                  v-if="show_pdf_export"
-                  type="button"
-                  class="u-button u-button_black"
-                  @click="show_pdf_export_modal = true"
-                >
-                  <b-icon icon="file-earmark-pdf" />
-                  {{ $t("sg_pdf_export_button") }}
-                </button>
-                <DropDown v-if="can_edit" :show_label="false" :right="true">
-                  <button
-                    type="button"
-                    class="u-buttonLink u-buttonLink_red"
-                    @click="show_remove_modal = true"
-                  >
-                    <b-icon icon="trash" />
-                    {{ $t("sg_remove_selection") }}
-                  </button>
-                  <RemoveMenu2
-                    v-if="show_remove_modal"
+              <div v-if="is_box_type" class="_coverColumn">
+                <div class="_coverFrame">
+                  <CoverField
+                    context="full"
+                    ratio="1 / 1"
+                    :cover="selection.$cover"
                     :path="selection_folder_path"
-                    :modal_title="
-                      $t('sg_remove_selection_confirm', { name: page_title })
-                    "
-                    :success_notification="$t('removed_successfully')"
-                    @removedSuccessfully="onRemovedSuccessfully"
-                    @close="show_remove_modal = false"
+                    :can_edit="can_edit"
+                    :available_options="['import']"
                   />
-                </DropDown>
+                </div>
               </div>
             </div>
           </header>
@@ -294,6 +308,9 @@ export default {
         selectionPdfExportEnabled(this.resolved_selection_type)
       );
     },
+    is_box_type() {
+      return this.type_slug === "box";
+    },
     edit_modal_title() {
       return `${this.page_title} — ${this.$t("sg_selection_name")}`;
     },
@@ -485,6 +502,40 @@ export default {
   margin-bottom: calc(var(--spacing) * 0.5);
 }
 
+._pageHeading_box {
+  margin-bottom: 0;
+}
+
+._pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing);
+}
+
+._pageHeader_box {
+  align-items: center;
+  margin-bottom: calc(var(--spacing) * 1);
+}
+
+._headerMain {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+._coverColumn {
+  min-width: 0;
+  flex: 0 1 200px;
+}
+
+._coverFrame {
+  width: 100%;
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c-bodybg);
+}
+
 ._titleRow {
   display: flex;
   flex-wrap: wrap;
@@ -498,22 +549,24 @@ export default {
   flex-wrap: wrap;
   align-items: center;
   gap: calc(var(--spacing) / 2);
+  flex: 0 0 auto;
 }
 
 ._titleGroup {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: calc(var(--spacing) * 0.35);
   min-width: 0;
 }
 
-._titleLine {
+._pageHeader_box ._titleGroup {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: calc(var(--spacing) * 0.65);
-  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+._pageSubtitle {
+  margin: calc(var(--spacing) / 6) 0 0;
+  color: var(--c-gris_fonce);
+  font-size: 0.95rem;
+  line-height: 1.2;
 }
 
 ._pageTitle {
@@ -540,13 +593,6 @@ export default {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-._selectionType {
-  font-size: 0.95rem;
-  font-weight: 400;
-  color: var(--c-gris_fonce);
-  line-height: 1.2;
 }
 
 ._form {

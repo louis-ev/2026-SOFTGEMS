@@ -33,6 +33,7 @@ This document describes how **selections** are stored and exposed in Softgems, a
 
 - On **`gems`** meta: optional **`box_selection_path`** (string), e.g. `box/3`, or empty if the stone is not in a box.
 - **Rule:** a gem may belong to **at most one** box selection. The canonical pointer is **`box_selection_path`** on the gem; the box folder’s **`selection_entries`** must stay **consistent** with that (V1: client orchestration via `assignGemToBox` in [client/src/utils/assign_gem_to_box.js](../client/src/utils/assign_gem_to_box.js)). Box folders live at `box/{n}`.
+- **Box cover:** only **`box`** selection folders support a cover image (`meta_cover.jpeg`, schema `$cover`). Editable on the box open view header (same `CoverField` flow as gems). Other selection types have no `$cover` in schema.
 
 Other selection types may include many gems in `selection_entries` without using `box_selection_path`.
 
