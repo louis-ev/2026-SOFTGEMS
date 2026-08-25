@@ -34,6 +34,7 @@ describe("gems_table_catalog_column_keys", () => {
       "reference_supplier",
       "reference_customer",
       "numero_de_mise_a_consommation",
+      "notes",
       "$date_modified",
       ...gems_table_selection_nums_column_keys,
     ]);
@@ -128,6 +129,12 @@ describe("gemHasFilledTableColumnValue", () => {
     expect(gemHasFilledTableColumnValue(gem, "selection_nums_sale_invoice")).toBe(
       false
     );
+    expect(
+      gemHasFilledTableColumnValue({ notes: "<p>Hello</p>" }, "notes")
+    ).toBe(true);
+    expect(
+      gemHasFilledTableColumnValue({ notes: "<p></p>" }, "notes")
+    ).toBe(false);
     expect(countGemsWithFilledTableColumnValue([gem], "color")).toBe(0);
   });
 });

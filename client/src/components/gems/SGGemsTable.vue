@@ -32,6 +32,7 @@
                   _filterActive: isColumnFilterActive(metadata_key),
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
                   _treatmentCol: metadata_key === 'treatment_type',
+                  _notesCol: metadata_key === 'notes',
                 },
               ]"
               :aria-sort="getAriaSort(metadata_key)"
@@ -197,6 +198,7 @@
                   _flashCell: isCellFlashing(gem, metadata_key),
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
                   _treatmentCol: metadata_key === 'treatment_type',
+                  _notesCol: metadata_key === 'notes',
                 },
               ]"
               :data-cell-key="getCellFlashKey(gem, metadata_key)"
@@ -269,6 +271,7 @@
                 {
                   _pricingCol: isGemPricingTotalColumnKey(metadata_key),
                   _treatmentCol: metadata_key === 'treatment_type',
+                  _notesCol: metadata_key === 'notes',
                 },
               ]"
               :data-metadata-key="metadata_key"
@@ -368,6 +371,7 @@ import { isRseStoneType } from "@/utils/selection_pdf_customs_summary.js";
 import { formatGemSelectionNumsColumnValue } from "@/utils/gem_selection_nums_columns.js";
 import { isGemMemoOutOutstanding } from "@/utils/gem_selection_membership_paths.js";
 import { isSelectionNumsColumnKey } from "@/utils/gems_table_metadata.js";
+import { htmlToPlainText } from "@/utils/rich_text.js";
 
 export default {
   name: "SGGemsTable",
@@ -664,13 +668,21 @@ export default {
           }
         );
       }
+      if (metadata_key === "notes") {
+        return htmlToPlainText(this.resolveMetadataValue(gem, metadata_key));
+      }
       return this.resolveMetadataValue(gem, metadata_key);
     },
     metadataCellTitle(gem, metadata_key) {
-      if (metadata_key !== "treatment_type") return "";
-      return gemTreatmentTypeTitle(
-        this.resolveMetadataValue(gem, metadata_key)
-      );
+      if (metadata_key === "treatment_type") {
+        return gemTreatmentTypeTitle(
+          this.resolveMetadataValue(gem, metadata_key)
+        );
+      }
+      if (metadata_key === "notes") {
+        return this.formatMetadataCellDisplay(gem, metadata_key);
+      }
+      return "";
     },
     resolveMetadataValue(gem, metadata_key) {
       if (metadata_key === "id") return this.getGemId(gem);
@@ -1493,6 +1505,16 @@ td[data-metadata-key="$cover"] {
 }
 
 ._gemMetadataValue {
+}
+td[data-metadata-key="notes"] {
+  max-width: 14rem;
+
+  ._gemMetadataValue {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 td[data-metadata-key="id"] {
   ._gemMetadataValue {

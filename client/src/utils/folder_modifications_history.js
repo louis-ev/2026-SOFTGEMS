@@ -38,6 +38,9 @@ function formatHistoryEntryValue(entry, { history_kind }) {
   if (history_kind === "selection" && entry?.field === "notes") {
     return htmlToPlainText(value) || "—";
   }
+  if (history_kind === "gem" && entry?.field === "notes") {
+    return htmlToPlainText(value) || "—";
+  }
   if (history_kind === "selection" && typeof value === "boolean") {
     return value ? "✓" : "—";
   }

@@ -605,6 +605,7 @@ export default {
   sg_selection_notes: "Notes",
   sg_selection_notes_export_hint:
     "Shown on PDF export just below the gems table, in both the English and French PDF versions.",
+  sg_gem_notes: "Notes",
   sg_section_selection_box: "Box",
   sg_gem_current_box: "Current box",
   sg_gem_no_box: "Not in any box.",

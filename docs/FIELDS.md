@@ -70,6 +70,12 @@ After the copy, the original is updated by subtraction. The copy then inherits t
 
 Helpers: [`gem_split.js`](../client/src/utils/gem_split.js). UI: [`SGGemSplitModal.vue`](../client/src/components/gems/SGGemSplitModal.vue).
 
+## Notes
+
+| Field   | Fill Method | Notes                                                                                                                                 |
+| ------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `notes` | manual      | Optional rich-text HTML (bold / italic / link). Editable in a **Notes** section on the gem open view ([`SGGemNotesSection.vue`](../client/src/components/gems/SGGemNotesSection.vue)). Optional **Notes** column in the gems inventory table (plain-text preview; full text on hover). Copied when duplicating a gem. |
+
 ## Stone Characteristics
 
 | Field              | Fill Method        | Notes                                                                                        |

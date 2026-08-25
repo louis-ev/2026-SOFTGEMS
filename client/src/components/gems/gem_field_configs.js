@@ -312,5 +312,13 @@ export function buildGemFieldConfigs(t) {
       type: "dimensions_merged",
       dimension_field_keys: ["length_mm", "width_mm", "height_mm"],
     },
+    notes: {
+      key: "notes",
+      label: t("sg_gem_notes"),
+      icon: "card-text",
+      type: "text",
+      input_type: "editor",
+      modal_size: "large",
+    },
   };
 }

@@ -160,6 +160,9 @@
           "numero_de_mise_a_consommation": {
             "type": "string"
           },
+          "notes": {
+            "type": "string"
+          },
           "paired_gem": {
             "type": "string"
           },

@@ -119,6 +119,14 @@
     <div v-if="is_loading">{{ $t("sg_loading_gem") }}</div>
     <div v-else-if="fetch_error" class="u-errorMsg">{{ fetch_error }}</div>
     <div v-else-if="gem" class="_content">
+      <SGGemNotesSection
+        :gem_path="gem_path"
+        :gem="gem"
+        :can_edit="can_edit"
+        :page_title="gem_title"
+        @saved="onFieldSaved"
+      />
+
       <SGGemSelectionsSection :gem_path="gem_path" :gem="gem" />
 
       <SGSectionPanel
@@ -550,6 +558,7 @@ import SGFolderMetaPeek from "@/components/softgems/SGFolderMetaPeek.vue";
 import SGFolderModificationsHistory from "@/components/softgems/SGFolderModificationsHistory.vue";
 import SGSectionPanel from "@/components/softgems/SGSectionPanel.vue";
 import SGGemSelectionsSection from "@/components/gems/SGGemSelectionsSection.vue";
+import SGGemNotesSection from "@/components/gems/SGGemNotesSection.vue";
 import { resolveOutstandingMemoOutPath } from "@/utils/gem_selection_membership_paths.js";
 import {
   parseSelectionFolderPath,
@@ -576,6 +585,7 @@ export default {
     SGFolderModificationsHistory,
     SGSectionPanel,
     SGGemSelectionsSection,
+    SGGemNotesSection,
     SGGemCertificatesSection: () =>
       import("@/components/gems/SGGemCertificatesSection.vue"),
     SGGemMediaSection: () => import("@/components/gems/SGGemMediaSection.vue"),

@@ -345,6 +345,7 @@ export default {
         pc_to: "file-earmark-text",
         pf_invoiced_price: "file-earmark-text",
         dimensions_lwh: "aspect-ratio",
+        notes: "card-text",
       };
       return metadata_to_icon[metadata_key] || null;
     },
@@ -378,6 +379,7 @@ export default {
         dimensions_lwh: "sg_gems_table_col_dimensions_lwh",
         $date_modified: "sg_gems_table_col_edited",
         paired_gem: "sg_gems_table_col_paired_gem",
+        notes: "sg_gem_notes",
       };
       const table_header = table_header_i18n[metadata_key];
       if (table_header) return this.$t(table_header);
@@ -408,6 +410,7 @@ export default {
         pc_to: "sg_pc_to",
         pf_invoiced_price: "sg_pf_invoiced_price",
         dimensions_lwh: "sg_dimensions_lwh",
+        notes: "sg_gem_notes",
         $path: "sg_path",
         $date_created: "sg_created",
       };

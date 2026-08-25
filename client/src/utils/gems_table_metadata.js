@@ -11,6 +11,7 @@ import {
   gems_table_selection_nums_column_keys,
   isSelectionNumsColumnKey,
 } from "@/utils/gem_selection_nums_columns.js";
+import { isEmptyRichText } from "@/utils/rich_text.js";
 
 export {
   filterGemsTableDefaultVisibleKeys,
@@ -56,6 +57,7 @@ export const gems_table_catalog_column_keys = Object.freeze([
   "reference_supplier",
   "reference_customer",
   "numero_de_mise_a_consommation",
+  "notes",
   "$date_modified",
   ...gems_table_selection_nums_column_keys,
 ]);
@@ -241,6 +243,9 @@ export function gemHasFilledTableColumnValue(gem, metadata_key) {
   }
   if (isSelectionNumsColumnKey(metadata_key)) {
     return Boolean(formatGemSelectionNumsColumnValue(gem, metadata_key));
+  }
+  if (metadata_key === "notes") {
+    return !isEmptyRichText(gem.notes);
   }
   return is_filled_meta_value(gem[metadata_key]);
 }

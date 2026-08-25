@@ -30,6 +30,7 @@
 import GemPricing from "@/mixins/GemPricing";
 import GemDimensions from "@/mixins/GemDimensions";
 import { getDateFormatLocale } from "@/utils/format_locale.js";
+import { htmlToPlainText } from "@/utils/rich_text.js";
 
 export default {
   name: "GemCsvExportButton",
@@ -110,6 +111,10 @@ export default {
 
       if (this.isGemDimensionsMergedColumnKey(metadata_key)) {
         return this.formatGemDimensionsInline(gem);
+      }
+
+      if (metadata_key === "notes") {
+        return htmlToPlainText(gem?.notes);
       }
 
       const raw_value = gem?.[metadata_key];
