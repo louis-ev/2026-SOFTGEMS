@@ -31,7 +31,13 @@
             class="_historyEntry"
           >
             <p class="_historyEntryTitle">
-              {{ formatHistoryEntryTitle(entry) }}
+              {{ formatHistoryFieldLabel(entry) }}
+            </p>
+            <p
+              v-if="historyEntryHasValue(entry)"
+              class="_historyEntryValue"
+            >
+              {{ formatHistoryValue(entry) }}
             </p>
             <p class="_historyEntryMeta">
               <time :datetime="entry.ts">{{
@@ -51,7 +57,11 @@
 
 <script>
 import BaseModal2 from "@/adc-core/modals/BaseModal2.vue";
-import { formatFolderHistoryEntryTitle } from "@/utils/folder_modifications_history.js";
+import {
+  formatFolderHistoryCreatedTitle,
+  formatFolderHistoryEntryValue,
+  formatFolderHistoryFieldName,
+} from "@/utils/folder_modifications_history.js";
 
 export default {
   name: "SGFolderModificationsHistory",
@@ -113,11 +123,26 @@ export default {
         this.is_loading_history = false;
       }
     },
-    formatHistoryEntryTitle(entry) {
-      return formatFolderHistoryEntryTitle(entry, {
+    historyFormatOptions() {
+      return {
         t: this.$t.bind(this),
         history_kind: this.history_kind,
-      });
+      };
+    },
+    formatHistoryFieldLabel(entry) {
+      if (entry?.event === "created") {
+        return formatFolderHistoryCreatedTitle(entry, this.historyFormatOptions());
+      }
+      if (entry?.event === "updated") {
+        return formatFolderHistoryFieldName(entry, this.historyFormatOptions());
+      }
+      return this.$t("sg_field_history");
+    },
+    historyEntryHasValue(entry) {
+      return entry?.event === "updated";
+    },
+    formatHistoryValue(entry) {
+      return formatFolderHistoryEntryValue(entry, this.historyFormatOptions());
     },
     formatAuthor(author_path) {
       if (!author_path) return "";
@@ -187,7 +212,17 @@ export default {
 ._historyEntryTitle {
   margin: 0;
   font-size: var(--sl-font-size-small);
+  font-weight: 600;
   color: var(--c-noir);
+}
+
+._historyEntryValue {
+  margin: 0;
+  font-size: var(--sl-font-size-small);
+  line-height: 1.45;
+  color: var(--c-noir);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 ._historyEntryMeta {

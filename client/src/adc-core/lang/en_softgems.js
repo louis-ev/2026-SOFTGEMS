@@ -283,6 +283,7 @@ export default {
   sg_remarks: "Remarks",
   sg_path: "Path",
   sg_created: "Created",
+  sg_created_with_fields: "Created ({count} fields)",
   sg_last_edited: "Last edited",
   sg_last_modified: "Last modified",
   sg_metadata: "Informations",
