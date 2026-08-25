@@ -32,6 +32,15 @@
           <b-icon icon="clipboard" />
           {{ $t("sg_selection_copy_gem_ids") }}
         </button>
+        <GemCsvExportButton
+          v-if="show_entries_table_shell"
+          menu_mode
+          :show_zip_download="false"
+          :gems="table_gems_for_export"
+          :metadata_keys="metadata_keys"
+          :metadata_labels="metadata_labels"
+          :file_name_prefix="selection_csv_file_prefix"
+        />
       </DropDown>
     </template>
     <p v-if="selection_gem_paths.length > 0" class="_entriesSortHint">
@@ -102,6 +111,7 @@
           @removeRowClick="confirmRemoveGemRow"
           @applyColumnFilter="onApplyColumnFilter"
           @clearColumnFilter="onClearColumnFilter"
+          @sortedGemsChange="table_gems_for_export = $event"
         />
         <div
           v-if="show_entries_reload_overlay"
@@ -178,6 +188,7 @@ import SGSelectionAddGemsByIdModal from "@/components/selections/SGSelectionAddG
 import SGSelectionGemsHistoryModal from "@/components/selections/SGSelectionGemsHistoryModal.vue";
 import SGGemEditFieldModal from "@/components/gems/SGGemEditFieldModal.vue";
 import SGGemColumnsModal from "@/components/gems/SGGemColumnsModal.vue";
+import GemCsvExportButton from "@/components/gems/GemCsvExportButton.vue";
 import { buildGemFieldConfigs } from "@/components/gems/gem_field_configs";
 import { applyPairedGemPartnerUpdates } from "@/utils/gem_pairing.js";
 import {
@@ -223,6 +234,7 @@ export default {
     SGSelectionGemsHistoryModal,
     SGGemEditFieldModal,
     SGGemColumnsModal,
+    GemCsvExportButton,
   },
   props: {
     selection_folder_path: {
@@ -264,6 +276,7 @@ export default {
       editing_current_value: "",
       index_heal_busy: false,
       index_heal_seq: 0,
+      table_gems_for_export: [],
     };
   },
   computed: {
@@ -308,6 +321,11 @@ export default {
     },
     show_entries_reload_overlay() {
       return this.entry_gems_loading && this.entry_gems_list.length > 0;
+    },
+    selection_csv_file_prefix() {
+      const parsed = parseSelectionFolderPath(this.selection_folder_path);
+      if (!parsed.type_slug || !parsed.folder_slug) return "selection-gems";
+      return `${parsed.type_slug}-${parsed.folder_slug}-gems`;
     },
   },
   watch: {

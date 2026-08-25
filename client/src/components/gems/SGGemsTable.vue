@@ -566,6 +566,15 @@ export default {
         this.detectUpdatedCells(new_gems);
       },
     },
+    sorted_gems: {
+      immediate: true,
+      handler(next_gems) {
+        this.$emit(
+          "sortedGemsChange",
+          Array.isArray(next_gems) ? next_gems : []
+        );
+      },
+    },
     metadata_keys: {
       immediate: true,
       handler(new_keys) {

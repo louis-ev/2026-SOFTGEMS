@@ -65,6 +65,7 @@
           @editCell="$emit('editCell', $event)"
           @applyColumnFilter="onApplyColumnFilter"
           @clearColumnFilter="onClearColumnFilter"
+          @sortedGemsChange="$emit('sortedGemsChange', $event)"
         />
       </div>
     </template>
@@ -232,12 +233,6 @@ export default {
     metadata_keys: {
       handler(next_keys) {
         this.$emit("metadataKeysChange", next_keys);
-      },
-      immediate: true,
-    },
-    sorted_gems: {
-      handler(next_gems) {
-        this.$emit("sortedGemsChange", next_gems);
       },
       immediate: true,
     },

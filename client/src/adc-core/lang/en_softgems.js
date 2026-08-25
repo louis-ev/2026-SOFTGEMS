@@ -57,7 +57,7 @@ export default {
   sg_table_page_size_label: "Rows per page",
   sg_table_page_size_aria: "Number of rows per page",
   sg_create_gem: "Add a gem",
-  sg_export_gems_csv: "Export full database (CSV)",
+  sg_export_gems_csv_table: "Export CSV for this gem table",
   sg_download_all_gems_zip: "Download all gems (ZIP)",
   sg_download_all_gems_zip_instructions:
     "A ZIP archive containing all gems files will be generated.",

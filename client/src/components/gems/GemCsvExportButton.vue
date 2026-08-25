@@ -1,6 +1,7 @@
 <template>
   <div class="_csvExport" :class="{ _csvExport_menu: menu_mode }">
     <button
+      v-if="show_zip_download"
       type="button"
       class="u-buttonLink"
       :disabled="!has_gems || is_downloading_zip"
@@ -20,7 +21,7 @@
       @click="exportCsv"
     >
       <b-icon icon="download" />
-      {{ $t("sg_export_gems_csv") }}
+      {{ $t("sg_export_gems_csv_table") }}
     </button>
   </div>
 </template>
@@ -39,6 +40,8 @@ export default {
     metadata_labels: { type: Object, default: () => ({}) },
     gems_path: { type: String, default: "gems" },
     menu_mode: { type: Boolean, default: false },
+    show_zip_download: { type: Boolean, default: true },
+    file_name_prefix: { type: String, default: "gems-table" },
   },
   data() {
     return {
@@ -140,7 +143,12 @@ export default {
         .join("\n");
       const csv_with_bom = `\uFEFF${csv_content}`;
       const file_date = new Date().toISOString().slice(0, 10);
-      const file_name = `gems-database-${file_date}.csv`;
+      const prefix = String(this.file_name_prefix || "gems-table")
+        .trim()
+        .replace(/[^\w-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      const file_name = `${prefix || "gems-table"}-${file_date}.csv`;
       const csv_blob = new Blob([csv_with_bom], {
         type: "text/csv;charset=utf-8;",
       });

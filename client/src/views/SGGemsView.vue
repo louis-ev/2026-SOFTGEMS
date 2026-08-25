@@ -5,14 +5,6 @@
         <div class="_pageHeader">
           <h1 class="_pageTitle">{{ $t("sg_all_gems") }}</h1>
           <div class="_headerActions">
-            <button
-              type="button"
-              class="u-button u-button_small"
-              @click="openColumnsModal"
-            >
-              <b-icon icon="layout-three-columns" />
-              {{ $t("sg_customize_columns") }}
-            </button>
             <router-link
               to="/gems/new"
               class="u-button u-button_small u-button_bleuvert"
@@ -26,6 +18,14 @@
               :right="true"
               :show_label="false"
             >
+              <button
+                type="button"
+                class="u-buttonLink"
+                @click="openColumnsModal"
+              >
+                <b-icon icon="layout-three-columns" />
+                {{ $t("sg_customize_columns") }}
+              </button>
               <GemCsvExportButton
                 menu_mode
                 :gems="sorted_gems_for_export"
