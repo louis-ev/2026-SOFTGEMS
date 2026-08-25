@@ -289,7 +289,7 @@ export default {
   sg_metadata: "Information",
   sg_reference_supplier: "Reference supplier",
   sg_reference_customer: "Reference customer",
-  sg_numero_de_mise_a_consommation: "Consumption entry number (MAC)",
+  sg_numero_de_mise_a_consommation: "Numéro de mise à consommation",
   sg_pair_single_indicator: "Pair / Single indicator",
   sg_paired_gem: "Paired gem",
   sg_paired_gem_search_placeholder: "Search by gem ID…",

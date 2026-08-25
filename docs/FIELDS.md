@@ -32,7 +32,7 @@ Other purple-highlighted (visible) rows in the sheet are also TODO for later (no
 | `box_reference`         | automatic          | Shows box reference when stone is associated to a box.        |
 | `reference_supplier`    | manual             | Supplier unique identifier for gemstone or parcel.            |
 | `reference_customer`    | manual             | Customer unique identifier for gemstone or parcel.            |
-| `numero_de_mise_a_consommation` | manual     | Alphanumeric consumption entry number (MAC). Editable in Identification on the gem open view. |
+| `numero_de_mise_a_consommation` | manual     | Alphanumeric consumption entry number. UI label stays **Numéro de mise à consommation** (customs term, do not translate). Editable in Identification on the gem open view. |
 | `paired_gem`            | select from gem list | User selects another gem to pair with current gem. On create and edit, reciprocal pairing is auto-set on the selected gem; changing or clearing pairing also unlinks the previous partner. |
 | `parent_id`             | automatic          | Set on the new gem when splitting (`parent_id` = original gem ID). Child gem open view shows a **Split from gem #…** cartouche (with cover) linking to the original. |
 | `splits`                | automatic          | On the original gem: array of `{ id, date }` for each gem split off it, oldest first. Survives repeated splits. Cleared on duplicate/split copies so children do not inherit the parent’s list. Original gem open view shows a **This gem has been split** cartouche; click opens a history modal with links to each child. |
