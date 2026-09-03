@@ -8,7 +8,6 @@ export const GEM_STATUS_MANUAL_SLUGS = Object.freeze([
   "buying-invoice",
   "sale-invoice",
   "return-memo-in",
-  "return-memo-out",
   "importation-return",
 ]);
 
@@ -19,7 +18,6 @@ const GEM_STATUS_LABEL_KEYS = Object.freeze({
   "buying-invoice": "sg_status_value_purchased",
   "sale-invoice": "sg_status_value_sold",
   "return-memo-in": "sg_status_value_returned",
-  "return-memo-out": "sg_status_value_returned",
   "importation-return": "sg_status_value_returned",
 });
 

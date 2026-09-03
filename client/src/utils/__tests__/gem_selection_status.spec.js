@@ -17,9 +17,7 @@ describe("gemStatusSlugForSelectionType", () => {
     expect(gemStatusSlugForSelectionType("return memo in")).toBe(
       "return-memo-in"
     );
-    expect(gemStatusSlugForSelectionType("return memo out")).toBe(
-      "return-memo-out"
-    );
+    expect(gemStatusSlugForSelectionType("return memo out")).toBe("");
     expect(gemStatusSlugForSelectionType("importation return")).toBe(
       "importation-return"
     );
