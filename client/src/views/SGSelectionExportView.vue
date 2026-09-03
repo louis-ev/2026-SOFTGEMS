@@ -345,6 +345,7 @@ export default {
         name,
         address: address_lines.join("\n"),
         address_lines,
+        tva_number: this.cleanString(contact_folder?.tva_number),
       };
       this.supplier_account_line = this.cleanString(
         contact_folder?.supplier_account_number

@@ -21,6 +21,10 @@
           >
             {{ line }}
           </p>
+          <p v-if="counterparty_tva_number" class="_counterpartyTvaLine">
+            <span class="_refLabel">{{ pdfT("vat_number") }}</span>
+            {{ counterparty_tva_number }}
+          </p>
         </div>
       </div>
 
@@ -435,6 +439,9 @@ export default {
         .map((line) => line.trim())
         .filter(Boolean);
     },
+    counterparty_tva_number() {
+      return this.cleanReferenceLine(this.counterparty_block?.tva_number);
+    },
     resolved_export_lang() {
       return normalizeSelectionPdfLang(this.export_lang);
     },
@@ -799,7 +806,8 @@ $acf-pdf-table-line: #000;
   text-transform: uppercase;
 }
 
-._counterpartyAddressLine {
+._counterpartyAddressLine,
+._counterpartyTvaLine {
   margin: 0;
   line-height: 1.4;
   font-weight: 400;
