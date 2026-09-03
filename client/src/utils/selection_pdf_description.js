@@ -230,6 +230,16 @@ export function buildGemPdfDescriptionBlocks(gem, origin = "", options = {}) {
     });
   }
 
+  const reference_customer = String(gem?.reference_customer || "").trim();
+  if (reference_customer) {
+    blocks.push({
+      type: "text",
+      text: selectionPdfT(lang, "reference_customer_prefix", {
+        value: reference_customer,
+      }),
+    });
+  }
+
   gemCertificateFiles(gem).forEach((certificate_file) => {
     const text = formatCertificateLinkLabel(
       certificate_file,

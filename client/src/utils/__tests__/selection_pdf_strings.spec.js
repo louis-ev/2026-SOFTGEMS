@@ -25,6 +25,12 @@ describe("selection_pdf_strings", () => {
     expect(selectionPdfT("fr", "order_number")).toBe("N\u00b0 Commande :");
     expect(selectionPdfT("en", "vat_number")).toBe("VAT No.:");
     expect(selectionPdfT("fr", "vat_number")).toBe("N\u00b0 TVA :");
+    expect(selectionPdfT("en", "reference_customer_prefix", { value: "CUST-1" })).toBe(
+      "Reference customer: CUST-1"
+    );
+    expect(selectionPdfT("fr", "reference_customer_prefix", { value: "CUST-1" })).toBe(
+      "R\u00e9f\u00e9rence client : CUST-1"
+    );
   });
 
   it("interpolates the payment line with lowercase words and cents", () => {

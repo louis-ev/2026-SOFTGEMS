@@ -310,7 +310,7 @@ describe("pdf shape abbreviations", () => {
 });
 
 describe("pdf description blocks", () => {
-  it("builds title, origin, and country of cut lines", () => {
+  it("builds title, origin, country of cut, and customer reference lines", () => {
     const blocks = buildGemPdfDescriptionBlocks({
       color: "Blue",
       stone_type: "sapphire",
@@ -318,11 +318,27 @@ describe("pdf description blocks", () => {
       origin_country: "Sri Lanka",
       country_of_cut: "Thailand",
       treatment_type: "No heat",
+      reference_customer: "CUST-123",
     });
     expect(blocks[0].text).toBe("Blue sapphire OV");
     expect(blocks.some((b) => b.text === "Origin: Sri Lanka")).toBe(true);
     expect(blocks.some((b) => b.text === "Country of cut: Thailand")).toBe(
       true
     );
+    expect(blocks.some((b) => b.text === "Reference customer: CUST-123")).toBe(
+      true
+    );
+  });
+
+  it("omits the customer reference line when empty", () => {
+    const blocks = buildGemPdfDescriptionBlocks({
+      color: "Blue",
+      stone_type: "sapphire",
+      shape: "Oval",
+      reference_customer: "  ",
+    });
+    expect(
+      blocks.some((b) => String(b.text || "").startsWith("Reference customer:"))
+    ).toBe(false);
   });
 });
