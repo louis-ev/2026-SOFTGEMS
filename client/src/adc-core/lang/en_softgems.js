@@ -635,7 +635,7 @@ export default {
   sg_selection_invalid_path: "Invalid selection link.",
   sg_selection_notes: "Notes",
   sg_selection_notes_export_hint:
-    "Shown on PDF export just below the gems table, in both the English and French PDF versions.",
+    "Shown on PDF export after the gems table and before the payment line / bank footer, in both the English and French PDF versions.",
   sg_gem_notes: "Notes",
   sg_section_selection_box: "Box",
   sg_gem_current_box: "Current box",

@@ -171,16 +171,16 @@
       </tbody>
     </table>
 
+    <section v-if="has_notes" class="_notesBlock">
+      <div class="_notesBody" v-html="notes_html" />
+    </section>
+
     <p
       v-if="has_pricing && show_payment_line && payment_line"
       class="_paymentLine"
     >
       {{ payment_line }}
     </p>
-
-    <section v-if="has_notes" class="_notesBlock">
-      <div class="_notesBody" v-html="notes_html" />
-    </section>
 
     <p v-if="has_pricing && bank_footer_en" class="_bankIntro">
       {{ bank_intro_line }}
