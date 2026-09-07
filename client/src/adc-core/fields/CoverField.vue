@@ -1,5 +1,9 @@
 <template>
-  <div class="_coverField" :style="cover_field_style">
+  <div
+    class="_coverField"
+    :class="{ _coverField_freeRatio: is_free_ratio }"
+    :style="cover_field_style"
+  >
     <div class="_hasImage" v-if="cover_thumb">
       <img
         :src="cover_thumb"
@@ -55,11 +59,11 @@
           @click="edit_mode = true"
         />
       </div>
-      <ImageSelect
+        <ImageSelect
         v-if="edit_mode"
         :path="path"
         :label="label_title"
-        :ratio="normalized_ratio"
+        :ratio="image_select_ratio"
         :preview_format="preview_format"
         :existing_preview="existing_preview"
         :available_options="available_options"
@@ -108,12 +112,26 @@ export default {
   beforeDestroy() {},
   watch: {},
   computed: {
+    is_free_ratio() {
+      return this.ratio === "free";
+    },
     normalized_ratio() {
-      if (!this.ratio) return null;
+      if (!this.ratio || this.is_free_ratio) return null;
       if (this.ratio === "square") return "1 / 1";
       return this.ratio;
     },
+    /** Passed to ImageSelect; `"free"` keeps crop UI without a forced aspect. */
+    image_select_ratio() {
+      if (this.is_free_ratio) return "free";
+      return this.normalized_ratio;
+    },
     cover_field_style() {
+      if (this.is_free_ratio) {
+        return {
+          position: "relative",
+          width: "100%",
+        };
+      }
       if (!this.normalized_ratio) return {};
       return {
         position: "relative",
@@ -158,6 +176,33 @@ export default {
   --color1: var(--c-gris_clair);
   --color2: white;
   // --color2: var(--c-gris_fonce);
+}
+
+._coverField_freeRatio {
+  position: relative;
+  inset: auto;
+  height: auto;
+  min-height: 8rem;
+
+  ._hasImage {
+    position: relative;
+    inset: auto;
+
+    img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+    }
+  }
+
+  ._noImage {
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
 }
 
 ._editingPane {

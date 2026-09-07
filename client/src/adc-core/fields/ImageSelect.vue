@@ -13,7 +13,7 @@
           <CropMedia
             :blob="picked_image"
             :preview_format="preview_format"
-            :forced_ratio="ratio"
+            :forced_ratio="forced_crop_ratio"
             @updateCrop="updateCrop"
           />
         </div>
@@ -79,6 +79,11 @@ export default {
     },
     image_has_been_changed() {
       return this.picked_image !== this.existing_preview;
+    },
+    /** `"free"` opens crop without locking aspect ratio. */
+    forced_crop_ratio() {
+      if (!this.ratio || this.ratio === "free") return undefined;
+      return this.ratio;
     },
   },
   methods: {

@@ -72,7 +72,7 @@
                 <div class="_coverFrame">
                   <CoverField
                     context="full"
-                    ratio="1 / 1"
+                    ratio="free"
                     :cover="selection.$cover"
                     :path="selection_folder_path"
                     :can_edit="can_edit"
@@ -525,10 +525,12 @@ export default {
 
 ._coverColumn {
   min-width: 0;
-  flex: 0 1 200px;
+  flex: 0 1 240px;
+  max-width: min(320px, 40vw);
 }
 
 ._coverFrame {
+  position: relative;
   width: 100%;
   border: 1px solid var(--c-gris_clair);
   border-radius: 8px;
