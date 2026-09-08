@@ -1,7 +1,7 @@
 {
   "name": "dodoc-electron",
   "productName": "SoftGems",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "SoftGems Electron wrapper",
   "main": "index.js",
   "private": true,
