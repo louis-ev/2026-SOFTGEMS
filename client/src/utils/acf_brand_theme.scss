@@ -16,7 +16,11 @@
   --label-color: var(--acf-brand-light);
   --c-bodybg: var(--acf-brand-cream);
   --c-blanc: #ffffff;
-  --c-gris_clair: color-mix(in srgb, var(--acf-brand-light) 11%, var(--acf-brand-cream));
+  --c-gris_clair: color-mix(
+    in srgb,
+    var(--acf-brand-light) 11%,
+    var(--acf-brand-cream)
+  );
   --c-gris: color-mix(in srgb, var(--acf-brand-light) 42%, white);
   --c-vert: var(--acf-brand-primary);
   --c-vert_fonce: var(--acf-brand-primary-dark);
@@ -37,7 +41,11 @@
   --g-300: color-mix(in srgb, var(--acf-brand-light) 28%, white);
   --g-400: color-mix(in srgb, var(--acf-brand-light) 42%, white);
   --g-500: var(--acf-brand-light);
-  --g-600: color-mix(in srgb, var(--acf-brand-primary) 35%, var(--acf-brand-light));
+  --g-600: color-mix(
+    in srgb,
+    var(--acf-brand-primary) 35%,
+    var(--acf-brand-light)
+  );
 
   accent-color: var(--acf-brand-primary);
 }
@@ -53,7 +61,7 @@ body,
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--acf-brand-light) 45%, transparent);
+  background: color-mix(in srgb, var(--acf-brand-light) 35%, transparent);
   color: var(--acf-brand-primary);
 }
 

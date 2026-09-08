@@ -544,7 +544,7 @@ textarea,
       // outline: 0;
       // filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.05));
       border-color: var(--c-gris);
-      background-color: var(--c-gris_clair);
+      // background-color: var(--c-gris_clair);
     }
   }
 
@@ -567,8 +567,13 @@ textarea,
 
   &[readonly] {
     color: var(--c-gris_fonce);
-    cursor: default;
+    cursor: not-allowed;
     caret-color: transparent;
+
+    &:hover,
+    &:focus-visible {
+      border-color: transparent;
+    }
   }
 }
 

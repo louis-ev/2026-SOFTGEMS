@@ -244,7 +244,13 @@ button._value {
 }
 
 ._valueReadonly {
-  cursor: default;
+  cursor: not-allowed;
+  color: var(--c-gris_fonce);
+
+  &:hover,
+  &:focus-visible {
+    border-color: transparent;
+  }
 }
 
 @keyframes sg_field_value_present_flash {

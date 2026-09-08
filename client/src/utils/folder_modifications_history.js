@@ -22,10 +22,10 @@ export function buildSelectionFieldLabels(t) {
     selection_date: t("sg_selection_date"),
     document_number_name: t("sg_selection_document_number_name"),
     counterparty_path: t("sg_selection_counterparty"),
-    reference_number: t("sg_selection_reference_number"),
     currency: t("sg_selection_currency"),
     exchange_rate: t("sg_selection_exchange_rate"),
-    notes: t("sg_selection_notes"),
+    notes_before: t("sg_selection_notes_before"),
+    notes: t("sg_selection_notes_after"),
     partnership_purchase: t("sg_selection_partnership_purchase"),
     partnership_purchased_percentage: t("sg_selection_purchased_percentage"),
     selection_entries: t("sg_selection_entries"),
@@ -182,7 +182,7 @@ export function formatFolderHistoryEntryValue(entry, { t, history_kind }) {
   const value = entry?.value;
   if (value === null || value === undefined || value === "") return "—";
 
-  if (entry?.field === "notes") {
+  if (entry?.field === "notes" || entry?.field === "notes_before") {
     return htmlToPlainText(value) || "—";
   }
 

@@ -371,14 +371,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -438,14 +438,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -493,14 +493,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -548,14 +548,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -603,9 +603,6 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
@@ -617,6 +614,9 @@
           },
           "partnership_purchased_percentage": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -664,14 +664,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -719,14 +719,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -774,9 +774,6 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
@@ -788,6 +785,9 @@
           },
           "partnership_purchased_percentage": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -835,14 +835,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -890,14 +890,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -945,14 +945,14 @@
           "counterparty_path": {
             "type": "string"
           },
-          "reference_number": {
-            "type": "string"
-          },
           "currency": {
             "type": "string"
           },
           "exchange_rate": {
             "type": "number"
+          },
+          "notes_before": {
+            "type": "string"
           },
           "notes": {
             "type": "string"

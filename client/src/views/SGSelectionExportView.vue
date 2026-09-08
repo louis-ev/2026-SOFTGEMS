@@ -17,7 +17,6 @@
       :legal_text="legal_text"
       :always_show_legal="always_show_legal"
       :pricing_total_key="pricing_total_key"
-      :order_number_line="order_number_line"
       :supplier_account_line="supplier_account_line"
       :bank_footer_en="bank_footer_en"
       :certificate_provider_labels="certificate_provider_labels"
@@ -168,9 +167,6 @@ export default {
         day: "2-digit",
       });
       return selectionPdfT(this.export_lang, "date_line", { date: formatted });
-    },
-    order_number_line() {
-      return this.cleanString(this.selection?.reference_number);
     },
     bank_footer_en() {
       const from_query = this.export_query.bank_footer_en;

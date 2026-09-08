@@ -53,7 +53,6 @@
               <th scope="col">{{ $t("sg_selection_type_label") }}</th>
               <th scope="col">{{ $t("sg_selection_internal_name") }}</th>
               <th scope="col">{{ $t("sg_selection_date") }}</th>
-              <th scope="col">{{ $t("sg_selection_reference_number") }}</th>
               <th scope="col">{{ $t("sg_selection_main_document") }}</th>
               <th scope="col">{{ $t("sg_selection_counterparty") }}</th>
             </tr>
@@ -90,7 +89,6 @@
                 <span class="_nameText">{{ selectionLabel(row) }}</span>
               </td>
               <td>{{ formatDateCell(row.selection_date) }}</td>
-              <td>{{ displayText(row.reference_number) }}</td>
               <td class="_mainDocumentCell">
                 <a
                   v-if="mainDocumentUrl(row)"
@@ -275,11 +273,6 @@ export default {
       const path = this.detailPath(row);
       if (!path) return;
       this.$router.push(path);
-    },
-    displayText(value) {
-      const raw =
-        value === null || value === undefined ? "" : String(value).trim();
-      return raw || "—";
     },
     formatDateCell(raw) {
       if (!raw) return "—";

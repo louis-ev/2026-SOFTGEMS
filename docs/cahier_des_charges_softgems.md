@@ -67,7 +67,7 @@ Le développement se déroule en deux étapes :
   - credit note
   - importation
   - importation return
-- Chaque type comporte un certain nombre de champs associés : date, nom de client, numéro de commande, currency, etc.
+- Chaque type comporte un certain nombre de champs associés : date, nom de client, currency, notes (avant / après le tableau), etc.
 - Une sélection peut contenir un ou plusieurs fichiers liés (PDF, photos, autre).
 - Un menu permet de sélectionner les pierres faisant partie de la sélection.
 - Un autre menu est disponible sur la fiche d’une pierre pour indiquer la sélection dont doit faire partie la pierre (par exemple, la sélection/boîte dans laquelle elle se trouve).

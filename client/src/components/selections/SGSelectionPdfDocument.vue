@@ -28,20 +28,17 @@
         </div>
       </div>
 
-      <div
-        v-if="show_order_number_line || show_supplier_account_line"
-        class="_referenceLines"
-      >
-        <p v-if="show_order_number_line" class="_orderLine">
-          <span class="_refLabel">{{ pdfT("order_number") }}</span>
-          {{ order_number_display }}
-        </p>
-        <p v-if="show_supplier_account_line" class="_supplierLine">
+      <div v-if="show_supplier_account_line" class="_referenceLines">
+        <p class="_supplierLine">
           <span class="_refLabel">{{ pdfT("supplier_account_number") }}</span>
           {{ supplier_account_display }}
         </p>
       </div>
     </header>
+
+    <section v-if="has_notes_before" class="_notesBlock _notesBlock_before">
+      <div class="_notesBody" v-html="notes_before_html" />
+    </section>
 
     <table class="_gemsTable">
       <colgroup>
@@ -365,10 +362,6 @@ export default {
       type: String,
       default: "",
     },
-    order_number_line: {
-      type: String,
-      default: "",
-    },
     supplier_account_line: {
       type: String,
       default: "",
@@ -445,14 +438,8 @@ export default {
     resolved_export_lang() {
       return normalizeSelectionPdfLang(this.export_lang);
     },
-    order_number_display() {
-      return this.cleanReferenceLine(this.order_number_line);
-    },
     supplier_account_display() {
       return this.cleanReferenceLine(this.supplier_account_line);
-    },
-    show_order_number_line() {
-      return Boolean(this.order_number_display);
     },
     show_supplier_account_line() {
       return Boolean(this.supplier_account_display);
@@ -544,6 +531,14 @@ export default {
     media_origin() {
       if (typeof window === "undefined") return "";
       return resolveAppPublicOrigin();
+    },
+    notes_before_html() {
+      return typeof this.selection?.notes_before === "string"
+        ? this.selection.notes_before
+        : "";
+    },
+    has_notes_before() {
+      return !isEmptyRichText(this.notes_before_html);
     },
     notes_html() {
       return typeof this.selection?.notes === "string"
@@ -790,7 +785,6 @@ $acf-pdf-table-line: #000;
   }
 }
 
-._orderLine,
 ._supplierLine {
   margin: 0;
 }
@@ -964,6 +958,10 @@ $acf-pdf-table-line: #000;
   line-height: 1.4;
   font-weight: 400;
   color: $acf-brand-primary;
+}
+
+._notesBlock_before {
+  margin: 0 0 4mm;
 }
 
 ._notesBody {

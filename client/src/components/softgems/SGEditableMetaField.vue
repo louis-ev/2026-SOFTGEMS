@@ -9,7 +9,7 @@
       :readonly="effective_readonly"
       :is_flashing="is_flashing"
       :pill_text="pill_text"
-      :hint_title="guest_value_hint_title"
+      :hint_title="value_hint_title"
       @click="onPresentClick"
     >
       <template v-if="$slots.value_trailing" #value_trailing>
@@ -171,8 +171,10 @@ export default {
       if (this.allow_guest_edit) return false;
       return !this.connected_as;
     },
-    guest_value_hint_title() {
-      if (this.readonly || this.allow_guest_edit || this.connected_as) return "";
+    value_hint_title() {
+      if (this.allow_guest_edit) return "";
+      if (this.readonly) return this.$t("sg_field_not_editable");
+      if (this.connected_as) return "";
       return this.$t("sg_editing_requires_account");
     },
     resolved_modal_title() {

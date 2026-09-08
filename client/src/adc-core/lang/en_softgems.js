@@ -399,6 +399,7 @@ export default {
   sg_history_by: "by",
   sg_edit_field: "Edit",
   sg_readonly_field: "Computed field (read-only)",
+  sg_field_not_editable: "Not editable",
   sg_section_status: "Status",
   sg_format_integer: "Format: integer",
   sg_format_decimal_2: "Format: 0.00",
@@ -523,7 +524,6 @@ export default {
   sg_selection_counterparty_company_contact_optional:
     "Optional — select a contact person at this company.",
   sg_selection_counterparty_loading_contacts: "Loading contacts…",
-  sg_selection_reference_number: "Purchase order No.",
   sg_supplier_account_number: "Supplier account No.",
   sg_selection_currency: "Currency",
   sg_selection_exchange_rate: "Exchange rate",
@@ -634,8 +634,10 @@ export default {
   sg_selection_no_files: "No attachments yet.",
   sg_selection_invalid_path: "Invalid selection link.",
   sg_selection_notes: "Notes",
+  sg_selection_notes_before: "Notes before table",
+  sg_selection_notes_after: "Notes after table",
   sg_selection_notes_export_hint:
-    "Shown on PDF export after the gems table and before the payment line / bank footer, in both the English and French PDF versions.",
+    "Shown on PDF export around the gems table (before and/or after), ahead of the payment line / bank footer, in both the English and French PDF versions.",
   sg_gem_notes: "Notes",
   sg_section_selection_box: "Box",
   sg_gem_current_box: "Current box",

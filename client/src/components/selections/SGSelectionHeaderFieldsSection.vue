@@ -42,20 +42,6 @@
       />
 
       <SGEditableMetaField
-        :label="$t('sg_selection_reference_number')"
-        icon="hash"
-        :value="selection.reference_number"
-        :readonly="!can_edit"
-        :modal_open="active_field === 'reference_number'"
-        :modal_title="field_modal_title($t('sg_selection_reference_number'))"
-        :modal_is_loading="is_saving_field === 'reference_number'"
-        :meta_text="reference_meta_text"
-        @presentClick="openField('reference_number')"
-        @close="closeField"
-        @save="onMetaTextSave"
-      />
-
-      <SGEditableMetaField
         :label="$t('sg_selection_currency')"
         icon="tag"
         :value="display_currency"
@@ -200,9 +186,6 @@ export default {
         label: this.$t("sg_selection_exchange_rate"),
       };
     },
-    reference_meta_text() {
-      return this.buildMetaText("reference_number");
-    },
     currency_meta_text() {
       const stored_code = resolveSelectionCurrency(this.selection?.currency);
       return {
@@ -266,11 +249,6 @@ export default {
       await this.persistFields({
         exchange_rate: normalizeSelectionExchangeRate(value),
       });
-    },
-    async onMetaTextSave({ value }) {
-      const field_key = this.active_field;
-      if (!field_key) return;
-      await this.persistField(field_key, value);
     },
     async persistField(field_key, raw_value) {
       if (!field_key) return;
