@@ -14,7 +14,7 @@
         _hasTrailing: has_value_trailing,
         _richText: is_rich_text,
       }"
-      :title="hint_title || undefined"
+      :title="resolved_hint_title || undefined"
       @click="$emit('click')"
     >
       <span
@@ -35,7 +35,7 @@
         _hasTrailing: has_value_trailing,
         _richText: is_rich_text,
       }"
-      :title="hint_title || undefined"
+      :title="resolved_hint_title || undefined"
     >
       <span
         v-if="is_rich_text && !is_empty"
@@ -99,6 +99,13 @@ export default {
   computed: {
     has_value_trailing() {
       return Boolean(this.$slots.value_trailing);
+    },
+    resolved_hint_title() {
+      const custom =
+        typeof this.hint_title === "string" ? this.hint_title.trim() : "";
+      if (custom) return custom;
+      if (this.readonly) return this.$t("sg_field_not_editable");
+      return "";
     },
     is_rich_text() {
       return this.value_type === "rich_text";

@@ -149,9 +149,11 @@ export default {
     document_title_prefix() {
       if (!this.selection) return "";
       const defaults = selectionPdfExportDefaults(this.resolved_selection_type);
+      // Keep trailing space from EN templates ("No. {number}") so the bold
+      // number does not stick to the period. FR templates use "N°{number}".
       return selectionPdfT(this.export_lang, defaults.document_title_key, {
         number: "",
-      }).trim();
+      }).trimStart();
     },
     document_number() {
       const from_path = selectionDocumentNumber(this.selection);
