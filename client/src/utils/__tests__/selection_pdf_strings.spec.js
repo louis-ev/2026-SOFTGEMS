@@ -21,8 +21,8 @@ describe("selection_pdf_strings", () => {
     expect(selectionPdfT("fr", "title_memo_out", { number: "12" })).toBe(
       "Consignation N\u00b012"
     );
-    expect(selectionPdfT("en", "vat_number")).toBe("VAT No.:");
-    expect(selectionPdfT("fr", "vat_number")).toBe("N\u00b0 TVA :");
+    expect(selectionPdfT("en", "vat_number")).toBe("VAT No.");
+    expect(selectionPdfT("fr", "vat_number")).toBe("N\u00b0 TVA");
     expect(selectionPdfT("en", "reference_customer_prefix", { value: "CUST-1" })).toBe(
       "Reference customer: CUST-1"
     );

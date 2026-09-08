@@ -802,6 +802,7 @@ $acf-pdf-table-line: #000;
 
 ._counterpartyAddressLine,
 ._counterpartyTvaLine {
+  display: block;
   margin: 0;
   line-height: 1.4;
   font-weight: 400;
