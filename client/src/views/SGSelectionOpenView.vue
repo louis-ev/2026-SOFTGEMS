@@ -49,7 +49,7 @@
                       <button
                         type="button"
                         class="u-buttonLink u-buttonLink_red"
-                        @click="show_remove_modal = true"
+                        @click="openRemoveModal"
                       >
                         <b-icon icon="trash" />
                         {{ $t("sg_remove_selection") }}
@@ -62,7 +62,7 @@
                         "
                         :success_notification="$t('removed_successfully')"
                         @removedSuccessfully="onRemovedSuccessfully"
-                        @close="show_remove_modal = false"
+                        @close="closeRemoveModal"
                       />
                     </DropDown>
                   </div>
@@ -218,6 +218,8 @@ import {
   selectionDetailPath,
   selectionListPath,
 } from "@/utils/selection_urls.js";
+import { clearOrphanedGemBoxRefs } from "@/utils/assign_gem_to_box.js";
+import { normalizeSelectionGemPaths } from "@/utils/selection_entries.js";
 export default {
   name: "SGSelectionOpenView",
   mixins: [SectionAnchorScrollMixin],
@@ -261,6 +263,8 @@ export default {
       selection_edit_modal: null,
       is_saving_internal_name: false,
       show_remove_modal: false,
+      /** Snapshot of gem paths before box delete (store may clear the folder first). */
+      pending_remove_gem_paths: [],
       show_pdf_export_modal: false,
       side_panel_gem_id: "",
     };
@@ -361,7 +365,33 @@ export default {
       }
       this.$router.push(selectionListPath(this.type_slug));
     },
-    onRemovedSuccessfully() {
+    openRemoveModal() {
+      this.pending_remove_gem_paths = this.is_box_type
+        ? normalizeSelectionGemPaths(this.selection?.selection_entries)
+        : [];
+      this.show_remove_modal = true;
+    },
+    closeRemoveModal() {
+      this.show_remove_modal = false;
+      this.pending_remove_gem_paths = [];
+    },
+    async onRemovedSuccessfully() {
+      if (this.is_box_type) {
+        const box_path = this.selection_folder_path;
+        const gem_paths = this.pending_remove_gem_paths;
+        if (box_path && gem_paths.length) {
+          try {
+            await clearOrphanedGemBoxRefs({
+              api: this.$api,
+              box_path,
+              gem_paths,
+            });
+          } catch (err) {
+            console.error("clearOrphanedGemBoxRefs", err);
+          }
+        }
+      }
+      this.pending_remove_gem_paths = [];
       this.show_remove_modal = false;
       this.goBack();
     },

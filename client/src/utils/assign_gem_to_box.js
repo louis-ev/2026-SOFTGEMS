@@ -76,21 +76,28 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
   }
 
   if (old_box) {
-    const old_folder = await api.getFolder({ path: old_box });
-    const paths = normalizeSelectionGemPaths(old_folder.selection_entries);
-    const filtered = paths.filter((path) => path !== gem_path);
-    if (filtered.length !== paths.length) {
-      await api.updateMeta({
-        path: old_box,
-        new_meta: { selection_entries: filtered },
-      });
+    try {
+      const old_folder = await api.getFolder({ path: old_box });
+      const paths = normalizeSelectionGemPaths(old_folder.selection_entries);
+      const filtered = paths.filter((path) => path !== gem_path);
+      if (filtered.length !== paths.length) {
+        await api.updateMeta({
+          path: old_box,
+          new_meta: { selection_entries: filtered },
+        });
+      }
+    } catch (err) {
+      // Box deleted without detaching gems leaves an orphaned box_selection_path.
+      if (err?.code !== "not_found") throw err;
     }
-    await clearGemSelectionMembership({
+    const updated_map = await clearGemSelectionMembership({
       api,
       gem_path,
       selection_path: old_box,
       gem,
     });
+    // Keep local gem in sync so the next membership patch does not re-add old_box.
+    gem.selection_membership_paths = updated_map;
   }
 
   const gem_meta_patch = { box_selection_path: new_box };
@@ -118,6 +125,46 @@ export async function assignGemToBox({ api, gem_path, new_box_folder_path }) {
         path: new_box,
         new_meta: { selection_entries: [...paths, gem_path] },
       });
+    }
+  }
+}
+
+/**
+ * Clear gem-side box pointers after a box folder was deleted (no box meta left to edit).
+ *
+ * @param {object} args
+ * @param {object} args.api
+ * @param {string} args.box_path – e.g. `box/2`
+ * @param {string[]} args.gem_paths – paths that were in the box `selection_entries`
+ */
+export async function clearOrphanedGemBoxRefs({ api, box_path, gem_paths }) {
+  const cleaned_box = String(box_path || "").trim();
+  if (!cleaned_box) return;
+
+  for (const raw of Array.isArray(gem_paths) ? gem_paths : []) {
+    const gem_path = String(raw || "").trim();
+    if (!gem_path) continue;
+    let gem;
+    try {
+      gem = await api.getFolder({ path: gem_path });
+    } catch (err) {
+      if (err?.code === "not_found") continue;
+      throw err;
+    }
+    const new_meta = {};
+    if (String(gem.box_selection_path || "").trim() === cleaned_box) {
+      new_meta.box_selection_path = "";
+    }
+    const map = normalizeMembershipPathsMap(
+      gem.selection_membership_paths,
+      gem.selection_gem_added_at
+    );
+    if (map[cleaned_box]) {
+      delete map[cleaned_box];
+      new_meta.selection_membership_paths = map;
+    }
+    if (Object.keys(new_meta).length) {
+      await api.updateMeta({ path: gem_path, new_meta });
     }
   }
 }
