@@ -273,8 +273,8 @@ export function buildGemFieldConfigs(t) {
       icon: "file-earmark-text",
       type: "number",
       input_type: "number",
-      input_step: 1,
-      instructions: t("sg_format_integer"),
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
     },
     price_per_carat_pc: {
       key: "price_per_carat_pc",
