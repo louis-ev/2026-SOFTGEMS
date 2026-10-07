@@ -46,9 +46,15 @@
           }}</span>
         </p>
         <div class="_pricingPairRow">
-          <span class="_pricingPairLabel">{{
-            $t("sg_pricing_cell_total")
-          }}</span>
+          <div class="_pricingPairLabelRow">
+            <DLabel
+              :str="pair_field_configs.total.label"
+              :icon="pair_field_configs.total.icon"
+            />
+            <span class="_pricingPairPill">{{
+              $t("sg_pricing_cell_total")
+            }}</span>
+          </div>
           <TextInput
             :content="pair_edit_total"
             :input_type="pair_field_configs.total.input_type || 'number'"
@@ -61,9 +67,15 @@
           />
         </div>
         <div class="_pricingPairRow">
-          <span class="_pricingPairLabel">{{
-            $t("sg_pricing_cell_per_carat")
-          }}</span>
+          <div class="_pricingPairLabelRow">
+            <DLabel
+              :str="pair_field_configs.per.label"
+              :icon="pair_field_configs.per.icon"
+            />
+            <span class="_pricingPairPill">{{
+              $t("sg_pricing_cell_per_carat")
+            }}</span>
+          </div>
           <TextInput
             :content="pair_edit_per_carat"
             :input_type="pair_field_configs.per.input_type || 'number'"
@@ -1367,6 +1379,29 @@ export default {
   font-size: var(--sl-font-size-x-small);
   font-weight: 600;
   color: color-mix(in srgb, var(--c-gris_fonce) 92%, transparent);
+}
+
+/* Mirrors SGFieldValuePresent label row + pill on the gem page. */
+._pricingPairLabelRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 3);
+}
+
+._pricingPairPill {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--c-gris_fonce);
+  background: var(--c-blanc);
+  border: 1px solid var(--c-gris_clair);
+  border-radius: 4px;
+  padding: 3px 6px;
 }
 
 ._syncPvdCheckbox {
