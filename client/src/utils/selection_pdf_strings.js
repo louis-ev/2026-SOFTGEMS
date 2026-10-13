@@ -47,9 +47,9 @@ export const selection_pdf_strings = Object.freeze({
     photo_fallback: "Photo",
     video_fallback: "Video",
     footer_line_1:
-      "Registered Office: 10 Place Vendôme, 75001 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
+      "Registered Office: 17 rue Drouot, 75009 Paris, France • Tel: +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
-      "SAS with a share capital of EUR 50,000 • SIRET No. 994 099 448 00015",
+      "SAS with a share capital of EUR 50,005 • SIRET No. 994 099 448 00015",
     customs_summary_title: "Customs summary",
     customs_col_hs_code: "Customs code",
     customs_col_name: "Name",
@@ -99,9 +99,9 @@ export const selection_pdf_strings = Object.freeze({
     photo_fallback: "Photo",
     video_fallback: "Vidéo",
     footer_line_1:
-      "SIÈGE SOCIAL : 10 Place Vendôme, 75001 Paris, France • Tél. : +33 (0)6 69 24 14 89 • info@acfinegems.com",
+      "SIÈGE SOCIAL : 17 rue Drouot, 75009 Paris, France • Tél. : +33 (0)6 69 24 14 89 • info@acfinegems.com",
     footer_line_2:
-      "SAS AU CAPITAL DE 50 000 EUROS • SIRET 994 099 448 00015",
+      "SAS AU CAPITAL DE 50 005 EUROS • SIRET 994 099 448 00015",
     customs_summary_title: "Résumé douanier",
     customs_col_hs_code: "Code douanier",
     customs_col_name: "Nom",
