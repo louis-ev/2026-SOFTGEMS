@@ -232,7 +232,7 @@ export default {
           ? folder.internal_name.trim()
           : "";
       const id_part = id ? `#${id}` : path;
-      if (name) return `${type_label} ${id_part}  ${name}`;
+      if (name) return `${type_label} ${id_part} â€” ${name}`;
       return `${type_label} ${id_part}`;
     },
     progressStepIndex(step) {

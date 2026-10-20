@@ -18,6 +18,7 @@ import { htmlToPlainText } from "@/utils/rich_text.js";
 const PRICE_LABEL_KEYS = Object.freeze({
   base_price_pcb: "sg_base_price_pcb",
   import_price: "sg_import_price",
+  return_price: "sg_return_price",
   pv_selling_price: "sg_pv_selling_price",
   pvd_asking_price: "sg_pvd_asking_price",
   pc_to: "sg_pc_to",

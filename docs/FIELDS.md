@@ -63,7 +63,7 @@ After the copy, the original is updated by subtraction. The copy then inherits t
 
 - New gem `weight_ct` = entered or suggested weight; original `weight_ct` = original − new (must stay > 0).
 - New gem `number_of_pieces` = entered count; original = original − new (must leave at least 1 piece).
-- **Prices:** if Cost per carat can be computed (`base_price_pcb` / original `weight_ct`), every set price total (Cost, Import, PV, PVD, PC, PF) is recalculated from its own /ct × the new or remaining weight. If Cost /ct is missing, prices are left unchanged.
+- **Prices:** if Cost per carat can be computed (`base_price_pcb` / original `weight_ct`), every set price total (Cost, Import, Return, PV, PVD, PC, PF) is recalculated from its own /ct × the new or remaining weight. If Cost /ct is missing, prices are left unchanged.
 - New gem also gets `parent_id` = original gem ID, plus the duplicate resets on copy (new ID, pairing cleared, fresh history). Memberships start cleared on the copy, then the selected parent selections are applied.
 - Original gem appends `{ id, date }` to `splits` (ISO date) when the copy is created.
 - Open-view cartouches: child shows **Split from gem #…** (cover, links to original); original shows **This gem has been split** and opens a history modal with child links.
@@ -74,7 +74,7 @@ Helpers: [`gem_split.js`](../client/src/utils/gem_split.js). UI: [`SGGemSplitMod
 
 From the gem open view (⋯ menu → **Merge into parent**), only when `parent_id` is set (the gem is a split-off child). A confirmation modal shows:
 
-1. **Parent changes:** weight, piece count, and price totals (Cost, Import, PV, PVD, PC, PF) as **addition**, shown as `parent + child = merged` (missing side = 0; weight 3 decimals, money 2), with a legend: **Parent** + **This split gem** = **New parent value**. Parent keeps its other meta, cover, files, pairing, status, and selections.
+1. **Parent changes:** weight, piece count, and price totals (Cost, Import, Return, PV, PVD, PC, PF) as **addition**, shown as `parent + child = merged` (missing side = 0; weight 3 decimals, money 2), with a legend: **Parent** + **This split gem** = **New parent value**. Parent keeps its other meta, cover, files, pairing, status, and selections.
 2. **Notice:** changed metadata and files on the child are discarded; the child is also removed from all selections.
 
 **Blocked** when the child itself has `splits` (merge those grandchildren first) or when the parent folder is missing.
@@ -187,7 +187,7 @@ Multiplicity rule: can be multiple reports for one stone.
 | `purchased_price_pa`     | manual             | **Removed from V1 UI** (schema/meta retained). Legacy **PA** total; per-carat was derived. Existing values remain on gems but are not shown or editable in the client. |
 | `total_cost`             | derived            | Purchase price (`T. Buy Px`). Hidden + purple in source. TODO for later (not V1). |
 
-## Pricing (Cost, Import, PV, PVD, PC, PF)
+## Pricing (Cost, Import, Return, PV, PVD, PC, PF)
 
 `base_price_pcb` is the persisted meta key for **Cost** (legacy internal name PCb). The UI and exports use the label **Cost**; do not rename the meta key without a data migration.
 
@@ -210,6 +210,7 @@ This section documents **how pricing works in the SoftGems client** (single sour
 | ---- | --------------------------------------------- | --------------------------------------------------------------------------------- |
 | Cost (PCb) | `base_price_pcb`                          | `price_per_carat_pcb`                                                             |
 | Import | `import_price`                              | `price_per_carat_import`                                                          |
+| Return | `return_price`                              | `price_per_carat_return`                                                          |
 | PV   | `pv_selling_price`                            | `price_per_carat_pv`                                                              |
 | PVD  | `pvd_asking_price`                            | `price_per_carat_pvd`                                                             |
 | PC   | `pc_to`                                       | `price_per_carat_pc`                                                              |
@@ -226,8 +227,8 @@ This section documents **how pricing works in the SoftGems client** (single sour
 
 - Pair definitions: [`client/src/mixins/GemPricing.js`](../client/src/mixins/GemPricing.js)
 - Field labels, virtual `pricing_total_key`: [`client/src/components/gems/gem_field_configs.js`](../client/src/components/gems/gem_field_configs.js)
-- Gems list table ([`client/src/components/gems/SGGemsTable.vue`](../client/src/components/gems/SGGemsTable.vue)): one column per pricing line (Cost, Import, PV, PVD, PC, PF) — **total** on the first line, derived **per carat + `/ct`** on the second; virtual `price_per_carat_*` keys are not separate columns ([`gem_virtual_per_carat_column_keys`](../client/src/mixins/GemPricing.js)).
-- **Default column order** (when no saved column preference exists): `id`, `status`, `$cover`, `number_of_pieces`, `stone_type`, `weight_ct`, `color`, `shape`, `origin_country`, `dimensions_lwh`, `treatment_type`, `base_price_pcb`, `import_price`, `pv_selling_price`, `pvd_asking_price`, `pc_to`, `pf_invoiced_price`, `paired_gem`, `country_of_cut`, `reference_supplier`, `reference_customer`, `numero_de_mise_a_consommation`, `$date_modified`, then one `selection_nums_*` column per selection type in [registry](../client/src/utils/selection_type_registry.js) order — see [`gems_table_catalog_column_keys`](../client/src/utils/gems_table_metadata.js). All selection-number columns are in the catalog / column customizer but **off by default** and stay unchecked on Reset; cell values are derived client-side from `selection_membership_paths` + `box_selection_path` (no extra server fetch) via [`gem_selection_nums_columns.js`](../client/src/utils/gem_selection_nums_columns.js).
+- Gems list table ([`client/src/components/gems/SGGemsTable.vue`](../client/src/components/gems/SGGemsTable.vue)): one column per pricing line (Cost, Import, Return, PV, PVD, PC, PF) — **total** on the first line, derived **per carat + `/ct`** on the second; virtual `price_per_carat_*` keys are not separate columns ([`gem_virtual_per_carat_column_keys`](../client/src/mixins/GemPricing.js)).
+- **Default column order** (when no saved column preference exists): `id`, `status`, `$cover`, `number_of_pieces`, `stone_type`, `weight_ct`, `color`, `shape`, `origin_country`, `dimensions_lwh`, `treatment_type`, `base_price_pcb`, `import_price`, `return_price`, `pv_selling_price`, `pvd_asking_price`, `pc_to`, `pf_invoiced_price`, `paired_gem`, `country_of_cut`, `reference_supplier`, `reference_customer`, `numero_de_mise_a_consommation`, `$date_modified`, then one `selection_nums_*` column per selection type in [registry](../client/src/utils/selection_type_registry.js) order — see [`gems_table_catalog_column_keys`](../client/src/utils/gems_table_metadata.js). All selection-number columns are in the catalog / column customizer but **off by default** and stay unchecked on Reset; cell values are derived client-side from `selection_membership_paths` + `box_selection_path` (no extra server fetch) via [`gem_selection_nums_columns.js`](../client/src/utils/gem_selection_nums_columns.js).
 - Column customizer ([`client/src/components/gems/SGGemColumnsModal.vue`](../client/src/components/gems/SGGemColumnsModal.vue)): same column keys as the table; legacy per-carat and `length_mm` / `width_mm` / `height_mm` selections are normalized via [`gems_table_metadata.js`](../client/src/utils/gems_table_metadata.js).
 - **Raw path fields not shown as columns:** `box_selection_path` and `selection_membership_paths` stay excluded from the picker (virtual `selection_nums_*` columns show document numbers instead). Removed from V1: `price_per_carat_all`.
 - Persisted gem fields: [`settings_base.json`](../settings_base.json) → `schema.$folders.gems.fields`
@@ -286,7 +287,7 @@ Multiplicity rule: can be multiple exports for one stone.
 | `export_type`    | select from a list       | `export temporaire` / `perfectionnement passif`.          |
 | `export_number`  | manual                   |                                                           |
 | `export_date`    | calendar                 | Default is today's date.                                  |
-| `export_price`   | automatic / manual       | Default importation price; keep editable for adjustments. |
+| `export_price`   | automatic / manual       | Not implemented as such. V1 uses the gem-level pricing pair `return_price` (Return, total + derived /ct). |
 | `pdf_link`       | link                     |                                                           |
 
 ## Memo and Invoice Flows

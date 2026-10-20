@@ -67,6 +67,7 @@ export const SELECTION_PDF_PRICING_OPTION_KEYS = Object.freeze([
 export const selection_pdf_pricing_label_keys = Object.freeze({
   base_price_pcb: "sg_base_price_pcb",
   import_price: "sg_import_price",
+  return_price: "sg_return_price",
   pv_selling_price: "sg_pv_selling_price",
   pvd_asking_price: "sg_pvd_asking_price",
   pc_to: "sg_pc_to",

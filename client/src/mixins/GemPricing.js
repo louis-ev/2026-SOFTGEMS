@@ -24,6 +24,10 @@ const price_field_pairs = [
     virtual_per_carat_key: "price_per_carat_import",
   },
   {
+    total_key: "return_price",
+    virtual_per_carat_key: "price_per_carat_return",
+  },
+  {
     total_key: "pv_selling_price",
     virtual_per_carat_key: "price_per_carat_pv",
   },

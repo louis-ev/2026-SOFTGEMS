@@ -25,6 +25,7 @@ describe("gems_table_catalog_column_keys", () => {
       "treatment_type",
       "base_price_pcb",
       "import_price",
+      "return_price",
       "pv_selling_price",
       "pvd_asking_price",
       "pc_to",

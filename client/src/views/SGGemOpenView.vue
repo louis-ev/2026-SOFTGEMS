@@ -415,6 +415,42 @@
           <div class="_pricingPair">
             <div class="_pricingPairGrid">
               <SGEditableMetaField
+                :label="$t('sg_return_price')"
+                icon="arrow-return-left"
+                :pill_text="$t('sg_pricing_cell_total')"
+                :value="gem.return_price"
+                :is_flashing="isFieldFlashing('return_price')"
+                :modal_open="editing_field === field_configs.return_price"
+                :modal_title="gemFieldModalTitle(field_configs.return_price)"
+                :gem_edit="gemEditorProps(field_configs.return_price)"
+                @presentClick="openEditModal(field_configs.return_price)"
+                @close="editing_field = null"
+                @saved="onFieldSaved"
+              />
+              <SGEditableMetaField
+                :label="$t('sg_price_per_carat_return')"
+                icon="diagram2"
+                :pill_text="$t('sg_pricing_cell_per_carat')"
+                :value="displayGemFieldValue('price_per_carat_return')"
+                :is_flashing="isFieldFlashing('price_per_carat_return')"
+                :modal_open="
+                  editing_field === field_configs.price_per_carat_return
+                "
+                :modal_title="
+                  gemFieldModalTitle(field_configs.price_per_carat_return)
+                "
+                :gem_edit="gemEditorProps(field_configs.price_per_carat_return)"
+                @presentClick="
+                  openEditModal(field_configs.price_per_carat_return)
+                "
+                @close="editing_field = null"
+                @saved="onFieldSaved"
+              />
+            </div>
+          </div>
+          <div class="_pricingPair">
+            <div class="_pricingPairGrid">
+              <SGEditableMetaField
                 :label="$t('sg_pv_selling_price')"
                 icon="tag"
                 :pill_text="$t('sg_pricing_cell_total')"

@@ -19,6 +19,7 @@ import { resolveSelectionType } from "@/utils/selection_paths.js";
 const PRICE_LABEL_KEYS = Object.freeze({
   base_price_pcb: "sg_base_price_pcb",
   import_price: "sg_import_price",
+  return_price: "sg_return_price",
   pv_selling_price: "sg_pv_selling_price",
   pvd_asking_price: "sg_pvd_asking_price",
   pc_to: "sg_pc_to",
@@ -313,7 +314,7 @@ function report_gem_split_progress(on_progress, info) {
 function is_box_selection_target(selection_path, selection_folder) {
   if (isBoxSelectionPath(selection_path)) return true;
   if (isBoxSelectionPath(selection_folder?.$path)) return true;
-  return resolveSelectionType(selection_folder) === "boîte";
+  return resolveSelectionType(selection_folder) === "boÃ®te";
 }
 
 async function addSplitGemToSelection({ api, gem_path, selection_path }) {

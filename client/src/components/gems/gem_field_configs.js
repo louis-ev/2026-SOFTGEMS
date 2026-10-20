@@ -199,6 +199,15 @@ export function buildGemFieldConfigs(t) {
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
     },
+    return_price: {
+      key: "return_price",
+      label: t("sg_return_price"),
+      icon: "arrow-return-left",
+      type: "number",
+      input_type: "number",
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
+    },
     price_per_carat_pcb: {
       key: "price_per_carat_pcb",
       label: t("sg_price_per_carat_pcb"),
@@ -228,6 +237,16 @@ export function buildGemFieldConfigs(t) {
       input_step: 0.01,
       instructions: t("sg_format_decimal_2"),
       pricing_total_key: "import_price",
+    },
+    price_per_carat_return: {
+      key: "price_per_carat_return",
+      label: t("sg_price_per_carat_return"),
+      icon: "diagram2",
+      type: "number",
+      input_type: "number",
+      input_step: 0.01,
+      instructions: t("sg_format_decimal_2"),
+      pricing_total_key: "return_price",
     },
     pv_selling_price: {
       key: "pv_selling_price",

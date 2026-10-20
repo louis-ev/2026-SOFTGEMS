@@ -280,7 +280,7 @@ async function migrateFlatSelections({ content_root, selections_root, dry_run })
 async function migrateGems({ gems_root, path_map, dry_run }) {
   if (path_map.size === 0) return 0;
   if (!(await fs.pathExists(gems_root))) {
-    console.log("No gems/ folder � skipping gem reference updates.");
+    console.log("No gems/ folder — skipping gem reference updates.");
     return 0;
   }
 
@@ -365,7 +365,7 @@ async function main() {
   const gems_root = path.join(content_root, "gems");
 
   console.log(`Content root: ${content_root}`);
-  if (dry_run) console.log("DRY RUN � no files will be modified.\n");
+  if (dry_run) console.log("DRY RUN — no files will be modified.\n");
 
   const remount_map = await remountNestedUnderSelections({
     content_root,

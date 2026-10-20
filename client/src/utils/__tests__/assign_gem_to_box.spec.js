@@ -35,7 +35,7 @@ describe("assignGemToBox", () => {
           },
         },
         "box/4": {
-          selection_type: "boîte",
+          selection_type: "boÃ®te",
           selection_entries: [],
         },
       },
@@ -57,7 +57,7 @@ describe("assignGemToBox", () => {
 
   it("removes the gem from the previous box when it still exists", async () => {
     api.store["box/2"] = {
-      selection_type: "boîte",
+      selection_type: "boÃ®te",
       selection_entries: ["gems/12", "gems/99"],
     };
 

@@ -117,6 +117,7 @@ const v1_new_gem_fields_defaults = {
   base_price_pcb: 0,
   purchased_price_pa: 0,
   import_price: 0,
+  return_price: 0,
   pv_selling_price: 0,
   pvd_asking_price: 0,
   pc_to: 0,
