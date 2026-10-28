@@ -9,6 +9,7 @@ export const stone_type_suggestions = [
   "Sapphire",
   "Star Ruby",
   "Star Sapphire",
+  "Diamond",
   "Quartz",
   "Amethyst",
   "Citrine",

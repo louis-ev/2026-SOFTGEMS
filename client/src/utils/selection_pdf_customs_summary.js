@@ -12,14 +12,14 @@ export const CUSTOMS_HS_CODE_RSE = "710 391";
 export const CUSTOMS_HS_CODE_PF = "710 399";
 
 /**
- * Ruby, sapphire, emerald (and star variants) ? RSE / pierres précieuses.
+ * Ruby, sapphire, emerald (and star variants), diamond ? RSE / pierres précieuses.
  * @param {*} stone_type
  * @returns {boolean}
  */
 export function isRseStoneType(stone_type) {
   const st = String(stone_type || "").trim().toLowerCase();
   if (!st) return false;
-  return /emerald|ruby|sapphire/.test(st);
+  return /emerald|ruby|sapphire|diamond/.test(st);
 }
 
 /**

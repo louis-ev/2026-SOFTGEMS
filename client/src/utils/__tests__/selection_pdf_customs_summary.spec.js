@@ -15,6 +15,7 @@ describe("isRseStoneType", () => {
     expect(isRseStoneType("Star Ruby")).toBe(true);
     expect(isRseStoneType("Star Sapphire")).toBe(true);
     expect(isRseStoneType("EMERALD")).toBe(true);
+    expect(isRseStoneType("Diamond")).toBe(true);
   });
 
   it("treats other stones as PF", () => {
